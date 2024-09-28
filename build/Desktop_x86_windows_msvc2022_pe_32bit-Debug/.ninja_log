@@ -1,0 +1,23 @@
+# ninja log v5
+405	2150	7492094288820307	CMakeFiles/RapidWebForgeApp.dir/RapidWebForgeApp_autogen/mocs_compilation.cpp.obj	565009887e944852
+18	404	7492094270918389	RapidWebForgeApp_autogen/timestamp	c04d24f63ea554dd
+18	404	7492094270918389	RapidWebForgeApp_autogen/mocs_compilation.cpp	c04d24f63ea554dd
+2856	3060	7492094297318030	RapidWebForgeApp.exe	c2cf6ba08540e06d
+18	404	7492094270918389	C:/Users/rodri/OneDrive/Documentos/Projects/RapidWebForgeApp/build/Desktop_x86_windows_msvc2022_pe_32bit-Debug/RapidWebForgeApp_autogen/timestamp	c04d24f63ea554dd
+18	404	7492094270918389	C:/Users/rodri/OneDrive/Documentos/Projects/RapidWebForgeApp/build/Desktop_x86_windows_msvc2022_pe_32bit-Debug/RapidWebForgeApp_autogen/mocs_compilation.cpp	c04d24f63ea554dd
+403	2087	7492087537300717	CMakeFiles/RapidWebForgeApp.dir/main.cpp.obj	48be989d8cd9f40c
+409	2223	7492094289586481	CMakeFiles/RapidWebForgeApp.dir/rapidwebforge.cpp.obj	dad7f0e3fc4d360c
+413	2856	7492094295892515	CMakeFiles/RapidWebForgeApp.dir/src/components/creation-assistant/creationassistant.cpp.obj	d8eec2beca0ec9a5
+21	674	7492096611106769	build.ninja	d1491c2467e5b290
+23	156	7492096604300874	RapidWebForgeApp_autogen/timestamp	c04d24f63ea554dd
+23	156	7492096604300874	RapidWebForgeApp_autogen/mocs_compilation.cpp	c04d24f63ea554dd
+23	156	7492096604300874	C:/Users/rodri/OneDrive/Documentos/Projects/RapidWebForgeApp/build/Desktop_x86_windows_msvc2022_pe_32bit-Debug/RapidWebForgeApp_autogen/timestamp	c04d24f63ea554dd
+23	156	7492096604300874	C:/Users/rodri/OneDrive/Documentos/Projects/RapidWebForgeApp/build/Desktop_x86_windows_msvc2022_pe_32bit-Debug/RapidWebForgeApp_autogen/mocs_compilation.cpp	c04d24f63ea554dd
+167	2517	7492096636964182	CMakeFiles/RapidWebForgeApp.dir/rapidwebforge.cpp.obj	dad7f0e3fc4d360c
+26	159	7492097439507355	RapidWebForgeApp_autogen/timestamp	c04d24f63ea554dd
+26	159	7492097439507355	RapidWebForgeApp_autogen/mocs_compilation.cpp	c04d24f63ea554dd
+26	159	7492097439507355	C:/Users/rodri/OneDrive/Documentos/Projects/RapidWebForgeApp/build/Desktop_x86_windows_msvc2022_pe_32bit-Debug/RapidWebForgeApp_autogen/timestamp	c04d24f63ea554dd
+26	159	7492097439507355	C:/Users/rodri/OneDrive/Documentos/Projects/RapidWebForgeApp/build/Desktop_x86_windows_msvc2022_pe_32bit-Debug/RapidWebForgeApp_autogen/mocs_compilation.cpp	c04d24f63ea554dd
+167	2089	7492097461226440	CMakeFiles/RapidWebForgeApp.dir/main.cpp.obj	48be989d8cd9f40c
+171	2112	7492097461412880	CMakeFiles/RapidWebForgeApp.dir/rapidwebforge.cpp.obj	dad7f0e3fc4d360c
+2113	2381	7492097463247575	RapidWebForgeApp.exe	c2cf6ba08540e06d

@@ -17,6 +17,9 @@ set(PROJECT_SOURCES
         rapidwebforge.cpp
         rapidwebforge.h
         rapidwebforge.ui
+        src/components/creation-assistant/creationassistant.h
+        src/components/creation-assistant/creationassistant.cpp
+        src/components/creation-assistant/creationassistant.ui
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
