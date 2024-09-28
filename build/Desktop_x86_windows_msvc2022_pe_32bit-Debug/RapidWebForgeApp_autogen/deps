@@ -378,6 +378,8 @@ RapidWebForgeApp_autogen/timestamp: \
 	C:/Users/rodri/OneDrive/Documentos/Projects/RapidWebForgeApp/main.cpp \
 	C:/Users/rodri/OneDrive/Documentos/Projects/RapidWebForgeApp/rapidwebforge.cpp \
 	C:/Users/rodri/OneDrive/Documentos/Projects/RapidWebForgeApp/rapidwebforge.h \
+	C:/Users/rodri/OneDrive/Documentos/Projects/RapidWebForgeApp/src/components/backend-assistant/backendassistant.cpp \
+	C:/Users/rodri/OneDrive/Documentos/Projects/RapidWebForgeApp/src/components/backend-assistant/backendassistant.h \
 	C:/Users/rodri/OneDrive/Documentos/Projects/RapidWebForgeApp/src/components/creation-assistant/creationassistant.cpp \
 	C:/Users/rodri/OneDrive/Documentos/Projects/RapidWebForgeApp/src/components/creation-assistant/creationassistant.h \
 	C:/Users/rodri/OneDrive/Documentos/Projects/RapidWebForgeApp/src/components/database-assistant/databaseassistant.cpp \
@@ -385,6 +387,7 @@ RapidWebForgeApp_autogen/timestamp: \
 	C:/Users/rodri/OneDrive/Documentos/Projects/RapidWebForgeApp/src/components/frontend-assistant/frontendassistant.cpp \
 	C:/Users/rodri/OneDrive/Documentos/Projects/RapidWebForgeApp/src/components/frontend-assistant/frontendassistant.h \
 	C:/Users/rodri/OneDrive/Documentos/Projects/RapidWebForgeApp/rapidwebforge.ui \
+	C:/Users/rodri/OneDrive/Documentos/Projects/RapidWebForgeApp/src/components/backend-assistant/backendassistant.ui \
 	C:/Users/rodri/OneDrive/Documentos/Projects/RapidWebForgeApp/src/components/creation-assistant/creationassistant.ui \
 	C:/Users/rodri/OneDrive/Documentos/Projects/RapidWebForgeApp/src/components/database-assistant/databaseassistant.ui \
 	C:/Users/rodri/OneDrive/Documentos/Projects/RapidWebForgeApp/src/components/frontend-assistant/frontendassistant.ui \

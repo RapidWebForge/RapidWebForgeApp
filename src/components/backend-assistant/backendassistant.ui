@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>BackendAssistant</class>
+ <widget class="QDialog" name="BackendAssistant">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>800</width>
+    <height>600</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>RapidWebForge</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <!-- Título principal -->
+   <item>
+    <widget class="QLabel" name="titleLabel">
+     <property name="text">
+      <string>Creation Assistant</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>24</pointsize>
+       <weight>75</weight>
+       <bold>true</bold>
+      </font>
+     </property>
+    </widget>
+   </item>
+   <!-- Subtítulo -->
+   <item>
+    <widget class="QLabel" name="subTitleLabel">
+     <property name="text">
+      <string>Select Backend Framework</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>18</pointsize>
+      </font>
+     </property>
+    </widget>
+   </item>
+   <!-- Logo de Express.js -->
+   <item>
+    <widget class="QLabel" name="logoLabel">
+     <property name="pixmap">
+      <pixmap resource="../../resources/express.png"/> <!-- Asegúrate de colocar la imagen en la ruta correcta -->
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
+    </widget>
+   </item>
+   <!-- Campo para el puerto -->
+   <item>
+    <widget class="QGroupBox" name="formGroupBox">
+     <property name="title">
+      <string></string>
+     </property>
+     <layout class="QHBoxLayout" name="horizontalLayout">
+      <item>
+       <widget class="QLabel" name="portLabel">
+        <property name="text">
+         <string>Port:</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLineEdit" name="portLineEdit"/>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <!-- Botones para navegar entre pantallas -->
+   <item>
+    <layout class="QHBoxLayout" name="buttonLayout">
+     <item>
+      <spacer name="horizontalSpacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeType">
+        <enum>QSizePolicy::Expanding</enum>
+       </property>
+      </spacer>
+     </item>
+     <!-- Botón Back -->
+     <item>
+      <widget class="QPushButton" name="backButton">
+       <property name="text">
+        <string>Back</string>
+       </property>
+      </widget>
+     </item>
+     <!-- Botón Next -->
+     <item>
+      <widget class="QPushButton" name="nextButton">
+       <property name="text">
+        <string>Next</string>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">background-color: #0F66DE; color: #ffffff; padding: 8px 16px; border-radius: 5px;</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

@@ -16,7 +16,6 @@ DatabaseAssistant::~DatabaseAssistant()
 {
     delete ui;
     delete frontendAssistant;  // Eliminar la pantalla de frontend cuando se destruya DatabaseAssistant
-
 }
 
 void DatabaseAssistant::on_nextButton_clicked()

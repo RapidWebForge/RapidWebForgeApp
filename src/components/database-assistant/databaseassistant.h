@@ -4,7 +4,6 @@
 #include <QDialog>
 #include "../frontend-assistant/frontendassistant.h"  // Incluir la clase de la tercera pantalla
 
-
 namespace Ui {
 class DatabaseAssistant;
 }
@@ -23,7 +22,6 @@ private slots:
 private:
     Ui::DatabaseAssistant *ui;
     FrontendAssistant *frontendAssistant;  // Puntero a la tercera pantalla
-
 };
 
 #endif // DATABASEASSISTANT_H

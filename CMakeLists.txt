@@ -26,6 +26,9 @@ set(PROJECT_SOURCES
         src/components/frontend-assistant/frontendassistant.h
         src/components/frontend-assistant/frontendassistant.cpp
         src/components/frontend-assistant/frontendassistant.ui
+        src/components/backend-assistant/backendassistant.h
+        src/components/backend-assistant/backendassistant.cpp
+        src/components/backend-assistant/backendassistant.ui
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)

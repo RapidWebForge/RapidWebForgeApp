@@ -7,7 +7,7 @@
 				{
 					"build" : ".",
 					"hasInstallRule" : true,
-					"jsonFile" : "directory-.-Debug-a87563e6983b3ad8e608.json",
+					"jsonFile" : "directory-.-Debug-015ba78879fa8dfe5b04.json",
 					"minimumCMakeVersion" : 
 					{
 						"string" : "3.16"
@@ -44,7 +44,7 @@
 				{
 					"directoryIndex" : 0,
 					"id" : "RapidWebForgeApp::@6890427a1f51a3e7e1df",
-					"jsonFile" : "target-RapidWebForgeApp-Debug-bed0e32ad385da03d8cf.json",
+					"jsonFile" : "target-RapidWebForgeApp-Debug-228d5d1eb5f056befc42.json",
 					"name" : "RapidWebForgeApp",
 					"projectIndex" : 0
 				},

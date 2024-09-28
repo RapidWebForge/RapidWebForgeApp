@@ -324,6 +324,12 @@
 			null
 		],
 		[
+			"C:/Users/rodri/OneDrive/Documentos/Projects/RapidWebForgeApp/src/components/backend-assistant/backendassistant.h",
+			"MU",
+			"YVZXK4HHFB/moc_backendassistant.cpp",
+			null
+		],
+		[
 			"C:/Users/rodri/OneDrive/Documentos/Projects/RapidWebForgeApp/src/components/creation-assistant/creationassistant.h",
 			"MU",
 			"BHBOJELOVC/moc_creationassistant.cpp",
@@ -404,6 +410,11 @@
 		],
 		[
 			"C:/Users/rodri/OneDrive/Documentos/Projects/RapidWebForgeApp/rapidwebforge.cpp",
+			"MU",
+			null
+		],
+		[
+			"C:/Users/rodri/OneDrive/Documentos/Projects/RapidWebForgeApp/src/components/backend-assistant/backendassistant.cpp",
 			"MU",
 			null
 		],

@@ -103,6 +103,15 @@ build CMakeFiles\RapidWebForgeApp.dir\src\components\frontend-assistant\frontend
   TARGET_COMPILE_PDB = CMakeFiles\RapidWebForgeApp.dir\
   TARGET_PDB = RapidWebForgeApp.pdb
 
+build CMakeFiles\RapidWebForgeApp.dir\src\components\backend-assistant\backendassistant.cpp.obj: CXX_COMPILER__RapidWebForgeApp_unscanned_Debug C$:\Users\rodri\OneDrive\Documentos\Projects\RapidWebForgeApp\src\components\backend-assistant\backendassistant.cpp || cmake_object_order_depends_target_RapidWebForgeApp
+  DEFINES = -DQT_CORE_LIB -DQT_GUI_LIB -DQT_WIDGETS_LIB -DUNICODE -DWIN32 -DWIN64 -D_ENABLE_EXTENDED_ALIGNED_STORAGE -D_UNICODE -D_WIN64
+  FLAGS = -DQT_QML_DEBUG /DWIN32 /D_WINDOWS /GR /EHsc /Zi /Ob0 /Od /RTC1 -std:c++17 -MDd
+  INCLUDES = -IC:\Users\rodri\OneDrive\Documentos\Projects\RapidWebForgeApp\build\Desktop_x86_windows_msvc2022_pe_32bit-Debug\RapidWebForgeApp_autogen\include -imsvcC:\Qt\6.8.0\msvc2022_64\include\QtCore -imsvcC:\Qt\6.8.0\msvc2022_64\include -imsvcC:\Qt\6.8.0\msvc2022_64\mkspecs\win32-msvc -imsvcC:\Qt\6.8.0\msvc2022_64\include\QtWidgets -imsvcC:\Qt\6.8.0\msvc2022_64\include\QtGui
+  OBJECT_DIR = CMakeFiles\RapidWebForgeApp.dir
+  OBJECT_FILE_DIR = CMakeFiles\RapidWebForgeApp.dir\src\components\backend-assistant
+  TARGET_COMPILE_PDB = CMakeFiles\RapidWebForgeApp.dir\
+  TARGET_PDB = RapidWebForgeApp.pdb
+
 
 # =============================================================================
 # Link build statements for EXECUTABLE target RapidWebForgeApp
@@ -111,7 +120,7 @@ build CMakeFiles\RapidWebForgeApp.dir\src\components\frontend-assistant\frontend
 #############################################
 # Link the executable RapidWebForgeApp.exe
 
-build RapidWebForgeApp.exe: CXX_EXECUTABLE_LINKER__RapidWebForgeApp_Debug CMakeFiles\RapidWebForgeApp.dir\RapidWebForgeApp_autogen\mocs_compilation.cpp.obj CMakeFiles\RapidWebForgeApp.dir\main.cpp.obj CMakeFiles\RapidWebForgeApp.dir\rapidwebforge.cpp.obj CMakeFiles\RapidWebForgeApp.dir\src\components\creation-assistant\creationassistant.cpp.obj CMakeFiles\RapidWebForgeApp.dir\src\components\database-assistant\databaseassistant.cpp.obj CMakeFiles\RapidWebForgeApp.dir\src\components\frontend-assistant\frontendassistant.cpp.obj | C$:\Qt\6.8.0\msvc2022_64\lib\Qt6Widgetsd.lib C$:\Qt\6.8.0\msvc2022_64\lib\Qt6Guid.lib C$:\Qt\6.8.0\msvc2022_64\lib\Qt6Cored.lib C$:\Qt\6.8.0\msvc2022_64\lib\Qt6EntryPointd.lib || RapidWebForgeApp_autogen RapidWebForgeApp_autogen_timestamp_deps
+build RapidWebForgeApp.exe: CXX_EXECUTABLE_LINKER__RapidWebForgeApp_Debug CMakeFiles\RapidWebForgeApp.dir\RapidWebForgeApp_autogen\mocs_compilation.cpp.obj CMakeFiles\RapidWebForgeApp.dir\main.cpp.obj CMakeFiles\RapidWebForgeApp.dir\rapidwebforge.cpp.obj CMakeFiles\RapidWebForgeApp.dir\src\components\creation-assistant\creationassistant.cpp.obj CMakeFiles\RapidWebForgeApp.dir\src\components\database-assistant\databaseassistant.cpp.obj CMakeFiles\RapidWebForgeApp.dir\src\components\frontend-assistant\frontendassistant.cpp.obj CMakeFiles\RapidWebForgeApp.dir\src\components\backend-assistant\backendassistant.cpp.obj | C$:\Qt\6.8.0\msvc2022_64\lib\Qt6Widgetsd.lib C$:\Qt\6.8.0\msvc2022_64\lib\Qt6Guid.lib C$:\Qt\6.8.0\msvc2022_64\lib\Qt6Cored.lib C$:\Qt\6.8.0\msvc2022_64\lib\Qt6EntryPointd.lib || RapidWebForgeApp_autogen RapidWebForgeApp_autogen_timestamp_deps
   FLAGS = -DQT_QML_DEBUG /DWIN32 /D_WINDOWS /GR /EHsc /Zi /Ob0 /Od /RTC1 -MDd
   LINK_FLAGS = /machine:x64 /debug /INCREMENTAL /subsystem:windows
   LINK_LIBRARIES = C:\Qt\6.8.0\msvc2022_64\lib\Qt6Widgetsd.lib  C:\Qt\6.8.0\msvc2022_64\lib\Qt6Guid.lib  C:\Qt\6.8.0\msvc2022_64\lib\Qt6Cored.lib  mpr.lib  userenv.lib  C:\Qt\6.8.0\msvc2022_64\lib\Qt6EntryPointd.lib  shell32.lib  d3d11.lib  dxgi.lib  dxguid.lib  d3d12.lib  kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib
@@ -187,7 +196,7 @@ build RapidWebForgeApp_autogen_timestamp_deps: phony
 #############################################
 # Utility command for RapidWebForgeApp_autogen
 
-build RapidWebForgeApp_autogen: phony CMakeFiles\RapidWebForgeApp_autogen RapidWebForgeApp_autogen\include\ui_rapidwebforge.h RapidWebForgeApp_autogen\include\src\components\creation-assistant\ui_creationassistant.h RapidWebForgeApp_autogen\include\src\components\database-assistant\ui_databaseassistant.h RapidWebForgeApp_autogen\include\src\components\frontend-assistant\ui_frontendassistant.h RapidWebForgeApp_autogen\timestamp RapidWebForgeApp_autogen\mocs_compilation.cpp RapidWebForgeApp_autogen_timestamp_deps
+build RapidWebForgeApp_autogen: phony CMakeFiles\RapidWebForgeApp_autogen RapidWebForgeApp_autogen\include\ui_rapidwebforge.h RapidWebForgeApp_autogen\include\src\components\creation-assistant\ui_creationassistant.h RapidWebForgeApp_autogen\include\src\components\database-assistant\ui_databaseassistant.h RapidWebForgeApp_autogen\include\src\components\frontend-assistant\ui_frontendassistant.h RapidWebForgeApp_autogen\include\src\components\backend-assistant\ui_backendassistant.h RapidWebForgeApp_autogen\timestamp RapidWebForgeApp_autogen\mocs_compilation.cpp RapidWebForgeApp_autogen_timestamp_deps
 
 
 #############################################
@@ -204,7 +213,7 @@ build RapidWebForgeApp_autogen\timestamp RapidWebForgeApp_autogen\mocs_compilati
 #############################################
 # Phony custom command for CMakeFiles\RapidWebForgeApp_autogen
 
-build CMakeFiles\RapidWebForgeApp_autogen RapidWebForgeApp_autogen\include\ui_rapidwebforge.h RapidWebForgeApp_autogen\include\src\components\creation-assistant\ui_creationassistant.h RapidWebForgeApp_autogen\include\src\components\database-assistant\ui_databaseassistant.h RapidWebForgeApp_autogen\include\src\components\frontend-assistant\ui_frontendassistant.h | ${cmake_ninja_workdir}CMakeFiles\RapidWebForgeApp_autogen ${cmake_ninja_workdir}RapidWebForgeApp_autogen\include\ui_rapidwebforge.h ${cmake_ninja_workdir}RapidWebForgeApp_autogen\include\src\components\creation-assistant\ui_creationassistant.h ${cmake_ninja_workdir}RapidWebForgeApp_autogen\include\src\components\database-assistant\ui_databaseassistant.h ${cmake_ninja_workdir}RapidWebForgeApp_autogen\include\src\components\frontend-assistant\ui_frontendassistant.h: phony RapidWebForgeApp_autogen\timestamp || RapidWebForgeApp_autogen_timestamp_deps
+build CMakeFiles\RapidWebForgeApp_autogen RapidWebForgeApp_autogen\include\ui_rapidwebforge.h RapidWebForgeApp_autogen\include\src\components\creation-assistant\ui_creationassistant.h RapidWebForgeApp_autogen\include\src\components\database-assistant\ui_databaseassistant.h RapidWebForgeApp_autogen\include\src\components\frontend-assistant\ui_frontendassistant.h RapidWebForgeApp_autogen\include\src\components\backend-assistant\ui_backendassistant.h | ${cmake_ninja_workdir}CMakeFiles\RapidWebForgeApp_autogen ${cmake_ninja_workdir}RapidWebForgeApp_autogen\include\ui_rapidwebforge.h ${cmake_ninja_workdir}RapidWebForgeApp_autogen\include\src\components\creation-assistant\ui_creationassistant.h ${cmake_ninja_workdir}RapidWebForgeApp_autogen\include\src\components\database-assistant\ui_databaseassistant.h ${cmake_ninja_workdir}RapidWebForgeApp_autogen\include\src\components\frontend-assistant\ui_frontendassistant.h ${cmake_ninja_workdir}RapidWebForgeApp_autogen\include\src\components\backend-assistant\ui_backendassistant.h: phony RapidWebForgeApp_autogen\timestamp || RapidWebForgeApp_autogen_timestamp_deps
 
 # =============================================================================
 # Target aliases.
