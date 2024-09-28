@@ -3,9 +3,12 @@
 #include <QFileDialog>
 #include <QMessageBox>
 
+#include "../database-assistant/databaseassistant.h"   // Incluir la clase DatabaseAssistant
+
 CreationAssistant::CreationAssistant(QWidget *parent) :
     QDialog(parent),
-    ui(new Ui::CreationAssistant)
+    ui(new Ui::CreationAssistant),
+    dbAssistant(new DatabaseAssistant(this))  // Inicializar la segunda pantalla
 {
     ui->setupUi(this);
     ui->projectInfoGroupBox->setStyleSheet("border: none;");
@@ -33,6 +36,8 @@ CreationAssistant::CreationAssistant(QWidget *parent) :
 CreationAssistant::~CreationAssistant()
 {
     delete ui;
+    delete dbAssistant;  // Eliminar la pantalla de base de datos cuando se destruya la principal
+
 }
 
 void CreationAssistant::handleNextButton()
@@ -48,6 +53,10 @@ void CreationAssistant::handleNextButton()
 
     QMessageBox::information(this, "Project Created", "Project created successfully!\nName: " + projectName +
                                                           "\nLocation: " + projectLocation + "\nLanguage: " + language);
+
+    // Ocultar la pantalla de creación y mostrar la pantalla de base de datos
+    this->hide();
+    dbAssistant->show();
 }
 
 void CreationAssistant::on_browseButton_clicked()

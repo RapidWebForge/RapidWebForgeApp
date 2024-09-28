@@ -328,6 +328,12 @@
 			"MU",
 			"BHBOJELOVC/moc_creationassistant.cpp",
 			null
+		],
+		[
+			"C:/Users/rodri/OneDrive/Documentos/Projects/RapidWebForgeApp/src/components/database-assistant/databaseassistant.h",
+			"MU",
+			"WAWMQ6B6SA/moc_databaseassistant.cpp",
+			null
 		]
 	],
 	"HEADER_EXTENSIONS" : [ "h", "hh", "h++", "hm", "hpp", "hxx", "in", "txx" ],
@@ -397,6 +403,11 @@
 		],
 		[
 			"C:/Users/rodri/OneDrive/Documentos/Projects/RapidWebForgeApp/src/components/creation-assistant/creationassistant.cpp",
+			"MU",
+			null
+		],
+		[
+			"C:/Users/rodri/OneDrive/Documentos/Projects/RapidWebForgeApp/src/components/database-assistant/databaseassistant.cpp",
 			"MU",
 			null
 		]

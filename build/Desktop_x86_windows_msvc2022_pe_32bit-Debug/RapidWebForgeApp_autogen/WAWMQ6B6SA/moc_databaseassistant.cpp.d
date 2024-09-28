@@ -1,4 +1,4 @@
-C:/Users/rodri/OneDrive/Documentos/Projects/RapidWebForgeApp/build/Desktop_x86_windows_msvc2022_pe_32bit-Debug/RapidWebForgeApp_autogen/BHBOJELOVC/moc_creationassistant.cpp: C:/Users/rodri/OneDrive/Documentos/Projects/RapidWebForgeApp/src/components/creation-assistant/creationassistant.h \
+C:/Users/rodri/OneDrive/Documentos/Projects/RapidWebForgeApp/build/Desktop_x86_windows_msvc2022_pe_32bit-Debug/RapidWebForgeApp_autogen/WAWMQ6B6SA/moc_databaseassistant.cpp: C:/Users/rodri/OneDrive/Documentos/Projects/RapidWebForgeApp/src/components/database-assistant/databaseassistant.h \
   C:/Qt/6.8.0/msvc2022_64/include/QtCore/q20functional.h \
   C:/Qt/6.8.0/msvc2022_64/include/QtCore/q20iterator.h \
   C:/Qt/6.8.0/msvc2022_64/include/QtCore/q20memory.h \
@@ -150,5 +150,4 @@ C:/Users/rodri/OneDrive/Documentos/Projects/RapidWebForgeApp/build/Desktop_x86_w
   C:/Qt/6.8.0/msvc2022_64/include/QtWidgets/qtwidgets-config.h \
   C:/Qt/6.8.0/msvc2022_64/include/QtWidgets/qtwidgetsexports.h \
   C:/Qt/6.8.0/msvc2022_64/include/QtWidgets/qtwidgetsglobal.h \
-  C:/Qt/6.8.0/msvc2022_64/include/QtWidgets/qwidget.h \
-  C:/Users/rodri/OneDrive/Documentos/Projects/RapidWebForgeApp/src/components/database-assistant/databaseassistant.h
+  C:/Qt/6.8.0/msvc2022_64/include/QtWidgets/qwidget.h

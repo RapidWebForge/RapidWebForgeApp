@@ -51,7 +51,7 @@
 			{
 				"command" : 3,
 				"file" : 1,
-				"line" : 23,
+				"line" : 29,
 				"parent" : 0
 			},
 			{
@@ -75,13 +75,13 @@
 			{
 				"command" : 4,
 				"file" : 1,
-				"line" : 62,
+				"line" : 69,
 				"parent" : 0
 			},
 			{
 				"command" : 5,
 				"file" : 1,
-				"line" : 45,
+				"line" : 52,
 				"parent" : 0
 			},
 			{
@@ -356,7 +356,9 @@
 			[
 				0,
 				1,
-				2
+				2,
+				6,
+				9
 			]
 		}
 	],
@@ -474,7 +476,9 @@
 			[
 				0,
 				1,
-				2
+				2,
+				6,
+				9
 			]
 		},
 		{
@@ -482,7 +486,11 @@
 			"sourceIndexes" : 
 			[
 				3,
-				5
+				5,
+				8,
+				11,
+				12,
+				13
 			]
 		},
 		{
@@ -490,14 +498,16 @@
 			"sourceIndexes" : 
 			[
 				4,
-				6
+				7,
+				10,
+				14
 			]
 		},
 		{
 			"name" : "CMake Rules",
 			"sourceIndexes" : 
 			[
-				7
+				15
 			]
 		}
 	],
@@ -533,9 +543,53 @@
 			"sourceGroupIndex" : 2
 		},
 		{
+			"backtrace" : 4,
+			"path" : "src/components/creation-assistant/creationassistant.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 4,
+			"compileGroupIndex" : 0,
+			"path" : "src/components/creation-assistant/creationassistant.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 4,
+			"path" : "src/components/creation-assistant/creationassistant.ui",
+			"sourceGroupIndex" : 2
+		},
+		{
+			"backtrace" : 4,
+			"path" : "src/components/database-assistant/databaseassistant.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 4,
+			"compileGroupIndex" : 0,
+			"path" : "src/components/database-assistant/databaseassistant.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 4,
+			"path" : "src/components/database-assistant/databaseassistant.ui",
+			"sourceGroupIndex" : 2
+		},
+		{
 			"backtrace" : 0,
 			"isGenerated" : true,
 			"path" : "build/Desktop_x86_windows_msvc2022_pe_32bit-Debug/RapidWebForgeApp_autogen/include/ui_rapidwebforge.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 0,
+			"isGenerated" : true,
+			"path" : "build/Desktop_x86_windows_msvc2022_pe_32bit-Debug/RapidWebForgeApp_autogen/include/src/components/creation-assistant/ui_creationassistant.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 0,
+			"isGenerated" : true,
+			"path" : "build/Desktop_x86_windows_msvc2022_pe_32bit-Debug/RapidWebForgeApp_autogen/include/src/components/database-assistant/ui_databaseassistant.h",
 			"sourceGroupIndex" : 1
 		},
 		{

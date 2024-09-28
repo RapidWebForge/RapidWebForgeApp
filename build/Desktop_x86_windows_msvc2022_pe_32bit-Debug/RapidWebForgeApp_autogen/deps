@@ -380,6 +380,9 @@ RapidWebForgeApp_autogen/timestamp: \
 	C:/Users/rodri/OneDrive/Documentos/Projects/RapidWebForgeApp/rapidwebforge.h \
 	C:/Users/rodri/OneDrive/Documentos/Projects/RapidWebForgeApp/src/components/creation-assistant/creationassistant.cpp \
 	C:/Users/rodri/OneDrive/Documentos/Projects/RapidWebForgeApp/src/components/creation-assistant/creationassistant.h \
+	C:/Users/rodri/OneDrive/Documentos/Projects/RapidWebForgeApp/src/components/database-assistant/databaseassistant.cpp \
+	C:/Users/rodri/OneDrive/Documentos/Projects/RapidWebForgeApp/src/components/database-assistant/databaseassistant.h \
 	C:/Users/rodri/OneDrive/Documentos/Projects/RapidWebForgeApp/rapidwebforge.ui \
 	C:/Users/rodri/OneDrive/Documentos/Projects/RapidWebForgeApp/src/components/creation-assistant/creationassistant.ui \
+	C:/Users/rodri/OneDrive/Documentos/Projects/RapidWebForgeApp/src/components/database-assistant/databaseassistant.ui \
 	C:/Qt/Tools/CMake_64/bin/cmake.exe
