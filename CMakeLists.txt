@@ -23,12 +23,16 @@ set(PROJECT_SOURCES
         src/components/database-assistant/databaseassistant.h
         src/components/database-assistant/databaseassistant.cpp
         src/components/database-assistant/databaseassistant.ui
+        src/components/frontend-assistant/frontendassistant.h
+        src/components/frontend-assistant/frontendassistant.cpp
+        src/components/frontend-assistant/frontendassistant.ui
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(RapidWebForgeApp
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
+
 
     )
 # Define target properties for Android with Qt 6 as:

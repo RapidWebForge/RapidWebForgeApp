@@ -2,3 +2,4 @@
 #include "EWIEGA46WW/moc_rapidwebforge.cpp"
 #include "BHBOJELOVC/moc_creationassistant.cpp"
 #include "WAWMQ6B6SA/moc_databaseassistant.cpp"
+#include "NKN5MJY33G/moc_frontendassistant.cpp"
