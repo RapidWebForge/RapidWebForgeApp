@@ -29,13 +29,15 @@ set(PROJECT_SOURCES
         src/components/backend-assistant/backendassistant.h
         src/components/backend-assistant/backendassistant.cpp
         src/components/backend-assistant/backendassistant.ui
+        src/components/summary-assistant/summaryassistant.h
+        src/components/summary-assistant/summaryassistant.cpp
+        src/components/summary-assistant/summaryassistant.ui
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(RapidWebForgeApp
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
-
 
     )
 # Define target properties for Android with Qt 6 as:

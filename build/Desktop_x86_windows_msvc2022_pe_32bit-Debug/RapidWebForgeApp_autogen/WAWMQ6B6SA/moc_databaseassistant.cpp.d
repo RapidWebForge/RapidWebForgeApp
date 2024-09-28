@@ -152,4 +152,5 @@ C:/Users/rodri/OneDrive/Documentos/Projects/RapidWebForgeApp/build/Desktop_x86_w
   C:/Qt/6.8.0/msvc2022_64/include/QtWidgets/qtwidgetsglobal.h \
   C:/Qt/6.8.0/msvc2022_64/include/QtWidgets/qwidget.h \
   C:/Users/rodri/OneDrive/Documentos/Projects/RapidWebForgeApp/src/components/backend-assistant/backendassistant.h \
-  C:/Users/rodri/OneDrive/Documentos/Projects/RapidWebForgeApp/src/components/frontend-assistant/frontendassistant.h
+  C:/Users/rodri/OneDrive/Documentos/Projects/RapidWebForgeApp/src/components/frontend-assistant/frontendassistant.h \
+  C:/Users/rodri/OneDrive/Documentos/Projects/RapidWebForgeApp/src/components/summary-assistant/summaryassistant.h

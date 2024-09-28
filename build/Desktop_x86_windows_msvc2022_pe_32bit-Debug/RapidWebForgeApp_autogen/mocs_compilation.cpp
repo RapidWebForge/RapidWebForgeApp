@@ -4,3 +4,4 @@
 #include "BHBOJELOVC/moc_creationassistant.cpp"
 #include "WAWMQ6B6SA/moc_databaseassistant.cpp"
 #include "NKN5MJY33G/moc_frontendassistant.cpp"
+#include "ZUMS2YIDI3/moc_summaryassistant.cpp"

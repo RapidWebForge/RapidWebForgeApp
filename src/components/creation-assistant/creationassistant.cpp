@@ -9,6 +9,7 @@ CreationAssistant::CreationAssistant(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::CreationAssistant),
     dbAssistant(new DatabaseAssistant(this))  // Inicializar la segunda pantalla
+
 {
     ui->setupUi(this);
     ui->projectInfoGroupBox->setStyleSheet("border: none;");

@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>SummaryAssistant</class>
+ <widget class="QDialog" name="SummaryAssistant">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>800</width>
+    <height>600</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>RapidWebForge</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <!-- Título principal -->
+   <item>
+    <widget class="QLabel" name="titleLabel">
+     <property name="text">
+      <string>Creation Assistant</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>24</pointsize>
+       <weight>75</weight>
+       <bold>true</bold>
+      </font>
+     </property>
+    </widget>
+   </item>
+   <!-- Subtítulo -->
+   <item>
+    <widget class="QLabel" name="subTitleLabel">
+     <property name="text">
+      <string>Resumen</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>18</pointsize>
+      </font>
+     </property>
+    </widget>
+   </item>
+   <!-- Logos de frameworks -->
+   <item>
+    <layout class="QHBoxLayout" name="frameworkLogoLayout">
+     <item>
+      <widget class="QLabel" name="frontendLabel">
+       <property name="pixmap">
+        <pixmap resource="../../resources/react.png"/> <!-- Cambia la ruta a tu logo de React -->
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignCenter</set>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="backendLabel">
+       <property name="pixmap">
+        <pixmap resource="../../resources/express.png"/> <!-- Cambia la ruta a tu logo de Express -->
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignCenter</set>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="databaseLabel">
+       <property name="pixmap">
+        <pixmap resource="../../resources/mysql.png"/> <!-- Cambia la ruta a tu logo de MySQL -->
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignCenter</set>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <!-- Campo para el nombre del proyecto -->
+   <item>
+    <widget class="QGroupBox" name="projectNameGroupBox">
+     <property name="title">
+      <string>Project Name</string>
+     </property>
+     <layout class="QHBoxLayout" name="horizontalLayout">
+      <item>
+       <widget class="QLineEdit" name="projectNameLineEdit"/>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <!-- Botones para navegar entre pantallas -->
+   <item>
+    <layout class="QHBoxLayout" name="buttonLayout">
+     <item>
+      <spacer name="horizontalSpacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeType">
+        <enum>QSizePolicy::Expanding</enum>
+       </property>
+      </spacer>
+     </item>
+     <!-- Botón Back -->
+     <item>
+      <widget class="QPushButton" name="backButton">
+       <property name="text">
+        <string>Back</string>
+       </property>
+      </widget>
+     </item>
+     <!-- Botón Create -->
+     <item>
+      <widget class="QPushButton" name="createButton">
+       <property name="text">
+        <string>Create</string>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">background-color: #0F66DE; color: #ffffff; padding: 8px 16px; border-radius: 5px;</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

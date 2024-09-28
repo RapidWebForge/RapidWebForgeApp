@@ -346,6 +346,12 @@
 			"MU",
 			"NKN5MJY33G/moc_frontendassistant.cpp",
 			null
+		],
+		[
+			"C:/Users/rodri/OneDrive/Documentos/Projects/RapidWebForgeApp/src/components/summary-assistant/summaryassistant.h",
+			"MU",
+			"ZUMS2YIDI3/moc_summaryassistant.cpp",
+			null
 		]
 	],
 	"HEADER_EXTENSIONS" : [ "h", "hh", "h++", "hm", "hpp", "hxx", "in", "txx" ],
@@ -430,6 +436,11 @@
 		],
 		[
 			"C:/Users/rodri/OneDrive/Documentos/Projects/RapidWebForgeApp/src/components/frontend-assistant/frontendassistant.cpp",
+			"MU",
+			null
+		],
+		[
+			"C:/Users/rodri/OneDrive/Documentos/Projects/RapidWebForgeApp/src/components/summary-assistant/summaryassistant.cpp",
 			"MU",
 			null
 		]
