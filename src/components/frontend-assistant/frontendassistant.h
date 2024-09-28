@@ -2,7 +2,6 @@
 #define FRONTENDASSISTANT_H
 
 #include <QDialog>
-#include "../backend-assistant/backendassistant.h"  // Incluir la clase de la cuarta pantalla
 
 namespace Ui {
 class FrontendAssistant;
@@ -21,7 +20,6 @@ private slots:
 
 private:
     Ui::FrontendAssistant *ui;
-    BackendAssistant *backendAssistant;  // Puntero a la cuarta pantalla
 };
 
 #endif // FRONTENDASSISTANT_H

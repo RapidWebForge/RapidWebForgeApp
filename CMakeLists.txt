@@ -32,6 +32,9 @@ set(PROJECT_SOURCES
         src/components/summary-assistant/summaryassistant.h
         src/components/summary-assistant/summaryassistant.cpp
         src/components/summary-assistant/summaryassistant.ui
+        src/components/stepper/stepper.h
+        src/components/stepper/stepper.cpp
+        src/components/stepper/stepper.ui
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)

@@ -2,7 +2,6 @@
 #define CREATIONASSISTANT_H
 
 #include <QDialog>
-#include "../database-assistant/databaseassistant.h"  // Incluir la clase de la segunda pantalla
 
 namespace Ui {
 class CreationAssistant;
@@ -22,7 +21,6 @@ private slots:
 
 private:
     Ui::CreationAssistant *ui;
-    DatabaseAssistant *dbAssistant;  // Puntero a la segunda pantalla
 };
 
 #endif // CREATIONASSISTANT_H

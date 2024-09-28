@@ -3,13 +3,9 @@
 #include <QFileDialog>
 #include <QMessageBox>
 
-#include "../database-assistant/databaseassistant.h"   // Incluir la clase DatabaseAssistant
-
 CreationAssistant::CreationAssistant(QWidget *parent) :
     QDialog(parent),
-    ui(new Ui::CreationAssistant),
-    dbAssistant(new DatabaseAssistant(this))  // Inicializar la segunda pantalla
-
+    ui(new Ui::CreationAssistant)
 {
     ui->setupUi(this);
     ui->projectInfoGroupBox->setStyleSheet("border: none;");
@@ -26,18 +22,17 @@ CreationAssistant::CreationAssistant(QWidget *parent) :
     ui->defaultLanguageComboBox->setStyleSheet("border: 1px solid #cccccc; font-size: 14; border-radius: 5px; font-weight: normal; background-color: #ffffff; padding: 2px;");
 
 
-    ui->nextButton->setStyleSheet("border: 1px solid #cccccc; border-radius: 5px; padding: 3px 16px; background-color: #0F66DE; color: #ffffff; font-size: 14px; margin-inline:20px;");
-    ui->cancelButton->setStyleSheet("border: 1px solid #cccccc; border-radius: 5px; padding: 3px 16px; background-color: #f5f5f5; color: #333333; font-size: 14px;");
+    // ui->nextButton->setStyleSheet("border: 1px solid #cccccc; border-radius: 5px; padding: 3px 16px; background-color: #0F66DE; color: #ffffff; font-size: 14px; margin-inline:20px;");
+    // ui->cancelButton->setStyleSheet("border: 1px solid #cccccc; border-radius: 5px; padding: 3px 16px; background-color: #f5f5f5; color: #333333; font-size: 14px;");
 
     // Connect buttons to their respective slots
-    connect(ui->nextButton, &QPushButton::clicked, this, &CreationAssistant::handleNextButton);
-    connect(ui->browseButton, &QPushButton::clicked, this, &CreationAssistant::on_browseButton_clicked);
+    // connect(ui->nextButton, &QPushButton::clicked, this, &CreationAssistant::handleNextButton);
+    // connect(ui->browseButton, &QPushButton::clicked, this, &CreationAssistant::on_browseButton_clicked);
 }
 
 CreationAssistant::~CreationAssistant()
 {
     delete ui;
-    delete dbAssistant;  // Eliminar la pantalla de base de datos cuando se destruya la principal
 
 }
 
@@ -54,10 +49,6 @@ void CreationAssistant::handleNextButton()
 
     QMessageBox::information(this, "Project Created", "Project created successfully!\nName: " + projectName +
                                                           "\nLocation: " + projectLocation + "\nLanguage: " + language);
-
-    // Ocultar la pantalla de creación y mostrar la pantalla de base de datos
-    this->hide();
-    dbAssistant->show();
 }
 
 void CreationAssistant::on_browseButton_clicked()
