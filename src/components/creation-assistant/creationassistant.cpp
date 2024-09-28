@@ -8,6 +8,22 @@ CreationAssistant::CreationAssistant(QWidget *parent) :
     ui(new Ui::CreationAssistant)
 {
     ui->setupUi(this);
+    ui->projectInfoGroupBox->setStyleSheet("border: none;");
+
+    ui->projectNameLabel->setStyleSheet("color: #333333; font-size: 14px; font-weight: normal;");
+
+    ui->projectLocationLabel->setStyleSheet("color: #333333; font-size: 14px; font-weight: normal;");
+    ui->defaultLanguageLabel->setStyleSheet("color: #333333; font-size: 14px; font-weight: normal;");
+    ui->label->setStyleSheet("font-size: 14px; color: #333333;");
+    ui->projectInfoLabel->setStyleSheet("font-size: 18px; color: #555555; padding-bottom: 10px;");
+    ui->projectNameLineEdit->setStyleSheet("border: 1px solid #cccccc; font-size: 14; border-radius: 5px; font-weight: normal; background-color: #ffffff; padding: 2px;");
+
+    ui->browseButton->setStyleSheet(" border: 1px solid #cccccc; font-size: 14; border-radius: 5px; font-weight: normal;background-color: #ffffff; padding: 2px;");
+    ui->defaultLanguageComboBox->setStyleSheet("border: 1px solid #cccccc; font-size: 14; border-radius: 5px; font-weight: normal; background-color: #ffffff; padding: 2px;");
+
+
+    ui->nextButton->setStyleSheet("border: 1px solid #cccccc; border-radius: 5px; padding: 3px 16px; background-color: #0F66DE; color: #ffffff; font-size: 14px; margin-inline:20px;");
+    ui->cancelButton->setStyleSheet("border: 1px solid #cccccc; border-radius: 5px; padding: 3px 16px; background-color: #f5f5f5; color: #333333; font-size: 14px;");
 
     // Connect buttons to their respective slots
     connect(ui->nextButton, &QPushButton::clicked, this, &CreationAssistant::handleNextButton);
@@ -22,7 +38,7 @@ CreationAssistant::~CreationAssistant()
 void CreationAssistant::handleNextButton()
 {
     QString projectName = ui->projectNameLineEdit->text();
-    QString projectLocation = ui->projectLocationLineEdit->text();
+    QString projectLocation = ui->browseButton->text();
     QString language = ui->defaultLanguageComboBox->currentText();
 
     if (projectName.isEmpty() || projectLocation.isEmpty()) {
@@ -40,6 +56,6 @@ void CreationAssistant::on_browseButton_clicked()
                                                     QDir::homePath(),
                                                     QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
     if (!dir.isEmpty()) {
-        ui->projectLocationLineEdit->setText(dir);
+        ui->browseButton->setText(dir);
     }
 }
