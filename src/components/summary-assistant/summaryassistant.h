@@ -16,8 +16,6 @@ public:
     explicit SummaryAssistant(QWidget *parent = nullptr);
     ~SummaryAssistant();
 
-    //void setProjectSummary(const QString &name, const QString &frontend, const QString &backend, const QString &database);
-
 private:
     Ui::SummaryAssistant *ui;
 };

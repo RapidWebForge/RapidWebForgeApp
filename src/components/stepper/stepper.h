@@ -2,6 +2,7 @@
 #define STEPPER_H
 
 #include <QWidget>
+#include "../backend-assistant/backendassistant.h"
 #include "../creation-assistant/creationassistant.h"
 #include "../database-assistant/databaseassistant.h"
 #include "../frontend-assistant/frontendassistant.h"
@@ -20,16 +21,17 @@ public:
     ~Stepper();
 
 private slots:
-    void on_nextButton_clicked();
-
     void on_backButton_clicked();
+
+    void on_nextButton_clicked();
 
 private:
     Ui::Stepper *ui;
-    CreationAssistant * creationAssistant;
-    DatabaseAssistant * databaseAssistant;
-    FrontendAssistant * frontendAssistant;
-    SummaryAssistant * summaryAssistant;
+    CreationAssistant *creationAssistant;
+    DatabaseAssistant *databaseAssistant;
+    FrontendAssistant *frontendAssistant;
+    BackendAssistant *backendAssistant;
+    SummaryAssistant *summaryAssistant;
 };
 
 #endif // STEPPER_H

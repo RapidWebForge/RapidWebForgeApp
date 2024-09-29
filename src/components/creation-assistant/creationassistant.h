@@ -13,10 +13,10 @@ class CreationAssistant : public QDialog
 
 public:
     explicit CreationAssistant(QWidget *parent = nullptr);
+    std::string isValid();
     ~CreationAssistant();
 
 private slots:
-    void handleNextButton();
     void on_browseButton_clicked();
 
 private:

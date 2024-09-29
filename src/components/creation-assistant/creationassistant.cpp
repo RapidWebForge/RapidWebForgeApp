@@ -3,11 +3,13 @@
 #include <QFileDialog>
 #include <QMessageBox>
 
-CreationAssistant::CreationAssistant(QWidget *parent) :
-    QDialog(parent),
-    ui(new Ui::CreationAssistant)
+CreationAssistant::CreationAssistant(QWidget *parent)
+    : QDialog(parent)
+    , ui(new Ui::CreationAssistant)
 {
     ui->setupUi(this);
+
+    // TODO: Pass to a function
     ui->projectInfoGroupBox->setStyleSheet("border: none;");
 
     ui->projectNameLabel->setStyleSheet("color: #333333; font-size: 14px; font-weight: normal;");
@@ -21,41 +23,37 @@ CreationAssistant::CreationAssistant(QWidget *parent) :
     ui->browseButton->setStyleSheet(" border: 1px solid #cccccc; font-size: 14; border-radius: 5px; font-weight: normal;background-color: #ffffff; padding: 2px;");
     ui->defaultLanguageComboBox->setStyleSheet("border: 1px solid #cccccc; font-size: 14; border-radius: 5px; font-weight: normal; background-color: #ffffff; padding: 2px;");
 
-
     // ui->nextButton->setStyleSheet("border: 1px solid #cccccc; border-radius: 5px; padding: 3px 16px; background-color: #0F66DE; color: #ffffff; font-size: 14px; margin-inline:20px;");
     // ui->cancelButton->setStyleSheet("border: 1px solid #cccccc; border-radius: 5px; padding: 3px 16px; background-color: #f5f5f5; color: #333333; font-size: 14px;");
-
-    // Connect buttons to their respective slots
-    // connect(ui->nextButton, &QPushButton::clicked, this, &CreationAssistant::handleNextButton);
-    // connect(ui->browseButton, &QPushButton::clicked, this, &CreationAssistant::on_browseButton_clicked);
 }
 
 CreationAssistant::~CreationAssistant()
 {
     delete ui;
-
 }
 
-void CreationAssistant::handleNextButton()
+std::string CreationAssistant::isValid()
 {
     QString projectName = ui->projectNameLineEdit->text();
     QString projectLocation = ui->browseButton->text();
-    QString language = ui->defaultLanguageComboBox->currentText();
+    // QString language = ui->defaultLanguageComboBox->currentText();
 
-    if (projectName.isEmpty() || projectLocation.isEmpty()) {
-        QMessageBox::warning(this, "Input Error", "Please fill in all the fields.");
-        return;
+    if (projectName.isEmpty()) {
+        return "Give a name for the project";
+    } else if (projectLocation == "Select path") {
+        return "Select a path for your project";
     }
 
-    QMessageBox::information(this, "Project Created", "Project created successfully!\nName: " + projectName +
-                                                          "\nLocation: " + projectLocation + "\nLanguage: " + language);
+    return "";
 }
 
 void CreationAssistant::on_browseButton_clicked()
 {
-    QString dir = QFileDialog::getExistingDirectory(this, tr("Select Project Location"),
+    QString dir = QFileDialog::getExistingDirectory(this,
+                                                    tr("Select Project Location"),
                                                     QDir::homePath(),
-                                                    QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
+                                                    QFileDialog::ShowDirsOnly
+                                                        | QFileDialog::DontResolveSymlinks);
     if (!dir.isEmpty()) {
         ui->browseButton->setText(dir);
     }

@@ -143,7 +143,7 @@
          <bool>false</bool>
         </property>
         <property name="text">
-         <string>Select direction</string>
+         <string>Select path</string>
         </property>
        </widget>
       </item>

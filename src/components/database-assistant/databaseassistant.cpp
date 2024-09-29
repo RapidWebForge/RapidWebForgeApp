@@ -1,24 +1,19 @@
 #include "databaseassistant.h"
 #include "ui_databaseassistant.h"
-#include <QMessageBox>
 
-DatabaseAssistant::DatabaseAssistant(QWidget *parent) :
-    QDialog(parent),
-    ui(new Ui::DatabaseAssistant),
-    frontendAssistant(new FrontendAssistant(this))  // Inicializa la tercera pantalla
+DatabaseAssistant::DatabaseAssistant(QWidget *parent)
+    : QDialog(parent)
+    , ui(new Ui::DatabaseAssistant)
 {
     ui->setupUi(this);
-    // Conectar el botón Next al slot correspondiente
-    connect(ui->nextButton, &QPushButton::clicked, this, &DatabaseAssistant::on_nextButton_clicked);
 }
 
 DatabaseAssistant::~DatabaseAssistant()
 {
     delete ui;
-    delete frontendAssistant;  // Eliminar la pantalla de frontend cuando se destruya DatabaseAssistant
 }
 
-void DatabaseAssistant::on_nextButton_clicked()
+std::string DatabaseAssistant::isValid()
 {
     QString server = ui->serverLineEdit->text();
     QString port = ui->portLineEdit->text();
@@ -26,13 +21,17 @@ void DatabaseAssistant::on_nextButton_clicked()
     QString password = ui->passwordLineEdit->text();
     QString database = ui->databaseComboBox->currentText();
 
-    // Verificar que los campos no estén vacíos antes de continuar
-    if (server.isEmpty() || port.isEmpty() || user.isEmpty() || database.isEmpty()) {
-        QMessageBox::warning(this, "Input Error", "Please fill in all the required fields.");
-        return;
+    if (server.isEmpty()) {
+        return "Choose a server";
+    } else if (port.isEmpty()) {
+        return "Choose a port";
+    } else if (user.isEmpty()) {
+        return "Enter your user";
+    } else if (password.isEmpty()) {
+        return "Enter your password";
+    } else if (database.isEmpty()) {
+        return "Enter your database";
     }
 
-    // Ocultar la pantalla actual y mostrar la pantalla de Frontend
-    this->hide();
-    frontendAssistant->show();
+    return "";
 }

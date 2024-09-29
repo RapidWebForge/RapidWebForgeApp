@@ -99,7 +99,6 @@
   /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/stdio.h \
   /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/syslimits.h \
   /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/wait.h \
-  /Users/lecav/Programs/Tesis/RapidWebForgeApp/src/components/frontend-assistant/frontendassistant.h \
   /Users/lecav/Qt/6.7.2/macos/lib/QtCore.framework/Versions/A/Headers/q20functional.h \
   /Users/lecav/Qt/6.7.2/macos/lib/QtCore.framework/Versions/A/Headers/q20memory.h \
   /Users/lecav/Qt/6.7.2/macos/lib/QtCore.framework/Versions/A/Headers/q20type_traits.h \

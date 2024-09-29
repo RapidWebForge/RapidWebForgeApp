@@ -13,18 +13,11 @@ class BackendAssistant : public QDialog
 
 public:
     explicit BackendAssistant(QWidget *parent = nullptr);
+    std::string isValid();
     ~BackendAssistant();
-
-
-private slots:
-    void on_nextButton_clicked();   // Slot para el botón Next
-
 
 private:
     Ui::BackendAssistant *ui;
-
-    //QString projectName;           // Almacenar el nombre del proyecto
-    //QString frontendFramework;     // Almacenar el framework frontend
 };
 
 #endif // BACKENDASSISTANT_H

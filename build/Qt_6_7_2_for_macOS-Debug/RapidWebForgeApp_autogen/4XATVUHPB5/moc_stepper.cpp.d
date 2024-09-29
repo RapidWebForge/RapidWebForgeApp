@@ -99,6 +99,7 @@
   /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/stdio.h \
   /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/syslimits.h \
   /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/wait.h \
+  /Users/lecav/Programs/Tesis/RapidWebForgeApp/src/components/backend-assistant/backendassistant.h \
   /Users/lecav/Programs/Tesis/RapidWebForgeApp/src/components/creation-assistant/creationassistant.h \
   /Users/lecav/Programs/Tesis/RapidWebForgeApp/src/components/database-assistant/databaseassistant.h \
   /Users/lecav/Programs/Tesis/RapidWebForgeApp/src/components/frontend-assistant/frontendassistant.h \

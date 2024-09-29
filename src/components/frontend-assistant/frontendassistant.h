@@ -13,10 +13,8 @@ class FrontendAssistant : public QDialog
 
 public:
     explicit FrontendAssistant(QWidget *parent = nullptr);
+    std::string isValid();
     ~FrontendAssistant();
-
-private slots:
-    void on_nextButton_clicked();   // Slot para el botón Next
 
 private:
     Ui::FrontendAssistant *ui;
