@@ -9,8 +9,31 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
+if(APPLE)
+    message(STATUS "Configuring for macOS")
+    set(VCPKG_INSTALLED_DIR ${CMAKE_SOURCE_DIR}/vcpkg_installed/arm64-osx)
+    set(BUNDLE_ID_OPTION MACOSX_BUNDLE_GUI_IDENTIFIER com.example.RapidWebForgeApp)
+    set(MACOS_SPECIFIC_LIBS "-framework CoreFoundation" resolv)
+elseif(WIN32)
+    message(STATUS "Configuring for Windows")
+    set(VCPKG_INSTALLED_DIR ${CMAKE_SOURCE_DIR}/vcpkg_installed/x64-windows)
+    set(WIN32_EXECUTABLE TRUE)
+endif()
+
+list(APPEND CMAKE_PREFIX_PATH "${VCPKG_INSTALLED_DIR}/share" "${VCPKG_INSTALLED_DIR}")
+
+# Packages
+# QtCreator
+find_package(Qt6 COMPONENTS Widgets CONFIG QUIET)
+if(NOT TARGET Qt6::Widgets)
+    find_package(Qt5 REQUIRED COMPONENTS Widgets CONFIG)
+endif()
+
+# Vcpkg
+find_package(boost_algorithm CONFIG REQUIRED)
+find_package(fmt CONFIG REQUIRED)
+find_package(inja CONFIG REQUIRED)
+find_package(unofficial-mysql-connector-cpp CONFIG REQUIRED)
 
 set(PROJECT_SOURCES
         main.cpp
@@ -37,38 +60,29 @@ set(PROJECT_SOURCES
         src/components/stepper/stepper.ui
 )
 
-if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
+# Define the executable based on Qt version
+if(QT_VERSION_MAJOR GREATER_EQUAL 6)
     qt_add_executable(RapidWebForgeApp
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
-
     )
-# Define target properties for Android with Qt 6 as:
-#    set_property(TARGET RapidWebForgeApp APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR
-#                 ${CMAKE_CURRENT_SOURCE_DIR}/android)
-# For more information, see https://doc.qt.io/qt-6/qt-add-executable.html#target-creation
 else()
-    if(ANDROID)
-        add_library(RapidWebForgeApp SHARED
-            ${PROJECT_SOURCES}
-        )
-# Define properties for Android with Qt 5 after find_package() calls as:
-#    set(ANDROID_PACKAGE_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/android")
-    else()
-        add_executable(RapidWebForgeApp
-            ${PROJECT_SOURCES}
-        )
-    endif()
+    add_executable(RapidWebForgeApp ${PROJECT_SOURCES})
 endif()
 
-target_link_libraries(RapidWebForgeApp PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
+target_include_directories(RapidWebForgeApp PRIVATE ${VCPKG_INSTALLED_DIR}/include)
 
-# Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
-# If you are developing for iOS or macOS you should consider setting an
-# explicit, fixed bundle identifier manually though.
-if(${QT_VERSION} VERSION_LESS 6.1.0)
-  set(BUNDLE_ID_OPTION MACOSX_BUNDLE_GUI_IDENTIFIER com.example.RapidWebForgeApp)
-endif()
+target_link_directories(RapidWebForgeApp PRIVATE ${VCPKG_INSTALLED_DIR}/lib)
+
+target_link_libraries(RapidWebForgeApp PRIVATE
+    Qt${QT_VERSION_MAJOR}::Widgets
+    Boost::algorithm
+    fmt::fmt
+    pantor::inja
+    unofficial::mysql-connector-cpp::connector
+    ${MACOS_SPECIFIC_LIBS}
+)
+
 set_target_properties(RapidWebForgeApp PROPERTIES
     ${BUNDLE_ID_OPTION}
     MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}

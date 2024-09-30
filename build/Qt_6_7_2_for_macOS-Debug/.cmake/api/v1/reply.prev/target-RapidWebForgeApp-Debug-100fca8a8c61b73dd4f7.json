@@ -15,13 +15,15 @@
 			"qt6_add_executable",
 			"qt_add_executable",
 			"install",
+			"target_link_directories",
 			"target_link_libraries",
 			"set_target_properties",
 			"include",
 			"find_package",
 			"find_dependency",
 			"_qt_internal_find_qt_dependencies",
-			"_qt_internal_find_third_party_dependencies"
+			"_qt_internal_find_third_party_dependencies",
+			"target_include_directories"
 		],
 		"files" : 
 		[
@@ -38,7 +40,9 @@
 			"/Users/lecav/Qt/6.7.2/macos/lib/cmake/Qt6/FindWrapOpenGL.cmake",
 			"/Users/lecav/Qt/6.7.2/macos/lib/cmake/Qt6Gui/Qt6GuiDependencies.cmake",
 			"/Users/lecav/Qt/6.7.2/macos/lib/cmake/Qt6Gui/Qt6GuiConfig.cmake",
-			"/Users/lecav/Qt/6.7.2/macos/lib/cmake/Qt6Gui/Qt6GuiTargets.cmake"
+			"/Users/lecav/Qt/6.7.2/macos/lib/cmake/Qt6Gui/Qt6GuiTargets.cmake",
+			"vcpkg_installed/arm64-osx/share/boost_algorithm/boost_algorithm-targets.cmake",
+			"vcpkg_installed/arm64-osx/share/boost_algorithm/boost_algorithm-config.cmake"
 		],
 		"nodes" : 
 		[
@@ -48,7 +52,7 @@
 			{
 				"command" : 3,
 				"file" : 1,
-				"line" : 41,
+				"line" : 61,
 				"parent" : 0
 			},
 			{
@@ -72,174 +76,212 @@
 			{
 				"command" : 4,
 				"file" : 1,
-				"line" : 81,
+				"line" : 104,
 				"parent" : 0
 			},
 			{
 				"command" : 5,
 				"file" : 1,
-				"line" : 64,
+				"line" : 85,
 				"parent" : 0
-			},
-			{
-				"command" : 8,
-				"file" : 1,
-				"line" : 13,
-				"parent" : 0
-			},
-			{
-				"file" : 4,
-				"parent" : 7
-			},
-			{
-				"command" : 8,
-				"file" : 4,
-				"line" : 169,
-				"parent" : 8
-			},
-			{
-				"file" : 3,
-				"parent" : 9
-			},
-			{
-				"command" : 7,
-				"file" : 3,
-				"line" : 55,
-				"parent" : 10
-			},
-			{
-				"file" : 2,
-				"parent" : 11
 			},
 			{
 				"command" : 6,
+				"file" : 1,
+				"line" : 86,
+				"parent" : 0
+			},
+			{
+				"command" : 9,
+				"file" : 1,
+				"line" : 28,
+				"parent" : 0
+			},
+			{
+				"file" : 4,
+				"parent" : 8
+			},
+			{
+				"command" : 9,
+				"file" : 4,
+				"line" : 169,
+				"parent" : 9
+			},
+			{
+				"file" : 3,
+				"parent" : 10
+			},
+			{
+				"command" : 8,
+				"file" : 3,
+				"line" : 55,
+				"parent" : 11
+			},
+			{
 				"file" : 2,
-				"line" : 62,
 				"parent" : 12
 			},
 			{
-				"command" : 5,
+				"command" : 7,
+				"file" : 2,
+				"line" : 62,
+				"parent" : 13
+			},
+			{
+				"command" : 6,
 				"file" : 0,
 				"line" : 576,
 				"parent" : 2
 			},
 			{
-				"command" : 7,
+				"command" : 8,
 				"file" : 3,
 				"line" : 43,
-				"parent" : 10
+				"parent" : 11
 			},
 			{
 				"file" : 9,
-				"parent" : 15
-			},
-			{
-				"command" : 10,
-				"file" : 9,
-				"line" : 42,
 				"parent" : 16
 			},
 			{
-				"command" : 9,
-				"file" : 8,
-				"line" : 111,
+				"command" : 11,
+				"file" : 9,
+				"line" : 42,
 				"parent" : 17
 			},
 			{
-				"command" : 8,
-				"file" : 7,
-				"line" : 76,
+				"command" : 10,
+				"file" : 8,
+				"line" : 111,
 				"parent" : 18
 			},
 			{
-				"file" : 6,
+				"command" : 9,
+				"file" : 7,
+				"line" : 76,
 				"parent" : 19
 			},
 			{
-				"command" : 7,
 				"file" : 6,
-				"line" : 57,
 				"parent" : 20
 			},
 			{
-				"file" : 5,
+				"command" : 8,
+				"file" : 6,
+				"line" : 57,
 				"parent" : 21
 			},
 			{
-				"command" : 6,
 				"file" : 5,
-				"line" : 62,
 				"parent" : 22
 			},
 			{
-				"command" : 9,
+				"command" : 7,
+				"file" : 5,
+				"line" : 62,
+				"parent" : 23
+			},
+			{
+				"command" : 10,
 				"file" : 8,
 				"line" : 111,
-				"parent" : 17
+				"parent" : 18
 			},
 			{
-				"command" : 8,
+				"command" : 9,
 				"file" : 7,
 				"line" : 76,
-				"parent" : 24
-			},
-			{
-				"file" : 12,
 				"parent" : 25
 			},
 			{
-				"command" : 7,
 				"file" : 12,
-				"line" : 43,
 				"parent" : 26
-			},
-			{
-				"file" : 11,
-				"parent" : 27
-			},
-			{
-				"command" : 11,
-				"file" : 11,
-				"line" : 33,
-				"parent" : 28
-			},
-			{
-				"command" : 9,
-				"file" : 8,
-				"line" : 36,
-				"parent" : 29
 			},
 			{
 				"command" : 8,
-				"file" : 7,
-				"line" : 76,
+				"file" : 12,
+				"line" : 43,
+				"parent" : 27
+			},
+			{
+				"file" : 11,
+				"parent" : 28
+			},
+			{
+				"command" : 12,
+				"file" : 11,
+				"line" : 33,
+				"parent" : 29
+			},
+			{
+				"command" : 10,
+				"file" : 8,
+				"line" : 36,
 				"parent" : 30
 			},
 			{
-				"file" : 10,
+				"command" : 9,
+				"file" : 7,
+				"line" : 76,
 				"parent" : 31
 			},
 			{
-				"command" : 5,
 				"file" : 10,
-				"line" : 48,
 				"parent" : 32
 			},
 			{
-				"command" : 7,
+				"command" : 6,
+				"file" : 10,
+				"line" : 48,
+				"parent" : 33
+			},
+			{
+				"command" : 8,
 				"file" : 12,
 				"line" : 55,
-				"parent" : 26
+				"parent" : 27
 			},
 			{
 				"file" : 13,
-				"parent" : 34
+				"parent" : 35
 			},
 			{
-				"command" : 6,
+				"command" : 7,
 				"file" : 13,
 				"line" : 62,
-				"parent" : 35
+				"parent" : 36
+			},
+			{
+				"command" : 9,
+				"file" : 1,
+				"line" : 30,
+				"parent" : 0
+			},
+			{
+				"file" : 15,
+				"parent" : 38
+			},
+			{
+				"command" : 8,
+				"file" : 15,
+				"line" : 57,
+				"parent" : 39
+			},
+			{
+				"file" : 14,
+				"parent" : 40
+			},
+			{
+				"command" : 7,
+				"file" : 14,
+				"line" : 60,
+				"parent" : 41
+			},
+			{
+				"command" : 13,
+				"file" : 1,
+				"line" : 84,
+				"parent" : 0
 			}
 		]
 	},
@@ -255,32 +297,32 @@
 			"defines" : 
 			[
 				{
-					"backtrace" : 14,
+					"backtrace" : 15,
 					"define" : "QT_CORE_LIB"
 				},
 				{
-					"backtrace" : 6,
+					"backtrace" : 7,
 					"define" : "QT_GUI_LIB"
 				},
 				{
-					"backtrace" : 6,
+					"backtrace" : 7,
 					"define" : "QT_WIDGETS_LIB"
 				}
 			],
 			"frameworks" : 
 			[
 				{
-					"backtrace" : 14,
+					"backtrace" : 15,
 					"isSystem" : true,
 					"path" : "/Users/lecav/Qt/6.7.2/macos/lib/QtCore.framework"
 				},
 				{
-					"backtrace" : 6,
+					"backtrace" : 7,
 					"isSystem" : true,
 					"path" : "/Users/lecav/Qt/6.7.2/macos/lib/QtWidgets.framework"
 				},
 				{
-					"backtrace" : 6,
+					"backtrace" : 7,
 					"isSystem" : true,
 					"path" : "/Users/lecav/Qt/6.7.2/macos/lib/QtGui.framework"
 				}
@@ -292,27 +334,32 @@
 					"path" : "/Users/lecav/Programs/Tesis/RapidWebForgeApp/build/Qt_6_7_2_for_macOS-Debug/RapidWebForgeApp_autogen/include"
 				},
 				{
-					"backtrace" : 14,
+					"backtrace" : 43,
+					"isSystem" : true,
+					"path" : "/Users/lecav/Programs/Tesis/RapidWebForgeApp/vcpkg_installed/arm64-osx/include"
+				},
+				{
+					"backtrace" : 15,
 					"isSystem" : true,
 					"path" : "/Users/lecav/Qt/6.7.2/macos/lib/QtCore.framework/Headers"
 				},
 				{
-					"backtrace" : 14,
+					"backtrace" : 15,
 					"isSystem" : true,
 					"path" : "/Users/lecav/Qt/6.7.2/macos/mkspecs/macx-clang"
 				},
 				{
-					"backtrace" : 14,
+					"backtrace" : 15,
 					"isSystem" : true,
 					"path" : "/Users/lecav/Qt/6.7.2/macos/include"
 				},
 				{
-					"backtrace" : 6,
+					"backtrace" : 7,
 					"isSystem" : true,
 					"path" : "/Users/lecav/Qt/6.7.2/macos/lib/QtWidgets.framework/Headers"
 				},
 				{
-					"backtrace" : 6,
+					"backtrace" : 7,
 					"isSystem" : true,
 					"path" : "/Users/lecav/Qt/6.7.2/macos/lib/QtGui.framework/Headers"
 				}
@@ -322,8 +369,11 @@
 			{
 				"backtraces" : 
 				[
-					14,
-					14
+					15,
+					15,
+					7,
+					7,
+					7
 				],
 				"standard" : "17"
 			},
@@ -344,11 +394,11 @@
 	"dependencies" : 
 	[
 		{
-			"id" : "RapidWebForgeApp_autogen_timestamp_deps::@6890427a1f51a3e7e1df"
-		},
-		{
 			"backtrace" : 0,
 			"id" : "RapidWebForgeApp_autogen::@6890427a1f51a3e7e1df"
+		},
+		{
+			"id" : "RapidWebForgeApp_autogen_timestamp_deps::@6890427a1f51a3e7e1df"
 		}
 	],
 	"id" : "RapidWebForgeApp::@6890427a1f51a3e7e1df",
@@ -383,36 +433,61 @@
 				"role" : "frameworkPath"
 			},
 			{
-				"fragment" : "-Wl,-rpath,/Users/lecav/Qt/6.7.2/macos/lib",
+				"backtrace" : 6,
+				"fragment" : "-L/Users/lecav/Programs/Tesis/RapidWebForgeApp/vcpkg_installed/arm64-osx/lib",
+				"role" : "libraryPath"
+			},
+			{
+				"fragment" : "-Wl,-rpath,/Users/lecav/Programs/Tesis/RapidWebForgeApp/vcpkg_installed/arm64-osx/lib -Wl,-rpath,/Users/lecav/Qt/6.7.2/macos/lib",
 				"role" : "libraries"
 			},
 			{
-				"backtrace" : 6,
+				"backtrace" : 7,
 				"fragment" : "/Users/lecav/Qt/6.7.2/macos/lib/QtWidgets.framework/Versions/A/QtWidgets",
 				"role" : "libraries"
 			},
 			{
-				"backtrace" : 13,
-				"fragment" : "/Users/lecav/Qt/6.7.2/macos/lib/QtGui.framework/Versions/A/QtGui",
+				"backtrace" : 7,
+				"fragment" : "/Users/lecav/Programs/Tesis/RapidWebForgeApp/vcpkg_installed/arm64-osx/debug/lib/libfmtd.a",
+				"role" : "libraries"
+			},
+			{
+				"backtrace" : 7,
+				"fragment" : "/Users/lecav/Programs/Tesis/RapidWebForgeApp/vcpkg_installed/arm64-osx/debug/lib/libmysqlcppconn8-static.a",
+				"role" : "libraries"
+			},
+			{
+				"backtrace" : 7,
+				"fragment" : "-framework CoreFoundation",
+				"role" : "libraries"
+			},
+			{
+				"backtrace" : 7,
+				"fragment" : "-lresolv",
 				"role" : "libraries"
 			},
 			{
 				"backtrace" : 14,
+				"fragment" : "/Users/lecav/Qt/6.7.2/macos/lib/QtGui.framework/Versions/A/QtGui",
+				"role" : "libraries"
+			},
+			{
+				"backtrace" : 15,
 				"fragment" : "/Users/lecav/Qt/6.7.2/macos/lib/QtCore.framework/Versions/A/QtCore",
 				"role" : "libraries"
 			},
 			{
-				"backtrace" : 23,
+				"backtrace" : 24,
 				"fragment" : "-framework IOKit",
 				"role" : "libraries"
 			},
 			{
-				"backtrace" : 23,
+				"backtrace" : 24,
 				"fragment" : "-framework DiskArbitration",
 				"role" : "libraries"
 			},
 			{
-				"backtrace" : 33,
+				"backtrace" : 34,
 				"fragment" : "-framework OpenGL",
 				"role" : "libraries"
 			},
@@ -421,18 +496,28 @@
 				"role" : "libraries"
 			},
 			{
-				"backtrace" : 36,
+				"backtrace" : 37,
 				"fragment" : "-framework AppKit",
 				"role" : "libraries"
 			},
 			{
-				"backtrace" : 36,
+				"backtrace" : 37,
 				"fragment" : "-framework ImageIO",
 				"role" : "libraries"
 			},
 			{
-				"backtrace" : 36,
+				"backtrace" : 37,
 				"fragment" : "-framework Metal",
+				"role" : "libraries"
+			},
+			{
+				"backtrace" : 42,
+				"fragment" : "/Users/lecav/Programs/Tesis/RapidWebForgeApp/vcpkg_installed/arm64-osx/debug/lib/libboost_exception.a",
+				"role" : "libraries"
+			},
+			{
+				"backtrace" : 42,
+				"fragment" : "/Users/lecav/Programs/Tesis/RapidWebForgeApp/vcpkg_installed/arm64-osx/debug/lib/libboost_regex.a",
 				"role" : "libraries"
 			}
 		],

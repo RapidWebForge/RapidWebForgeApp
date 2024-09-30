@@ -42,8 +42,8 @@ if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT
   if(EXISTS "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/./RapidWebForgeApp.app/Contents/MacOS/RapidWebForgeApp" AND
      NOT IS_SYMLINK "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/./RapidWebForgeApp.app/Contents/MacOS/RapidWebForgeApp")
     execute_process(COMMAND /usr/bin/install_name_tool
+      -delete_rpath "/Users/lecav/Programs/Tesis/RapidWebForgeApp/vcpkg_installed/arm64-osx/lib"
       -delete_rpath "/Users/lecav/Qt/6.7.2/macos/lib"
-      -add_rpath "@executable_path/../Frameworks"
       "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/./RapidWebForgeApp.app/Contents/MacOS/RapidWebForgeApp")
   endif()
 endif()

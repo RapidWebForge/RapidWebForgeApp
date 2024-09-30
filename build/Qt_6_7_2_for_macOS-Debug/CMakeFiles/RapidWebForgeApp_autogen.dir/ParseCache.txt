@@ -259,10 +259,10 @@
  uic:ui_backendassistant.h
 /Users/lecav/Programs/Tesis/RapidWebForgeApp/src/components/database-assistant/databaseassistant.cpp
  uic:ui_databaseassistant.h
-/Users/lecav/Programs/Tesis/RapidWebForgeApp/src/components/summary-assistant/summaryassistant.cpp
- uic:ui_summaryassistant.h
 /Users/lecav/Programs/Tesis/RapidWebForgeApp/rapidwebforge.cpp
  uic:./ui_rapidwebforge.h
+/Users/lecav/Programs/Tesis/RapidWebForgeApp/src/components/summary-assistant/summaryassistant.cpp
+ uic:ui_summaryassistant.h
 /Users/lecav/Programs/Tesis/RapidWebForgeApp/src/components/stepper/stepper.h
  mmc:Q_OBJECT
  mdp:/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/Availability.h
