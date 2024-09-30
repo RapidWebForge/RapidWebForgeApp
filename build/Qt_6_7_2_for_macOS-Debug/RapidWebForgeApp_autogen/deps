@@ -103,9 +103,6 @@ RapidWebForgeApp_autogen/timestamp: \
 	/Users/lecav/Programs/Tesis/RapidWebForgeApp/build/Qt_6_7_2_for_macOS-Debug/CMakeFiles/3.30.4/CMakeCXXCompiler.cmake \
 	/Users/lecav/Programs/Tesis/RapidWebForgeApp/build/Qt_6_7_2_for_macOS-Debug/CMakeFiles/3.30.4/CMakeSystem.cmake \
 	/Users/lecav/Programs/Tesis/RapidWebForgeApp/build/Qt_6_7_2_for_macOS-Debug/RapidWebForgeApp_autogen/moc_predefs.h \
-	/Users/lecav/Programs/Tesis/RapidWebForgeApp/main.cpp \
-	/Users/lecav/Programs/Tesis/RapidWebForgeApp/rapidwebforge.cpp \
-	/Users/lecav/Programs/Tesis/RapidWebForgeApp/rapidwebforge.h \
 	/Users/lecav/Programs/Tesis/RapidWebForgeApp/src/components/backend-assistant/backendassistant.cpp \
 	/Users/lecav/Programs/Tesis/RapidWebForgeApp/src/components/backend-assistant/backendassistant.h \
 	/Users/lecav/Programs/Tesis/RapidWebForgeApp/src/components/creation-assistant/creationassistant.cpp \
@@ -118,6 +115,11 @@ RapidWebForgeApp_autogen/timestamp: \
 	/Users/lecav/Programs/Tesis/RapidWebForgeApp/src/components/stepper/stepper.h \
 	/Users/lecav/Programs/Tesis/RapidWebForgeApp/src/components/summary-assistant/summaryassistant.cpp \
 	/Users/lecav/Programs/Tesis/RapidWebForgeApp/src/components/summary-assistant/summaryassistant.h \
+	/Users/lecav/Programs/Tesis/RapidWebForgeApp/src/core/project-manager/projectmanager.cpp \
+	/Users/lecav/Programs/Tesis/RapidWebForgeApp/src/core/project-manager/projectmanager.h \
+	/Users/lecav/Programs/Tesis/RapidWebForgeApp/src/main.cpp \
+	/Users/lecav/Programs/Tesis/RapidWebForgeApp/src/rapidwebforge.cpp \
+	/Users/lecav/Programs/Tesis/RapidWebForgeApp/src/rapidwebforge.h \
 	/Users/lecav/Programs/Tesis/RapidWebForgeApp/vcpkg_installed/arm64-osx/share/absl/abslConfig.cmake \
 	/Users/lecav/Programs/Tesis/RapidWebForgeApp/vcpkg_installed/arm64-osx/share/absl/abslConfigVersion.cmake \
 	/Users/lecav/Programs/Tesis/RapidWebForgeApp/vcpkg_installed/arm64-osx/share/absl/abslTargets-debug.cmake \
@@ -608,11 +610,11 @@ RapidWebForgeApp_autogen/timestamp: \
 	/opt/homebrew/Cellar/cmake/3.30.4/share/cmake/Modules/Platform/Darwin.cmake \
 	/opt/homebrew/Cellar/cmake/3.30.4/share/cmake/Modules/Platform/UnixPaths.cmake \
 	/opt/homebrew/Cellar/cmake/3.30.4/share/cmake/Modules/SelectLibraryConfigurations.cmake \
-	/Users/lecav/Programs/Tesis/RapidWebForgeApp/rapidwebforge.ui \
 	/Users/lecav/Programs/Tesis/RapidWebForgeApp/src/components/backend-assistant/backendassistant.ui \
 	/Users/lecav/Programs/Tesis/RapidWebForgeApp/src/components/creation-assistant/creationassistant.ui \
 	/Users/lecav/Programs/Tesis/RapidWebForgeApp/src/components/database-assistant/databaseassistant.ui \
 	/Users/lecav/Programs/Tesis/RapidWebForgeApp/src/components/frontend-assistant/frontendassistant.ui \
 	/Users/lecav/Programs/Tesis/RapidWebForgeApp/src/components/stepper/stepper.ui \
 	/Users/lecav/Programs/Tesis/RapidWebForgeApp/src/components/summary-assistant/summaryassistant.ui \
+	/Users/lecav/Programs/Tesis/RapidWebForgeApp/src/rapidwebforge.ui \
 	/opt/homebrew/Cellar/cmake/3.30.4/bin/cmake

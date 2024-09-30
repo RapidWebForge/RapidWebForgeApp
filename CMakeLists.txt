@@ -36,10 +36,10 @@ find_package(inja CONFIG REQUIRED)
 find_package(unofficial-mysql-connector-cpp CONFIG REQUIRED)
 
 set(PROJECT_SOURCES
-        main.cpp
-        rapidwebforge.cpp
-        rapidwebforge.h
-        rapidwebforge.ui
+        src/main.cpp
+        src/rapidwebforge.cpp
+        src/rapidwebforge.h
+        src/rapidwebforge.ui
         src/components/creation-assistant/creationassistant.h
         src/components/creation-assistant/creationassistant.cpp
         src/components/creation-assistant/creationassistant.ui
@@ -58,6 +58,8 @@ set(PROJECT_SOURCES
         src/components/stepper/stepper.h
         src/components/stepper/stepper.cpp
         src/components/stepper/stepper.ui
+        src/core/project-manager/projectmanager.h
+        src/core/project-manager/projectmanager.cpp
 )
 
 # Define the executable based on Qt version

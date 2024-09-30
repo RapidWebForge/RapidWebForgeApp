@@ -455,12 +455,6 @@
 	"HEADERS" : 
 	[
 		[
-			"/Users/lecav/Programs/Tesis/RapidWebForgeApp/rapidwebforge.h",
-			"MU",
-			"EWIEGA46WW/moc_rapidwebforge.cpp",
-			null
-		],
-		[
 			"/Users/lecav/Programs/Tesis/RapidWebForgeApp/src/components/backend-assistant/backendassistant.h",
 			"MU",
 			"YVZXK4HHFB/moc_backendassistant.cpp",
@@ -494,6 +488,18 @@
 			"/Users/lecav/Programs/Tesis/RapidWebForgeApp/src/components/summary-assistant/summaryassistant.h",
 			"MU",
 			"ZUMS2YIDI3/moc_summaryassistant.cpp",
+			null
+		],
+		[
+			"/Users/lecav/Programs/Tesis/RapidWebForgeApp/src/core/project-manager/projectmanager.h",
+			"MU",
+			"ZU5QNMWWRM/moc_projectmanager.cpp",
+			null
+		],
+		[
+			"/Users/lecav/Programs/Tesis/RapidWebForgeApp/src/rapidwebforge.h",
+			"MU",
+			"UVLADIE3JM/moc_rapidwebforge.cpp",
 			null
 		]
 	],
@@ -555,12 +561,6 @@
 	"SETTINGS_FILE" : "/Users/lecav/Programs/Tesis/RapidWebForgeApp/build/Qt_6_7_2_for_macOS-Debug/CMakeFiles/RapidWebForgeApp_autogen.dir/AutogenUsed.txt",
 	"SOURCES" : 
 	[
-		[ "/Users/lecav/Programs/Tesis/RapidWebForgeApp/main.cpp", "MU", null ],
-		[
-			"/Users/lecav/Programs/Tesis/RapidWebForgeApp/rapidwebforge.cpp",
-			"MU",
-			null
-		],
 		[
 			"/Users/lecav/Programs/Tesis/RapidWebForgeApp/src/components/backend-assistant/backendassistant.cpp",
 			"MU",
@@ -588,6 +588,21 @@
 		],
 		[
 			"/Users/lecav/Programs/Tesis/RapidWebForgeApp/src/components/summary-assistant/summaryassistant.cpp",
+			"MU",
+			null
+		],
+		[
+			"/Users/lecav/Programs/Tesis/RapidWebForgeApp/src/core/project-manager/projectmanager.cpp",
+			"MU",
+			null
+		],
+		[
+			"/Users/lecav/Programs/Tesis/RapidWebForgeApp/src/main.cpp",
+			"MU",
+			null
+		],
+		[
+			"/Users/lecav/Programs/Tesis/RapidWebForgeApp/src/rapidwebforge.cpp",
 			"MU",
 			null
 		]
