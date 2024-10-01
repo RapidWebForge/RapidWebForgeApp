@@ -56,11 +56,15 @@ CMAKE_CXX_FLAGS_RELEASE:STRING=-O3 -DNDEBUG
 //Flags used by the CXX compiler during RELWITHDEBINFO builds.
 CMAKE_CXX_FLAGS_RELWITHDEBINFO:STRING=-O2 -g -DNDEBUG
 
+CMAKE_CXX_OUTPUT_EXTENSION:STRING=.obj
+
 //Libraries linked by default with all C++ applications.
 CMAKE_CXX_STANDARD_LIBRARIES:STRING=-lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32
 
 //No help, variable specified on the command line.
 CMAKE_C_COMPILER:FILEPATH=C:/Qt/Tools/llvm-mingw1706_64/bin/clang.exe
+
+CMAKE_C_OUTPUT_EXTENSION:STRING=
 
 //Path to a program.
 CMAKE_DLLTOOL:FILEPATH=C:/Qt/Tools/llvm-mingw1706_64/bin/llvm-dlltool.exe
@@ -169,6 +173,8 @@ CMAKE_MODULE_LINKER_FLAGS_RELEASE:STRING=
 // RELWITHDEBINFO builds.
 CMAKE_MODULE_LINKER_FLAGS_RELWITHDEBINFO:STRING=
 
+CMAKE_MODULE_PATH:STRING=C:/Qt/6.8.0/llvm-mingw_64/lib/cmake/Qt6;C:/Qt/6.8.0/llvm-mingw_64/lib/cmake/Qt6/3rdparty/extra-cmake-modules/find-modules;C:/Qt/6.8.0/llvm-mingw_64/lib/cmake/Qt6/3rdparty/kwin
+
 //Path to a program.
 CMAKE_NM:FILEPATH=C:/Qt/Tools/llvm-mingw1706_64/bin/llvm-nm.exe
 
@@ -178,8 +184,7 @@ CMAKE_OBJCOPY:FILEPATH=C:/Qt/Tools/llvm-mingw1706_64/bin/llvm-objcopy.exe
 //Path to a program.
 CMAKE_OBJDUMP:FILEPATH=C:/Qt/Tools/llvm-mingw1706_64/bin/llvm-objdump.exe
 
-//No help, variable specified on the command line.
-CMAKE_PREFIX_PATH:PATH=C:/Qt/6.8.0/llvm-mingw_64
+CMAKE_PREFIX_PATH:STRING=C:/Qt/6.8.0/llvm-mingw_64;G:/programs/RapidWebForgeApp/vcpkg_installed/x64-windows/share;G:/programs/RapidWebForgeApp/vcpkg_installed/x64-windows
 
 //Value Computed by CMake
 CMAKE_PROJECT_DESCRIPTION:STATIC=
@@ -285,11 +290,22 @@ CMAKE_STRIP:FILEPATH=C:/Qt/Tools/llvm-mingw1706_64/bin/llvm-strip.exe
 //Path to a program.
 CMAKE_TAPI:FILEPATH=CMAKE_TAPI-NOTFOUND
 
+CMAKE_TOOLCHAIN_FILE:PATH=G:/programs/RapidWebForgeApp/build/Desktop_Qt_6_8_0_llvm_mingw_64_bit-Debug/vcpkg-dependencies/toolchain.cmake
+
 //If this value is on, makefiles will be generated without the
 // .SILENT directive, and all commands will be echoed to the console
 // during the make.  This is useful for debugging only. With Visual
 // Studio IDE projects all commands are done without /nologo.
 CMAKE_VERBOSE_MAKEFILE:BOOL=FALSE
+
+//Path to a library.
+LIB_EAY:FILEPATH=G:/programs/RapidWebForgeApp/vcpkg_installed/x64-windows/lib/libcrypto.lib
+
+//Path to a file.
+OPENSSL_INCLUDE_DIR:PATH=G:/programs/RapidWebForgeApp/vcpkg_installed/x64-windows/include
+
+//The directory containing a CMake configuration file for Protobuf.
+Protobuf_DIR:PATH=G:/programs/RapidWebForgeApp/vcpkg_installed/x64-windows/share/protobuf
 
 //Additional directories where find(Qt6 ...) host Qt components
 // are searched
@@ -343,6 +359,9 @@ RapidWebForgeApp_IS_TOP_LEVEL:STATIC=ON
 //Value Computed by CMake
 RapidWebForgeApp_SOURCE_DIR:STATIC=G:/programs/RapidWebForgeApp
 
+//Path to a library.
+SSL_EAY:FILEPATH=G:/programs/RapidWebForgeApp/vcpkg_installed/x64-windows/lib/libssl.lib
+
 //Path to a program.
 Vulkan_GLSLANG_VALIDATOR_EXECUTABLE:FILEPATH=Vulkan_GLSLANG_VALIDATOR_EXECUTABLE-NOTFOUND
 
@@ -358,11 +377,134 @@ Vulkan_LIBRARY:FILEPATH=Vulkan_LIBRARY-NOTFOUND
 //Path to a program.
 WINDEPLOYQT_EXECUTABLE:FILEPATH=C:/Qt/6.8.0/llvm-mingw_64/bin/windeployqt.exe
 
+//The directory containing a CMake configuration file for absl.
+absl_DIR:PATH=G:/programs/RapidWebForgeApp/vcpkg_installed/x64-windows/share/absl
+
 //The directory containing a CMake configuration file for boost_algorithm.
-boost_algorithm_DIR:PATH=boost_algorithm_DIR-NOTFOUND
+boost_algorithm_DIR:PATH=G:/programs/RapidWebForgeApp/vcpkg_installed/x64-windows/share/boost_algorithm
+
+//The directory containing a CMake configuration file for boost_array.
+boost_array_DIR:PATH=G:/programs/RapidWebForgeApp/vcpkg_installed/x64-windows/share/boost_array
+
+//The directory containing a CMake configuration file for boost_assert.
+boost_assert_DIR:PATH=G:/programs/RapidWebForgeApp/vcpkg_installed/x64-windows/share/boost_assert
+
+//The directory containing a CMake configuration file for boost_bind.
+boost_bind_DIR:PATH=G:/programs/RapidWebForgeApp/vcpkg_installed/x64-windows/share/boost_bind
+
+//The directory containing a CMake configuration file for boost_concept_check.
+boost_concept_check_DIR:PATH=G:/programs/RapidWebForgeApp/vcpkg_installed/x64-windows/share/boost_concept_check
+
+//The directory containing a CMake configuration file for boost_config.
+boost_config_DIR:PATH=G:/programs/RapidWebForgeApp/vcpkg_installed/x64-windows/share/boost_config
+
+//The directory containing a CMake configuration file for boost_container_hash.
+boost_container_hash_DIR:PATH=G:/programs/RapidWebForgeApp/vcpkg_installed/x64-windows/share/boost_container_hash
+
+//The directory containing a CMake configuration file for boost_conversion.
+boost_conversion_DIR:PATH=G:/programs/RapidWebForgeApp/vcpkg_installed/x64-windows/share/boost_conversion
+
+//The directory containing a CMake configuration file for boost_core.
+boost_core_DIR:PATH=G:/programs/RapidWebForgeApp/vcpkg_installed/x64-windows/share/boost_core
+
+//The directory containing a CMake configuration file for boost_describe.
+boost_describe_DIR:PATH=G:/programs/RapidWebForgeApp/vcpkg_installed/x64-windows/share/boost_describe
+
+//The directory containing a CMake configuration file for boost_detail.
+boost_detail_DIR:PATH=G:/programs/RapidWebForgeApp/vcpkg_installed/x64-windows/share/boost_detail
+
+//The directory containing a CMake configuration file for boost_exception.
+boost_exception_DIR:PATH=G:/programs/RapidWebForgeApp/vcpkg_installed/x64-windows/share/boost_exception
+
+//The directory containing a CMake configuration file for boost_function.
+boost_function_DIR:PATH=G:/programs/RapidWebForgeApp/vcpkg_installed/x64-windows/share/boost_function
+
+//The directory containing a CMake configuration file for boost_function_types.
+boost_function_types_DIR:PATH=G:/programs/RapidWebForgeApp/vcpkg_installed/x64-windows/share/boost_function_types
+
+//The directory containing a CMake configuration file for boost_functional.
+boost_functional_DIR:PATH=G:/programs/RapidWebForgeApp/vcpkg_installed/x64-windows/share/boost_functional
+
+//The directory containing a CMake configuration file for boost_fusion.
+boost_fusion_DIR:PATH=G:/programs/RapidWebForgeApp/vcpkg_installed/x64-windows/share/boost_fusion
+
+//The directory containing a CMake configuration file for boost_io.
+boost_io_DIR:PATH=G:/programs/RapidWebForgeApp/vcpkg_installed/x64-windows/share/boost_io
+
+//The directory containing a CMake configuration file for boost_iterator.
+boost_iterator_DIR:PATH=G:/programs/RapidWebForgeApp/vcpkg_installed/x64-windows/share/boost_iterator
+
+//The directory containing a CMake configuration file for boost_move.
+boost_move_DIR:PATH=G:/programs/RapidWebForgeApp/vcpkg_installed/x64-windows/share/boost_move
+
+//The directory containing a CMake configuration file for boost_mp11.
+boost_mp11_DIR:PATH=G:/programs/RapidWebForgeApp/vcpkg_installed/x64-windows/share/boost_mp11
+
+//The directory containing a CMake configuration file for boost_mpl.
+boost_mpl_DIR:PATH=G:/programs/RapidWebForgeApp/vcpkg_installed/x64-windows/share/boost_mpl
+
+//The directory containing a CMake configuration file for boost_optional.
+boost_optional_DIR:PATH=G:/programs/RapidWebForgeApp/vcpkg_installed/x64-windows/share/boost_optional
+
+//The directory containing a CMake configuration file for boost_predef.
+boost_predef_DIR:PATH=G:/programs/RapidWebForgeApp/vcpkg_installed/x64-windows/share/boost_predef
+
+//The directory containing a CMake configuration file for boost_preprocessor.
+boost_preprocessor_DIR:PATH=G:/programs/RapidWebForgeApp/vcpkg_installed/x64-windows/share/boost_preprocessor
+
+//The directory containing a CMake configuration file for boost_range.
+boost_range_DIR:PATH=G:/programs/RapidWebForgeApp/vcpkg_installed/x64-windows/share/boost_range
+
+//The directory containing a CMake configuration file for boost_regex.
+boost_regex_DIR:PATH=G:/programs/RapidWebForgeApp/vcpkg_installed/x64-windows/share/boost_regex
+
+//The directory containing a CMake configuration file for boost_smart_ptr.
+boost_smart_ptr_DIR:PATH=G:/programs/RapidWebForgeApp/vcpkg_installed/x64-windows/share/boost_smart_ptr
+
+//The directory containing a CMake configuration file for boost_static_assert.
+boost_static_assert_DIR:PATH=G:/programs/RapidWebForgeApp/vcpkg_installed/x64-windows/share/boost_static_assert
+
+//The directory containing a CMake configuration file for boost_throw_exception.
+boost_throw_exception_DIR:PATH=G:/programs/RapidWebForgeApp/vcpkg_installed/x64-windows/share/boost_throw_exception
+
+//The directory containing a CMake configuration file for boost_tuple.
+boost_tuple_DIR:PATH=G:/programs/RapidWebForgeApp/vcpkg_installed/x64-windows/share/boost_tuple
+
+//The directory containing a CMake configuration file for boost_type_traits.
+boost_type_traits_DIR:PATH=G:/programs/RapidWebForgeApp/vcpkg_installed/x64-windows/share/boost_type_traits
+
+//The directory containing a CMake configuration file for boost_typeof.
+boost_typeof_DIR:PATH=G:/programs/RapidWebForgeApp/vcpkg_installed/x64-windows/share/boost_typeof
+
+//The directory containing a CMake configuration file for boost_unordered.
+boost_unordered_DIR:PATH=G:/programs/RapidWebForgeApp/vcpkg_installed/x64-windows/share/boost_unordered
+
+//The directory containing a CMake configuration file for boost_utility.
+boost_utility_DIR:PATH=G:/programs/RapidWebForgeApp/vcpkg_installed/x64-windows/share/boost_utility
+
+//The directory containing a CMake configuration file for fmt.
+fmt_DIR:PATH=G:/programs/RapidWebForgeApp/vcpkg_installed/x64-windows/share/fmt
+
+//The directory containing a CMake configuration file for inja.
+inja_DIR:PATH=G:/programs/RapidWebForgeApp/vcpkg_installed/x64-windows/share/inja
+
+//The directory containing a CMake configuration file for nlohmann_json.
+nlohmann_json_DIR:PATH=G:/programs/RapidWebForgeApp/vcpkg_installed/x64-windows/share/nlohmann_json
+
+//CMake built-in FindProtobuf.cmake module compatible
+protobuf_MODULE_COMPATIBLE:BOOL=OFF
+
+//Enable for verbose output
+protobuf_VERBOSE:BOOL=OFF
+
+//The directory containing a CMake configuration file for unofficial-mysql-connector-cpp.
+unofficial-mysql-connector-cpp_DIR:PATH=G:/programs/RapidWebForgeApp/vcpkg_installed/x64-windows/share/unofficial-mysql-connector-cpp
+
+//The directory containing a CMake configuration file for utf8_range.
+utf8_range_DIR:PATH=G:/programs/RapidWebForgeApp/vcpkg_installed/x64-windows/share/utf8_range
 
 //Path to a program.
-vcpkg_program:FILEPATH=vcpkg_program-NOTFOUND
+vcpkg_program:FILEPATH=G:/programs/RapidWebForgeApp/vcpkg/vcpkg.exe
 
 
 ########################
@@ -541,8 +683,20 @@ CMAKE_STRIP-ADVANCED:INTERNAL=1
 CMAKE_TAPI-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_VERBOSE_MAKEFILE
 CMAKE_VERBOSE_MAKEFILE-ADVANCED:INTERNAL=1
+//Details about finding OpenSSL
+FIND_PACKAGE_MESSAGE_DETAILS_OpenSSL:INTERNAL=[G:/programs/RapidWebForgeApp/vcpkg_installed/x64-windows/lib/libcrypto.lib][G:/programs/RapidWebForgeApp/vcpkg_installed/x64-windows/include][c ][v3.3.2()]
+//Details about finding Protobuf
+FIND_PACKAGE_MESSAGE_DETAILS_Protobuf:INTERNAL=[G:/programs/RapidWebForgeApp/vcpkg_installed/x64-windows/tools/protobuf/protoc.exe][optimized;G:/programs/RapidWebForgeApp/vcpkg_installed/x64-windows/bin/libprotobuf.dll;debug;G:/programs/RapidWebForgeApp/vcpkg_installed/x64-windows/debug/bin/libprotobufd.dll][G:/programs/RapidWebForgeApp/vcpkg_installed/x64-windows/include][v25.1.0()]
+//Details about finding Threads
+FIND_PACKAGE_MESSAGE_DETAILS_Threads:INTERNAL=[TRUE][v()]
+//Details about finding nlohmann_json
+FIND_PACKAGE_MESSAGE_DETAILS_nlohmann_json:INTERNAL=[G:/programs/RapidWebForgeApp/vcpkg_installed/x64-windows/share/nlohmann_json/nlohmann_jsonConfig.cmake][v3.11.3()]
 //Test HAVE_STDATOMIC
 HAVE_STDATOMIC:INTERNAL=1
+//ADVANCED property for variable: LIB_EAY
+LIB_EAY-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: OPENSSL_INCLUDE_DIR
+OPENSSL_INCLUDE_DIR-ADVANCED:INTERNAL=1
 //Qt feature: abstractbutton (from target Qt6::Widgets)
 QT_FEATURE_abstractbutton:INTERNAL=ON
 //Qt feature: abstractslider (from target Qt6::Widgets)
@@ -1297,6 +1451,8 @@ QT_FEATURE_xmlstreamwriter:INTERNAL=ON
 QT_FEATURE_xrender:INTERNAL=OFF
 //Qt feature: zstd (from target Qt6::Core)
 QT_FEATURE_zstd:INTERNAL=OFF
+//ADVANCED property for variable: SSL_EAY
+SSL_EAY-ADVANCED:INTERNAL=1
 //Result of TRY_COMPILE
 THREADS_HAVE_PTHREAD_ARG:INTERNAL=TRUE
 //ADVANCED property for variable: Vulkan_GLSLANG_VALIDATOR_EXECUTABLE
@@ -1311,4 +1467,8 @@ Vulkan_LIBRARY-ADVANCED:INTERNAL=1
 _CMAKE_LINKER_PUSHPOP_STATE_SUPPORTED:INTERNAL=FALSE
 //CMAKE_INSTALL_PREFIX during last run
 _GNUInstallDirs_LAST_CMAKE_INSTALL_PREFIX:INTERNAL=C:/Program Files (x86)/RapidWebForgeApp
+//ADVANCED property for variable: protobuf_MODULE_COMPATIBLE
+protobuf_MODULE_COMPATIBLE-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: protobuf_VERBOSE
+protobuf_VERBOSE-ADVANCED:INTERNAL=1
 
