@@ -1,0 +1,3 @@
+set(__QT_DEPLOY_TARGET_RapidWebForgeApp_FILE G:/programs/RapidWebForgeApp/build/Desktop_Qt_6_8_0_llvm_mingw_64_bit-Debug/RapidWebForgeApp.exe)
+set(__QT_DEPLOY_TARGET_RapidWebForgeApp_TYPE EXECUTABLE)
+set(__QT_DEPLOY_TARGET_RapidWebForgeApp_RUNTIME_DLLS C:/Qt/6.8.0/llvm-mingw_64/bin/Qt6Widgets.dll;G:/programs/RapidWebForgeApp/vcpkg_installed/x64-windows/debug/bin/fmtd.dll;G:/programs/RapidWebForgeApp/vcpkg_installed/x64-windows/debug/bin/mysqlcppconn8-2-vs14.dll;C:/Qt/6.8.0/llvm-mingw_64/bin/Qt6Gui.dll;C:/Qt/6.8.0/llvm-mingw_64/bin/Qt6Core.dll;G:/programs/RapidWebForgeApp/vcpkg_installed/x64-windows/debug/bin/boost_regex-vc143-mt-gd-x64-1_85.dll)

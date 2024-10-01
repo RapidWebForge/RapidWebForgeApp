@@ -1,0 +1,22 @@
+# ninja log v6
+13	2745	7494534464261277	RapidWebForgeApp_autogen/timestamp	e3ed36cfdb09f7bb
+13	2745	7494534464261277	RapidWebForgeApp_autogen/mocs_compilation.cpp	e3ed36cfdb09f7bb
+13	2745	7494534464261277	G:/programs/RapidWebForgeApp/build/Desktop_Qt_6_8_0_llvm_mingw_64_bit-Debug/RapidWebForgeApp_autogen/timestamp	e3ed36cfdb09f7bb
+13	2745	7494534464261277	G:/programs/RapidWebForgeApp/build/Desktop_Qt_6_8_0_llvm_mingw_64_bit-Debug/RapidWebForgeApp_autogen/mocs_compilation.cpp	e3ed36cfdb09f7bb
+2790	2922	7494534465776114	CMakeFiles/RapidWebForgeApp.dir/src/core/project-manager/projectmanager.cpp.obj	a1f39496698571b1
+2756	5932	7494534465434600	CMakeFiles/RapidWebForgeApp.dir/src/main.cpp.obj	b6d77e369d849452
+2759	5961	7494534465471738	CMakeFiles/RapidWebForgeApp.dir/src/rapidwebforge.cpp.obj	b8edeeae5ad50c3e
+2752	6000	7494534465394576	CMakeFiles/RapidWebForgeApp.dir/RapidWebForgeApp_autogen/mocs_compilation.cpp.obj	b2ad84aca54a3757
+2785	6024	7494534465732234	CMakeFiles/RapidWebForgeApp.dir/src/components/stepper/stepper.cpp.obj	47ecf673e8684129
+2776	6113	7494534465631920	CMakeFiles/RapidWebForgeApp.dir/src/components/backend-assistant/backendassistant.cpp.obj	828d3373c6dc7108
+2780	6132	7494534465682244	CMakeFiles/RapidWebForgeApp.dir/src/components/summary-assistant/summaryassistant.cpp.obj	9f6ccc587aaf5d25
+2771	6133	7494534465591908	CMakeFiles/RapidWebForgeApp.dir/src/components/frontend-assistant/frontendassistant.cpp.obj	e233015d0e7a5ac4
+2767	6310	7494534465546780	CMakeFiles/RapidWebForgeApp.dir/src/components/database-assistant/databaseassistant.cpp.obj	fff12306529a7462
+2763	6531	7494534465501745	CMakeFiles/RapidWebForgeApp.dir/src/components/creation-assistant/creationassistant.cpp.obj	174a4f2459df98c3
+6531	6709	7494534503192870	RapidWebForgeApp.exe	aae6ce28a3cbd91d
+36	335	7494535239252271	RapidWebForgeApp_autogen/timestamp	e3ed36cfdb09f7bb
+36	335	7494535239252271	RapidWebForgeApp_autogen/mocs_compilation.cpp	e3ed36cfdb09f7bb
+36	335	7494535239252271	G:/programs/RapidWebForgeApp/build/Desktop_Qt_6_8_0_llvm_mingw_64_bit-Debug/RapidWebForgeApp_autogen/timestamp	e3ed36cfdb09f7bb
+36	335	7494535239252271	G:/programs/RapidWebForgeApp/build/Desktop_Qt_6_8_0_llvm_mingw_64_bit-Debug/RapidWebForgeApp_autogen/mocs_compilation.cpp	e3ed36cfdb09f7bb
+336	2296	7494535242267569	CMakeFiles/RapidWebForgeApp.dir/src/main.cpp.obj	b6d77e369d849452
+2296	2411	7494535261854768	RapidWebForgeApp.exe	aae6ce28a3cbd91d
