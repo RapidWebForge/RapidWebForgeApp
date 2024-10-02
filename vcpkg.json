@@ -3,6 +3,7 @@
     "boost-algorithm",
     "fmt",
     "inja",
-    "mysql-connector-cpp"
+    "mysql-connector-cpp",
+    "sqlite3"
   ]
 }

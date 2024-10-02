@@ -34,12 +34,14 @@ find_package(boost_algorithm CONFIG REQUIRED)
 find_package(fmt CONFIG REQUIRED)
 find_package(inja CONFIG REQUIRED)
 find_package(unofficial-mysql-connector-cpp CONFIG REQUIRED)
+find_package(unofficial-sqlite3 CONFIG REQUIRED)
 
 set(PROJECT_SOURCES
         src/main.cpp
         src/rapidwebforge.cpp
         src/rapidwebforge.h
         src/rapidwebforge.ui
+        # Components
         src/components/creation-assistant/creationassistant.h
         src/components/creation-assistant/creationassistant.cpp
         src/components/creation-assistant/creationassistant.ui
@@ -58,8 +60,15 @@ set(PROJECT_SOURCES
         src/components/stepper/stepper.h
         src/components/stepper/stepper.cpp
         src/components/stepper/stepper.ui
+        # Core
         src/core/project-manager/projectmanager.h
         src/core/project-manager/projectmanager.cpp
+        # Models
+        src/models/project/project.h
+        src/models/project/project.cpp
+        # Utils
+        src/utils/database/database.h
+        src/utils/database/database.cpp
 )
 
 # Define the executable based on Qt version
@@ -82,6 +91,7 @@ target_link_libraries(RapidWebForgeApp PRIVATE
     fmt::fmt
     pantor::inja
     unofficial::mysql-connector-cpp::connector
+    unofficial::sqlite3::sqlite3
     ${MACOS_SPECIFIC_LIBS}
 )
 
