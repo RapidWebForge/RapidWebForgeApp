@@ -12,7 +12,7 @@ public:
     sqlite3 *getConnection();
     ~Database();
 
-    // Prohibir copia y asignación
+    // Prohibit copying and assignment
     Database(const Database &) = delete;
     Database &operator=(const Database &) = delete;
 
