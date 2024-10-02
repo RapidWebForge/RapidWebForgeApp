@@ -1,5 +1,5 @@
 #include "rapidwebforge.h"
-#include "./ui_rapidwebforge.h"
+#include "src/ui_rapidwebforge.h"
 
 RapidWebForge::RapidWebForge(QWidget *parent)
     : QMainWindow(parent)
