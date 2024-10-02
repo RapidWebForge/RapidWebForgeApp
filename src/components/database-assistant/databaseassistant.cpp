@@ -1,5 +1,5 @@
 #include "databaseassistant.h"
-#include "ui_databaseassistant.h"
+#include "src/components/database-assistant/ui_databaseassistant.h"
 
 DatabaseAssistant::DatabaseAssistant(QWidget *parent)
     : QDialog(parent)

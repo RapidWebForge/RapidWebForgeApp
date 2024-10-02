@@ -1,5 +1,5 @@
 #include "frontendassistant.h"
-#include "ui_frontendassistant.h"
+#include "src/components/frontend-assistant/ui_frontendassistant.h"
 
 FrontendAssistant::FrontendAssistant(QWidget *parent)
     : QDialog(parent)

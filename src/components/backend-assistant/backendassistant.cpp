@@ -1,5 +1,5 @@
 #include "backendassistant.h"
-#include "ui_backendassistant.h"
+#include "src/components/backend-assistant/ui_backendassistant.h"
 
 BackendAssistant::BackendAssistant(QWidget *parent)
     : QDialog(parent)

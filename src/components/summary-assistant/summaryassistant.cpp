@@ -1,5 +1,5 @@
 #include "summaryassistant.h"
-#include "ui_summaryassistant.h"
+#include "src/components/summary-assistant/ui_summaryassistant.h"
 
 SummaryAssistant::SummaryAssistant(QWidget *parent)
     : QDialog(parent)
