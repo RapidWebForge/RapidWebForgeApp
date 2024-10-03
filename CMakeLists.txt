@@ -6,21 +6,18 @@ set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
+set(CMAKE_TOOLCHAIN_FILE "${CMAKE_SOURCE_DIR}/vcpkg/scripts/buildsystems/vcpkg.cmake" CACHE STRING "Vcpkg toolchain file")
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(VCPKG_MANIFEST_MODE ON)
 
 if(APPLE)
     message(STATUS "Configuring for macOS")
-    set(VCPKG_INSTALLED_DIR ${CMAKE_SOURCE_DIR}/vcpkg_installed/arm64-osx)
-    set(BUNDLE_ID_OPTION MACOSX_BUNDLE_GUI_IDENTIFIER com.example.RapidWebForgeApp)
     set(MACOS_SPECIFIC_LIBS "-framework CoreFoundation" resolv)
 elseif(WIN32)
     message(STATUS "Configuring for Windows")
-    set(VCPKG_INSTALLED_DIR ${CMAKE_SOURCE_DIR}/vcpkg_installed/x64-windows)
     set(WIN32_EXECUTABLE TRUE)
 endif()
-
-list(APPEND CMAKE_PREFIX_PATH "${VCPKG_INSTALLED_DIR}/share" "${VCPKG_INSTALLED_DIR}")
 
 # Packages
 # QtCreator
@@ -80,10 +77,6 @@ if(QT_VERSION_MAJOR GREATER_EQUAL 6)
 else()
     add_executable(RapidWebForgeApp ${PROJECT_SOURCES})
 endif()
-
-target_include_directories(RapidWebForgeApp PRIVATE ${VCPKG_INSTALLED_DIR}/include)
-
-target_link_directories(RapidWebForgeApp PRIVATE ${VCPKG_INSTALLED_DIR}/lib)
 
 target_link_libraries(RapidWebForgeApp PRIVATE
     Qt${QT_VERSION_MAJOR}::Widgets
