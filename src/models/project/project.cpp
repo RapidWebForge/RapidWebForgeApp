@@ -1,31 +1,43 @@
 #include "project.h"
 #include <iomanip>
-#include <iostream>
 #include <sstream>
 
-// Constructor con parámetros
-Project::Project(int id, const std::string &name, const std::string &description)
-    : id(id)
-    , name(name)
-    , description(description)
-    , createdAt(std::chrono::system_clock::now())
-    , updatedAt(std::chrono::system_clock::now())
-{
-    createdAt = std::chrono::system_clock::now();
-    updatedAt = createdAt;
-}
-
-// Constructor vacío
+// Empty constructor
 Project::Project()
     : id(0)
     , name("")
     , description("")
+    , path("")
+    , databaseData()
     , createdAt(std::chrono::system_clock::now())
-    , updatedAt(std::chrono::system_clock::now())
-{
-    createdAt = std::chrono::system_clock::now();
-    updatedAt = createdAt;
-}
+    , updatedAt(createdAt)
+{}
+
+// Constructor with parameters
+Project::Project(int id,
+                 const std::string &name,
+                 const std::string &description,
+                 const std::string &path,
+                 const DatabaseData &databaseData)
+    : id(id)
+    , name(name)
+    , description(description)
+    , path(path)
+    , databaseData(databaseData)
+    , createdAt(std::chrono::system_clock::now())
+    , updatedAt(createdAt)
+{}
+
+// Constructor with Project
+Project::Project(const Project &project)
+    : id(project.getId())
+    , name(project.getName())
+    , description(project.getDescription())
+    , path(project.getPath())
+    , databaseData(project.getDatabaseData())
+    , createdAt(project.getCreatedAtChrono())
+    , updatedAt(project.getUpdatedAtChrono())
+{}
 
 // Getters
 int Project::getId() const
@@ -43,21 +55,44 @@ std::string Project::getDescription() const
     return description;
 }
 
+std::string Project::getPath() const
+{
+    return path;
+}
+
+const DatabaseData &Project::getDatabaseData() const
+{
+    return databaseData;
+}
+
+std::string Project::timePointToString(const std::chrono::system_clock::time_point &tp) const
+{
+    std::time_t timeT = std::chrono::system_clock::to_time_t(tp);
+    std::stringstream ss;
+    ss << std::put_time(std::localtime(&timeT), "%Y-%m-%d %H:%M:%S");
+    return ss.str();
+}
+
 std::string Project::getCreatedAt() const
 {
-    std::time_t createdAtTimeT = std::chrono::system_clock::to_time_t(createdAt);
-    std::stringstream ss;
-    ss << std::put_time(std::localtime(&createdAtTimeT), "%Y-%m-%d %H:%M:%S");
-    return ss.str();
+    return timePointToString(createdAt);
+}
+
+std::chrono::system_clock::time_point Project::getCreatedAtChrono() const
+{
+    return createdAt;
 }
 
 std::string Project::getUpdatedAt() const
 {
-    std::time_t updatedAtTimeT = std::chrono::system_clock::to_time_t(updatedAt);
-    std::stringstream ss;
-    ss << std::put_time(std::localtime(&updatedAtTimeT), "%Y-%m-%d %H:%M:%S");
-    return ss.str();
+    return timePointToString(updatedAt);
 }
+
+std::chrono::system_clock::time_point Project::getUpdatedAtChrono() const
+{
+    return updatedAt;
+}
+
 // Setters
 void Project::setName(const std::string &newName)
 {

@@ -1,5 +1,5 @@
-#include "./components/stepper/stepper.h"
 #include <QApplication>
+#include "./components/stepper/stepper.h"
 
 int main(int argc, char *argv[])
 {

@@ -63,6 +63,8 @@ set(PROJECT_SOURCES
         # Models
         src/models/project/project.h
         src/models/project/project.cpp
+        src/models/database-data/databasedata.h
+        src/models/database-data/databasedata.cpp
         # Utils
         src/utils/database/database.h
         src/utils/database/database.cpp

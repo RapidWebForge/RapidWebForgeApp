@@ -10,6 +10,7 @@ Stepper::Stepper(QWidget *parent)
     , frontendAssistant(new FrontendAssistant())
     , backendAssistant(new BackendAssistant())
     , summaryAssistant(new SummaryAssistant())
+    , newProject()
 {
     ui->setupUi(this);
 
@@ -25,6 +26,7 @@ Stepper::Stepper(QWidget *parent)
 Stepper::~Stepper()
 {
     delete ui;
+    // delete newProject;
 }
 
 void Stepper::on_nextButton_clicked()

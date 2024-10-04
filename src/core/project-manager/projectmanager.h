@@ -15,7 +15,8 @@ public:
     ~ProjectManager() = default;
 
     void createProject(const Project &project);
-    std::optional<Project> getProjectById(int id);
+    std::optional<DatabaseData> getDatabaseById(int databaseId);
+    std::optional<Project> getProjectById(int projectId);
     std::vector<Project> getAllProjects();
     void updateProject(const Project &project);
     void deleteProjectById(int id);
