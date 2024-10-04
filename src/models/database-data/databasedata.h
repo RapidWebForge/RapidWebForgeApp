@@ -6,6 +6,7 @@
 class DatabaseData
 {
 private:
+    int id;
     std::string server;
     std::string port;
     std::string user;
@@ -15,13 +16,15 @@ private:
 public:
     DatabaseData();
     DatabaseData(const DatabaseData &databaseData);
-    DatabaseData(const std::string &server,
+    DatabaseData(int id,
+                 const std::string &server,
                  const std::string &port,
                  const std::string &user,
                  const std::string &password,
                  const std::string &databaseName);
 
     // Getters
+    int getId() const;
     std::string getServer() const;
     std::string getPort() const;
     std::string getUser() const;

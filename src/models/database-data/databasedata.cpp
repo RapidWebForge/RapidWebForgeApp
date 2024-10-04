@@ -2,7 +2,8 @@
 
 // Empty constructor
 DatabaseData::DatabaseData()
-    : server("")
+    : id(0)
+    , server("")
     , port("")
     , user("")
     , password("")
@@ -10,12 +11,14 @@ DatabaseData::DatabaseData()
 {}
 
 // Constructor with all parameters
-DatabaseData::DatabaseData(const std::string &server,
+DatabaseData::DatabaseData(int id,
+                           const std::string &server,
                            const std::string &port,
                            const std::string &user,
                            const std::string &password,
                            const std::string &databaseName)
-    : server(server)
+    : id(id)
+    , server(server)
     , port(port)
     , user(user)
     , password(password)
@@ -24,7 +27,8 @@ DatabaseData::DatabaseData(const std::string &server,
 
 // Constructor with DatabaseData
 DatabaseData::DatabaseData(const DatabaseData &databaseData)
-    : server(databaseData.getServer())
+    : id(databaseData.getId())
+    , server(databaseData.getServer())
     , port(databaseData.getPort())
     , user(databaseData.getUser())
     , password(databaseData.getPassword())
@@ -32,6 +36,11 @@ DatabaseData::DatabaseData(const DatabaseData &databaseData)
 {}
 
 // Getters
+int DatabaseData::getId() const
+{
+    return id;
+}
+
 std::string DatabaseData::getServer() const
 {
     return server;
