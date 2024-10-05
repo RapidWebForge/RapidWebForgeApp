@@ -65,6 +65,11 @@ const DatabaseData &Project::getDatabaseData() const
     return databaseData;
 }
 
+DatabaseData &Project::getDatabaseData()
+{
+    return databaseData;
+}
+
 std::string Project::timePointToString(const std::chrono::system_clock::time_point &tp) const
 {
     std::time_t timeT = std::chrono::system_clock::to_time_t(tp);
@@ -103,6 +108,12 @@ void Project::setName(const std::string &newName)
 void Project::setDescription(const std::string &newDescription)
 {
     description = newDescription;
+    setUpdatedAt();
+}
+
+void Project::setPath(const std::string &newPath)
+{
+    path = newPath;
     setUpdatedAt();
 }
 

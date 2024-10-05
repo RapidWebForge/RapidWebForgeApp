@@ -67,27 +67,27 @@ std::string DatabaseData::getDatabaseName() const
 }
 
 // Setters
-void DatabaseData::setServer(std::string server)
+void DatabaseData::setServer(const std::string &server)
 {
     this->server = server;
 }
 
-void DatabaseData::setPort(std::string port)
+void DatabaseData::setPort(const std::string &port)
 {
     this->port = port;
 }
 
-void DatabaseData::setUser(std::string user)
+void DatabaseData::setUser(const std::string &user)
 {
     this->user = user;
 }
 
-void DatabaseData::setPassword(std::string password)
+void DatabaseData::setPassword(const std::string &password)
 {
     this->password = password;
 }
 
-void DatabaseData::setDatabase(std::string databaseName)
+void DatabaseData::setDatabase(const std::string &databaseName)
 {
     this->databaseName = databaseName;
 }

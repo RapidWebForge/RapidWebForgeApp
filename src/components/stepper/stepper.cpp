@@ -11,6 +11,7 @@ Stepper::Stepper(QWidget *parent)
     , backendAssistant(new BackendAssistant())
     , summaryAssistant(new SummaryAssistant())
     , newProject()
+    , projectManager()
 {
     ui->setupUi(this);
 
@@ -26,7 +27,6 @@ Stepper::Stepper(QWidget *parent)
 Stepper::~Stepper()
 {
     delete ui;
-    // delete newProject;
 }
 
 void Stepper::on_nextButton_clicked()
@@ -41,10 +41,11 @@ void Stepper::on_nextButton_clicked()
     if (currentIndex == 1) {
         CreationAssistant *creationAssistantWidget = qobject_cast<CreationAssistant *>(
             currentWidget);
-        message = creationAssistantWidget ? creationAssistantWidget->isValid() : "";
+        message = creationAssistantWidget ? creationAssistantWidget->isValid(newProject) : "";
+        // creationAssistantWidget->
     } else if (currentIndex == 2) {
         DatabaseAssistant *databaseAsistantWidget = qobject_cast<DatabaseAssistant *>(currentWidget);
-        message = databaseAsistantWidget ? databaseAsistantWidget->isValid() : "";
+        message = databaseAsistantWidget ? databaseAsistantWidget->isValid(newProject) : "";
     } else if (currentIndex == 3) {
         FrontendAssistant *frontendAsistantWidget = qobject_cast<FrontendAssistant *>(currentWidget);
         message = frontendAsistantWidget ? frontendAsistantWidget->isValid() : "";

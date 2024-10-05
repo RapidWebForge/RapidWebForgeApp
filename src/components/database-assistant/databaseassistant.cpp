@@ -13,24 +13,38 @@ DatabaseAssistant::~DatabaseAssistant()
     delete ui;
 }
 
-std::string DatabaseAssistant::isValid()
+std::string DatabaseAssistant::isValid(Project &project)
 {
-    QString server = ui->serverLineEdit->text();
-    QString port = ui->portLineEdit->text();
-    QString user = ui->userLineEdit->text();
-    QString password = ui->passwordLineEdit->text();
-    QString database = ui->databaseComboBox->currentText();
+    std::string server = ui->serverLineEdit->text().toStdString();
+    std::string port = ui->portLineEdit->text().toStdString();
+    std::string user = ui->userLineEdit->text().toStdString();
+    std::string password = ui->passwordLineEdit->text().toStdString();
+    std::string database = ui->databaseComboBox->currentText().toStdString();
 
-    if (server.isEmpty()) {
+    if (server.empty()) {
         return "Choose a server";
-    } else if (port.isEmpty()) {
+    } else {
+        project.getDatabaseData().setServer(server);
+    }
+    if (port.empty()) {
         return "Choose a port";
-    } else if (user.isEmpty()) {
+    } else {
+        project.getDatabaseData().setPort(port);
+    }
+    if (user.empty()) {
         return "Enter your user";
-    } else if (password.isEmpty()) {
+    } else {
+        project.getDatabaseData().setUser(user);
+    }
+    if (password.empty()) {
         return "Enter your password";
-    } else if (database.isEmpty()) {
+    } else {
+        project.getDatabaseData().setPassword(password);
+    }
+    if (database.empty()) {
         return "Enter your database";
+    } else {
+        project.getDatabaseData().setDatabase(database);
     }
 
     return "";

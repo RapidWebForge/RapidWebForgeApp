@@ -8,7 +8,7 @@
 class Database
 {
 public:
-    static Database &getInstance(const std::string &dbName = "../db/projects.db");
+    static Database &getInstance(const std::string &dbName = "../../../db/projects.db");
     sqlite3 *getConnection();
     ~Database();
 

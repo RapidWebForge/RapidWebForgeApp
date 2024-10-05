@@ -2,6 +2,7 @@
 #define CREATIONASSISTANT_H
 
 #include <QDialog>
+#include "../../models/project/project.h"
 
 namespace Ui {
 class CreationAssistant;
@@ -13,7 +14,7 @@ class CreationAssistant : public QDialog
 
 public:
     explicit CreationAssistant(QWidget *parent = nullptr);
-    std::string isValid();
+    std::string isValid(Project &project);
     ~CreationAssistant();
 
 private slots:

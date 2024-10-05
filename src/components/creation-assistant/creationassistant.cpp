@@ -32,16 +32,21 @@ CreationAssistant::~CreationAssistant()
     delete ui;
 }
 
-std::string CreationAssistant::isValid()
+std::string CreationAssistant::isValid(Project &project)
 {
-    QString projectName = ui->projectNameLineEdit->text();
-    QString projectLocation = ui->browseButton->text();
+    std::string projectName = ui->projectNameLineEdit->text().toStdString();
+    std::string projectPath = ui->browseButton->text().toStdString();
     // QString language = ui->defaultLanguageComboBox->currentText();
 
-    if (projectName.isEmpty()) {
+    if (projectName.empty()) {
         return "Give a name for the project";
-    } else if (projectLocation == "Select path") {
+    } else {
+        project.setName(projectName);
+    }
+    if (projectPath == "Select path" || projectPath.empty()) {
         return "Select a path for your project";
+    } else {
+        project.setPath(projectPath);
     }
 
     return "";

@@ -2,6 +2,7 @@
 #define STEPPER_H
 
 #include <QWidget>
+#include "../../core/project-manager/projectmanager.h"
 #include "../../models/project/project.h"
 #include "../backend-assistant/backendassistant.h"
 #include "../creation-assistant/creationassistant.h"
@@ -33,7 +34,8 @@ private:
     FrontendAssistant *frontendAssistant;
     BackendAssistant *backendAssistant;
     SummaryAssistant *summaryAssistant;
-    Project *newProject;
+    Project newProject;
+    ProjectManager projectManager;
 };
 
 #endif // STEPPER_H

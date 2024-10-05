@@ -32,6 +32,7 @@ public:
     std::string getDescription() const;
     std::string getPath() const;
     const DatabaseData &getDatabaseData() const;
+    DatabaseData &getDatabaseData();
     std::string getCreatedAt() const;
     std::chrono::system_clock::time_point getCreatedAtChrono() const;
     std::string getUpdatedAt() const;

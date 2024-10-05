@@ -2,6 +2,7 @@
 #define DATABASEASSISTANT_H
 
 #include <QDialog>
+#include "../../models/project/project.h"
 
 namespace Ui {
 class DatabaseAssistant;
@@ -13,7 +14,7 @@ class DatabaseAssistant : public QDialog
 
 public:
     explicit DatabaseAssistant(QWidget *parent = nullptr);
-    std::string isValid();
+    std::string isValid(Project &project);
     ~DatabaseAssistant();
 
 private:

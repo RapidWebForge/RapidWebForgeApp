@@ -32,11 +32,11 @@ public:
     std::string getDatabaseName() const;
 
     // Setters
-    void setServer(std::string server);
-    void setPort(std::string port);
-    void setUser(std::string user);
-    void setPassword(std::string password);
-    void setDatabase(std::string databaseName);
+    void setServer(const std::string &server);
+    void setPort(const std::string &port);
+    void setUser(const std::string &user);
+    void setPassword(const std::string &password);
+    void setDatabase(const std::string &databaseName);
 };
 
 #endif // DATABASEDATA_H
