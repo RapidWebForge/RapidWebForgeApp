@@ -21,6 +21,7 @@ private slots:
 
 private:
     Ui::CreationAssistant *ui;
+    void applyStylesCA(); // Declaración de la función applyStyles
 };
 
 #endif // CREATIONASSISTANT_H

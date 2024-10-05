@@ -8,23 +8,7 @@ CreationAssistant::CreationAssistant(QWidget *parent)
     , ui(new Ui::CreationAssistant)
 {
     ui->setupUi(this);
-
-    // TODO: Pass to a function
-    ui->projectInfoGroupBox->setStyleSheet("border: none;");
-
-    ui->projectNameLabel->setStyleSheet("color: #333333; font-size: 14px; font-weight: normal;");
-
-    ui->projectLocationLabel->setStyleSheet("color: #333333; font-size: 14px; font-weight: normal;");
-    ui->defaultLanguageLabel->setStyleSheet("color: #333333; font-size: 14px; font-weight: normal;");
-    ui->label->setStyleSheet("font-size: 14px; color: #333333;");
-    ui->projectInfoLabel->setStyleSheet("font-size: 18px; color: #555555; padding-bottom: 10px;");
-    ui->projectNameLineEdit->setStyleSheet("border: 1px solid #cccccc; font-size: 14; border-radius: 5px; font-weight: normal; background-color: #ffffff; padding: 2px;");
-
-    ui->browseButton->setStyleSheet(" border: 1px solid #cccccc; font-size: 14; border-radius: 5px; font-weight: normal;background-color: #ffffff; padding: 2px;");
-    ui->defaultLanguageComboBox->setStyleSheet("border: 1px solid #cccccc; font-size: 14; border-radius: 5px; font-weight: normal; background-color: #ffffff; padding: 2px;");
-
-    // ui->nextButton->setStyleSheet("border: 1px solid #cccccc; border-radius: 5px; padding: 3px 16px; background-color: #0F66DE; color: #ffffff; font-size: 14px; margin-inline:20px;");
-    // ui->cancelButton->setStyleSheet("border: 1px solid #cccccc; border-radius: 5px; padding: 3px 16px; background-color: #f5f5f5; color: #333333; font-size: 14px;");
+    applyStylesCA(); // Aplicar todos los estilos
 }
 
 CreationAssistant::~CreationAssistant()
@@ -57,4 +41,34 @@ void CreationAssistant::on_browseButton_clicked()
     if (!dir.isEmpty()) {
         ui->browseButton->setText(dir);
     }
+}
+void CreationAssistant::applyStylesCA()
+{
+    QString generalStyle = "color: #333333; font-size: 14px; font-weight: normal;";
+    QString inputStyle = "border: 1px solid #cccccc; font-size: 14px; border-radius: 5px; "
+                         "font-weight: normal; background-color: #ffffff; padding: 4px 8px;";
+
+    // Estilos para las etiquetas
+    ui->projectNameLabel->setStyleSheet(generalStyle);
+    ui->projectLocationLabel->setStyleSheet(generalStyle);
+    ui->defaultLanguageLabel->setStyleSheet(generalStyle);
+    ui->label->setStyleSheet(generalStyle);
+
+    // Estilo específico para la etiqueta de información del proyecto
+    ui->projectInfoLabel->setStyleSheet("font-size: 25px; color: #000000; padding-bottom: 0px; "
+                                        "padding-left: 50px;");
+    ui->titleLabel->setStyleSheet(
+        "font-size: 35px; color: #27292A; padding-top: 10px; padding-left: 40px;");
+    // Estilo para la línea de edición de texto
+    ui->projectNameLineEdit->setStyleSheet(inputStyle);
+
+    // Estilo para el botón de búsqueda
+    ui->browseButton->setStyleSheet(inputStyle);
+
+    // Estilo para el ComboBox
+    ui->defaultLanguageComboBox->setStyleSheet(inputStyle);
+
+    // Ajustar margenes y espaciamiento del layout principal (opcional)
+    ui->verticalLayout->setContentsMargins(20, 0, 20, 0); // Ajusta los márgenes del layout
+    ui->verticalLayout->setSpacing(10);                   // Ajusta el espaciado entre widgets
 }

@@ -2,12 +2,18 @@
 <ui version="4.0">
  <class>CreationAssistant</class>
  <widget class="QWidget" name="CreationAssistant">
+  <property name="windowModality">
+   <enum>Qt::WindowModality::NonModal</enum>
+  </property>
+  <property name="enabled">
+   <bool>true</bool>
+  </property>
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>600</width>
-    <height>400</height>
+    <width>439</width>
+    <height>238</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -26,7 +32,14 @@
       <string>Creation Assistant</string>
      </property>
      <property name="alignment">
-      <set>Qt::AlignmentFlag::AlignCenter</set>
+      <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter</set>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="projectInfoLabel">
+     <property name="text">
+      <string>Project Information</string>
      </property>
     </widget>
    </item>
@@ -36,10 +49,16 @@
       <bool>true</bool>
      </property>
      <property name="sizePolicy">
-      <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-       <horstretch>40</horstretch>
+      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+       <horstretch>0</horstretch>
        <verstretch>0</verstretch>
       </sizepolicy>
+     </property>
+     <property name="maximumSize">
+      <size>
+       <width>16777215</width>
+       <height>16777215</height>
+      </size>
      </property>
      <property name="font">
       <font>
@@ -52,8 +71,11 @@
      <property name="cursor">
       <cursorShape>ArrowCursor</cursorShape>
      </property>
+     <property name="contextMenuPolicy">
+      <enum>Qt::ContextMenuPolicy::DefaultContextMenu</enum>
+     </property>
      <property name="styleSheet">
-      <string notr="true"/>
+      <string notr="true">border: none;</string>
      </property>
      <property name="title">
       <string/>
@@ -68,8 +90,14 @@
       <property name="fieldGrowthPolicy">
        <enum>QFormLayout::FieldGrowthPolicy::AllNonFixedFieldsGrow</enum>
       </property>
+      <property name="rowWrapPolicy">
+       <enum>QFormLayout::RowWrapPolicy::DontWrapRows</enum>
+      </property>
       <property name="labelAlignment">
        <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+      </property>
+      <property name="formAlignment">
+       <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignTop</set>
       </property>
       <property name="horizontalSpacing">
        <number>10</number>
@@ -81,12 +109,15 @@
        <number>90</number>
       </property>
       <property name="topMargin">
-       <number>40</number>
+       <number>0</number>
       </property>
       <property name="rightMargin">
        <number>90</number>
       </property>
-      <item row="2" column="0">
+      <property name="bottomMargin">
+       <number>0</number>
+      </property>
+      <item row="1" column="0">
        <widget class="QLabel" name="projectNameLabel">
         <property name="font">
          <font>
@@ -101,14 +132,14 @@
         </property>
        </widget>
       </item>
-      <item row="2" column="1">
+      <item row="1" column="1">
        <widget class="QLineEdit" name="projectNameLineEdit">
         <property name="styleSheet">
          <string notr="true"/>
         </property>
        </widget>
       </item>
-      <item row="3" column="0">
+      <item row="2" column="0">
        <widget class="QLabel" name="projectLocationLabel">
         <property name="font">
          <font>
@@ -123,8 +154,14 @@
         </property>
        </widget>
       </item>
-      <item row="3" column="1">
+      <item row="2" column="1">
        <widget class="QPushButton" name="browseButton">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
         <property name="font">
          <font>
           <bold>false</bold>
@@ -145,9 +182,12 @@
         <property name="text">
          <string>Select path</string>
         </property>
+        <property name="default">
+         <bool>false</bool>
+        </property>
        </widget>
       </item>
-      <item row="4" column="0">
+      <item row="3" column="0">
        <widget class="QLabel" name="defaultLanguageLabel">
         <property name="font">
          <font>
@@ -162,7 +202,7 @@
         </property>
        </widget>
       </item>
-      <item row="4" column="1">
+      <item row="3" column="1">
        <widget class="QComboBox" name="defaultLanguageComboBox">
         <property name="font">
          <font>
@@ -184,7 +224,7 @@
         </item>
        </widget>
       </item>
-      <item row="5" column="0">
+      <item row="4" column="0">
        <widget class="QLabel" name="label">
         <property name="font">
          <font>
@@ -199,7 +239,7 @@
         </property>
        </widget>
       </item>
-      <item row="5" column="1">
+      <item row="4" column="1">
        <widget class="QCheckBox" name="createGitRepoCheckBox">
         <property name="font">
          <font>
@@ -211,13 +251,6 @@
         </property>
         <property name="text">
          <string>Create git repository</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="0">
-       <widget class="QLabel" name="projectInfoLabel">
-        <property name="text">
-         <string>Project Information</string>
         </property>
        </widget>
       </item>

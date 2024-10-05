@@ -1,5 +1,6 @@
-#include "./components/stepper/stepper.h"
 #include <QApplication>
+#include "./components/stepper/stepper.h"
+#include <fmt/core.h>
 
 int main(int argc, char *argv[])
 {

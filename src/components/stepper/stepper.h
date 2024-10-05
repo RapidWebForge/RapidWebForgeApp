@@ -27,6 +27,7 @@ private slots:
 
 private:
     Ui::Stepper *ui;
+    void applyStyles(); // Declaración de la función applyStyles
     CreationAssistant *creationAssistant;
     DatabaseAssistant *databaseAssistant;
     FrontendAssistant *frontendAssistant;

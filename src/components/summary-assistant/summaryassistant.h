@@ -18,6 +18,7 @@ public:
 
 private:
     Ui::SummaryAssistant *ui;
+    void applyStylesSummary();
 };
 
 #endif // SUMMARYASSISTANT_H
