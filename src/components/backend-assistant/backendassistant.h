@@ -19,6 +19,7 @@ public:
 
 private:
     Ui::BackendAssistant *ui;
+    void applyStylesBack();
 };
 
 #endif // BACKENDASSISTANT_H

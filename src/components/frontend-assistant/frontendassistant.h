@@ -19,6 +19,7 @@ public:
 
 private:
     Ui::FrontendAssistant *ui;
+    void applyStylesFront();
 };
 
 #endif // FRONTENDASSISTANT_H

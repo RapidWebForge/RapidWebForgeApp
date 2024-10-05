@@ -2,12 +2,15 @@
 <ui version="4.0">
  <class>Stepper</class>
  <widget class="QWidget" name="Stepper">
+  <property name="windowModality">
+   <enum>Qt::WindowModality::NonModal</enum>
+  </property>
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>874</width>
-    <height>608</height>
+    <width>822</width>
+    <height>481</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -18,8 +21,8 @@
     <rect>
      <x>20</x>
      <y>20</y>
-     <width>821</width>
-     <height>511</height>
+     <width>781</width>
+     <height>381</height>
     </rect>
    </property>
    <widget class="QWidget" name="page"/>
@@ -27,8 +30,8 @@
   <widget class="QPushButton" name="nextButton">
    <property name="geometry">
     <rect>
-     <x>740</x>
-     <y>560</y>
+     <x>700</x>
+     <y>430</y>
      <width>100</width>
      <height>32</height>
     </rect>
@@ -40,8 +43,8 @@
   <widget class="QPushButton" name="backButton">
    <property name="geometry">
     <rect>
-     <x>610</x>
-     <y>560</y>
+     <x>580</x>
+     <y>430</y>
      <width>100</width>
      <height>32</height>
     </rect>

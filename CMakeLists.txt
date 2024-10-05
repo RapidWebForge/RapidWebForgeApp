@@ -33,6 +33,7 @@ find_package(inja CONFIG REQUIRED)
 find_package(unofficial-mysql-connector-cpp CONFIG REQUIRED)
 find_package(unofficial-sqlite3 CONFIG REQUIRED)
 
+
 set(PROJECT_SOURCES
         src/main.cpp
         src/rapidwebforge.cpp
@@ -70,6 +71,7 @@ set(PROJECT_SOURCES
         src/utils/database/database.cpp
 )
 
+
 # Define the executable based on Qt version
 if(QT_VERSION_MAJOR GREATER_EQUAL 6)
     qt_add_executable(RapidWebForgeApp
@@ -77,7 +79,8 @@ if(QT_VERSION_MAJOR GREATER_EQUAL 6)
         ${PROJECT_SOURCES}
     )
 else()
-    add_executable(RapidWebForgeApp ${PROJECT_SOURCES})
+    add_executable(RapidWebForgeApp ${PROJECT_SOURCES}
+        src/resources/resources.qrc)
 endif()
 
 target_link_libraries(RapidWebForgeApp PRIVATE

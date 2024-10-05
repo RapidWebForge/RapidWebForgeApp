@@ -19,6 +19,7 @@ public:
 
 private:
     Ui::DatabaseAssistant *ui;
+    void applyStylesDatabase();
 };
 
 #endif // DATABASEASSISTANT_H

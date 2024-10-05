@@ -20,7 +20,7 @@ Stepper::Stepper(QWidget *parent)
     ui->stepsWidget->addWidget(frontendAssistant);
     ui->stepsWidget->addWidget(backendAssistant);
     ui->stepsWidget->addWidget(summaryAssistant);
-
+    applyStyles(); // Aplicar todos los estilos
     ui->stepsWidget->setCurrentWidget(creationAssistant);
 }
 
@@ -72,4 +72,20 @@ void Stepper::on_backButton_clicked()
     if (currentIndex > 0) {
         ui->stepsWidget->setCurrentIndex(currentIndex - 1);
     }
+}
+void Stepper::applyStyles()
+{
+    this->setStyleSheet("background-color: #ffffff;");
+    QString generalStyle = "color: #333333; font-size: 14px; font-weight: normal;";
+    QString inputStyle = "border: 1px solid #cccccc; font-size: 14px; border-radius: 5px; "
+                         "font-weight: normal; background-color: #ffffff; padding: 4px 8px;";
+
+    // Estilo para los botones (comentados en tu código original)
+    ui->nextButton->setStyleSheet(
+        "border: 1px solid #cccccc; border-radius: 7px; margin-left: 0px; padding: 6px 20px; "
+        "font-weight: semi-bold;"
+        "background-color: #0F66DE; color: #ffffff; font-size: 16px; margin-inline: 20px;");
+    ui->backButton->setStyleSheet(
+        "border: 1px solid #cccccc; border-radius: 7px; padding: 6px 20px; font-weight: semi-bold;"
+        "background-color: #f5f5f5; color: #333333; font-size: 16px;");
 }
