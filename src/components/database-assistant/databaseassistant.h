@@ -17,9 +17,13 @@ public:
     std::string isValid(Project &project);
     ~DatabaseAssistant();
 
+private slots:
+    void on_testConnectionButton_clicked();
+
 private:
     Ui::DatabaseAssistant *ui;
     void applyStylesDatabase();
+    bool testCompleted;
 };
 
 #endif // DATABASEASSISTANT_H

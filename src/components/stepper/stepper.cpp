@@ -38,20 +38,25 @@ void Stepper::on_nextButton_clicked()
     std::string message = "";
 
     // Check if exist isValid() method
-    if (currentIndex == 1) {
+    if (currentIndex == 0) {
         CreationAssistant *creationAssistantWidget = qobject_cast<CreationAssistant *>(
             currentWidget);
         message = creationAssistantWidget ? creationAssistantWidget->isValid(newProject) : "";
-        // creationAssistantWidget->
-    } else if (currentIndex == 2) {
+    } else if (currentIndex == 1) {
         DatabaseAssistant *databaseAsistantWidget = qobject_cast<DatabaseAssistant *>(currentWidget);
         message = databaseAsistantWidget ? databaseAsistantWidget->isValid(newProject) : "";
-    } else if (currentIndex == 3) {
+    } else if (currentIndex == 2) {
         FrontendAssistant *frontendAsistantWidget = qobject_cast<FrontendAssistant *>(currentWidget);
         message = frontendAsistantWidget ? frontendAsistantWidget->isValid(newProject) : "";
-    } else if (currentIndex == 4) {
+    } else if (currentIndex == 3) {
         BackendAssistant *backendAsistantWidget = qobject_cast<BackendAssistant *>(currentWidget);
         message = backendAsistantWidget ? backendAsistantWidget->isValid(newProject) : "";
+        // Update SummaryAssistant before moving to the next step
+        SummaryAssistant *summaryAssistantWidget = qobject_cast<SummaryAssistant *>(
+            ui->stepsWidget->widget(currentIndex + 1));
+        if (summaryAssistantWidget) {
+            summaryAssistantWidget->setProjectInformation(newProject);
+        }
     }
 
     if (message != "") {
@@ -59,9 +64,16 @@ void Stepper::on_nextButton_clicked()
         return; // Stop here
     }
 
-    // Next step
+    // Move to the next step
     if (currentIndex < ui->stepsWidget->count() - 1) {
         ui->stepsWidget->setCurrentIndex(currentIndex + 1);
+    }
+
+    // Create Project in Summary
+    if (currentIndex == ui->stepsWidget->count() - 2) {
+        projectManager.createProject(newProject);
+        message = "Your project has been created successfully!";
+        QMessageBox::information(this, "Successful", QString::fromStdString(message));
     }
 }
 
@@ -73,6 +85,7 @@ void Stepper::on_backButton_clicked()
         ui->stepsWidget->setCurrentIndex(currentIndex - 1);
     }
 }
+
 void Stepper::applyStyles()
 {
     this->setStyleSheet("background-color: #ffffff;");

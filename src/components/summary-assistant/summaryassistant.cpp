@@ -34,3 +34,9 @@ void SummaryAssistant::applyStylesSummary()
     ui->projectNameLineEdit->setStyleSheet(
         lineEditStyle); // Campo de texto para el nombre del proyecto
 }
+
+void SummaryAssistant::setProjectInformation(Project &project)
+{
+    QString projectName = QString::fromStdString(project.getName());
+    ui->projectNameLineEdit->setText(projectName);
+}

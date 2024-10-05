@@ -1,9 +1,12 @@
 #include "databaseassistant.h"
+#include <QMessageBox>
 #include "src/components/database-assistant/ui_databaseassistant.h"
+#include <mysqlx/xdevapi.h>
 
 DatabaseAssistant::DatabaseAssistant(QWidget *parent)
     : QDialog(parent)
     , ui(new Ui::DatabaseAssistant)
+    , testCompleted(false)
 {
     ui->setupUi(this);
     applyStylesDatabase();
@@ -48,7 +51,7 @@ std::string DatabaseAssistant::isValid(Project &project)
         project.getDatabaseData().setDatabase(database);
     }
 
-    return "";
+    return !testCompleted ? "You should test connection!" : "";
 }
 
 void DatabaseAssistant::applyStylesDatabase()
@@ -125,5 +128,35 @@ void DatabaseAssistant::applyStylesDatabase()
     // Alineación y tamaño del icono (si existe un QLabel para el icono)
     if (ui->iconLabel) {
         ui->iconLabel->setAlignment(Qt::AlignCenter);
+    }
+}
+
+void DatabaseAssistant::on_testConnectionButton_clicked()
+{
+    std::string server = ui->serverLineEdit->text().toStdString();
+    std::string port = ui->portLineEdit->text().toStdString();
+    std::string user = ui->userLineEdit->text().toStdString();
+    std::string password = ui->passwordLineEdit->text().toStdString();
+    std::string database = ui->databaseLineEdit->text().toStdString();
+
+    if (server.empty() || port.empty() || user.empty() || password.empty() || database.empty()) {
+        QMessageBox::warning(this, "Warning", QString::fromStdString("Complete all fields"));
+    } else {
+        try {
+            int portInt = std::stoi(port);
+            mysqlx::Session session(server, portInt, user, password);
+            mysqlx::Schema schema = session.getSchema(database);
+            QMessageBox::information(this, "Successful", "Connection successfully");
+            testCompleted = true;
+        } catch (const mysqlx::Error &err) {
+            QString errorMsg = QString("MySQL Error: %1").arg(err.what());
+            QMessageBox::critical(this, "Connection Failed", errorMsg);
+        } catch (std::exception &ex) {
+            QString errorMsg = QString("STD Exception: %1").arg(ex.what());
+            QMessageBox::critical(this, "Connection Failed", errorMsg);
+        } catch (const char *ex) {
+            QString errorMsg = QString("Exception: %1").arg(ex);
+            QMessageBox::critical(this, "Connection Failed", errorMsg);
+        }
     }
 }

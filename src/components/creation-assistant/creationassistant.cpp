@@ -1,7 +1,7 @@
 #include "creationassistant.h"
-#include "ui_creationassistant.h"
 #include <QFileDialog>
 #include <QMessageBox>
+#include "ui_creationassistant.h"
 
 CreationAssistant::CreationAssistant(QWidget *parent)
     : QDialog(parent)
@@ -20,7 +20,6 @@ std::string CreationAssistant::isValid(Project &project)
 {
     std::string projectName = ui->projectNameLineEdit->text().toStdString();
     std::string projectPath = ui->browseButton->text().toStdString();
-    // QString language = ui->defaultLanguageComboBox->currentText();
 
     if (projectName.empty()) {
         return "Give a name for the project";

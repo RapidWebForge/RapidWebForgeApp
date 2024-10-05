@@ -126,7 +126,11 @@
        </widget>
       </item>
       <item>
-       <widget class="QLineEdit" name="projectNameLineEdit"/>
+       <widget class="QLineEdit" name="projectNameLineEdit">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+       </widget>
       </item>
      </layout>
     </widget>
