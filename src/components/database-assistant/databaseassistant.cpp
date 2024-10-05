@@ -20,7 +20,7 @@ std::string DatabaseAssistant::isValid()
     QString port = ui->portLineEdit->text();
     QString user = ui->userLineEdit->text();
     QString password = ui->passwordLineEdit->text();
-    QString database = ui->databaseComboBox->currentText();
+    QString database = ui->databaseLineEdit->text();
 
     if (server.isEmpty()) {
         return "Choose a server";
@@ -61,14 +61,11 @@ void DatabaseAssistant::applyStylesDatabase()
     ui->portLineEdit->setStyleSheet(lineEditStyle);
     ui->userLineEdit->setStyleSheet(lineEditStyle);
     ui->passwordLineEdit->setStyleSheet(lineEditStyle);
+    ui->databaseLineEdit->setStyleSheet(lineEditStyle);
 
     // Estilo para la entrada de contraseña (Password)
     ui->passwordLineEdit->setEchoMode(QLineEdit::Password);
 
-    // Estilo para el combo box de la base de datos (QComboBox)
-    ui->databaseComboBox->setStyleSheet(
-        "border: 1px solid #cccccc; font-size: 14px; border-radius: 5px; "
-        "background-color: #ffffff; padding: 5px 10px; ");
 
     // Estilo para el group box que contiene los elementos (QGroupBox)
     ui->formGroupBox->setStyleSheet(" border-radius: 10px;  ");
