@@ -9,6 +9,8 @@ Project::Project()
     , description("")
     , path("")
     , databaseData()
+    , frontendPort("9000")
+    , backendPort("3000")
     , createdAt(std::chrono::system_clock::now())
     , updatedAt(createdAt)
 {}
@@ -18,12 +20,16 @@ Project::Project(int id,
                  const std::string &name,
                  const std::string &description,
                  const std::string &path,
-                 const DatabaseData &databaseData)
+                 const DatabaseData &databaseData,
+                 const std::string &frontendPort,
+                 const std::string &backendPort)
     : id(id)
     , name(name)
     , description(description)
     , path(path)
     , databaseData(databaseData)
+    , frontendPort(frontendPort)
+    , backendPort(backendPort)
     , createdAt(std::chrono::system_clock::now())
     , updatedAt(createdAt)
 {}
@@ -35,6 +41,8 @@ Project::Project(const Project &project)
     , description(project.getDescription())
     , path(project.getPath())
     , databaseData(project.getDatabaseData())
+    , frontendPort(project.getFrontendPort())
+    , backendPort(project.getBackendPort())
     , createdAt(project.getCreatedAtChrono())
     , updatedAt(project.getUpdatedAtChrono())
 {}
@@ -68,6 +76,16 @@ const DatabaseData &Project::getDatabaseData() const
 DatabaseData &Project::getDatabaseData()
 {
     return databaseData;
+}
+
+std::string Project::getFrontendPort() const
+{
+    return frontendPort;
+}
+
+std::string Project::getBackendPort() const
+{
+    return backendPort;
 }
 
 std::string Project::timePointToString(const std::chrono::system_clock::time_point &tp) const
@@ -114,6 +132,18 @@ void Project::setDescription(const std::string &newDescription)
 void Project::setPath(const std::string &newPath)
 {
     path = newPath;
+    setUpdatedAt();
+}
+
+void Project::setFrontendPort(const std::string &newFrontendPort)
+{
+    frontendPort = newFrontendPort;
+    setUpdatedAt();
+}
+
+void Project::setBackendPort(const std::string &newBackendPort)
+{
+    backendPort = newBackendPort;
     setUpdatedAt();
 }
 

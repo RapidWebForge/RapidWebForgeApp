@@ -37,6 +37,8 @@ void ProjectManager::createProjectsTable()
             name TEXT NOT NULL,
             description TEXT,
             path TEXT NOT NULL,
+            frontendPort TEXT NOT NULL,
+            backendPort TEXT NOT NULL,
             created_at TEXT NOT NULL,
             updated_at TEXT NOT NULL,
             database_id INTEGER,
@@ -118,15 +120,18 @@ void ProjectManager::createProject(const Project &project)
 
     int databaseId = sqlite3_last_insert_rowid(db);
 
-    std::string sqlProject = "INSERT INTO projects (name, description, path, created_at, "
-                             "updated_at, database_id) VALUES (?, ?, ?, ?, ?, ?);";
+    std::string sqlProject
+        = "INSERT INTO projects (name, description, path, frontendPort, backendPort, created_at, "
+          "updated_at, database_id) VALUES (?, ?, ?, ?, ?, ?);";
     executeSQL(db, sqlProject, [&](sqlite3_stmt *stmt) {
         sqlite3_bind_text(stmt, 1, project.getName().c_str(), -1, SQLITE_STATIC);
         sqlite3_bind_text(stmt, 2, project.getDescription().c_str(), -1, SQLITE_STATIC);
         sqlite3_bind_text(stmt, 3, project.getPath().c_str(), -1, SQLITE_STATIC);
-        sqlite3_bind_text(stmt, 4, project.getCreatedAt().c_str(), -1, SQLITE_STATIC);
-        sqlite3_bind_text(stmt, 5, project.getUpdatedAt().c_str(), -1, SQLITE_STATIC);
-        sqlite3_bind_int(stmt, 6, databaseId);
+        sqlite3_bind_text(stmt, 4, project.getFrontendPort().c_str(), -1, SQLITE_STATIC);
+        sqlite3_bind_text(stmt, 5, project.getBackendPort().c_str(), -1, SQLITE_STATIC);
+        sqlite3_bind_text(stmt, 6, project.getCreatedAt().c_str(), -1, SQLITE_STATIC);
+        sqlite3_bind_text(stmt, 7, project.getUpdatedAt().c_str(), -1, SQLITE_STATIC);
+        sqlite3_bind_int(stmt, 8, databaseId);
     });
 }
 
@@ -135,8 +140,8 @@ std::optional<Project> ProjectManager::getProjectById(int projectId)
     sqlite3 *db = Database::getInstance().getConnection();
     std::optional<Project> projectOpt;
 
-    std::string sql = "SELECT id, name, description, path, database_id, created_at, updated_at "
-                      "FROM projects WHERE id = ?;";
+    std::string sql = "SELECT id, name, description, path, frontendPort, backendPort, database_id, "
+                      "created_at, updated_at FROM projects WHERE id = ?;";
     executeSQL(
         db,
         sql,
@@ -146,11 +151,19 @@ std::optional<Project> ProjectManager::getProjectById(int projectId)
             std::string name = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 1));
             std::string description = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 2));
             std::string path = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 3));
-            int databaseId = sqlite3_column_int(stmt, 4);
+            std::string frontendPort = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 4));
+            std::string backendPort = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 5));
+            int databaseId = sqlite3_column_int(stmt, 6);
 
             auto dbDataOpt = getDatabaseById(databaseId);
             if (dbDataOpt) {
-                projectOpt = Project(id, name, description, path, dbDataOpt.value());
+                projectOpt = Project(id,
+                                     name,
+                                     description,
+                                     path,
+                                     dbDataOpt.value(),
+                                     frontendPort,
+                                     backendPort);
             }
         });
 
@@ -162,18 +175,21 @@ std::vector<Project> ProjectManager::getAllProjects()
     sqlite3 *db = Database::getInstance().getConnection();
     std::vector<Project> projects;
 
-    std::string sql
-        = "SELECT id, name, description, path, database_id, created_at, updated_at FROM projects;";
+    std::string sql = "SELECT id, name, description, path, frontendPort, backendPort, database_id, "
+                      "created_at, updated_at FROM projects;";
     executeSQL(db, sql, nullptr, [&](sqlite3_stmt *stmt) {
         int projectId = sqlite3_column_int(stmt, 0);
         std::string name = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 1));
         std::string description = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 2));
         std::string path = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 3));
-        int databaseId = sqlite3_column_int(stmt, 4);
+        std::string frontendPort = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 4));
+        std::string backendPort = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 5));
+        int databaseId = sqlite3_column_int(stmt, 6);
 
         auto dbDataOpt = getDatabaseById(databaseId);
         if (dbDataOpt) {
-            projects.push_back(Project(projectId, name, description, path, dbDataOpt.value()));
+            projects.push_back(Project(
+                projectId, name, description, path, dbDataOpt.value(), frontendPort, backendPort));
         }
     });
 
@@ -196,14 +212,16 @@ void ProjectManager::updateProject(const Project &project)
         sqlite3_bind_int(stmt, 6, dbData.getId());
     });
 
-    std::string sqlUpdateProject
-        = "UPDATE projects SET name = ?, description = ?, path = ?, updated_at = ? WHERE id = ?;";
+    std::string sqlUpdateProject = "UPDATE projects SET name = ?, description = ?, path = ?, "
+                                   "frontendPort = ?,  updated_at = ? WHERE id = ?;";
     executeSQL(db, sqlUpdateProject, [&](sqlite3_stmt *stmt) {
         sqlite3_bind_text(stmt, 1, project.getName().c_str(), -1, SQLITE_STATIC);
         sqlite3_bind_text(stmt, 2, project.getDescription().c_str(), -1, SQLITE_STATIC);
         sqlite3_bind_text(stmt, 3, project.getPath().c_str(), -1, SQLITE_STATIC);
-        sqlite3_bind_text(stmt, 4, project.getUpdatedAt().c_str(), -1, SQLITE_STATIC);
-        sqlite3_bind_int(stmt, 5, project.getId());
+        sqlite3_bind_text(stmt, 4, project.getFrontendPort().c_str(), -1, SQLITE_STATIC);
+        sqlite3_bind_text(stmt, 5, project.getBackendPort().c_str(), -1, SQLITE_STATIC);
+        sqlite3_bind_text(stmt, 6, project.getUpdatedAt().c_str(), -1, SQLITE_STATIC);
+        sqlite3_bind_int(stmt, 7, project.getId());
     });
 }
 

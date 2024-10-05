@@ -13,10 +13,18 @@ FrontendAssistant::~FrontendAssistant()
     delete ui;
 }
 
-std::string FrontendAssistant::isValid()
+std::string FrontendAssistant::isValid(Project &project)
 {
-    QString port = ui->portLineEdit->text();
+    std::string port = ui->portLineEdit->text().toStdString();
 
-    // TODO: Check a correct port
-    return port.isEmpty() ? "Please fill in the port field." : "";
+    if (port.empty()) {
+        return "Please fill in the port field.";
+    } else if (port.length() != 4) {
+        return "Port must be exactly 4 digits.";
+    } else if (!std::all_of(port.begin(), port.end(), ::isdigit)) {
+        return "Port must contain only numeric digits.";
+    } else {
+        project.setFrontendPort(port);
+    }
+    return "";
 }

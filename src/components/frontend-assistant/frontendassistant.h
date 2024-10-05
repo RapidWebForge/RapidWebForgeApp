@@ -2,6 +2,7 @@
 #define FRONTENDASSISTANT_H
 
 #include <QDialog>
+#include "../../models/project/project.h"
 
 namespace Ui {
 class FrontendAssistant;
@@ -13,7 +14,7 @@ class FrontendAssistant : public QDialog
 
 public:
     explicit FrontendAssistant(QWidget *parent = nullptr);
-    std::string isValid();
+    std::string isValid(Project &project);
     ~FrontendAssistant();
 
 private:

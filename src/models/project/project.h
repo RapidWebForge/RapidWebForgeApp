@@ -13,6 +13,8 @@ private:
     std::string description;
     std::string path;
     DatabaseData databaseData;
+    std::string frontendPort;
+    std::string backendPort;
     std::chrono::system_clock::time_point createdAt;
     std::chrono::system_clock::time_point updatedAt;
 
@@ -23,7 +25,9 @@ public:
             const std::string &name,
             const std::string &description,
             const std::string &path,
-            const DatabaseData &databaseData);
+            const DatabaseData &databaseData,
+            const std::string &frontendPort,
+            const std::string &backendPort);
     Project();
 
     // Getters
@@ -31,8 +35,13 @@ public:
     std::string getName() const;
     std::string getDescription() const;
     std::string getPath() const;
+
     const DatabaseData &getDatabaseData() const;
     DatabaseData &getDatabaseData();
+
+    std::string getFrontendPort() const;
+    std::string getBackendPort() const;
+
     std::string getCreatedAt() const;
     std::chrono::system_clock::time_point getCreatedAtChrono() const;
     std::string getUpdatedAt() const;
@@ -44,6 +53,8 @@ public:
     void setName(const std::string &newName);
     void setDescription(const std::string &newDescription);
     void setPath(const std::string &newPath);
+    void setFrontendPort(const std::string &frontendPort);
+    void setBackendPort(const std::string &backendPort);
     void setUpdatedAt();
 };
 

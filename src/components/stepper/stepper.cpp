@@ -48,10 +48,10 @@ void Stepper::on_nextButton_clicked()
         message = databaseAsistantWidget ? databaseAsistantWidget->isValid(newProject) : "";
     } else if (currentIndex == 3) {
         FrontendAssistant *frontendAsistantWidget = qobject_cast<FrontendAssistant *>(currentWidget);
-        message = frontendAsistantWidget ? frontendAsistantWidget->isValid() : "";
+        message = frontendAsistantWidget ? frontendAsistantWidget->isValid(newProject) : "";
     } else if (currentIndex == 4) {
         BackendAssistant *backendAsistantWidget = qobject_cast<BackendAssistant *>(currentWidget);
-        message = backendAsistantWidget ? backendAsistantWidget->isValid() : "";
+        message = backendAsistantWidget ? backendAsistantWidget->isValid(newProject) : "";
     }
 
     if (message != "") {

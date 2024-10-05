@@ -13,10 +13,18 @@ BackendAssistant::~BackendAssistant()
     delete ui;
 }
 
-std::string BackendAssistant::isValid()
+std::string BackendAssistant::isValid(Project &project)
 {
-    QString port = ui->portLineEdit->text();
+    std::string port = ui->portLineEdit->text().toStdString();
 
-    // TODO: Check a correct port
-    return port.isEmpty() ? "Please fill in the port field." : "";
+    if (port.empty()) {
+        return "Please fill in the port field.";
+    } else if (port.length() != 4) {
+        return "Port must be exactly 4 digits.";
+    } else if (!std::all_of(port.begin(), port.end(), ::isdigit)) {
+        return "Port must contain only numeric digits.";
+    } else {
+        project.setBackendPort(port);
+    }
+    return "";
 }

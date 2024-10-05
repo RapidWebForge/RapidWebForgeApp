@@ -2,6 +2,7 @@
 #define BACKENDASSISTANT_H
 
 #include <QDialog>
+#include "../../models/project/project.h"
 
 namespace Ui {
 class BackendAssistant;
@@ -13,7 +14,7 @@ class BackendAssistant : public QDialog
 
 public:
     explicit BackendAssistant(QWidget *parent = nullptr);
-    std::string isValid();
+    std::string isValid(Project &project);
     ~BackendAssistant();
 
 private:

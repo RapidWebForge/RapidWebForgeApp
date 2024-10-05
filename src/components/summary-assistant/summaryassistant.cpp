@@ -12,18 +12,3 @@ SummaryAssistant::~SummaryAssistant()
 {
     delete ui;
 }
-
-// TODO: use a class to get information
-/*
-void SummaryAssistant::setProjectSummary(const QString &name,
-                                         const QString &frontend,
-                                         const QString &backend,
-                                         const QString &database)
-{
-    ui->projectNameLineEdit->setText(name);
-
-    ui->frontendLabel->setText(frontend);
-    ui->backendLabel->setText(backend);
-    ui->databaseLabel->setText(database);
-}
-*/

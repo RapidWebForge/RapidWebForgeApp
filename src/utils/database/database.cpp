@@ -1,4 +1,5 @@
 #include "database.h"
+#include <filesystem>
 #include <fmt/core.h>
 #include <iostream>
 
@@ -17,6 +18,9 @@ sqlite3 *Database::getConnection()
 
 Database::Database(const std::string &dbName)
 {
+    std::filesystem::path dbPath = dbName;
+    std::filesystem::create_directories(dbPath.parent_path());
+
     // Intentar abrir la base de datos en la ruta especificada
     if (sqlite3_open(dbName.c_str(), &db)) {
         fmt::print(stderr, "Error al abrir la base de datos '{}': {}\n", dbName, sqlite3_errmsg(db));
