@@ -1,0 +1,21 @@
+const { Sequelize } = require('sequelize');
+
+// Inicializar Sequelize
+const sequelize = new Sequelize('{{ credentials.dbname }}', '{{ credentials.user }}', '{{ credentials.password }}', {
+  host: 'localhost',
+  dialect: 'mysql'
+});
+
+// Cargar modelos
+{% for table in tables %}
+const {{ table.name }} = require('./{{table.name }}')(sequelize);
+{% endfor %}
+
+// Exportar los modelos y la instancia de Sequelize
+module.exports = {
+  sequelize,
+  {% for table in tables %}
+  {{ table.name }}{% if loop.is_last %} {% else %}, {% endif %}
+  
+  {% endfor %}
+};

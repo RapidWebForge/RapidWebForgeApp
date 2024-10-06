@@ -1,3 +1,5 @@
 #include "codegenerator.h"
 
-CodeGenerator::CodeGenerator() {}
+CodeGenerator::CodeGenerator(const std::string &projectPath)
+    : backendGenerator(projectPath)
+{}

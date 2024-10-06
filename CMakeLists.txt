@@ -78,11 +78,17 @@ set(PROJECT_SOURCES
         src/core/project-manager/projectmanager.cpp
         src/core/code-generator/codegenerator.h
         src/core/code-generator/codegenerator.cpp
+        src/core/backend-generator/backendgenerator.h
+        src/core/backend-generator/backendgenerator.cpp
         # Models
         src/models/project/project.h
         src/models/project/project.cpp
         src/models/database-data/databasedata.h
         src/models/database-data/databasedata.cpp
+        src/models/transaction/transaction.h
+        src/models/transaction/transaction.cpp
+        src/models/field/field.h
+        src/models/field/field.cpp
         # Utils
         src/utils/database/database.h
         src/utils/database/database.cpp

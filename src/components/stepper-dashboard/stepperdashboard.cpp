@@ -1,5 +1,8 @@
 #include "stepperdashboard.h"
+#include <QMessageBox>
+#include <QTimer>
 #include "ui_stepperdashboard.h"
+#include <fmt/core.h>
 
 StepperDashboard::StepperDashboard(QDialog *parent)
     : QDialog(parent)
@@ -34,6 +37,22 @@ StepperDashboard::StepperDashboard(QDialog *parent)
     // Asignar los menús a los botones
     ui->projectButton->setMenu(projectMenu);
     ui->versionsButton->setMenu(versionsMenu);
+
+    // Start Code Generator
+    codeGenerator = new CodeGenerator(defineProjectPath());
+}
+
+void StepperDashboard::showEvent(QShowEvent *event)
+{
+    QDialog::showEvent(event);
+
+    QTimer::singleShot(0, this, [this]() {
+        if (codeGenerator->backendGenerator.loadSchema()) {
+            QMessageBox::information(this, "Successful", "Information loaded");
+        } else {
+            QMessageBox::warning(this, "Warning", "There is no information, add data");
+        }
+    });
 }
 
 StepperDashboard::~StepperDashboard()
@@ -258,4 +277,10 @@ void StepperDashboard::setupMenus()
 
     // Conectar señales de las acciones a slots si es necesario
     // connect(projectChangeAction, &QAction::triggered, this, &StepperDashboard::onProjectChange);
+}
+
+std::string StepperDashboard::defineProjectPath()
+{
+    // TODO: Use SQLite to get real path
+    return "/Users/lecav/Programs/RapidWebForgeTests/test1";
 }

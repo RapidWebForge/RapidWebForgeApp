@@ -17,6 +17,7 @@ class BackendDashboard : public QDialog
 public:
     explicit BackendDashboard(QWidget *parent = nullptr);
     ~BackendDashboard();
+
 private slots:
     void showCreateTableDialog();
     void showAddFieldDialog();

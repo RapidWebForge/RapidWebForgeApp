@@ -4,6 +4,7 @@
 #include <QAction>
 #include <QMenu>
 #include <QWidget>
+#include "../../core/code-generator/codegenerator.h"
 #include "../backend-dashboard/backenddashboard.h"
 #include "../frontend-dashboard/frontenddashboard.h"
 
@@ -19,11 +20,15 @@ public:
     explicit StepperDashboard(QDialog *parent = nullptr);
     ~StepperDashboard();
 
+protected:
+    void showEvent(QShowEvent *event) override;
+
 private slots:
     void showBackendPage();
     void showFrontendPage();
     void applyMenuStyles();
     void setupMenus(); // Método para inicializar y configurar los menús
+    std::string defineProjectPath();
 
 private:
     Ui::StepperDashboard *ui;
@@ -44,6 +49,9 @@ private:
     QAction *changeVersionAction;
     QAction *versionHistoryAction;
     QAction *deleteVersionAction;
+
+    // Code Generator definition
+    CodeGenerator *codeGenerator;
 };
 
 #endif // STEPPERDASHBOARD_H
