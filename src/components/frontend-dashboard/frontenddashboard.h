@@ -17,6 +17,7 @@ public:
 
 private:
     Ui::FrontendDashboard *ui;
+    void applyStylesFront();
 };
 
 #endif // FRONTENDDASHBOARD_H
