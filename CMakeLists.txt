@@ -65,6 +65,12 @@ set(PROJECT_SOURCES
         src/components/frontend-dashboard/frontenddashboard.h
         src/components/frontend-dashboard/frontenddashboard.cpp
         src/components/frontend-dashboard/frontenddashboard.ui
+        src/components/create-table-dashboard/createtabledialog.h
+        src/components/create-table-dashboard/createtabledialog.cpp
+        src/components/create-table-dashboard/createtabledialog.ui
+        src/components/addfield-dashboard/addfielddialog.h
+        src/components/addfield-dashboard/addfielddialog.cpp
+        src/components/addfield-dashboard/addfielddialog.ui
         src/core/project-manager/projectmanager.h
         src/core/project-manager/projectmanager.cpp
         src/resources/resources.qrc
@@ -81,6 +87,7 @@ if(QT_VERSION_MAJOR GREATER_EQUAL 6)
     )
 else()
     add_executable(RapidWebForgeApp ${PROJECT_SOURCES}
+
 
 
     )
