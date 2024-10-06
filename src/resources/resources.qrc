@@ -5,5 +5,16 @@
         <file>Front.png</file>
         <file>DB2.png</file>
     </qresource>
-    <qresource prefix="/new/prefix1"/>
+    <qresource prefix="/icons">
+        <file>add.png</file>
+        <file>adddb.png</file>
+        <file>delete.png</file>
+        <file>edit.png</file>
+        <file>database.png</file>
+        <file>DB2.png</file>
+        <file>Front.png</file>
+        <file>MySQL.png</file>
+        <file>resources.qrc</file>
+        <file>table.png</file>
+    </qresource>
 </RCC>

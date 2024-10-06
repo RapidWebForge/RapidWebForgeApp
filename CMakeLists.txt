@@ -58,9 +58,26 @@ set(PROJECT_SOURCES
         src/components/stepper/stepper.h
         src/components/stepper/stepper.cpp
         src/components/stepper/stepper.ui
+        src/components/stepper-dashboard/stepperdashboard.h
+        src/components/stepper-dashboard/stepperdashboard.cpp
+        src/components/stepper-dashboard/stepperdashboard.ui
+        src/components/backend-dashboard/backenddashboard.h
+        src/components/backend-dashboard/backenddashboard.cpp
+        src/components/backend-dashboard/backenddashboard.ui
+        src/components/frontend-dashboard/frontenddashboard.h
+        src/components/frontend-dashboard/frontenddashboard.cpp
+        src/components/frontend-dashboard/frontenddashboard.ui
+        src/components/create-table-dashboard/createtabledialog.h
+        src/components/create-table-dashboard/createtabledialog.cpp
+        src/components/create-table-dashboard/createtabledialog.ui
+        src/components/addfield-dashboard/addfielddialog.h
+        src/components/addfield-dashboard/addfielddialog.cpp
+        src/components/addfield-dashboard/addfielddialog.ui
         # Core
         src/core/project-manager/projectmanager.h
         src/core/project-manager/projectmanager.cpp
+        src/core/code-generator/codegenerator.h
+        src/core/code-generator/codegenerator.cpp
         # Models
         src/models/project/project.h
         src/models/project/project.cpp
@@ -69,6 +86,8 @@ set(PROJECT_SOURCES
         # Utils
         src/utils/database/database.h
         src/utils/database/database.cpp
+        # Resources
+        src/resources/resources.qrc
 )
 
 
@@ -79,8 +98,7 @@ if(QT_VERSION_MAJOR GREATER_EQUAL 6)
         ${PROJECT_SOURCES}
     )
 else()
-    add_executable(RapidWebForgeApp ${PROJECT_SOURCES}
-        src/resources/resources.qrc)
+    add_executable(RapidWebForgeApp ${PROJECT_SOURCES})
 endif()
 
 target_link_libraries(RapidWebForgeApp PRIVATE
