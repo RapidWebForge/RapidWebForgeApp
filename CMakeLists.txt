@@ -56,8 +56,19 @@ set(PROJECT_SOURCES
         src/components/stepper/stepper.h
         src/components/stepper/stepper.cpp
         src/components/stepper/stepper.ui
+        src/components/stepper-dashboard/stepperdashboard.h
+        src/components/stepper-dashboard/stepperdashboard.cpp
+        src/components/stepper-dashboard/stepperdashboard.ui
+        src/components/backend-dashboard/backenddashboard.h
+        src/components/backend-dashboard/backenddashboard.cpp
+        src/components/backend-dashboard/backenddashboard.ui
+        src/components/frontend-dashboard/frontenddashboard.h
+        src/components/frontend-dashboard/frontenddashboard.cpp
+        src/components/frontend-dashboard/frontenddashboard.ui
         src/core/project-manager/projectmanager.h
         src/core/project-manager/projectmanager.cpp
+        src/resources/resources.qrc
+
 )
 
 
@@ -66,10 +77,13 @@ if(QT_VERSION_MAJOR GREATER_EQUAL 6)
     qt_add_executable(RapidWebForgeApp
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
+
     )
 else()
     add_executable(RapidWebForgeApp ${PROJECT_SOURCES}
-        src/resources/resources.qrc)
+
+
+    )
 endif()
 
 target_link_libraries(RapidWebForgeApp PRIVATE
