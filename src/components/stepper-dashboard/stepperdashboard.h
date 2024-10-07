@@ -23,12 +23,16 @@ public:
 protected:
     void showEvent(QShowEvent *event) override;
 
+signals:
+    void schemaLoaded();
+
 private slots:
     void showBackendPage();
     void showFrontendPage();
     void applyMenuStyles();
     void setupMenus(); // Método para inicializar y configurar los menús
     std::string defineProjectPath();
+    void onSchemaLoaded();
 
 private:
     Ui::StepperDashboard *ui;

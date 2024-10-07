@@ -6,35 +6,14 @@ BackendDashboard::BackendDashboard(QWidget *parent)
     , ui(new Ui::BackendDashboard)
     , createTableDialog(nullptr) // Inicialización del puntero a nullptr
     , addFieldDialog(nullptr)
+    , rootItem(nullptr)
 {
     ui->setupUi(this);
 
-    // Configura y agrega elementos al QTreeWidget
-    QTreeWidgetItem *root = new QTreeWidgetItem(ui->databaseTreeWidget);
-    root->setText(0, "Database tables");
-    root->setIcon(0,
-                  QIcon(":/icons/database.png")); // Asegúrate de tener el icono en la ruta correcta
-
-    // Agregar elementos a la raíz
-    QTreeWidgetItem *projectItem = new QTreeWidgetItem(root);
-    projectItem->setText(0, "projects");
-    projectItem->setIcon(0, QIcon(":/icons/table.png"));
-    projectItem->setIcon(0, QIcon(":/icons/delete.png"));
-
-    QTreeWidgetItem *tasksItem = new QTreeWidgetItem(root);
-    tasksItem->setText(0, "tasks");
-    tasksItem->setIcon(0, QIcon(":/icons/table.png"));
-    tasksItem->setIcon(0, QIcon(":/icons/delete.png"));
-
-    QTreeWidgetItem *employeeItem = new QTreeWidgetItem(root);
-    employeeItem->setText(0, "employees");
-    employeeItem->setIcon(0, QIcon(":/icons/table.png"));
-    employeeItem->setIcon(0, QIcon(":/icons/delete.png"));
-
-    QTreeWidgetItem *clientItem = new QTreeWidgetItem(root);
-    clientItem->setText(0, "clients");
-    clientItem->setIcon(0, QIcon(":/icons/table.png"));
-    clientItem->setIcon(0, QIcon(":/icons/delete.png"));
+    // Create and setting root
+    rootItem = new QTreeWidgetItem(ui->databaseTreeWidget);
+    rootItem->setText(0, "Database tables");
+    rootItem->setIcon(0, QIcon(":/icons/database.png"));
 
     ui->databaseTreeWidget->expandAll();
 
@@ -49,6 +28,8 @@ BackendDashboard::BackendDashboard(QWidget *parent)
 BackendDashboard::~BackendDashboard()
 {
     delete ui;
+    delete createTableDialog;
+    delete addFieldDialog;
 }
 void BackendDashboard::applyStylesBack()
 {
@@ -211,6 +192,7 @@ void BackendDashboard::setupTasksTable()
                                         "   color: white;"
                                         "}");
 }
+
 void BackendDashboard::setupTasksMethodsList()
 {
     // Crear una lista de métodos
@@ -278,10 +260,40 @@ void BackendDashboard::showCreateTableDialog()
     }
     createTableDialog->exec(); // Muestra el diálogo de forma modal
 }
+
 void BackendDashboard::showAddFieldDialog()
 {
     if (!addFieldDialog) {
         addFieldDialog = new AddFieldDialog(this);
     }
     addFieldDialog->exec(); // Muestra el diálogo de forma modal
+}
+
+void BackendDashboard::setTransactions(const std::vector<Transaction> &newTransactions)
+{
+    transactions = newTransactions;
+
+    // Clear rootItem
+    rootItem->takeChildren();
+
+    // Add transactions like children
+    for (const auto &transaction : transactions) {
+        QTreeWidgetItem *item = new QTreeWidgetItem(rootItem);
+        item->setText(0, QString::fromStdString(transaction.getName()));
+        item->setIcon(0, QIcon(":/icons/table.png"));
+        // item->setIcon(0, QIcon(":/icons/delete.png"));
+        // TODO: Replace for a custom widget to allow multiple icons
+    }
+
+    // Expandir todo el árbol para mostrar todas las tablas
+    ui->databaseTreeWidget->expandAll();
+}
+std::vector<Transaction> &BackendDashboard::getTransactions()
+{
+    return transactions;
+}
+
+const std::vector<Transaction> &BackendDashboard::getTransactions() const
+{
+    return transactions;
 }

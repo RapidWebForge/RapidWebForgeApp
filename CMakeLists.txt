@@ -104,7 +104,8 @@ if(QT_VERSION_MAJOR GREATER_EQUAL 6)
         ${PROJECT_SOURCES}
     )
 else()
-    add_executable(RapidWebForgeApp ${PROJECT_SOURCES})
+    add_executable(RapidWebForgeApp ${PROJECT_SOURCES}
+    )
 endif()
 
 target_link_libraries(RapidWebForgeApp PRIVATE

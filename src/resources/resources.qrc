@@ -17,4 +17,11 @@
         <file>resources.qrc</file>
         <file>table.png</file>
     </qresource>
+    <qresource prefix="/templates">
+        <file alias="controllers">templates/controllers.inja</file>
+        <file alias="models">templates/models.inja</file>
+        <file alias="modelsIndex">templates/modelsIndex.inja</file>
+        <file alias="routes">templates/routes.inja</file>
+        <file alias="routesIndex">templates/routesIndex.inja</file>
+    </qresource>
 </RCC>

@@ -1,6 +1,7 @@
 #ifndef BACKENDGENERATOR_H
 #define BACKENDGENERATOR_H
 
+#include <QString>
 #include "../../models/field/field.h"
 #include "../../models/transaction/transaction.h"
 #include <nlohmann/json.hpp>
@@ -13,7 +14,8 @@ public:
     BackendGenerator(const std::string &projectPath);
     bool loadSchema();
     bool generateBackendCode();
-    std::vector<Transaction> getTransactions() const;
+    const std::vector<Transaction> &getTransactions() const;
+    std::vector<Transaction> &getTransactions();
 
 private:
     void generateFile(const Transaction &transaction,

@@ -40,6 +40,8 @@ StepperDashboard::StepperDashboard(QDialog *parent)
 
     // Start Code Generator
     codeGenerator = new CodeGenerator(defineProjectPath());
+
+    connect(this, &StepperDashboard::schemaLoaded, this, &StepperDashboard::onSchemaLoaded);
 }
 
 void StepperDashboard::showEvent(QShowEvent *event)
@@ -49,10 +51,27 @@ void StepperDashboard::showEvent(QShowEvent *event)
     QTimer::singleShot(0, this, [this]() {
         if (codeGenerator->backendGenerator.loadSchema()) {
             QMessageBox::information(this, "Successful", "Information loaded");
+
+            backendDashboard->setTransactions(codeGenerator->backendGenerator.getTransactions());
+
+            emit schemaLoaded();
         } else {
             QMessageBox::warning(this, "Warning", "There is no information, add data");
         }
     });
+}
+
+void StepperDashboard::onSchemaLoaded()
+{
+    // Aquí puedes proceder con operaciones que dependen del esquema cargado
+    backendDashboard->setTransactions(codeGenerator->backendGenerator.getTransactions());
+
+    // Generar código después de cargar el esquema
+    if (codeGenerator->backendGenerator.generateBackendCode()) {
+        QMessageBox::information(this, "Successful", "Code Generated");
+    } else {
+        QMessageBox::warning(this, "Warning", "Nothing happened");
+    }
 }
 
 StepperDashboard::~StepperDashboard()

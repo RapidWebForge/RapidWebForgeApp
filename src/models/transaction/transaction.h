@@ -14,16 +14,19 @@ public:
     // Getters
     int getId() const;
     std::string getName() const;
+    std::string getNameConst() const;
     const std::vector<Field> &getFields() const;
     std::vector<Field> &getFields();
 
     // Setters
     void setName(const std::string &newName);
+    void setNameConst(const std::string &newNameConst);
     void setFields(const std::vector<Field> &newFields);
 
 private:
     int id;
     std::string name;
+    std::string nameConst;
     std::vector<Field> fields;
 };
 

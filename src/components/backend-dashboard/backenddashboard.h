@@ -3,6 +3,8 @@
 
 #include <QCheckBox>
 #include <QDialog>
+#include <QTreeWidgetItem>
+#include "../../models/transaction/transaction.h"
 #include "../addfield-dashboard/addfielddialog.h"
 #include "../create-table-dashboard/createtabledialog.h"
 
@@ -17,6 +19,10 @@ class BackendDashboard : public QDialog
 public:
     explicit BackendDashboard(QWidget *parent = nullptr);
     ~BackendDashboard();
+    std::vector<Transaction> transactions;
+    void setTransactions(const std::vector<Transaction> &newTransactions);
+    const std::vector<Transaction> &getTransactions() const;
+    std::vector<Transaction> &getTransactions();
 
 private slots:
     void showCreateTableDialog();
@@ -29,6 +35,7 @@ private:
     void setupTasksMethodsList();
     CreateTableDialog *createTableDialog;
     AddFieldDialog *addFieldDialog;
+    QTreeWidgetItem *rootItem;
 };
 
 #endif // BACKENDDASHBOARD_H
