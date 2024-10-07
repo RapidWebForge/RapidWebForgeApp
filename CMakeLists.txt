@@ -73,6 +73,12 @@ set(PROJECT_SOURCES
         src/components/addfield-dashboard/addfielddialog.h
         src/components/addfield-dashboard/addfielddialog.cpp
         src/components/addfield-dashboard/addfielddialog.ui
+        src/components/projects-panel/projectspanel.h
+        src/components/projects-panel/projectspanel.cpp
+        src/components/projects-panel/projectspanel.ui
+        src/components/project-preview/projectpreview.h
+        src/components/project-preview/projectpreview.cpp
+        src/components/project-preview/projectpreview.ui
         # Core
         src/core/project-manager/projectmanager.h
         src/core/project-manager/projectmanager.cpp
