@@ -16,6 +16,7 @@
         <file>MySQL.png</file>
         <file>resources.qrc</file>
         <file>table.png</file>
+        <file>Recent.png</file>
     </qresource>
     <qresource prefix="/inja_templates">
         <file alias="controllers">inja_templates/controllers.inja</file>

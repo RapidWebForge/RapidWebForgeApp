@@ -25,6 +25,7 @@ private slots:
 private:
     Ui::ProjectsPanel *ui;
     std::vector<Project> projects;
+    void applyStylesProj();
 };
 
 #endif // PROJECTSPANEL_H

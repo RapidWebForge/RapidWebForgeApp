@@ -14,6 +14,7 @@ ProjectsPanel::ProjectsPanel(QWidget *parent)
 
     ProjectManager projectManager;
     setupProjects(projectManager.getAllProjects());
+    applyStylesProj();
 }
 
 void ProjectsPanel::setupProjects(const std::vector<Project> &projects)
@@ -102,4 +103,103 @@ void ProjectsPanel::onProjectPreviewClicked(const Project &project)
 ProjectsPanel::~ProjectsPanel()
 {
     delete ui;
+}
+
+void ProjectsPanel::applyStylesProj()
+{
+    // Aplica el stylesheet a los elementos del panel
+    QString stylesheet = R"(
+
+
+        QWidget#widget {
+            background-color: #f9f9f9;
+        }
+
+        QWidget#ProjectsPanel {
+            background-color: white;
+        }
+
+        QPushButton#recentsButton{
+            font-size: 14px;
+            color: #000000;
+            background-color: #ffffff;
+            border-radius: 5px;
+            padding: 7px 7px;
+            text-align: left; /* Alineación del texto dentro del botón */
+        }
+
+        QPushButton#configurationButton {
+            font-size: 14px;
+            color: #000000;
+            background-color: #ffffff;
+            border: 0.5px solid #dddddd;
+            border-radius: 5px;
+            padding: 7px 7px;
+        }
+
+
+        QPushButton#recentsButton:hover, QPushButton#configurationButton:hover {
+            background-color: #f0f0f0;
+        }
+
+        QPushButton#recentsButton:pressed, QPushButton#configurationButton:pressed {
+            background-color: #e0e0e0;
+        }
+
+        QPushButton#addProjectButton {
+            font-size: 36px;
+            color: #666666;
+            background-color: #f9f9f9;
+            border: 2px dashed #cccccc;
+            border-radius: 10px;
+            min-width: 150px;
+            min-height: 150px;
+        }
+
+        QPushButton#addProjectButton:hover {
+            background-color: #e9e9e9;
+        }
+
+        QPushButton#addProjectButton:pressed {
+            background-color: #d9d9d9;
+        }
+
+        QScrollArea {
+            border: none;
+            background-color: #ffffff;
+        }
+
+        QWidget#scrollAreaWidgetContents {
+            background-color: #ffffff;
+        }
+
+        QLabel {
+            font-size: 35px;
+            font-weight: bold;
+            color: #333333;
+        }
+
+        QWidget#projectPreview {
+            background-color: #ffffff;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 10px;
+            margin: 5px;
+        }
+
+        QWidget#projectPreview:hover {
+            background-color: #f0f0f0;
+        }
+
+        QWidget#projectPreview:pressed {
+            background-color: #e0e0e0;
+        }
+
+        QLabel#projectName {
+            font-size: 18px;
+            color: #333333;
+        }
+    )";
+
+    this->setStyleSheet(stylesheet);
 }
