@@ -92,7 +92,7 @@ void ProjectsPanel::onProjectPreviewClicked(const Project &project)
     this->hide();
 
     // When a project is clicked, open the StepperDashboard for that project
-    StepperDashboard *stprDashboard = new StepperDashboard();
+    StepperDashboard *stprDashboard = new StepperDashboard(nullptr, project);
     stprDashboard->show();
 
     // Show when dashboard is closed

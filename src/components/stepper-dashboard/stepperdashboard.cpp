@@ -4,7 +4,7 @@
 #include "ui_stepperdashboard.h"
 #include <fmt/core.h>
 
-StepperDashboard::StepperDashboard(QDialog *parent)
+StepperDashboard::StepperDashboard(QDialog *parent, const Project &project)
     : QDialog(parent)
     , ui(new Ui::StepperDashboard)
     , frontendDashboard(new FrontendDashboard())
@@ -19,6 +19,7 @@ StepperDashboard::StepperDashboard(QDialog *parent)
     , changeVersionAction(new QAction("Change version", this))
     , versionHistoryAction(new QAction("Version history", this))
     , deleteVersionAction(new QAction("Delete version", this))
+    , project(project)
 {
     ui->setupUi(this);
 
@@ -39,7 +40,7 @@ StepperDashboard::StepperDashboard(QDialog *parent)
     ui->versionsButton->setMenu(versionsMenu);
 
     // Start Code Generator
-    codeGenerator = new CodeGenerator(defineProjectPath());
+    codeGenerator = new CodeGenerator(this->project.getPath());
 
     connect(this, &StepperDashboard::schemaLoaded, this, &StepperDashboard::onSchemaLoaded);
 }
@@ -294,10 +295,4 @@ void StepperDashboard::setupMenus()
 
     // Conectar señales de las acciones a slots si es necesario
     // connect(projectChangeAction, &QAction::triggered, this, &StepperDashboard::onProjectChange);
-}
-
-std::string StepperDashboard::defineProjectPath()
-{
-    // TODO: Use SQLite to get real path
-    return "/Users/lecav/Programs/RapidWebForgeTests/test1";
 }

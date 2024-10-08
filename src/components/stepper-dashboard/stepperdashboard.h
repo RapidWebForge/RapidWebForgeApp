@@ -5,6 +5,7 @@
 #include <QMenu>
 #include <QWidget>
 #include "../../core/code-generator/codegenerator.h"
+#include "../../models/project/project.h"
 #include "../backend-dashboard/backenddashboard.h"
 #include "../frontend-dashboard/frontenddashboard.h"
 
@@ -17,7 +18,7 @@ class StepperDashboard : public QDialog
     Q_OBJECT
 
 public:
-    explicit StepperDashboard(QDialog *parent = nullptr);
+    explicit StepperDashboard(QDialog *parent = nullptr, const Project &project = Project());
     ~StepperDashboard();
 
 protected:
@@ -30,8 +31,7 @@ private slots:
     void showBackendPage();
     void showFrontendPage();
     void applyMenuStyles();
-    void setupMenus(); // Método para inicializar y configurar los menús
-    std::string defineProjectPath();
+    void setupMenus();
     void onSchemaLoaded();
 
 private:
@@ -56,6 +56,9 @@ private:
 
     // Code Generator definition
     CodeGenerator *codeGenerator;
+
+    // Project
+    Project project;
 };
 
 #endif // STEPPERDASHBOARD_H
