@@ -4,7 +4,6 @@
 #include <fmt/core.h>
 #include <fstream>
 #include <inja/inja.hpp>
-#include <iostream>
 #include <nlohmann/json.hpp>
 
 // Constructor
@@ -141,7 +140,7 @@ void BackendGenerator::generateFile(const Transaction &transaction,
 
 void BackendGenerator::generateController(const Transaction &transaction)
 {
-    std::string templatePath = ":/templates/controllers";
+    std::string templatePath = ":/inja_templates/controllers";
     std::string outputPath = projectPath + "/backend/controllers/" + transaction.getNameConst()
                              + "Controller.js";
     generateFile(transaction, templatePath, outputPath);
@@ -149,14 +148,14 @@ void BackendGenerator::generateController(const Transaction &transaction)
 
 void BackendGenerator::generateModel(const Transaction &transaction)
 {
-    std::string templatePath = ":/templates/models";
+    std::string templatePath = ":/inja_templates/models";
     std::string outputPath = projectPath + "/backend/models/" + transaction.getNameConst() + ".js";
     generateFile(transaction, templatePath, outputPath);
 }
 
 void BackendGenerator::generateRoute(const Transaction &transaction)
 {
-    std::string templatePath = ":/templates/routes";
+    std::string templatePath = ":/inja_templates/routes";
     std::string outputPath = projectPath + "/backend/routes/" + transaction.getNameConst()
                              + "Routes.js";
     generateFile(transaction, templatePath, outputPath, false);
@@ -180,7 +179,7 @@ void BackendGenerator::generateIndexFiles()
     context["transactions"] = transactionsNames; // Añadir transacciones al contexto
 
     // Ruta al template de modelsIndex
-    QString modelsIndexTemplatePath = ":/templates/modelsIndex";
+    QString modelsIndexTemplatePath = ":/inja_templates/modelsIndex";
     QFile modelsIndexFile(modelsIndexTemplatePath);
     if (!modelsIndexFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
         fmt::print(stderr,
@@ -205,7 +204,7 @@ void BackendGenerator::generateIndexFiles()
     writeFile(projectPath + "/backend/models/index.js", modelsIndexResult);
 
     // Ruta al template de routesIndex
-    QString routesIndexTemplatePath = ":/templates/routesIndex";
+    QString routesIndexTemplatePath = ":/inja_templates/routesIndex";
     QFile routesIndexFile(routesIndexTemplatePath);
     if (!routesIndexFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
         fmt::print(stderr,

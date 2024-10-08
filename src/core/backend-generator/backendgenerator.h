@@ -2,7 +2,6 @@
 #define BACKENDGENERATOR_H
 
 #include <QString>
-#include "../../models/field/field.h"
 #include "../../models/transaction/transaction.h"
 #include <nlohmann/json.hpp>
 #include <string>

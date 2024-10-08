@@ -40,7 +40,7 @@ StepperDashboard::StepperDashboard(QDialog *parent, const Project &project)
     ui->versionsButton->setMenu(versionsMenu);
 
     // Start Code Generator
-    codeGenerator = new CodeGenerator(this->project.getPath());
+    codeGenerator = new CodeGenerator(this->project);
 
     connect(this, &StepperDashboard::schemaLoaded, this, &StepperDashboard::onSchemaLoaded);
 }

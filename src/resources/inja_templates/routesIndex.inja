@@ -1,0 +1,14 @@
+const express = require('express');
+const router = express.Router();
+
+// Importar las rutas individuales
+{% for transaction in transactions %}
+const {{ transaction.nameConst }}Routes = require('./{{transaction.nameConst }}Routes');
+{% endfor %}
+
+// Usar las rutas importadas
+{% for transaction in transactions %}
+router.use({{ transaction.nameConst }}Routes); // Usa las rutas de {{ transaction.name }}
+{% endfor %}
+
+module.exports = router; // Exporta el enrutador consolidado

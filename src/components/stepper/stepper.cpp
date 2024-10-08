@@ -1,5 +1,6 @@
 #include "stepper.h"
 #include <QMessageBox>
+#include "../../core/code-generator/codegenerator.h"
 #include "../stepper-dashboard/stepperdashboard.h"
 #include "ui_stepper.h"
 
@@ -73,6 +74,9 @@ void Stepper::on_nextButton_clicked()
     // Create Project before Summary
     if (currentIndex == ui->stepsWidget->count() - 2) {
         projectManager.createProject(this->newProject);
+        // TODO: FIX
+        // CodeGenerator codeGenerator(this->newProject);
+        // codeGenerator.createBaseBackendProject();
         message = "Your project has been created successfully!";
         QMessageBox::information(this, "Successful", QString::fromStdString(message));
     }

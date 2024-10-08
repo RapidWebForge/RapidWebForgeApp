@@ -32,7 +32,7 @@ find_package(fmt CONFIG REQUIRED)
 find_package(inja CONFIG REQUIRED)
 find_package(unofficial-mysql-connector-cpp CONFIG REQUIRED)
 find_package(unofficial-sqlite3 CONFIG REQUIRED)
-
+find_package(libzip CONFIG REQUIRED)
 
 set(PROJECT_SOURCES
         src/main.cpp
@@ -111,6 +111,7 @@ if(QT_VERSION_MAJOR GREATER_EQUAL 6)
     )
 else()
     add_executable(RapidWebForgeApp ${PROJECT_SOURCES}
+        src/utils/ziphelper/ziphelper.h src/utils/ziphelper/ziphelper.cpp
     )
 endif()
 
@@ -121,6 +122,7 @@ target_link_libraries(RapidWebForgeApp PRIVATE
     pantor::inja
     unofficial::mysql-connector-cpp::connector
     unofficial::sqlite3::sqlite3
+    libzip::zip
     ${MACOS_SPECIFIC_LIBS}
 )
 
