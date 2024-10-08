@@ -1,5 +1,6 @@
 #include "stepper.h"
 #include <QMessageBox>
+#include "../stepper-dashboard/stepperdashboard.h"
 #include "ui_stepper.h"
 
 Stepper::Stepper(QWidget *parent)
@@ -41,21 +42,21 @@ void Stepper::on_nextButton_clicked()
     if (currentIndex == 0) {
         CreationAssistant *creationAssistantWidget = qobject_cast<CreationAssistant *>(
             currentWidget);
-        message = creationAssistantWidget ? creationAssistantWidget->isValid(newProject) : "";
+        message = creationAssistantWidget ? creationAssistantWidget->isValid(this->newProject) : "";
     } else if (currentIndex == 1) {
         DatabaseAssistant *databaseAsistantWidget = qobject_cast<DatabaseAssistant *>(currentWidget);
-        message = databaseAsistantWidget ? databaseAsistantWidget->isValid(newProject) : "";
+        message = databaseAsistantWidget ? databaseAsistantWidget->isValid(this->newProject) : "";
     } else if (currentIndex == 2) {
         FrontendAssistant *frontendAsistantWidget = qobject_cast<FrontendAssistant *>(currentWidget);
-        message = frontendAsistantWidget ? frontendAsistantWidget->isValid(newProject) : "";
+        message = frontendAsistantWidget ? frontendAsistantWidget->isValid(this->newProject) : "";
     } else if (currentIndex == 3) {
         BackendAssistant *backendAsistantWidget = qobject_cast<BackendAssistant *>(currentWidget);
-        message = backendAsistantWidget ? backendAsistantWidget->isValid(newProject) : "";
+        message = backendAsistantWidget ? backendAsistantWidget->isValid(this->newProject) : "";
         // Update SummaryAssistant before moving to the next step
         SummaryAssistant *summaryAssistantWidget = qobject_cast<SummaryAssistant *>(
             ui->stepsWidget->widget(currentIndex + 1));
         if (summaryAssistantWidget) {
-            summaryAssistantWidget->setProjectInformation(newProject);
+            summaryAssistantWidget->setProjectInformation(this->newProject);
         }
     }
 
@@ -69,11 +70,23 @@ void Stepper::on_nextButton_clicked()
         ui->stepsWidget->setCurrentIndex(currentIndex + 1);
     }
 
-    // Create Project in Summary
+    // Create Project before Summary
     if (currentIndex == ui->stepsWidget->count() - 2) {
-        projectManager.createProject(newProject);
+        projectManager.createProject(this->newProject);
         message = "Your project has been created successfully!";
         QMessageBox::information(this, "Successful", QString::fromStdString(message));
+    }
+
+    // Show dashboard
+    if (currentIndex == ui->stepsWidget->count() - 1) {
+        this->hide();
+
+        // When a project is clicked, open the StepperDashboard for that project
+        StepperDashboard *stprDashboard = new StepperDashboard(nullptr, this->newProject);
+        stprDashboard->show();
+
+        // Show when dashboard is closed
+        connect(stprDashboard, &StepperDashboard::destroyed, this, &Stepper::show);
     }
 }
 
@@ -93,7 +106,6 @@ void Stepper::applyStyles()
     QString inputStyle = "border: 1px solid #cccccc; font-size: 14px; border-radius: 5px; "
                          "font-weight: normal; background-color: #ffffff; padding: 4px 8px;";
 
-    // Estilo para los botones (comentados en tu código original)
     ui->nextButton->setStyleSheet(
         "border: 1px solid #cccccc; border-radius: 7px; margin-left: 0px; padding: 6px 20px; "
         "font-weight: semi-bold;"

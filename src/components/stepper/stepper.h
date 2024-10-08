@@ -24,17 +24,17 @@ public:
 
 private slots:
     void on_backButton_clicked();
-
     void on_nextButton_clicked();
 
 private:
     Ui::Stepper *ui;
-    void applyStyles(); // Declaración de la función applyStyles
+    void applyStyles();
     CreationAssistant *creationAssistant;
     DatabaseAssistant *databaseAssistant;
     FrontendAssistant *frontendAssistant;
     BackendAssistant *backendAssistant;
     SummaryAssistant *summaryAssistant;
+
     Project newProject;
     ProjectManager projectManager;
 };
