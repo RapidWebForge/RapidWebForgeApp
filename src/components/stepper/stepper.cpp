@@ -73,10 +73,12 @@ void Stepper::on_nextButton_clicked()
 
     // Create Project before Summary
     if (currentIndex == ui->stepsWidget->count() - 2) {
+        // Create project in sqlite
         projectManager.createProject(this->newProject);
-        // TODO: FIX
-        // CodeGenerator codeGenerator(this->newProject);
-        // codeGenerator.createBaseBackendProject();
+        // Copy folder template to choose path
+        CodeGenerator codeGenerator(this->newProject);
+        codeGenerator.createBaseBackendProject();
+
         message = "Your project has been created successfully!";
         QMessageBox::information(this, "Successful", QString::fromStdString(message));
     }

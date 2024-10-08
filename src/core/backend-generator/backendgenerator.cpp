@@ -17,6 +17,20 @@ bool BackendGenerator::loadSchema()
     std::ifstream file(projectPath + "/backend.json");
     if (!file.is_open()) {
         fmt::print(stderr, "Unable to open JSON file: {}/backend.json\n", projectPath);
+
+        // Create backend.json
+        nlohmann::json backendJson;
+        backendJson["transactions"] = nlohmann::json::array();
+
+        std::ofstream jsonFile(projectPath + "/backend.json");
+        if (!jsonFile.is_open()) {
+            fmt::print(stderr, "Failed to create backend.json\n");
+            return false;
+        }
+
+        jsonFile << backendJson.dump(2);
+        jsonFile.close();
+
         return false;
     }
 
@@ -25,6 +39,17 @@ bool BackendGenerator::loadSchema()
         file >> jsonSchema;
     } catch (const nlohmann::json::parse_error &e) {
         fmt::print(stderr, "Error parsing JSON: {}\n", e.what());
+        return false;
+    }
+
+    // Verify if have transactions
+    if (jsonSchema.contains("transactions") && jsonSchema["transactions"].is_array()) {
+        if (jsonSchema["transactions"].empty()) {
+            fmt::print(stderr, "The backend.json file exists but has no transactions.\n");
+            return false;
+        }
+    } else {
+        fmt::print(stderr, "The backend.json file exists but has an invalid structure.\n");
         return false;
     }
 
