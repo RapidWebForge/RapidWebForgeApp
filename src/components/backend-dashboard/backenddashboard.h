@@ -19,10 +19,16 @@ class BackendDashboard : public QDialog
 public:
     explicit BackendDashboard(QWidget *parent = nullptr);
     ~BackendDashboard();
-    std::vector<Transaction> transactions;
-    void setTransactions(const std::vector<Transaction> &newTransactions);
+    // Getters
     const std::vector<Transaction> &getTransactions() const;
     std::vector<Transaction> &getTransactions();
+    // Setters
+    void setTransactions(const std::vector<Transaction> &newTransactions);
+    void setCurrentTransaction(Transaction &transaction);
+
+public slots:
+    void onFieldSaved(const Field &field);
+    void onTransactionSaved(const Transaction &transaction);
 
 private slots:
     void showCreateTableDialog();
@@ -36,6 +42,8 @@ private:
     CreateTableDialog *createTableDialog;
     AddFieldDialog *addFieldDialog;
     QTreeWidgetItem *rootItem;
+    std::vector<Transaction> transactions;
+    Transaction currentTransaction;
 };
 
 #endif // BACKENDDASHBOARD_H

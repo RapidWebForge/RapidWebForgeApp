@@ -31,6 +31,7 @@ BackendDashboard::~BackendDashboard()
     delete createTableDialog;
     delete addFieldDialog;
 }
+
 void BackendDashboard::applyStylesBack()
 {
     this->setStyleSheet("QTreeWidget {"
@@ -255,8 +256,13 @@ void BackendDashboard::showCreateTableDialog()
 {
     if (!createTableDialog) {
         createTableDialog = new CreateTableDialog(this);
+
+        connect(createTableDialog,
+                &CreateTableDialog::transactionSaved,
+                this,
+                &BackendDashboard::onTransactionSaved);
     }
-    createTableDialog->exec(); // Muestra el diálogo de forma modal
+    createTableDialog->exec();
 }
 
 void BackendDashboard::showAddFieldDialog()
@@ -264,9 +270,21 @@ void BackendDashboard::showAddFieldDialog()
     if (!addFieldDialog) {
         addFieldDialog = new AddFieldDialog(this);
     }
-    addFieldDialog->exec(); // Muestra el diálogo de forma modal
+    addFieldDialog->exec();
 }
 
+// Getters
+std::vector<Transaction> &BackendDashboard::getTransactions()
+{
+    return transactions;
+}
+
+const std::vector<Transaction> &BackendDashboard::getTransactions() const
+{
+    return transactions;
+}
+
+// Setters
 void BackendDashboard::setTransactions(const std::vector<Transaction> &newTransactions)
 {
     transactions = newTransactions;
@@ -286,12 +304,19 @@ void BackendDashboard::setTransactions(const std::vector<Transaction> &newTransa
     // Expandir todo el árbol para mostrar todas las tablas
     ui->databaseTreeWidget->expandAll();
 }
-std::vector<Transaction> &BackendDashboard::getTransactions()
+
+void BackendDashboard::setCurrentTransaction(Transaction &transaction)
 {
-    return transactions;
+    currentTransaction = transaction;
 }
 
-const std::vector<Transaction> &BackendDashboard::getTransactions() const
+void BackendDashboard::onFieldSaved(const Field &field)
 {
-    return transactions;
+    currentTransaction.getFields().push_back(field);
+}
+
+void BackendDashboard::onTransactionSaved(const Transaction &transaction)
+{
+    transactions.push_back(transaction);
+    setTransactions(transactions);
 }

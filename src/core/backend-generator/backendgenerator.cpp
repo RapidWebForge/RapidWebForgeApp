@@ -1,4 +1,5 @@
 #include "backendgenerator.h"
+#include <QDebug>
 #include <QFile>
 #include <QTextStream>
 #include <fmt/core.h>
@@ -105,6 +106,62 @@ void BackendGenerator::parseJson(const nlohmann::json &jsonSchema)
     }
 }
 
+bool BackendGenerator::updateSchema()
+{
+    nlohmann::json jsonSchema;
+
+    // Create the transactions array
+    jsonSchema["transactions"] = nlohmann::json::array();
+
+    // Loop through each transaction
+    for (const auto &transaction : transactions) {
+        // Create a JSON object for each transaction
+        nlohmann::json transactionJson;
+        transactionJson["name"] = transaction.getName();
+        transactionJson["nameConst"] = transaction.getNameConst();
+
+        // Create a fields array for each transaction
+        transactionJson["fields"] = nlohmann::json::array();
+        for (const auto &field : transaction.getFields()) {
+            // Create a JSON object for each field
+            nlohmann::json fieldJson;
+            fieldJson["name"] = field.getName();
+            fieldJson["type"] = field.getType();
+            fieldJson["isNull"] = field.getIsNull();
+            fieldJson["isUnique"] = field.getIsUnique();
+
+            // Add the field JSON object to the fields array
+            transactionJson["fields"].push_back(fieldJson);
+        }
+
+        // Add the transaction JSON object to the transactions array
+        jsonSchema["transactions"].push_back(transactionJson);
+    }
+
+    // Construct the full file path using projectPath
+    std::string filePath = projectPath + "/backend.json";
+
+    // Write the JSON to a file
+    std::ofstream jsonFile(filePath);
+    if (!jsonFile.is_open()) {
+        fmt::print(stderr, "Failed to open the file for writing: {}\n", filePath);
+        return false;
+    }
+
+    jsonFile << jsonSchema.dump(2);
+    jsonFile.close();
+
+    // Check for writing errors
+    if (jsonFile.fail()) {
+        fmt::print(stderr, "Error while writing and closing the file: {}\n", filePath);
+        return false;
+    }
+
+    fmt::print("File saved successfully: {}\n", filePath);
+
+    return true;
+}
+
 // Generate the backend code using Inja templates
 bool BackendGenerator::generateBackendCode()
 {
@@ -116,6 +173,14 @@ bool BackendGenerator::generateBackendCode()
     }
 
     return true;
+}
+
+// Regenerate backend with new information
+bool BackendGenerator::updateBackendCode()
+{
+    if (updateSchema())
+        return generateBackendCode();
+    return false;
 }
 
 void BackendGenerator::generateFile(const Transaction &transaction,
@@ -256,4 +321,10 @@ const std::vector<Transaction> &BackendGenerator::getTransactions() const
 std::vector<Transaction> &BackendGenerator::getTransactions()
 {
     return transactions;
+}
+
+// Setter for transactions
+void BackendGenerator::setTransactions(const std::vector<Transaction> &newTransactions)
+{
+    transactions = newTransactions;
 }

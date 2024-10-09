@@ -13,6 +13,9 @@ public:
     BackendGenerator(const std::string &projectPath);
     bool loadSchema();
     bool generateBackendCode();
+    bool updateSchema();
+    bool updateBackendCode();
+    void setTransactions(const std::vector<Transaction> &newTransactions);
     const std::vector<Transaction> &getTransactions() const;
     std::vector<Transaction> &getTransactions();
 

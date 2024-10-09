@@ -12,3 +12,25 @@ AddFieldDialog::~AddFieldDialog()
 {
     delete ui;
 }
+
+void AddFieldDialog::on_addButton_clicked()
+{
+    std::string fieldName = ui->fieldNameLineEdit->text().toStdString();
+    field.setName(fieldName);
+
+    std::string fieldType = ui->fieldTypeComboBox->currentText().toStdString();
+    field.setType(fieldType);
+
+    std::string constraint = ui->constraintComboBox->currentData().toString().toStdString();
+    if (constraint == "NULL") {
+        field.setIsNull(true);
+        field.setIsUnique(false);
+    } else {
+        field.setIsNull(false);
+        field.setIsUnique(true);
+    }
+
+    emit fieldSaved(field);
+
+    accept();
+}

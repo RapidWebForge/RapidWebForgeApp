@@ -20,6 +20,7 @@ StepperDashboard::StepperDashboard(QDialog *parent, const Project &project)
     , versionHistoryAction(new QAction("Version history", this))
     , deleteVersionAction(new QAction("Delete version", this))
     , project(project)
+    , codeGenerator(new CodeGenerator(project))
 {
     ui->setupUi(this);
 
@@ -38,9 +39,6 @@ StepperDashboard::StepperDashboard(QDialog *parent, const Project &project)
     // Asignar los menús a los botones
     ui->projectButton->setMenu(projectMenu);
     ui->versionsButton->setMenu(versionsMenu);
-
-    // Start Code Generator
-    codeGenerator = new CodeGenerator(this->project);
 
     connect(this, &StepperDashboard::schemaLoaded, this, &StepperDashboard::onSchemaLoaded);
 }
@@ -63,7 +61,9 @@ void StepperDashboard::showEvent(QShowEvent *event)
 void StepperDashboard::onSchemaLoaded()
 {
     // Aquí puedes proceder con operaciones que dependen del esquema cargado
-    backendDashboard->setTransactions(codeGenerator->backendGenerator.getTransactions());
+    std::vector<Transaction> transactions = codeGenerator->backendGenerator.getTransactions();
+    backendDashboard->setTransactions(transactions);
+    backendDashboard->setCurrentTransaction(transactions.at(0));
 
     // Generar código después de cargar el esquema
     // if (codeGenerator->backendGenerator.generateBackendCode()) {
@@ -152,6 +152,7 @@ void StepperDashboard::showFrontendPage()
                                      "   background-color: #dddddd;"
                                      "}");
 }
+
 void StepperDashboard::applyMenuStyles()
 {
     this->setStyleSheet("background-color: #ffffff;");
@@ -294,5 +295,14 @@ void StepperDashboard::setupMenus()
     deleteVersionAction->setEnabled(false); // Deshabilitar la opción de eliminar para estilo
 
     // Conectar señales de las acciones a slots si es necesario
-    // connect(projectChangeAction, &QAction::triggered, this, &StepperDashboard::onProjectChange);
+    connect(saveChangesAction, &QAction::triggered, this, &StepperDashboard::onSaveChanges);
+}
+
+void StepperDashboard::onSaveChanges()
+{
+    codeGenerator->backendGenerator.setTransactions(backendDashboard->getTransactions());
+
+    codeGenerator->backendGenerator.updateBackendCode();
+
+    QMessageBox::information(this, "Save Changes", "Changes have been saved successfully.");
 }
