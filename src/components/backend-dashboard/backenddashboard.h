@@ -26,9 +26,14 @@ public:
     void setTransactions(const std::vector<Transaction> &newTransactions);
     void setCurrentTransaction(Transaction &transaction);
 
+    // Método para configurar el nombre de la base de datos
+    void setDatabaseLabel(const std::string &dbName);
+
 public slots:
     void onFieldSaved(const Field &field);
     void onTransactionSaved(const Transaction &transaction);
+    // Nueva función para manejar la selección de una tabla
+    void onTableSelected(QTreeWidgetItem *item, int column);
 
 private slots:
     void showCreateTableDialog();
@@ -39,6 +44,9 @@ private:
     void applyStylesBack();
     void setupTasksTable();
     void setupTasksMethodsList();
+    void updateTasksTable(
+        const Transaction &transaction); // Nueva función para actualizar la tabla de tareas
+
     CreateTableDialog *createTableDialog;
     AddFieldDialog *addFieldDialog;
     QTreeWidgetItem *rootItem;

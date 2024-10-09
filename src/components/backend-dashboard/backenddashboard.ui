@@ -70,7 +70,7 @@
              </font>
             </property>
             <property name="text">
-             <string>Products_db</string>
+             <string>Database</string>
             </property>
             <property name="alignment">
              <set>Qt::AlignmentFlag::AlignCenter</set>
@@ -161,7 +161,7 @@
              </font>
             </property>
             <property name="text">
-             <string>Tasks Table</string>
+             <string>Table</string>
             </property>
            </widget>
           </item>
@@ -250,7 +250,7 @@
            </font>
           </property>
           <property name="text">
-           <string>Tasks Methods</string>
+           <string>Methods</string>
           </property>
          </widget>
         </item>

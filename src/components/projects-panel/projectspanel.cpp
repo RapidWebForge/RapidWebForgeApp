@@ -115,7 +115,7 @@ void ProjectsPanel::onProjectPreviewClicked(const Project &project)
 
     // When a project is clicked, open the StepperDashboard for that project
     StepperDashboard *stprDashboard = new StepperDashboard(nullptr, project);
-    stprDashboard->show();
+    stprDashboard->showMaximized();
 
     // Show when dashboard is closed
     connect(stprDashboard, &StepperDashboard::destroyed, this, &ProjectsPanel::show);

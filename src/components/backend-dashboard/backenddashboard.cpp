@@ -17,6 +17,12 @@ BackendDashboard::BackendDashboard(QWidget *parent)
 
     ui->databaseTreeWidget->expandAll();
 
+    // Conectar el evento de selección del árbol de tablas a la función onTableSelected
+    connect(ui->databaseTreeWidget,
+            &QTreeWidget::itemClicked,
+            this,
+            &BackendDashboard::onTableSelected);
+
     connect(ui->pushButton, &QPushButton::clicked, this, &BackendDashboard::showCreateTableDialog);
     connect(ui->addButton, &QPushButton::clicked, this, &BackendDashboard::showAddFieldDialog);
 
@@ -129,32 +135,74 @@ void BackendDashboard::setupTasksTable()
     headers << "Field name" << "Type" << "PK" << "FK" << "Const";
     ui->tasksTableWidget->setHorizontalHeaderLabels(headers);
 
-    ui->tasksTableWidget->setRowCount(4); // Número de filas
+    // Definir el ancho mínimo de las columnas
+    //for (int column = 0; column < ui->tasksTableWidget->columnCount(); ++column) {
+    //    ui->tasksTableWidget->setColumnWidth(column,
+    //                                         30); // Establece el ancho mínimo para cada columna
+    //    ui->tasksTableWidget->horizontalHeader()->setMinimumSectionSize(
+    //        30); // Mínimo tamaño por sección
+    //}
+
+    //ui->tasksTableWidget->setRowCount(4); // Número de filas
 
     // Agregar datos a la tabla
-    ui->tasksTableWidget->setItem(0, 0, new QTableWidgetItem("id"));
-    ui->tasksTableWidget->setItem(0, 1, new QTableWidgetItem("int"));
-    ui->tasksTableWidget->setItem(0, 2, new QTableWidgetItem(""));
-    ui->tasksTableWidget->setItem(0, 3, new QTableWidgetItem(""));
-    ui->tasksTableWidget->setItem(0, 4, new QTableWidgetItem("NOT NULL"));
+    //ui->tasksTableWidget->setItem(0, 0, new QTableWidgetItem("id"));
+    //ui->tasksTableWidget->setItem(0, 1, new QTableWidgetItem("int"));
+    //ui->tasksTableWidget->setItem(0, 2, new QTableWidgetItem(""));
+    //ui->tasksTableWidget->setItem(0, 3, new QTableWidgetItem(""));
+    //ui->tasksTableWidget->setItem(0, 4, new QTableWidgetItem("NOT NULL"));
 
-    ui->tasksTableWidget->setItem(1, 0, new QTableWidgetItem("title"));
-    ui->tasksTableWidget->setItem(1, 1, new QTableWidgetItem("chart(55)"));
-    ui->tasksTableWidget->setItem(1, 2, new QTableWidgetItem(""));
-    ui->tasksTableWidget->setItem(1, 3, new QTableWidgetItem(""));
-    ui->tasksTableWidget->setItem(1, 4, new QTableWidgetItem("UNIQUE"));
+    //ui->tasksTableWidget->setItem(1, 0, new QTableWidgetItem("title"));
+    //ui->tasksTableWidget->setItem(1, 1, new QTableWidgetItem("chart(55)"));
+    //ui->tasksTableWidget->setItem(1, 2, new QTableWidgetItem(""));
+    //ui->tasksTableWidget->setItem(1, 3, new QTableWidgetItem(""));
+    //ui->tasksTableWidget->setItem(1, 4, new QTableWidgetItem("UNIQUE"));
 
-    ui->tasksTableWidget->setItem(2, 0, new QTableWidgetItem("description"));
-    ui->tasksTableWidget->setItem(2, 1, new QTableWidgetItem("chart(55)"));
-    ui->tasksTableWidget->setItem(2, 2, new QTableWidgetItem(""));
-    ui->tasksTableWidget->setItem(2, 3, new QTableWidgetItem(""));
-    ui->tasksTableWidget->setItem(2, 4, new QTableWidgetItem("CHECK"));
+    //ui->tasksTableWidget->setItem(2, 0, new QTableWidgetItem("description"));
+    //ui->tasksTableWidget->setItem(2, 1, new QTableWidgetItem("chart(55)"));
+    //ui->tasksTableWidget->setItem(2, 2, new QTableWidgetItem(""));
+    //ui->tasksTableWidget->setItem(2, 3, new QTableWidgetItem(""));
+    //ui->tasksTableWidget->setItem(2, 4, new QTableWidgetItem("CHECK"));
 
-    ui->tasksTableWidget->setItem(3, 0, new QTableWidgetItem("creation date"));
-    ui->tasksTableWidget->setItem(3, 1, new QTableWidgetItem("chart(55)"));
-    ui->tasksTableWidget->setItem(3, 2, new QTableWidgetItem(""));
-    ui->tasksTableWidget->setItem(3, 3, new QTableWidgetItem(""));
-    ui->tasksTableWidget->setItem(3, 4, new QTableWidgetItem("DEFAULT"));
+    //ui->tasksTableWidget->setItem(3, 0, new QTableWidgetItem("creation date"));
+    //ui->tasksTableWidget->setItem(3, 1, new QTableWidgetItem("chart(55)"));
+    //ui->tasksTableWidget->setItem(3, 2, new QTableWidgetItem(""));
+    //ui->tasksTableWidget->setItem(3, 3, new QTableWidgetItem(""));
+    //ui->tasksTableWidget->setItem(3, 4, new QTableWidgetItem("DEFAULT"));
+
+    // Configurar la propiedad de ajuste de texto (WordWrap)
+    ui->tasksTableWidget->setWordWrap(true);
+
+    // Configurar el tamaño de las celdas para ajustarse al contenido
+    ui->tasksTableWidget->resizeColumnsToContents();
+    ui->tasksTableWidget->resizeRowsToContents();
+
+    // Ajustar el tamaño de las celdas para adaptarse al contenido automáticamente
+    ui->tasksTableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
+    ui->tasksTableWidget->verticalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
+
+    // Ajustes de estilo y visualización
+    ui->tasksTableWidget->horizontalHeader()->setStretchLastSection(
+        true); // Última columna ajustada al ancho restante
+    ui->tasksTableWidget->verticalHeader()->setVisible(false); // Oculta el encabezado vertical
+    ui->tasksTableWidget->setSelectionBehavior(QAbstractItemView::SelectRows); // Selección por filas
+    //ui->tasksTableWidget->setEditTriggers(QAbstractItemView::NoEditTriggers); // Deshabilitar edición
+
+    // Ajustes de estilo
+    ui->tasksTableWidget->setStyleSheet("QTableWidget {"
+                                        "   background-color: #ffffff;"
+                                        "   border: 1px solid #dcdcdc;"
+                                        "   border-radius: 8px;"
+                                        "   font-size: 14px;"
+                                        "   color: #333;"
+                                        "} "
+                                        "QTableWidget::item {"
+                                        "   padding: 10px;"
+                                        "} "
+                                        "QTableWidget::item:selected {"
+                                        "   background-color: #0F66DE;"
+                                        "   color: white;"
+                                        "}");
 
     // Establecer alineación para las celdas de las columnas de tipo PK y FK
     for (int row = 0; row < ui->tasksTableWidget->rowCount(); ++row) {
@@ -319,4 +367,83 @@ void BackendDashboard::onTransactionSaved(const Transaction &transaction)
 {
     transactions.push_back(transaction);
     setTransactions(transactions);
+}
+
+// Definición de la función onTableSelected
+void BackendDashboard::onTableSelected(QTreeWidgetItem *item, int column)
+{
+    // Verificar si el item seleccionado es válido y no es el rootItem
+    if (!item || item == rootItem)
+        return;
+
+    // Buscar la transacción correspondiente en `transactions`
+    for (const auto &transaction : transactions) {
+        if (transaction.getName() == item->text(0).toStdString()) {
+            setCurrentTransaction(const_cast<Transaction &>(transaction));
+
+            // Actualizar el nombre del label para que muestre el nombre de la tabla seleccionada
+            ui->labelTable->setText(QString::fromStdString(transaction.getName()) + " Table");
+
+            // Actualizar el nombre del label para que muestre el nombre de la tabla seleccionada
+            ui->labelMethods->setText(QString::fromStdString(transaction.getName()) + " Methods");
+
+            updateTasksTable(transaction);
+            break;
+        }
+    }
+}
+
+// Definición de la función updateTasksTable
+void BackendDashboard::updateTasksTable(const Transaction &transaction)
+{
+    // Limpiar el contenido de la tabla de tareas
+    ui->tasksTableWidget->clearContents();
+    ui->tasksTableWidget->setRowCount(
+        transaction.getFields().size()); // Establecer número de filas según los campos
+
+    // Definir un tamaño mínimo para las celdas de la tabla
+    //ui->tasksTableWidget->setMinimumSize(400, 200); // Ajustar tamaño mínimo de la tabla
+
+    // Agregar los datos de los campos a la tabla
+    for (int row = 0; row < transaction.getFields().size(); ++row) {
+        const Field &field = transaction.getFields()[row];
+        ui->tasksTableWidget->setItem(row,
+                                      0,
+                                      new QTableWidgetItem(QString::fromStdString(field.getName())));
+        ui->tasksTableWidget->setItem(row,
+                                      1,
+                                      new QTableWidgetItem(QString::fromStdString(field.getType())));
+
+        // Crear elementos para Primary Key y Foreign Key con checkbox
+        QTableWidgetItem *pkItem = new QTableWidgetItem();
+        pkItem->setCheckState(field.getIsNull() ? Qt::Checked : Qt::Unchecked);
+        pkItem->setTextAlignment(Qt::AlignCenter);
+        ui->tasksTableWidget->setItem(row, 2, pkItem);
+
+        QTableWidgetItem *fkItem = new QTableWidgetItem();
+        fkItem->setCheckState(field.getIsUnique() ? Qt::Checked : Qt::Unchecked);
+        fkItem->setTextAlignment(Qt::AlignCenter);
+        ui->tasksTableWidget->setItem(row, 3, fkItem);
+
+        // Crear un elemento de la columna Const para mostrar restricciones adicionales como UNIQUE o CHECK
+        ui->tasksTableWidget->setItem(row,
+                                      4,
+                                      new QTableWidgetItem(QString::fromStdString(
+                                          field.getIsUnique() ? "UNIQUE" : "")));
+    }
+
+    // Ajustar el tamaño de las celdas para adaptarse al contenido
+    ui->tasksTableWidget->resizeColumnsToContents();
+    ui->tasksTableWidget->resizeRowsToContents();
+
+    // Mantener un ancho mínimo para las columnas
+    for (int column = 0; column < ui->tasksTableWidget->columnCount(); ++column) {
+        ui->tasksTableWidget->setColumnWidth(column,
+                                             30); // Definir el ancho mínimo para cada columna
+    }
+}
+// Función para actualizar el nombre de la base de datos en el QLabel
+void BackendDashboard::setDatabaseLabel(const std::string &dbName)
+{
+    ui->databaseLabel->setText(QString::fromStdString(dbName));
 }

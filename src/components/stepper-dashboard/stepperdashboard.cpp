@@ -65,6 +65,14 @@ void StepperDashboard::onSchemaLoaded()
     backendDashboard->setTransactions(transactions);
     backendDashboard->setCurrentTransaction(transactions.at(0));
 
+    // Si existen transacciones, configurar la primera como la actual
+    if (!transactions.empty()) {
+        backendDashboard->setCurrentTransaction(transactions.at(0));
+    }
+
+    // Configurar el nombre de la base de datos en BackendDashboard
+    backendDashboard->setDatabaseLabel(project.getDatabaseData().getDatabaseName());
+
     // Generar código después de cargar el esquema
     // if (codeGenerator->backendGenerator.generateBackendCode()) {
     //     QMessageBox::information(this, "Successful", "Code Generated");
