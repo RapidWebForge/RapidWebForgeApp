@@ -20,15 +20,14 @@
       <font>
        <family>Segoe UI</family>
        <pointsize>18</pointsize>
-       <weight>75</weight>
        <bold>true</bold>
       </font>
      </property>
-     <property name="alignment">
-      <set>Qt::AlignCenter</set>
-     </property>
      <property name="text">
       <string>Add field</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignmentFlag::AlignCenter</set>
      </property>
     </widget>
    </item>
@@ -48,7 +47,7 @@
       <item row="0" column="1">
        <widget class="QLineEdit" name="fieldNameLineEdit">
         <property name="text">
-         <string>count</string>
+         <string/>
         </property>
        </widget>
       </item>
@@ -63,17 +62,17 @@
        <widget class="QComboBox" name="fieldTypeComboBox">
         <item>
          <property name="text">
-          <string>number</string>
+          <string>STRING</string>
          </property>
         </item>
         <item>
          <property name="text">
-          <string>text</string>
+          <string>INTEGER</string>
          </property>
         </item>
         <item>
          <property name="text">
-          <string>date</string>
+          <string>DATE</string>
          </property>
         </item>
        </widget>
@@ -107,19 +106,17 @@
       </item>
       <item row="4" column="1">
        <widget class="QComboBox" name="constraintComboBox">
+        <property name="duplicatesEnabled">
+         <bool>false</bool>
+        </property>
         <item>
          <property name="text">
-          <string>Text</string>
+          <string>UNIQUE</string>
          </property>
         </item>
         <item>
          <property name="text">
-          <string>Unique</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>Check</string>
+          <string>NULL</string>
          </property>
         </item>
        </widget>
@@ -132,15 +129,18 @@
      <item>
       <spacer name="horizontalSpacer">
        <property name="orientation">
-        <enum>Qt::Horizontal</enum>
+        <enum>Qt::Orientation::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>0</width>
+         <height>0</height>
+        </size>
        </property>
       </spacer>
      </item>
      <item>
       <widget class="QPushButton" name="cancelButton">
-       <property name="text">
-        <string>Cancel</string>
-       </property>
        <property name="font">
         <font>
          <family>Segoe UI</family>
@@ -148,13 +148,13 @@
          <bold>true</bold>
         </font>
        </property>
+       <property name="text">
+        <string>Cancel</string>
+       </property>
       </widget>
      </item>
      <item>
       <widget class="QPushButton" name="addButton">
-       <property name="text">
-        <string>Add</string>
-       </property>
        <property name="font">
         <font>
          <family>Segoe UI</family>
@@ -164,6 +164,9 @@
        </property>
        <property name="styleSheet">
         <string notr="true">background-color: #0F66DE; color: white; border-radius: 5px; padding: 5px 20px;</string>
+       </property>
+       <property name="text">
+        <string>Add</string>
        </property>
       </widget>
      </item>

@@ -33,6 +33,7 @@ private slots:
     void applyMenuStyles();
     void setupMenus();
     void onSchemaLoaded();
+    void onSaveChanges();
 
 private:
     Ui::StepperDashboard *ui;

@@ -7,8 +7,8 @@
 #include <nlohmann/json.hpp>
 
 CodeGenerator::CodeGenerator(const Project &project)
-    : backendGenerator(project.getPath())
-    , project(project)
+    : project(project)
+    , backendGenerator(project.getPath())
 {}
 
 bool CodeGenerator::createBaseBackendProject()
