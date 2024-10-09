@@ -25,7 +25,6 @@ public:
     // Setters
     void setTransactions(const std::vector<Transaction> &newTransactions);
     void setCurrentTransaction(Transaction &transaction);
-
     // Método para configurar el nombre de la base de datos
     void setDatabaseLabel(const std::string &dbName);
 

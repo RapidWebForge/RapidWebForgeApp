@@ -2,6 +2,7 @@
 #define BACKENDGENERATOR_H
 
 #include <QString>
+#include "../../models/database-data/databasedata.h"
 #include "../../models/transaction/transaction.h"
 #include <nlohmann/json.hpp>
 #include <string>
@@ -10,7 +11,7 @@
 class BackendGenerator
 {
 public:
-    BackendGenerator(const std::string &projectPath);
+    BackendGenerator(const std::string &projectPath, const DatabaseData &databaseData);
     bool loadSchema();
     bool generateBackendCode();
     bool updateSchema();
@@ -33,6 +34,7 @@ private:
 
     std::vector<Transaction> transactions;
     std::string projectPath;
+    DatabaseData databaseData;
 };
 
 #endif // BACKENDGENERATOR_H

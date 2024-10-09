@@ -8,7 +8,7 @@
 
 CodeGenerator::CodeGenerator(const Project &project)
     : project(project)
-    , backendGenerator(project.getPath())
+    , backendGenerator(project.getPath(), project.getDatabaseData())
 {}
 
 bool CodeGenerator::createBaseBackendProject()

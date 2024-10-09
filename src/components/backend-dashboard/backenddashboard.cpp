@@ -317,6 +317,8 @@ void BackendDashboard::showAddFieldDialog()
 {
     if (!addFieldDialog) {
         addFieldDialog = new AddFieldDialog(this);
+
+        connect(addFieldDialog, &AddFieldDialog::fieldSaved, this, &BackendDashboard::onFieldSaved);
     }
     addFieldDialog->exec();
 }
@@ -361,6 +363,17 @@ void BackendDashboard::setCurrentTransaction(Transaction &transaction)
 void BackendDashboard::onFieldSaved(const Field &field)
 {
     currentTransaction.getFields().push_back(field);
+
+    // Buscar el currentTransaction en el vector de transactions
+    for (auto &transaction : transactions) {
+        if (transaction.getName() == currentTransaction.getName()) {
+            // Si es el mismo, actualizamos el vector de campos
+            transaction.setFields(currentTransaction.getFields());
+            break;
+        }
+    }
+
+    updateTasksTable(currentTransaction);
 }
 
 void BackendDashboard::onTransactionSaved(const Transaction &transaction)
@@ -416,12 +429,16 @@ void BackendDashboard::updateTasksTable(const Transaction &transaction)
 
         // Crear elementos para Primary Key y Foreign Key con checkbox
         QTableWidgetItem *pkItem = new QTableWidgetItem();
-        pkItem->setCheckState(field.getIsNull() ? Qt::Checked : Qt::Unchecked);
+        // TODO: Fix pk doesn't match with isNull
+        // pkItem->setCheckState(field.getIsNull() ? Qt::Checked : Qt::Unchecked);
+        pkItem->setCheckState(Qt::Unchecked);
         pkItem->setTextAlignment(Qt::AlignCenter);
         ui->tasksTableWidget->setItem(row, 2, pkItem);
 
         QTableWidgetItem *fkItem = new QTableWidgetItem();
-        fkItem->setCheckState(field.getIsUnique() ? Qt::Checked : Qt::Unchecked);
+        // TODO: Fix fk doesn't match with isUnique
+        // fkItem->setCheckState(field.getIsUnique() ? Qt::Checked : Qt::Unchecked);
+        fkItem->setCheckState(Qt::Unchecked);
         fkItem->setTextAlignment(Qt::AlignCenter);
         ui->tasksTableWidget->setItem(row, 3, fkItem);
 
@@ -442,6 +459,7 @@ void BackendDashboard::updateTasksTable(const Transaction &transaction)
                                              30); // Definir el ancho mínimo para cada columna
     }
 }
+
 // Función para actualizar el nombre de la base de datos en el QLabel
 void BackendDashboard::setDatabaseLabel(const std::string &dbName)
 {

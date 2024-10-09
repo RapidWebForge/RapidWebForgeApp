@@ -8,8 +8,9 @@
 #include <nlohmann/json.hpp>
 
 // Constructor
-BackendGenerator::BackendGenerator(const std::string &projectPath)
+BackendGenerator::BackendGenerator(const std::string &projectPath, const DatabaseData &databaseData)
     : projectPath(projectPath)
+    , databaseData(databaseData)
 {}
 
 // Loading database schema from JSON file
@@ -283,10 +284,10 @@ void BackendGenerator::generateIndexFiles()
     modelsIndexFile.close();
 
     // Añadir credenciales a `context` para usar en el template de rutas
-    nlohmann::json credentials = {{"dbname", "your_database_name"},
-                                  {"user", "your_database_user"},
-                                  {"password", "your_database_password"},
-                                  {"host", "localhost"}};
+    nlohmann::json credentials = {{"dbname", databaseData.getDatabaseName()},
+                                  {"user", databaseData.getUser()},
+                                  {"password", databaseData.getPassword()},
+                                  {"host", databaseData.getServer()}};
     context["credentials"] = credentials;
 
     // Renderizar el template de modelsIndex con el contexto
