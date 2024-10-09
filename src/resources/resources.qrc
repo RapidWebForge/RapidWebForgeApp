@@ -4,6 +4,7 @@
         <file>Back.png</file>
         <file>Front.png</file>
         <file>DB2.png</file>
+        <file>grupo.png</file>
     </qresource>
     <qresource prefix="/icons">
         <file>add.png</file>

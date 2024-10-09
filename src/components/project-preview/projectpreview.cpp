@@ -8,7 +8,7 @@ ProjectPreview::ProjectPreview(QWidget *parent, const Project &project)
 {
     ui->setupUi(this);
 
-    ui->label->setText(QString::fromStdString(this->project.getName()));
+    ui->labelProject->setText(QString::fromStdString(this->project.getName()));
 }
 
 ProjectPreview::~ProjectPreview()

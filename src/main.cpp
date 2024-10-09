@@ -4,7 +4,6 @@
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
-
     ProjectsPanel projectsPanel;
     projectsPanel.show();
     return a.exec();

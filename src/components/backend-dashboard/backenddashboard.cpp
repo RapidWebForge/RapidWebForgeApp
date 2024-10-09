@@ -42,8 +42,6 @@ void BackendDashboard::applyStylesBack()
                         "   padding: 5px;"
                         "}"
                         "QTreeWidget::item {"
-                        "   border-radius: 5px;"
-                        "   margin: 2px;"
                         "   padding: 5px;"
                         "}"
                         "QTreeWidget::item:selected {"

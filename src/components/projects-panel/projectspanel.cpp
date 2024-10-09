@@ -33,7 +33,7 @@ void ProjectsPanel::setupProjects(const std::vector<Project> &projects)
     // Crear el widget para agregar un nuevo proyecto
     QPushButton *addProjectButton = new QPushButton(this);
     addProjectButton->setText("+");
-    addProjectButton->setFixedSize(120, 120); // Tamaño del botón, puedes ajustarlo según el diseño
+    addProjectButton->setFixedSize(190, 130); // Tamaño del botón, puedes ajustarlo según el diseño
     addProjectButton->setStyleSheet("QPushButton {"
                                     "   font-size: 48px;"
                                     "   color: #555;"
@@ -45,7 +45,27 @@ void ProjectsPanel::setupProjects(const std::vector<Project> &projects)
                                     "}");
     connect(addProjectButton, &QPushButton::clicked, this, &ProjectsPanel::onAddProjectClicked);
 
-    gridLayout->addWidget(addProjectButton, 0, 0);
+    // Crear el contenedor para el botón y el texto
+    QWidget *newProjectWidget = new QWidget(this);
+    QVBoxLayout *newProjectLayout = new QVBoxLayout(newProjectWidget);
+
+    // Ajustar márgenes y espaciado para que el texto esté más cerca del botón
+    newProjectLayout->setAlignment(Qt::AlignCenter);
+    newProjectLayout->setSpacing(5); // Ajusta el espaciado entre el botón y el texto
+    newProjectLayout->setContentsMargins(0, 0, 0, 0); // Quita márgenes adicionales
+    newProjectLayout->setContentsMargins(10, 10, 10, 10); // Márgenes del contenedor
+    newProjectWidget->setFixedSize(215, 180);             // Tamaño fijo para el contenedor
+
+    // Agregar el botón y el texto "New" al contenedor
+    newProjectLayout->addWidget(addProjectButton);
+
+    QLabel *newLabel = new QLabel("New", this);
+    newLabel->setAlignment(Qt::AlignCenter);
+    newLabel->setStyleSheet("font-size: 16px; color: #333;"); // Personaliza el estilo del texto
+    newProjectLayout->addWidget(newLabel);
+
+    // Agregar el contenedor al layout principal
+    gridLayout->addWidget(newProjectWidget, 0, 0);
 
     // Add projects to layout
     int row = 0;
@@ -55,6 +75,7 @@ void ProjectsPanel::setupProjects(const std::vector<Project> &projects)
     for (const auto &project : projects) {
         // Widget for each project
         ProjectPreview *projectPreview = new ProjectPreview(this, project);
+        projectPreview->setFixedSize(215, 180); // Ajustar el tamaño de cada contenedor de proyecto
 
         // Connect the ProjectPreview click to open the StepperDashboard
         connect(projectPreview,
@@ -173,7 +194,7 @@ void ProjectsPanel::applyStylesProj()
             background-color: #ffffff;
         }
 
-        QLabel {
+        QLabel#label {
             font-size: 35px;
             font-weight: bold;
             color: #333333;
