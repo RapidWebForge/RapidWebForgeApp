@@ -28,5 +28,6 @@
     </qresource>
     <qresource prefix="/project_templates">
         <file alias="backend">project_templates/backend_template.zip</file>
+        <file alias="frontend">project_templates/frontend_template.zip</file>
     </qresource>
 </RCC>
