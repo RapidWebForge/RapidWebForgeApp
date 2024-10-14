@@ -48,7 +48,8 @@ void StepperDashboard::showEvent(QShowEvent *event)
     QDialog::showEvent(event);
 
     QTimer::singleShot(0, this, [this]() {
-        if (codeGenerator->backendGenerator.loadSchema()) {
+        if (codeGenerator->backendGenerator.loadSchema()
+            && codeGenerator->frontendGenerator.loadSchema()) {
             QMessageBox::information(this, "Successful", "Information loaded");
 
             emit schemaLoaded();
@@ -63,11 +64,16 @@ void StepperDashboard::onSchemaLoaded()
     // Aquí puedes proceder con operaciones que dependen del esquema cargado
     std::vector<Transaction> transactions = codeGenerator->backendGenerator.getTransactions();
     backendDashboard->setTransactions(transactions);
-    backendDashboard->setCurrentTransaction(transactions.at(0));
 
-    // Si existen transacciones, configurar la primera como la actual
+    std::vector<View> views = codeGenerator->frontendGenerator.getViews();
+    frontendDashboard->setViews(views);
+
     if (!transactions.empty()) {
         backendDashboard->setCurrentTransaction(transactions.at(0));
+    }
+
+    if (!views.empty()) {
+        frontendDashboard->setCurrentView(views.at(0));
     }
 
     // Configurar el nombre de la base de datos en BackendDashboard

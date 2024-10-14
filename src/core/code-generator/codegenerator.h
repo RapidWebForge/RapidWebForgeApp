@@ -3,6 +3,7 @@
 
 #include "../../models/project/project.h"
 #include "../backend-generator/backendgenerator.h"
+#include "../frontend-generator/frontendgenerator.h"
 #include <nlohmann/json.hpp>
 
 class CodeGenerator
@@ -10,6 +11,7 @@ class CodeGenerator
 public:
     explicit CodeGenerator(const Project &project);
     BackendGenerator backendGenerator;
+    FrontendGenerator frontendGenerator;
 
     bool createBaseBackendProject();  // Create backend project
     bool createBaseFrontendProject(); // Create frontend project

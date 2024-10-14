@@ -10,6 +10,7 @@
 CodeGenerator::CodeGenerator(const Project &project)
     : project(project)
     , backendGenerator(project.getPath(), project.getDatabaseData())
+    , frontendGenerator(project.getPath())
 {}
 
 // Función genérica para crear un directorio

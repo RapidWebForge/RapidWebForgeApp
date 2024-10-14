@@ -1,4 +1,7 @@
 #include "frontendgenerator.h"
+#include <fmt/core.h>
+#include <fstream>
+#include <inja/inja.hpp>
 
 FrontendGenerator::FrontendGenerator(const std::string &projectPath)
     : projectPath(projectPath)
@@ -125,4 +128,25 @@ bool FrontendGenerator::updateSchema()
     jsonFile.close();
 
     return true;
+}
+
+// Getters
+const std::vector<Route> &FrontendGenerator::getRoutes() const
+{
+    return routes;
+}
+
+std::vector<Route> &FrontendGenerator::getRoutes()
+{
+    return routes;
+}
+
+const std::vector<View> &FrontendGenerator::getViews() const
+{
+    return views;
+}
+
+std::vector<View> &FrontendGenerator::getViews()
+{
+    return views;
 }

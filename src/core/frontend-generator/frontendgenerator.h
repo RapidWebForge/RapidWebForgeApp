@@ -3,6 +3,7 @@
 
 #include "../../models/route/route.h"
 #include "../../models/view/view.h"
+#include <nlohmann/json.hpp>
 #include <string>
 #include <vector>
 
@@ -13,8 +14,11 @@ public:
     bool loadSchema();
     bool updateSchema();
 
+    // Getters
     const std::vector<Route> &getRoutes() const;
+    std::vector<Route> &getRoutes();
     const std::vector<View> &getViews() const;
+    std::vector<View> &getViews();
 
 private:
     std::string projectPath;

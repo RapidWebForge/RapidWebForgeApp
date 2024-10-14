@@ -10,9 +10,11 @@ FrontendDashboard::FrontendDashboard(QWidget *parent)
 }
 
 FrontendDashboard::~FrontendDashboard()
+
 {
     delete ui;
 }
+
 void FrontendDashboard::applyStylesFront()
 {
     this->setStyleSheet("QTreeWidget {"
@@ -76,4 +78,26 @@ void FrontendDashboard::applyStylesFront()
 
     ui->titleLabel->setStyleSheet("font-size: 35px; color: #27292A; padding-top: 10px; "
                                   "padding-left: 40px; padding-bottom: 20px;");
+}
+
+// Getters
+std::vector<View> &FrontendDashboard::getViews()
+{
+    return views;
+}
+
+const std::vector<View> &FrontendDashboard::getViews() const
+{
+    return views;
+}
+
+// Setters
+void FrontendDashboard::setViews(const std::vector<View> &newViews)
+{
+    views = newViews;
+}
+
+void FrontendDashboard::setCurrentView(View &view)
+{
+    currentView = view;
 }
