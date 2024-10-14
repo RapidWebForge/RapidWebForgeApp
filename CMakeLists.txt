@@ -86,6 +86,8 @@ set(PROJECT_SOURCES
         src/core/code-generator/codegenerator.cpp
         src/core/backend-generator/backendgenerator.h
         src/core/backend-generator/backendgenerator.cpp
+        src/core/frontend-generator/frontendgenerator.h
+        src/core/frontend-generator/frontendgenerator.cpp
         # Models
         src/models/project/project.h
         src/models/project/project.cpp
@@ -95,9 +97,17 @@ set(PROJECT_SOURCES
         src/models/transaction/transaction.cpp
         src/models/field/field.h
         src/models/field/field.cpp
+        src/models/route/route.h
+        src/models/route/route.cpp
+        src/models/component/component.h
+        src/models/component/component.cpp
+        src/models/view/view.h
+        src/models/view/view.cpp
         # Utils
         src/utils/database/database.h
         src/utils/database/database.cpp
+        src/utils/ziphelper/ziphelper.h
+        src/utils/ziphelper/ziphelper.cpp
         # Resources
         src/resources/resources.qrc
 )
@@ -111,7 +121,6 @@ if(QT_VERSION_MAJOR GREATER_EQUAL 6)
     )
 else()
     add_executable(RapidWebForgeApp ${PROJECT_SOURCES}
-        src/utils/ziphelper/ziphelper.h src/utils/ziphelper/ziphelper.cpp
     )
 endif()
 
