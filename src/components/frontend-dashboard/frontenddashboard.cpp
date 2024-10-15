@@ -101,3 +101,5 @@ void FrontendDashboard::setCurrentView(View &view)
 {
     currentView = view;
 }
+
+void FrontendDashboard::on_addSectionButton_clicked() {}

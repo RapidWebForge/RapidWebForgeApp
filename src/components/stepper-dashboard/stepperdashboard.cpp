@@ -40,7 +40,14 @@ StepperDashboard::StepperDashboard(QDialog *parent, const Project &project)
     ui->projectButton->setMenu(projectMenu);
     ui->versionsButton->setMenu(versionsMenu);
 
-    connect(this, &StepperDashboard::schemaLoaded, this, &StepperDashboard::onSchemaLoaded);
+    connect(this,
+            &StepperDashboard::backendSchemaLoaded,
+            this,
+            &StepperDashboard::onBackendSchemaLoaded);
+    connect(this,
+            &StepperDashboard::frontendSchemaLoaded,
+            this,
+            &StepperDashboard::onFrontendSchemaLoaded);
 }
 
 void StepperDashboard::showEvent(QShowEvent *event)
@@ -48,43 +55,45 @@ void StepperDashboard::showEvent(QShowEvent *event)
     QDialog::showEvent(event);
 
     QTimer::singleShot(0, this, [this]() {
-        if (codeGenerator->backendGenerator.loadSchema()
-            && codeGenerator->frontendGenerator.loadSchema()) {
+        // Backend
+        if (codeGenerator->backendGenerator.loadSchema()) {
             QMessageBox::information(this, "Successful", "Information loaded");
 
-            emit schemaLoaded();
+            emit backendSchemaLoaded();
         } else {
             QMessageBox::warning(this, "Warning", "There is no information, add data");
+        }
+        // Frontend
+        if (codeGenerator->frontendGenerator.loadSchema()) {
+            QMessageBox::information(this, "Successful", "Views loaded");
+
+            emit frontendSchemaLoaded();
+        } else {
+            QMessageBox::warning(this, "Warning", "There is no views, add visual content");
         }
     });
 }
 
-void StepperDashboard::onSchemaLoaded()
+void StepperDashboard::onBackendSchemaLoaded()
 {
-    // Aquí puedes proceder con operaciones que dependen del esquema cargado
     std::vector<Transaction> transactions = codeGenerator->backendGenerator.getTransactions();
     backendDashboard->setTransactions(transactions);
-
-    std::vector<View> views = codeGenerator->frontendGenerator.getViews();
-    frontendDashboard->setViews(views);
 
     if (!transactions.empty()) {
         backendDashboard->setCurrentTransaction(transactions.at(0));
     }
 
+    backendDashboard->setDatabaseLabel(project.getDatabaseData().getDatabaseName());
+}
+
+void StepperDashboard::onFrontendSchemaLoaded()
+{
+    std::vector<View> views = codeGenerator->frontendGenerator.getViews();
+    frontendDashboard->setViews(views);
+
     if (!views.empty()) {
         frontendDashboard->setCurrentView(views.at(0));
     }
-
-    // Configurar el nombre de la base de datos en BackendDashboard
-    backendDashboard->setDatabaseLabel(project.getDatabaseData().getDatabaseName());
-
-    // Generar código después de cargar el esquema
-    // if (codeGenerator->backendGenerator.generateBackendCode()) {
-    //     QMessageBox::information(this, "Successful", "Code Generated");
-    // } else {
-    //     QMessageBox::warning(this, "Warning", "Nothing happened");
-    // }
 }
 
 StepperDashboard::~StepperDashboard()

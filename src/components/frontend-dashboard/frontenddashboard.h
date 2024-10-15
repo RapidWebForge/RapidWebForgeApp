@@ -23,6 +23,9 @@ public:
     void setViews(const std::vector<View> &views);
     void setCurrentView(View &view);
 
+private slots:
+    void on_addSectionButton_clicked();
+
 private:
     Ui::FrontendDashboard *ui;
     void applyStylesFront();
