@@ -13,12 +13,16 @@ public:
     FrontendGenerator(const std::string &projectPath);
     bool loadSchema();
     bool updateSchema();
-
+    bool generateFrontendCode();
+    bool updateFrontendCode();
     // Getters
     const std::vector<Route> &getRoutes() const;
     std::vector<Route> &getRoutes();
     const std::vector<View> &getViews() const;
     std::vector<View> &getViews();
+    // Setters
+    void setRoutes(const std::vector<Route> &routes);
+    void setViews(const std::vector<View> &views);
 
 private:
     std::string projectPath;

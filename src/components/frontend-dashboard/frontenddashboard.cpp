@@ -4,8 +4,15 @@
 FrontendDashboard::FrontendDashboard(QWidget *parent)
     : QDialog(parent)
     , ui(new Ui::FrontendDashboard)
+    , createViewDialog(nullptr)
 {
     ui->setupUi(this);
+
+    connect(ui->addSectionButton,
+            &QPushButton::clicked,
+            this,
+            &FrontendDashboard::showCreateViewDialog);
+
     applyStylesFront();
 }
 
@@ -80,7 +87,37 @@ void FrontendDashboard::applyStylesFront()
                                   "padding-left: 40px; padding-bottom: 20px;");
 }
 
+void FrontendDashboard::showCreateViewDialog()
+{
+    if (!createViewDialog) {
+        createViewDialog = new CreateView(this);
+
+        connect(createViewDialog, &CreateView::routeSaved, this, &FrontendDashboard::onRouteSaved);
+    }
+    createViewDialog->exec();
+}
+
+void FrontendDashboard::onRouteSaved(const Route &route)
+{
+    routes.push_back(route);
+
+    View view(route.getComponent());
+
+    views.push_back(view);
+    // setRoutes(routes);
+}
+
 // Getters
+const std::vector<Route> &FrontendDashboard::getRoutes() const
+{
+    return routes;
+}
+
+std::vector<Route> &FrontendDashboard::getRoutes()
+{
+    return routes;
+}
+
 std::vector<View> &FrontendDashboard::getViews()
 {
     return views;
@@ -92,14 +129,17 @@ const std::vector<View> &FrontendDashboard::getViews() const
 }
 
 // Setters
-void FrontendDashboard::setViews(const std::vector<View> &newViews)
+void FrontendDashboard::setRoutes(const std::vector<Route> &routes)
 {
-    views = newViews;
+    this->routes = routes;
+}
+
+void FrontendDashboard::setViews(const std::vector<View> &views)
+{
+    this->views = views;
 }
 
 void FrontendDashboard::setCurrentView(View &view)
 {
     currentView = view;
 }
-
-void FrontendDashboard::on_addSectionButton_clicked() {}

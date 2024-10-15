@@ -130,6 +130,16 @@ bool FrontendGenerator::updateSchema()
     return true;
 }
 
+bool FrontendGenerator::generateFrontendCode()
+{
+    return true;
+}
+
+bool FrontendGenerator::updateFrontendCode()
+{
+    return updateSchema() ? generateFrontendCode() : false;
+}
+
 // Getters
 const std::vector<Route> &FrontendGenerator::getRoutes() const
 {
@@ -149,4 +159,15 @@ const std::vector<View> &FrontendGenerator::getViews() const
 std::vector<View> &FrontendGenerator::getViews()
 {
     return views;
+}
+
+// Setters
+void FrontendGenerator::setRoutes(const std::vector<Route> &routes)
+{
+    this->routes = routes;
+}
+
+void FrontendGenerator::setViews(const std::vector<View> &views)
+{
+    this->views = views;
 }

@@ -323,43 +323,6 @@ void BackendDashboard::showAddFieldDialog()
     addFieldDialog->exec();
 }
 
-// Getters
-std::vector<Transaction> &BackendDashboard::getTransactions()
-{
-    return transactions;
-}
-
-const std::vector<Transaction> &BackendDashboard::getTransactions() const
-{
-    return transactions;
-}
-
-// Setters
-void BackendDashboard::setTransactions(const std::vector<Transaction> &newTransactions)
-{
-    transactions = newTransactions;
-
-    // Clear rootItem
-    rootItem->takeChildren();
-
-    // Add transactions like children
-    for (const auto &transaction : transactions) {
-        QTreeWidgetItem *item = new QTreeWidgetItem(rootItem);
-        item->setText(0, QString::fromStdString(transaction.getName()));
-        item->setIcon(0, QIcon(":/icons/table.png"));
-        // item->setIcon(0, QIcon(":/icons/delete.png"));
-        // TODO: Replace for a custom widget to allow multiple icons
-    }
-
-    // Expandir todo el árbol para mostrar todas las tablas
-    ui->databaseTreeWidget->expandAll();
-}
-
-void BackendDashboard::setCurrentTransaction(Transaction &transaction)
-{
-    currentTransaction = transaction;
-}
-
 void BackendDashboard::onFieldSaved(const Field &field)
 {
     currentTransaction.getFields().push_back(field);
@@ -464,4 +427,41 @@ void BackendDashboard::updateTasksTable(const Transaction &transaction)
 void BackendDashboard::setDatabaseLabel(const std::string &dbName)
 {
     ui->databaseLabel->setText(QString::fromStdString(dbName));
+}
+
+// Getters
+std::vector<Transaction> &BackendDashboard::getTransactions()
+{
+    return transactions;
+}
+
+const std::vector<Transaction> &BackendDashboard::getTransactions() const
+{
+    return transactions;
+}
+
+// Setters
+void BackendDashboard::setTransactions(const std::vector<Transaction> &newTransactions)
+{
+    transactions = newTransactions;
+
+    // Clear rootItem
+    rootItem->takeChildren();
+
+    // Add transactions like children
+    for (const auto &transaction : transactions) {
+        QTreeWidgetItem *item = new QTreeWidgetItem(rootItem);
+        item->setText(0, QString::fromStdString(transaction.getName()));
+        item->setIcon(0, QIcon(":/icons/table.png"));
+        // item->setIcon(0, QIcon(":/icons/delete.png"));
+        // TODO: Replace for a custom widget to allow multiple icons
+    }
+
+    // Expandir todo el árbol para mostrar todas las tablas
+    ui->databaseTreeWidget->expandAll();
+}
+
+void BackendDashboard::setCurrentTransaction(Transaction &transaction)
+{
+    currentTransaction = transaction;
 }

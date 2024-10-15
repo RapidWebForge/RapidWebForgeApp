@@ -5,6 +5,11 @@ View::View()
     , components()
 {}
 
+View::View(const std::string &name)
+    : name(name)
+    , components()
+{}
+
 View::View(const std::string &name, const std::vector<Component> &components)
     : name(name)
     , components(components)

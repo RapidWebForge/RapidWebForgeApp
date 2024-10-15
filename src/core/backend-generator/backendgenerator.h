@@ -16,9 +16,11 @@ public:
     bool generateBackendCode();
     bool updateSchema();
     bool updateBackendCode();
-    void setTransactions(const std::vector<Transaction> &newTransactions);
+    // Getters
     const std::vector<Transaction> &getTransactions() const;
     std::vector<Transaction> &getTransactions();
+    // Setters
+    void setTransactions(const std::vector<Transaction> &transactions);
 
 private:
     void generateFile(const Transaction &transaction,

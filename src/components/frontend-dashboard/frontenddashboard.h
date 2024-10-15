@@ -2,7 +2,9 @@
 #define FRONTENDDASHBOARD_H
 
 #include <QDialog>
+#include "../../models/route/route.h"
 #include "../../models/view/view.h"
+#include "../create-view/createview.h"
 #include <vector>
 
 namespace Ui {
@@ -17,19 +19,27 @@ public:
     explicit FrontendDashboard(QWidget *parent = nullptr);
     ~FrontendDashboard();
     // Getters
+    const std::vector<Route> &getRoutes() const;
+    std::vector<Route> &getRoutes();
     const std::vector<View> &getViews() const;
     std::vector<View> &getViews();
     // Setters
+    void setRoutes(const std::vector<Route> &routes);
     void setViews(const std::vector<View> &views);
     void setCurrentView(View &view);
 
+public slots:
+    void onRouteSaved(const Route &route);
+
 private slots:
-    void on_addSectionButton_clicked();
+    void showCreateViewDialog();
 
 private:
     Ui::FrontendDashboard *ui;
     void applyStylesFront();
 
+    CreateView *createViewDialog;
+    std::vector<Route> routes;
     std::vector<View> views;
     View currentView;
 };

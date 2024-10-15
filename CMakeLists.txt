@@ -79,6 +79,9 @@ set(PROJECT_SOURCES
         src/components/project-preview/projectpreview.h
         src/components/project-preview/projectpreview.cpp
         src/components/project-preview/projectpreview.ui
+        src/components/create-view/createview.h
+        src/components/create-view/createview.cpp
+        src/components/create-view/createview.ui
         # Core
         src/core/project-manager/projectmanager.h
         src/core/project-manager/projectmanager.cpp

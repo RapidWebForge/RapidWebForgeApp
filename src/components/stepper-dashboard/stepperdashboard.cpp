@@ -89,7 +89,10 @@ void StepperDashboard::onBackendSchemaLoaded()
 void StepperDashboard::onFrontendSchemaLoaded()
 {
     std::vector<View> views = codeGenerator->frontendGenerator.getViews();
+    std::vector<Route> routes = codeGenerator->frontendGenerator.getRoutes();
+
     frontendDashboard->setViews(views);
+    frontendDashboard->setRoutes(routes);
 
     if (!views.empty()) {
         frontendDashboard->setCurrentView(views.at(0));
@@ -326,6 +329,12 @@ void StepperDashboard::onSaveChanges()
     codeGenerator->backendGenerator.setTransactions(backendDashboard->getTransactions());
 
     codeGenerator->backendGenerator.updateBackendCode();
+
+    codeGenerator->frontendGenerator.setRoutes(frontendDashboard->getRoutes());
+
+    codeGenerator->frontendGenerator.setViews(frontendDashboard->getViews());
+
+    codeGenerator->frontendGenerator.updateFrontendCode();
 
     QMessageBox::information(this, "Save Changes", "Changes have been saved successfully.");
 }

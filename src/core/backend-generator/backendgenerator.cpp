@@ -179,9 +179,7 @@ bool BackendGenerator::generateBackendCode()
 // Regenerate backend with new information
 bool BackendGenerator::updateBackendCode()
 {
-    if (updateSchema())
-        return generateBackendCode();
-    return false;
+    return updateSchema() ? generateBackendCode() : false;
 }
 
 void BackendGenerator::generateFile(const Transaction &transaction,
@@ -313,7 +311,7 @@ void BackendGenerator::generateIndexFiles()
     writeFile(projectPath + "/backend/routes/index.js", routesIndexResult);
 }
 
-// Getter for transactions
+// Getter
 const std::vector<Transaction> &BackendGenerator::getTransactions() const
 {
     return transactions;
@@ -324,8 +322,8 @@ std::vector<Transaction> &BackendGenerator::getTransactions()
     return transactions;
 }
 
-// Setter for transactions
-void BackendGenerator::setTransactions(const std::vector<Transaction> &newTransactions)
+// Setter
+void BackendGenerator::setTransactions(const std::vector<Transaction> &transactions)
 {
-    transactions = newTransactions;
+    this->transactions = transactions;
 }

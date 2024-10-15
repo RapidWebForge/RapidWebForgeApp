@@ -13,6 +13,7 @@ private:
 
 public:
     View();
+    View(const std::string &name);
     View(const std::string &name, const std::vector<Component> &components);
 
     std::string getName() const;
