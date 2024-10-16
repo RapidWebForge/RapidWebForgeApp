@@ -9,6 +9,10 @@ CreationAssistant::CreationAssistant(QWidget *parent)
 {
     ui->setupUi(this);
     applyStylesCA(); // Aplicar todos los estilos
+
+    //Ocultar defaul language
+    ui->defaultLanguageLabel->hide();
+    ui->defaultLanguageComboBox->hide();
 }
 
 CreationAssistant::~CreationAssistant()

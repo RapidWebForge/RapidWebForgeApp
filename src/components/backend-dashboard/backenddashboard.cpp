@@ -353,6 +353,17 @@ void BackendDashboard::setTransactions(const std::vector<Transaction> &newTransa
 
     // Expandir todo el árbol para mostrar todas las tablas
     ui->databaseTreeWidget->expandAll();
+
+    // If transactions are available, set the first one as the current transaction
+    if (!transactions.empty()) {
+        // Load the first transaction automatically
+        setCurrentTransaction(transactions[0]);
+        updateTasksTable(transactions[0]);
+
+        // Update UI labels for the first transaction
+        ui->labelTable->setText(QString::fromStdString(transactions[0].getName()) + " Table");
+        ui->labelMethods->setText(QString::fromStdString(transactions[0].getName()) + " Methods");
+    }
 }
 
 void BackendDashboard::setCurrentTransaction(Transaction &transaction)
