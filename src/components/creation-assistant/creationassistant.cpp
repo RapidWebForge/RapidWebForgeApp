@@ -36,6 +36,12 @@ std::string CreationAssistant::isValid(Project &project)
         project.setPath(projectPath);
     }
 
+    // Validar si se debe crear un repositorio Git
+    if (shouldCreateGitRepo()) {
+        project.setVersions(true); // Habilitar versiones si se selecciona crear Git
+    } else {
+        project.setVersions(false);
+    }
     return "";
 }
 
@@ -50,6 +56,13 @@ void CreationAssistant::on_browseButton_clicked()
         ui->browseButton->setText(dir);
     }
 }
+
+bool CreationAssistant::shouldCreateGitRepo()
+{
+    // Retorna verdadero si el checkbox está seleccionado
+    return ui->createGitRepoCheckBox->isChecked();
+}
+
 void CreationAssistant::applyStylesCA()
 {
     QString generalStyle = "color: #333333; font-size: 14px; font-weight: normal;";

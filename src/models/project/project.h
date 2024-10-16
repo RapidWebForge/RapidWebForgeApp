@@ -17,6 +17,7 @@ private:
     std::string backendPort;
     std::chrono::system_clock::time_point createdAt;
     std::chrono::system_clock::time_point updatedAt;
+    bool versions; // Nueva propiedad para el control de versiones
 
 public:
     // Constructors
@@ -27,7 +28,8 @@ public:
             const std::string &path,
             const DatabaseData &databaseData,
             const std::string &frontendPort,
-            const std::string &backendPort);
+            const std::string &backendPort,
+            bool versions); // Constructor con versions
     Project();
 
     // Getters
@@ -56,6 +58,9 @@ public:
     void setFrontendPort(const std::string &frontendPort);
     void setBackendPort(const std::string &backendPort);
     void setUpdatedAt();
+
+    bool getVersions() const;
+    void setVersions(bool newVersions);
 };
 
 #endif // PROJECT_H

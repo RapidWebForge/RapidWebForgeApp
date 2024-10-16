@@ -23,6 +23,7 @@ private slots:
 private:
     Ui::CreationAssistant *ui;
     void applyStylesCA(); // Declaración de la función applyStyles
+    bool shouldCreateGitRepo(); // Método para verificar si se debe crear un repositorio Git
 };
 
 #endif // CREATIONASSISTANT_H

@@ -22,7 +22,8 @@ Project::Project(int id,
                  const std::string &path,
                  const DatabaseData &databaseData,
                  const std::string &frontendPort,
-                 const std::string &backendPort)
+                 const std::string &backendPort,
+                 bool versions) // Añadir versions
     : id(id)
     , name(name)
     , description(description)
@@ -30,6 +31,7 @@ Project::Project(int id,
     , databaseData(databaseData)
     , frontendPort(frontendPort)
     , backendPort(backendPort)
+    , versions(versions) // Inicializar versions
     , createdAt(std::chrono::system_clock::now())
     , updatedAt(createdAt)
 {}
@@ -150,4 +152,16 @@ void Project::setBackendPort(const std::string &newBackendPort)
 void Project::setUpdatedAt()
 {
     updatedAt = std::chrono::system_clock::now();
+}
+
+// Getter y Setter para versions
+bool Project::getVersions() const
+{
+    return versions;
+}
+
+void Project::setVersions(bool newVersions)
+{
+    versions = newVersions;
+    setUpdatedAt();
 }
