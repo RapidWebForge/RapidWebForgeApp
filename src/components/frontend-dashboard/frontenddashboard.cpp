@@ -101,9 +101,9 @@ void FrontendDashboard::onRouteSaved(const Route &route)
 {
     routes.push_back(route);
 
-    View view(route.getComponent());
+    // View view(route.getComponent());
+    // views.push_back(view);
 
-    views.push_back(view);
     // setRoutes(routes);
 }
 

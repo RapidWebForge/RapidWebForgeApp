@@ -30,6 +30,9 @@ private:
     std::vector<View> views;
 
     void parseJson(const nlohmann::json &jsonSchema);
+    bool updateFrontendJson(const std::string &componentName);
+    bool generateComponentBase(const std::string &componentName);
+    bool generateMain();
 };
 
 #endif // FRONTENDGENERATOR_H

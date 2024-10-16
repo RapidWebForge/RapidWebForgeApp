@@ -111,6 +111,8 @@ set(PROJECT_SOURCES
         src/utils/database/database.cpp
         src/utils/ziphelper/ziphelper.h
         src/utils/ziphelper/ziphelper.cpp
+        src/utils/file/fileutiils.h
+        src/utils/file/fileutiils.cpp
         # Resources
         src/resources/resources.qrc
 )

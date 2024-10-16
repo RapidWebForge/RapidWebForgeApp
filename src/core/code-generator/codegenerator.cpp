@@ -124,7 +124,7 @@ bool CodeGenerator::createBaseFrontendProject()
     homePropsJson["text"] = "Home View";
     homeH1Json["props"] = homePropsJson;
     homeComponentsJson["components"].push_back(homeH1Json);
-    homeViewJson["home"] = homeComponentsJson;
+    homeViewJson["Home"] = homeComponentsJson;
     frontendJson["views"].push_back(homeViewJson);
 
     if (!createJsonFile(this->project.getPath() + "/frontend.json", frontendJson)) {
