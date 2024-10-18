@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1000</width>
-    <height>600</height>
+    <height>628</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -55,16 +55,56 @@
           </property>
           <column>
            <property name="text">
-            <string>1</string>
+            <string>Components</string>
            </property>
           </column>
+          <item>
+           <property name="text">
+            <string>Inputs</string>
+           </property>
+           <item>
+            <property name="text">
+             <string>Input</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>TextArea</string>
+            </property>
+           </item>
+          </item>
+          <item>
+           <property name="text">
+            <string>Labels</string>
+           </property>
+           <item>
+            <property name="text">
+             <string>Header H1</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Header H2</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Header H3</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Paragraph</string>
+            </property>
+           </item>
+          </item>
          </widget>
         </item>
        </layout>
       </widget>
      </item>
      <item>
-      <widget class="QGroupBox" name="mainViewGroup">
+      <widget class="QGroupBox" name="currentViewGroup">
        <property name="styleSheet">
         <string notr="true">border: none;</string>
        </property>
@@ -73,7 +113,7 @@
        </property>
        <layout class="QVBoxLayout" name="verticalLayoutMainView">
         <item>
-         <widget class="QTreeWidget" name="mainViewTree">
+         <widget class="QTreeWidget" name="currentViewTree">
           <property name="headerHidden">
            <bool>true</bool>
           </property>

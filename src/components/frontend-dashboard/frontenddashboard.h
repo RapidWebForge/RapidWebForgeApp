@@ -2,6 +2,7 @@
 #define FRONTENDDASHBOARD_H
 
 #include <QDialog>
+#include <QTreeWidget>
 #include "../../models/route/route.h"
 #include "../../models/view/view.h"
 #include "../create-view/createview.h"
@@ -18,6 +19,7 @@ class FrontendDashboard : public QDialog
 public:
     explicit FrontendDashboard(QWidget *parent = nullptr);
     ~FrontendDashboard();
+
     // Getters
     const std::vector<Route> &getRoutes() const;
     std::vector<Route> &getRoutes();
@@ -37,6 +39,9 @@ private slots:
 private:
     Ui::FrontendDashboard *ui;
     void applyStylesFront();
+    void setUpTreeWidgets();
+    void setComponentsDraggable();
+    void populateCurrentViewTree();
 
     CreateView *createViewDialog;
     std::vector<Route> routes;

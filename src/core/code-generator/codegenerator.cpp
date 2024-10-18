@@ -134,3 +134,9 @@ bool CodeGenerator::createBaseFrontendProject()
     fmt::print("Base Frontend project created successfully\n");
     return true;
 }
+
+// Get
+std::string CodeGenerator::getProjectPath() const
+{
+    return project.getPath();
+}

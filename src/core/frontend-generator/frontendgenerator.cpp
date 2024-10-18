@@ -165,7 +165,7 @@ bool FrontendGenerator::updateFrontendJson(const std::string &componentName)
     if (!componentExists) {
         nlohmann::json newView;
         nlohmann::json newComponent;
-        newComponent["type"] = "H1";
+        newComponent["type"] = "Header H1";
         newComponent["props"]["text"] = componentName + " View";
 
         newView[componentName]["components"].push_back(newComponent);

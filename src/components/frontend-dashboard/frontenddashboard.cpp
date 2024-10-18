@@ -1,4 +1,10 @@
 #include "frontenddashboard.h"
+// #include <QFile>
+// #include <QJsonArray>
+// #include <QJsonDocument>
+// #include <QJsonObject>
+#include <QDropEvent>
+#include <QMimeData>
 #include "ui_frontenddashboard.h"
 
 FrontendDashboard::FrontendDashboard(QWidget *parent)
@@ -14,10 +20,10 @@ FrontendDashboard::FrontendDashboard(QWidget *parent)
             &FrontendDashboard::showCreateViewDialog);
 
     applyStylesFront();
+    setUpTreeWidgets();
 }
 
 FrontendDashboard::~FrontendDashboard()
-
 {
     delete ui;
 }
@@ -87,6 +93,77 @@ void FrontendDashboard::applyStylesFront()
                                   "padding-left: 40px; padding-bottom: 20px;");
 }
 
+void FrontendDashboard::setUpTreeWidgets()
+{
+    // Components Tree
+    QTreeWidget *componentsTree = ui->componentsTree;
+
+    componentsTree->setDragEnabled(true);
+    componentsTree->setDropIndicatorShown(true);
+    componentsTree->setDragDropMode(QAbstractItemView::InternalMove);
+
+    setComponentsDraggable();
+
+    // Current View Tree
+    QTreeWidget *currentViewTree = ui->currentViewTree;
+
+    currentViewTree->setAcceptDrops(true);
+}
+
+void FrontendDashboard::setComponentsDraggable()
+{
+    QTreeWidgetItem *inputsGroup = ui->componentsTree->topLevelItem(0); // Primer grupo, "Inputs"
+    QTreeWidgetItem *labelsGroup = ui->componentsTree->topLevelItem(1); // Segundo grupo, "Labels"
+
+    // Deshabilitar arrastre para el grupo "Inputs"
+    if (inputsGroup) {
+        inputsGroup->setFlags(inputsGroup->flags() & ~Qt::ItemIsDragEnabled);
+    }
+
+    // Deshabilitar arrastre para el grupo "Labels"
+    if (labelsGroup) {
+        labelsGroup->setFlags(labelsGroup->flags() & ~Qt::ItemIsDragEnabled);
+    }
+
+    // Habilitar arrastre de los hijos
+    for (int i = 0; i < inputsGroup->childCount(); ++i) {
+        QTreeWidgetItem *child = inputsGroup->child(i);
+        child->setFlags(child->flags() | Qt::ItemIsDragEnabled);
+    }
+
+    for (int i = 0; i < labelsGroup->childCount(); ++i) {
+        QTreeWidgetItem *child = labelsGroup->child(i);
+        child->setFlags(child->flags() | Qt::ItemIsDragEnabled);
+    }
+}
+
+void FrontendDashboard::populateCurrentViewTree()
+{
+    // Clear currentViewTree
+    ui->currentViewTree->clear();
+
+    // Check currentView components
+    if (currentView.getComponents().empty()) {
+        qDebug() << "Nothing found!" << "\n";
+        return;
+    }
+
+    // Loop through the components of the currentView and add them to the QTreeWidget
+    for (const auto &component : currentView.getComponents()) {
+        QTreeWidgetItem *componentItem = new QTreeWidgetItem(ui->currentViewTree);
+        componentItem->setText(0, QString::fromStdString(component.getType()));
+
+        // const auto &props = component.getProps();
+        // for (const auto &property : props) {
+        //     QTreeWidgetItem *propertyItem = new QTreeWidgetItem(componentItem);
+        //     propertyItem->setText(0, QString::fromStdString(property.first));
+        //     propertyItem->setText(1, QString::fromStdString(property.second));
+        // }
+    }
+
+    ui->currentViewTree->expandAll();
+}
+
 void FrontendDashboard::showCreateViewDialog()
 {
     if (!createViewDialog) {
@@ -142,4 +219,6 @@ void FrontendDashboard::setViews(const std::vector<View> &views)
 void FrontendDashboard::setCurrentView(View &view)
 {
     currentView = view;
+
+    populateCurrentViewTree();
 }

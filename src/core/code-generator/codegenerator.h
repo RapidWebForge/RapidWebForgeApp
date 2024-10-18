@@ -16,6 +16,8 @@ public:
     bool createBaseBackendProject();  // Create backend project
     bool createBaseFrontendProject(); // Create frontend project
 
+    std::string getProjectPath() const;
+
 private:
     bool createDirectory(const std::string &path);
     bool unzipFile(const std::string &zipPath, const std::string &extractPath);
