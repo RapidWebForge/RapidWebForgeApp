@@ -29,6 +29,7 @@ private slots:
 private:
     Ui::Stepper *ui;
     void applyStyles();
+    void create_git_repo(const std::string &projectPath); // Método para crear repositorio Git
     CreationAssistant *creationAssistant;
     DatabaseAssistant *databaseAssistant;
     FrontendAssistant *frontendAssistant;

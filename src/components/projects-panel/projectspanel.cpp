@@ -33,7 +33,7 @@ void ProjectsPanel::setupProjects(const std::vector<Project> &projects)
     // Crear el widget para agregar un nuevo proyecto
     QPushButton *addProjectButton = new QPushButton(this);
     addProjectButton->setText("+");
-    addProjectButton->setFixedSize(190, 130); // Tamaño del botón, puedes ajustarlo según el diseño
+    addProjectButton->setFixedSize(190, 108); // Tamaño del botón, puedes ajustarlo según el diseño
     addProjectButton->setStyleSheet("QPushButton {"
                                     "   font-size: 48px;"
                                     "   color: #555;"
@@ -50,7 +50,7 @@ void ProjectsPanel::setupProjects(const std::vector<Project> &projects)
     QVBoxLayout *newProjectLayout = new QVBoxLayout(newProjectWidget);
 
     // Ajustar márgenes y espaciado para que el texto esté más cerca del botón
-    newProjectLayout->setAlignment(Qt::AlignCenter);
+    newProjectLayout->setAlignment(Qt::AlignTop);
     newProjectLayout->setSpacing(5); // Ajusta el espaciado entre el botón y el texto
     newProjectLayout->setContentsMargins(0, 0, 0, 0); // Quita márgenes adicionales
     newProjectLayout->setContentsMargins(10, 10, 10, 10); // Márgenes del contenedor
@@ -61,7 +61,8 @@ void ProjectsPanel::setupProjects(const std::vector<Project> &projects)
 
     QLabel *newLabel = new QLabel("New", this);
     newLabel->setAlignment(Qt::AlignCenter);
-    newLabel->setStyleSheet("font-size: 16px; color: #333;"); // Personaliza el estilo del texto
+    newLabel->setStyleSheet(
+        "font-size: 16px; color: #333; padding-top: 12px; "); // Personaliza el estilo del texto
     newProjectLayout->addWidget(newLabel);
 
     // Agregar el contenedor al layout principal

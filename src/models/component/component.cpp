@@ -5,6 +5,11 @@ Component::Component()
     , props()
 {}
 
+Component::Component(const std::string &type)
+    : type(type)
+    , props()
+{}
+
 Component::Component(const std::string &type, const std::map<std::string, std::string> &props)
     : type(type)
     , props(props)

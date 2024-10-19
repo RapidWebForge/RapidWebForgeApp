@@ -12,6 +12,7 @@ private:
 
 public:
     Component();
+    Component(const std::string &type);
     Component(const std::string &type, const std::map<std::string, std::string> &props);
 
     std::string getType() const;
