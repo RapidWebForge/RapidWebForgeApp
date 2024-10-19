@@ -1,10 +1,7 @@
 #include "frontenddashboard.h"
-// #include <QFile>
-// #include <QJsonArray>
-// #include <QJsonDocument>
-// #include <QJsonObject>
+#include <QDebug>
 #include <QDropEvent>
-#include <QMimeData>
+#include <QMessageBox>
 #include "ui_frontenddashboard.h"
 
 FrontendDashboard::FrontendDashboard(QWidget *parent)
@@ -168,7 +165,7 @@ void FrontendDashboard::convertTreeToViews()
     });
 
     if (it != views.end()) {
-        // Limpiar los componentes actuales de la vista
+        // Limpiar los componentes actuales de currentView
         std::vector<Component> newComponents;
 
         // Iterar sobre los componentes del QTreeWidget
@@ -177,11 +174,9 @@ void FrontendDashboard::convertTreeToViews()
 
             // Crear un nuevo componente basado en el QTreeWidgetItem
             std::string componentType = componentItem->text(0).toStdString();
-            // std::map<std::string, std::string> componentProps;
 
             // Crear un objeto Component con el tipo y las propiedades obtenidas
             Component newComponent(componentType);
-            // Component newComponent(componentType, componentProps);
 
             // Si el componente tiene otros componentes anidados, manejarlos recursivamente
             if (componentItem->childCount() > 0) {
@@ -192,8 +187,11 @@ void FrontendDashboard::convertTreeToViews()
             newComponents.push_back(newComponent);
         }
 
-        // Actualizar los componentes de la vista
-        it->setComponents(newComponents);
+        // Actualizar los componentes de currentView
+        currentView.setComponents(newComponents);
+
+        // Actualizar la vista correspondiente en 'views'
+        *it = currentView;
     }
 }
 
@@ -220,6 +218,23 @@ void FrontendDashboard::populateNestedComponents(QTreeWidgetItem *parentItem,
         // Agregar el componente hijo al vector de componentes de la vista actual
         components.push_back(childComponent);
     }
+}
+
+void FrontendDashboard::on_addColumnButton_clicked()
+{
+    convertTreeToViews();
+
+    for (auto &v : views) {
+        qDebug() << "View: " << v.getName() << "\n";
+        if (!v.getComponents().empty()) {
+            qDebug() << "Components\n";
+            for (auto &c : v.getComponents()) {
+                qDebug() << "Component: " << c.getType() << "\n";
+            }
+        }
+    }
+
+    QMessageBox::information(this, "Successful", "View updated");
 }
 
 void FrontendDashboard::showCreateViewDialog()

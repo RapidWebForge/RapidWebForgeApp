@@ -36,6 +36,8 @@ public slots:
 private slots:
     void showCreateViewDialog();
 
+    void on_addColumnButton_clicked();
+
 private:
     Ui::FrontendDashboard *ui;
     void applyStylesFront();

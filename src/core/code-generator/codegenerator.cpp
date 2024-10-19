@@ -120,7 +120,7 @@ bool CodeGenerator::createBaseFrontendProject()
     nlohmann::json homeH1Json;
     nlohmann::json homePropsJson;
     homeComponentsJson["components"] = nlohmann::json::array();
-    homeH1Json["type"] = "H1";
+    homeH1Json["type"] = "Header H1";
     homePropsJson["text"] = "Home View";
     homeH1Json["props"] = homePropsJson;
     homeComponentsJson["components"].push_back(homeH1Json);

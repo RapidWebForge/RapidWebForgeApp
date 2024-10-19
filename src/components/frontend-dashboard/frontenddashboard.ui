@@ -151,7 +151,7 @@
           <item>
            <widget class="QPushButton" name="addColumnButton">
             <property name="text">
-             <string>New Column</string>
+             <string>Save</string>
             </property>
            </widget>
           </item>

@@ -332,7 +332,7 @@ void StepperDashboard::onSaveChanges()
 
     codeGenerator->frontendGenerator.setRoutes(frontendDashboard->getRoutes());
 
-    // codeGenerator->frontendGenerator.setViews(frontendDashboard->getViews());
+    codeGenerator->frontendGenerator.setViews(frontendDashboard->getViews());
 
     codeGenerator->frontendGenerator.updateFrontendCode();
 
