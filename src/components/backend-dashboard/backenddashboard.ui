@@ -91,6 +91,16 @@
            </spacer>
           </item>
           <item>
+           <widget class="QPushButton" name="editDB">
+            <property name="text">
+             <string/>
+            </property>
+            <property name="icon">
+             <iconset theme="QIcon::ThemeIcon::MailMessageNew"/>
+            </property>
+           </widget>
+          </item>
+          <item>
            <widget class="QPushButton" name="pushButton">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
@@ -109,6 +119,16 @@
             </property>
             <property name="icon">
              <iconset theme="QIcon::ThemeIcon::ListAdd"/>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="deleteDB">
+            <property name="text">
+             <string/>
+            </property>
+            <property name="icon">
+             <iconset theme="QIcon::ThemeIcon::ListRemove"/>
             </property>
            </widget>
           </item>

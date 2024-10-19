@@ -1,4 +1,7 @@
 #include "backenddashboard.h"
+#include <QInputDialog>
+#include <QLineEdit>
+#include <QMessageBox>
 #include "ui_backenddashboard.h"
 
 BackendDashboard::BackendDashboard(QWidget *parent)
@@ -25,6 +28,14 @@ BackendDashboard::BackendDashboard(QWidget *parent)
 
     connect(ui->pushButton, &QPushButton::clicked, this, &BackendDashboard::showCreateTableDialog);
     connect(ui->addButton, &QPushButton::clicked, this, &BackendDashboard::showAddFieldDialog);
+
+    connect(ui->editDB, &QPushButton::clicked, this, &BackendDashboard::on_editButton_clicked);
+    connect(ui->deleteDB, &QPushButton::clicked, this, &BackendDashboard::on_deleteButton_clicked);
+
+    connect(ui->databaseTreeWidget,
+            &QTreeWidget::itemChanged,
+            this,
+            &BackendDashboard::onTableNameChanged);
 
     setupTasksMethodsList();
     setupTasksTable();
@@ -125,6 +136,14 @@ void BackendDashboard::applyStylesBack()
     ui->pushButton->setIcon(QIcon(":/icons/adddb.png"));
     ui->pushButton->setIconSize(QSize(16, 16));
     ui->pushButton->setToolTip("Delete table");
+
+    ui->deleteDB->setIcon(QIcon(":/icons/delete.png"));
+    ui->deleteDB->setIconSize(QSize(16, 16));
+    ui->deleteDB->setToolTip("Delete table");
+
+    ui->editDB->setIcon(QIcon(":/icons/edit.png"));
+    ui->editDB->setIconSize(QSize(16, 16));
+    ui->editDB->setToolTip("Delete table");
 }
 
 void BackendDashboard::setupTasksTable()
@@ -320,6 +339,16 @@ void BackendDashboard::showAddFieldDialog()
 
         connect(addFieldDialog, &AddFieldDialog::fieldSaved, this, &BackendDashboard::onFieldSaved);
     }
+
+    // Asegúrate de que `currentTransaction` esté asignado
+    //if (currentTransaction.getName().empty()) {
+    //    QMessageBox::warning(this, "Error", "No transaction is currently selected.");
+    //    return;
+    //}
+
+    // Asignar el currentTransaction al AddFieldDialog
+    //addFieldDialog->setTransaction(currentTransaction);
+
     addFieldDialog->exec();
 }
 
@@ -346,9 +375,11 @@ void BackendDashboard::setTransactions(const std::vector<Transaction> &newTransa
     for (const auto &transaction : transactions) {
         QTreeWidgetItem *item = new QTreeWidgetItem(rootItem);
         item->setText(0, QString::fromStdString(transaction.getName()));
-        item->setIcon(0, QIcon(":/icons/table.png"));
+        // item->setIcon(0, QIcon(":/icons/table.png"));
         // item->setIcon(0, QIcon(":/icons/delete.png"));
         // TODO: Replace for a custom widget to allow multiple icons
+        // Habilitar la edición in-place para el nombre de la tabla
+        item->setFlags(item->flags() | Qt::ItemIsEditable);
     }
 
     // Expandir todo el árbol para mostrar todas las tablas
@@ -373,6 +404,15 @@ void BackendDashboard::setCurrentTransaction(Transaction &transaction)
 
 void BackendDashboard::onFieldSaved(const Field &field)
 {
+    // Verificar si ya existe una clave primaria en la tabla actual
+    if (field.isPrimaryKey()) {
+        for (auto &existingField : currentTransaction.getFields()) {
+            if (existingField.isPrimaryKey()) {
+                existingField.setIsPrimaryKey(false); // Desmarcar la PK anterior
+            }
+        }
+    }
+
     currentTransaction.getFields().push_back(field);
 
     // Buscar el currentTransaction en el vector de transactions
@@ -440,16 +480,12 @@ void BackendDashboard::updateTasksTable(const Transaction &transaction)
 
         // Crear elementos para Primary Key y Foreign Key con checkbox
         QTableWidgetItem *pkItem = new QTableWidgetItem();
-        // TODO: Fix pk doesn't match with isNull
-        // pkItem->setCheckState(field.getIsNull() ? Qt::Checked : Qt::Unchecked);
-        pkItem->setCheckState(Qt::Unchecked);
+        pkItem->setCheckState(field.isPrimaryKey() ? Qt::Checked : Qt::Unchecked);
         pkItem->setTextAlignment(Qt::AlignCenter);
         ui->tasksTableWidget->setItem(row, 2, pkItem);
 
         QTableWidgetItem *fkItem = new QTableWidgetItem();
-        // TODO: Fix fk doesn't match with isUnique
-        // fkItem->setCheckState(field.getIsUnique() ? Qt::Checked : Qt::Unchecked);
-        fkItem->setCheckState(Qt::Unchecked);
+        fkItem->setCheckState(field.isForeignKey() ? Qt::Checked : Qt::Unchecked);
         fkItem->setTextAlignment(Qt::AlignCenter);
         ui->tasksTableWidget->setItem(row, 3, fkItem);
 
@@ -475,4 +511,98 @@ void BackendDashboard::updateTasksTable(const Transaction &transaction)
 void BackendDashboard::setDatabaseLabel(const std::string &dbName)
 {
     ui->databaseLabel->setText(QString::fromStdString(dbName));
+}
+
+void BackendDashboard::on_editButton_clicked()
+{
+    QTreeWidgetItem *selectedItem = ui->databaseTreeWidget->currentItem();
+    if (!selectedItem || selectedItem == rootItem)
+        return; // Si no hay nada seleccionado o es el nodo raíz, no hacer nada
+
+    bool ok;
+    QString currentName = selectedItem->text(0);
+
+    // Mostrar un cuadro de diálogo que permita editar el nombre de la tabla
+    QString newName = QInputDialog::getText(this,
+                                            tr("Edit Table Name"),
+                                            tr("New table name:"),
+                                            QLineEdit::Normal,
+                                            currentName,
+                                            &ok);
+
+    if (ok && !newName.isEmpty() && newName != currentName) {
+        // Actualizar el nombre en la interfaz gráfica
+        selectedItem->setText(0, newName);
+
+        // Actualizar el nombre en la lista de transacciones
+        for (auto &transaction : transactions) {
+            if (transaction.getName() == currentName.toStdString()) {
+                transaction.setName(newName.toStdString());
+                break;
+            }
+        }
+    }
+}
+
+void BackendDashboard::on_deleteButton_clicked()
+{
+    // Obtener el elemento seleccionado en el árbol de tablas
+    QTreeWidgetItem *selectedItem = ui->databaseTreeWidget->currentItem();
+
+    // Verificar que haya un elemento seleccionado y que no sea el rootItem
+    if (!selectedItem || selectedItem == rootItem) {
+        return; // Si no hay un elemento seleccionado o es el nodo raíz, no hacer nada
+    }
+
+    QString tableName = selectedItem->text(0); // Nombre de la tabla seleccionada
+
+    // Mostrar un cuadro de diálogo para confirmar la eliminación
+    QMessageBox::StandardButton reply;
+    reply = QMessageBox::question(this,
+                                  "Delete Table",
+                                  "Are you sure you want to delete the table '" + tableName + "'?",
+                                  QMessageBox::Yes | QMessageBox::No);
+
+    if (reply == QMessageBox::Yes) {
+        // Eliminar el elemento del árbol visual
+        delete selectedItem;
+
+        // Eliminar la transacción correspondiente en la lista de transacciones
+        auto it = std::remove_if(transactions.begin(),
+                                 transactions.end(),
+                                 [&tableName](const Transaction &transaction) {
+                                     return transaction.getName() == tableName.toStdString();
+                                 });
+        transactions.erase(it, transactions.end());
+
+        // Limpiar la tabla de tareas asociada
+        ui->tasksTableWidget->clearContents();
+        ui->tasksTableWidget->setRowCount(0);
+
+        // Actualizar las etiquetas y la interfaz gráfica
+        ui->labelTable->setText("No Table Selected");
+        ui->labelMethods->setText("No Methods Available");
+    }
+}
+void BackendDashboard::onTableNameChanged(QTreeWidgetItem *item, int column)
+{
+    if (!item || item == rootItem)
+        return;
+
+    QString newName = item->text(0);
+
+    // Actualizar la transacción correspondiente en la lista de transacciones
+    for (auto &transaction : transactions) {
+        if (transaction.getName() == currentTransaction.getName()) {
+            transaction.setName(newName.toStdString());
+            break;
+        }
+    }
+
+    // Actualizar el nombre de la tabla actual
+    currentTransaction.setName(newName.toStdString());
+
+    // Actualizar los labels de la UI
+    ui->labelTable->setText(newName + " Table");
+    ui->labelMethods->setText(newName + " Methods");
 }

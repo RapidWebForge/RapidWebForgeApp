@@ -33,6 +33,9 @@ public slots:
     void onTransactionSaved(const Transaction &transaction);
     // Nueva función para manejar la selección de una tabla
     void onTableSelected(QTreeWidgetItem *item, int column);
+    void on_editButton_clicked();
+    void on_deleteButton_clicked();
+    void onTableNameChanged(QTreeWidgetItem *item, int column);
 
 private slots:
     void showCreateTableDialog();

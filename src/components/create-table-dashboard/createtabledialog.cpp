@@ -40,4 +40,7 @@ void CreateTableDialog::on_createButton_clicked()
     transaction.setNameConst(boost::to_lower_copy(transactionName));
 
     emit transactionSaved(transaction);
+
+    // Limpiar el campo de texto después de crear la transacción
+    ui->tableNameLineEdit->clear(); // Esto limpia el input de la tabla
 }

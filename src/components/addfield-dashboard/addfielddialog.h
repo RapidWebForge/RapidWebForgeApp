@@ -3,6 +3,7 @@
 
 #include <QDialog>
 #include "../../models/field/field.h"
+#include "../../models/transaction/transaction.h" // Incluir el modelo de transacción
 
 namespace Ui {
 class AddFieldDialog;
@@ -16,6 +17,8 @@ public:
     explicit AddFieldDialog(QWidget *parent = nullptr);
     ~AddFieldDialog();
 
+    void setTransaction(Transaction &transaction);
+
 signals:
     void fieldSaved(const Field &field);
 
@@ -25,6 +28,7 @@ private slots:
 private:
     Ui::AddFieldDialog *ui;
     Field field;
+    Transaction *currentTransaction; // Referencia a la transacción actual
 };
 
 #endif // ADDFIELDDIALOG_H
