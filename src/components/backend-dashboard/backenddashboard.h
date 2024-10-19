@@ -36,6 +36,7 @@ public slots:
     void on_editButton_clicked();
     void on_deleteButton_clicked();
     void onTableNameChanged(QTreeWidgetItem *item, int column);
+    void on_deleteFieldButton_clicked();
 
 private slots:
     void showCreateTableDialog();
