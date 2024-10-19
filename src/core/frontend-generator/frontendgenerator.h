@@ -33,6 +33,7 @@ private:
     bool updateFrontendJson(const std::string &componentName);
     bool generateComponentBase(const std::string &componentName);
     bool generateMain();
+    bool generateViews();
 };
 
 #endif // FRONTENDGENERATOR_H

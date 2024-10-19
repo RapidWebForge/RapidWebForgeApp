@@ -196,11 +196,36 @@ bool FrontendGenerator::generateComponentBase(const std::string &componentName)
     inja::Environment env;
     nlohmann::json data;
 
-    // Insert the component name into the JSON context
+    // Inserta el nombre del componente en el contexto de Inja
     data["component"] = componentName;
+
+    // Agrega los componentes actuales si existen
+    auto it = std::find_if(views.begin(), views.end(), [&componentName](const View &view) {
+        return view.getName() == componentName;
+    });
+
+    data["components"] = nlohmann::json::array(); // Asegúrate de inicializar el array
+
+    // Si la vista ya existe, agrega sus componentes al contexto
+    if (it != views.end()) {
+        for (const auto &component : it->getComponents()) {
+            nlohmann::json componentJson;
+            componentJson["type"] = component.getType();
+
+            // Agrega las props si existen
+            nlohmann::json propsJson;
+            for (const auto &prop : component.getProps()) {
+                propsJson[prop.first] = prop.second;
+            }
+            componentJson["props"] = propsJson;
+
+            data["components"].push_back(componentJson);
+        }
+    }
 
     std::string templatePath = ":/inja/frontend/view";
 
+    // Cargar el template
     QFile file(QString::fromStdString(templatePath));
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
         fmt::print(stderr, "Unable to open template file from resource: {}\n", templatePath);
@@ -216,10 +241,11 @@ bool FrontendGenerator::generateComponentBase(const std::string &componentName)
     std::string outputPath = projectPath + "/frontend/src/views/" + componentName + ".tsx";
 
     try {
+        // Renderizar con Inja usando el contenido del archivo como una cadena
         std::string result = env.render(templateString, data);
         FileUtils::writeFile(outputPath, result);
 
-        updateFrontendJson(componentName);
+        updateFrontendJson(componentName); // Actualizar el frontend.json
     } catch (const std::exception &e) {
         fmt::print(stderr, "Error generating component base for {}: {}\n", componentName, e.what());
         return false;
@@ -251,10 +277,16 @@ bool FrontendGenerator::generateMain()
         }
 
         if (!componentExists) {
-            generateComponentBase(route.getComponent());
+            if (!generateComponentBase(route.getComponent())) {
+                fmt::print(stderr,
+                           "Failed to generate component base for {}\n",
+                           route.getComponent());
+                return false;
+            }
 
-            View view(route.getComponent());
-            views.push_back(view);
+            // Agregar la nueva vista al vector de vistas
+            View newView(route.getComponent());
+            views.push_back(newView);
         }
     }
 
@@ -285,9 +317,64 @@ bool FrontendGenerator::generateMain()
     return true;
 }
 
+bool FrontendGenerator::generateViews()
+{
+    inja::Environment env;
+
+    for (const auto &view : views) {
+        nlohmann::json data;
+        data["component"] = view.getName(); // Agregar la variable 'component' al contexto
+        data["components"] = nlohmann::json::array();
+
+        for (const auto &component : view.getComponents()) {
+            nlohmann::json componentJson;
+            componentJson["type"] = component.getType();
+
+            // Agregar las props del componente
+            nlohmann::json propsJson;
+            for (const auto &prop : component.getProps()) {
+                propsJson[prop.first] = prop.second;
+            }
+            componentJson["props"] = propsJson;
+
+            data["components"].push_back(componentJson);
+        }
+
+        // Cargar la plantilla de vista
+        std::string templatePath = ":/inja/frontend/view";
+
+        QFile file(QString::fromStdString(templatePath));
+        if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+            fmt::print(stderr, "Unable to open template file from resource: {}\n", templatePath);
+            return false;
+        }
+
+        QTextStream in(&file);
+        QString templateContent = in.readAll();
+        file.close();
+
+        std::string templateString = templateContent.toStdString();
+        std::string outputPath = projectPath + "/frontend/src/views/" + view.getName() + ".tsx";
+
+        try {
+            // Renderizar con Inja usando el contexto actualizado
+            std::string result = env.render(templateString, data);
+            FileUtils::writeFile(outputPath, result);
+        } catch (const std::exception &e) {
+            fmt::print(stderr, "Error generating view for {}: {}\n", view.getName(), e.what());
+            return false;
+        }
+    }
+
+    return true;
+}
+
 bool FrontendGenerator::generateFrontendCode()
 {
     if (!generateMain())
+        return false;
+
+    if (!generateViews())
         return false;
 
     return true;

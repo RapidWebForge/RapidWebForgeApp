@@ -1,5 +1,19 @@
 import React from "react";
 
 export default function {{ component }}() {
-  return <h1>{{ component }} View</h1>;
+  return (
+    <div>
+      {% for comp in components %}
+        {% if comp.type == "Header H1" %}
+          <h1>{{ default(comp.props.text, "Default Header") }}</h1>
+        {% else if comp.type == "Paragraph" %}
+          <p>{{ default(comp.props.text, "Default Paragraph") }}</p>
+        {% else if comp.type == "Input" %}
+          <input
+            placeholder="{{ default(comp.props.placeholder, "Default Input") }}"
+          />
+        {% endif %}
+      {% endfor %}
+    </div>
+  );
 }
