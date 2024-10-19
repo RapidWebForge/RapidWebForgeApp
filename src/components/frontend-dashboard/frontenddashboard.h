@@ -42,6 +42,8 @@ private:
     void setUpTreeWidgets();
     void setComponentsDraggable();
     void populateCurrentViewTree();
+    void convertTreeToViews();
+    void populateNestedComponents(QTreeWidgetItem *parentItem, std::vector<Component> &component);
 
     CreateView *createViewDialog;
     std::vector<Route> routes;

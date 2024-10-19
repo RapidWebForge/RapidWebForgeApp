@@ -98,6 +98,21 @@
             </property>
            </item>
           </item>
+          <item>
+           <property name="text">
+            <string>Containers</string>
+           </property>
+           <item>
+            <property name="text">
+             <string>Horizontal Layout</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Vertical Layout</string>
+            </property>
+           </item>
+          </item>
          </widget>
         </item>
        </layout>

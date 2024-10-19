@@ -152,16 +152,74 @@ void FrontendDashboard::populateCurrentViewTree()
     for (const auto &component : currentView.getComponents()) {
         QTreeWidgetItem *componentItem = new QTreeWidgetItem(ui->currentViewTree);
         componentItem->setText(0, QString::fromStdString(component.getType()));
-
-        // const auto &props = component.getProps();
-        // for (const auto &property : props) {
-        //     QTreeWidgetItem *propertyItem = new QTreeWidgetItem(componentItem);
-        //     propertyItem->setText(0, QString::fromStdString(property.first));
-        //     propertyItem->setText(1, QString::fromStdString(property.second));
-        // }
     }
 
     ui->currentViewTree->expandAll();
+}
+
+void FrontendDashboard::convertTreeToViews()
+{
+    // Obtén el nombre de la vista actual
+    std::string viewName = currentView.getName();
+
+    // Encuentra la vista correspondiente en el vector de vistas
+    auto it = std::find_if(views.begin(), views.end(), [&viewName](const View &v) {
+        return v.getName() == viewName;
+    });
+
+    if (it != views.end()) {
+        // Limpiar los componentes actuales de la vista
+        std::vector<Component> newComponents;
+
+        // Iterar sobre los componentes del QTreeWidget
+        for (int i = 0; i < ui->currentViewTree->topLevelItemCount(); ++i) {
+            QTreeWidgetItem *componentItem = ui->currentViewTree->topLevelItem(i);
+
+            // Crear un nuevo componente basado en el QTreeWidgetItem
+            std::string componentType = componentItem->text(0).toStdString();
+            // std::map<std::string, std::string> componentProps;
+
+            // Crear un objeto Component con el tipo y las propiedades obtenidas
+            Component newComponent(componentType);
+            // Component newComponent(componentType, componentProps);
+
+            // Si el componente tiene otros componentes anidados, manejarlos recursivamente
+            if (componentItem->childCount() > 0) {
+                populateNestedComponents(componentItem, newComponents);
+            }
+
+            // Agregar el componente al vector de componentes de la vista
+            newComponents.push_back(newComponent);
+        }
+
+        // Actualizar los componentes de la vista
+        it->setComponents(newComponents);
+    }
+}
+
+// Función recursiva para manejar componentes anidados
+void FrontendDashboard::populateNestedComponents(QTreeWidgetItem *parentItem,
+                                                 std::vector<Component> &components)
+{
+    // Iterar sobre los hijos del QTreeWidgetItem actual
+    for (int i = 0; i < parentItem->childCount(); ++i) {
+        QTreeWidgetItem *childItem = parentItem->child(i);
+
+        // Obtiene el tipo del componente hijo
+        std::string childComponentType = childItem->text(0).toStdString();
+        std::map<std::string, std::string> childComponentProps; // Props se mantienen vacíos
+
+        // Crea un nuevo componente hijo
+        Component childComponent(childComponentType, childComponentProps);
+
+        // Si el componente hijo tiene otros componentes anidados, llamamos recursivamente
+        if (childItem->childCount() > 0) {
+            populateNestedComponents(childItem, components);
+        }
+
+        // Agregar el componente hijo al vector de componentes de la vista actual
+        components.push_back(childComponent);
+    }
 }
 
 void FrontendDashboard::showCreateViewDialog()
