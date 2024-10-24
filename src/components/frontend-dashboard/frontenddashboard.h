@@ -37,6 +37,7 @@ private slots:
     void showCreateViewDialog();
 
     void on_addColumnButton_clicked();
+    void onCurrentViewTreeItemSelected(QTreeWidgetItem *item, int column);
 
 private:
     Ui::FrontendDashboard *ui;
@@ -46,11 +47,13 @@ private:
     void populateCurrentViewTree();
     void convertTreeToViews();
     void populateNestedComponents(QTreeWidgetItem *parentItem, std::vector<Component> &component);
+    void populatePropertiesTable(const Component &component);
 
     CreateView *createViewDialog;
     std::vector<Route> routes;
     std::vector<View> views;
     View currentView;
+    Component currentComponent;
 };
 
 #endif // FRONTENDDASHBOARD_H

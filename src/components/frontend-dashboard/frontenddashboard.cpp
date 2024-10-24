@@ -2,6 +2,7 @@
 #include <QDebug>
 #include <QDropEvent>
 #include <QMessageBox>
+#include "../../models/component-type/componenttype.h"
 #include "ui_frontenddashboard.h"
 
 FrontendDashboard::FrontendDashboard(QWidget *parent)
@@ -15,6 +16,10 @@ FrontendDashboard::FrontendDashboard(QWidget *parent)
             &QPushButton::clicked,
             this,
             &FrontendDashboard::showCreateViewDialog);
+    connect(ui->currentViewTree,
+            &QTreeWidget::itemClicked,
+            this,
+            &FrontendDashboard::onCurrentViewTreeItemSelected);
 
     applyStylesFront();
     setUpTreeWidgets();
@@ -148,7 +153,9 @@ void FrontendDashboard::populateCurrentViewTree()
     // Loop through the components of the currentView and add them to the QTreeWidget
     for (const auto &component : currentView.getComponents()) {
         QTreeWidgetItem *componentItem = new QTreeWidgetItem(ui->currentViewTree);
-        componentItem->setText(0, QString::fromStdString(component.getType()));
+        // componentItem->setText(0, QString::fromStdString(component.getType()));
+        componentItem->setText(0,
+                               QString::fromStdString(componentTypeToString(component.getType())));
     }
 
     ui->currentViewTree->expandAll();
@@ -173,9 +180,12 @@ void FrontendDashboard::convertTreeToViews()
             QTreeWidgetItem *componentItem = ui->currentViewTree->topLevelItem(i);
 
             // Crear un nuevo componente basado en el QTreeWidgetItem
-            std::string componentType = componentItem->text(0).toStdString();
+            std::string componentTypeStr = componentItem->text(0).toStdString();
 
             // Crear un objeto Component con el tipo y las propiedades obtenidas
+            ComponentType componentType = stringToComponentType(componentTypeStr);
+
+            // Crear un nuevo componente con el tipo convertido
             Component newComponent(componentType);
 
             // Si el componente tiene otros componentes anidados, manejarlos recursivamente
@@ -203,12 +213,14 @@ void FrontendDashboard::populateNestedComponents(QTreeWidgetItem *parentItem,
     for (int i = 0; i < parentItem->childCount(); ++i) {
         QTreeWidgetItem *childItem = parentItem->child(i);
 
-        // Obtiene el tipo del componente hijo
-        std::string childComponentType = childItem->text(0).toStdString();
-        std::map<std::string, std::string> childComponentProps; // Props se mantienen vacíos
+        // Obtener el tipo del componente hijo como cadena
+        std::string childComponentTypeStr = childItem->text(0).toStdString();
 
-        // Crea un nuevo componente hijo
-        Component childComponent(childComponentType, childComponentProps);
+        // Convertir la cadena a ComponentType
+        ComponentType childComponentType = stringToComponentType(childComponentTypeStr);
+
+        // Crear el componente hijo con el tipo convertido
+        Component childComponent(childComponentType);
 
         // Si el componente hijo tiene otros componentes anidados, llamamos recursivamente
         if (childItem->childCount() > 0) {
@@ -224,17 +236,73 @@ void FrontendDashboard::on_addColumnButton_clicked()
 {
     convertTreeToViews();
 
-    for (auto &v : views) {
-        qDebug() << "View: " << v.getName() << "\n";
-        if (!v.getComponents().empty()) {
-            qDebug() << "Components\n";
-            for (auto &c : v.getComponents()) {
-                qDebug() << "Component: " << c.getType() << "\n";
-            }
-        }
-    }
+    // // Print
+    // for (auto &v : views) {
+    //     qDebug() << "View: " << v.getName() << "\n";
+    //     if (!v.getComponents().empty()) {
+    //         qDebug() << "Components\n";
+    //         for (auto &c : v.getComponents()) {
+    //             qDebug() << "Component: " << c.getType() << "\n";
+    //         }
+    //     }
+    // }
 
     QMessageBox::information(this, "Successful", "View updated");
+}
+
+void FrontendDashboard::onCurrentViewTreeItemSelected(QTreeWidgetItem *item, int column)
+{
+    // Obtener el tipo de componente del QTreeWidgetItem
+    std::string componentType = item->text(0).toStdString();
+
+    // Buscar el componente correspondiente en el currentView
+    const auto &components = currentView.getComponents();
+    auto it = std::find_if(components.begin(),
+                           components.end(),
+                           [&componentType](const Component &comp) {
+                               return componentTypeToString(comp.getType()) == componentType;
+                           });
+
+    if (it != components.end()) {
+        currentComponent = *it; // Actualizar currentComponent
+
+        qDebug() << "Found Component: "
+                 << QString::fromStdString(componentTypeToString(currentComponent.getType()));
+
+        // Llenar la tabla de propiedades con las propiedades del componente
+        populatePropertiesTable(currentComponent);
+    }
+}
+
+void FrontendDashboard::populatePropertiesTable(const Component &component)
+{
+    // Limpiar la tabla de propiedades y ajustar el número de filas
+    ui->propertiesTable->clearContents();
+    ui->propertiesTable->setRowCount(0);
+
+    const auto &props = component.getProps();
+
+    if (props.empty()) {
+        qDebug() << "No properties found for this component.";
+        return;
+    }
+
+    // Ajustar el número de filas
+    ui->propertiesTable->setRowCount(props.size());
+
+    int row = 0;
+    for (const auto &prop : props) {
+        QTableWidgetItem *keyItem = new QTableWidgetItem(QString::fromStdString(prop.first));
+        QTableWidgetItem *valueItem = new QTableWidgetItem(QString::fromStdString(prop.second));
+
+        ui->propertiesTable->setItem(row, 0, keyItem);
+        ui->propertiesTable->setItem(row, 1, valueItem);
+
+        ++row;
+    }
+
+    // Ajustar el ancho de las columnas
+    // ui->propertiesTable->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
 }
 
 void FrontendDashboard::showCreateViewDialog()

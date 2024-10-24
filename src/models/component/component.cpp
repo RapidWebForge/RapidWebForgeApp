@@ -1,23 +1,37 @@
 #include "component.h"
 
 Component::Component()
-    : type("")
+    : type(ComponentType::Undefined)
     , props()
-{}
+{
+    initializeDefaultProps();
+}
 
-Component::Component(const std::string &type)
+Component::Component(ComponentType type)
     : type(type)
     , props()
-{}
+{
+    initializeDefaultProps();
+}
 
-Component::Component(const std::string &type, const std::map<std::string, std::string> &props)
+Component::Component(ComponentType type, const std::map<std::string, std::string> &props)
     : type(type)
     , props(props)
-{}
+{
+    initializeDefaultProps();
+}
+
+void Component::initializeDefaultProps()
+{
+    auto it = componentPropertiesMap.find(type);
+    if (it != componentPropertiesMap.end()) {
+        props = it->second;
+    }
+}
 
 // Getters
 
-std::string Component::getType() const
+ComponentType Component::getType() const
 {
     return type;
 }
@@ -34,7 +48,7 @@ std::map<std::string, std::string> &Component::getProps()
 
 // Setters
 
-void Component::setType(const std::string &type)
+void Component::setType(ComponentType type)
 {
     this->type = type;
 }

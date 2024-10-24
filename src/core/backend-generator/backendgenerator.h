@@ -31,6 +31,8 @@ private:
     void generateModel(const Transaction &transaction);
     void generateRoute(const Transaction &transaction);
     void generateIndexFiles();
+    bool generateFrontendModels();
+    bool generateFrontendServices();
     void writeFile(const std::string &filePath, const std::string &content);
     void parseJson(const nlohmann::json &jsonSchema);
 

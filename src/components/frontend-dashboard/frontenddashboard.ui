@@ -171,11 +171,14 @@
        <layout class="QVBoxLayout" name="verticalLayoutProperties">
         <item>
          <widget class="QTableWidget" name="propertiesTable">
+          <property name="sizeAdjustPolicy">
+           <enum>QAbstractScrollArea::SizeAdjustPolicy::AdjustIgnored</enum>
+          </property>
           <property name="gridStyle">
            <enum>Qt::PenStyle::SolidLine</enum>
           </property>
           <property name="rowCount">
-           <number>15</number>
+           <number>10</number>
           </property>
           <property name="columnCount">
            <number>2</number>
@@ -187,6 +190,9 @@
            </stringlist>
           </property>
           <attribute name="horizontalHeaderVisible">
+           <bool>true</bool>
+          </attribute>
+          <attribute name="horizontalHeaderStretchLastSection">
            <bool>true</bool>
           </attribute>
           <attribute name="verticalHeaderVisible">
@@ -202,13 +208,16 @@
           <row/>
           <row/>
           <row/>
-          <row/>
-          <row/>
-          <row/>
-          <row/>
-          <row/>
-          <column/>
-          <column/>
+          <column>
+           <property name="text">
+            <string>Propierties</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>Value</string>
+           </property>
+          </column>
          </widget>
         </item>
        </layout>

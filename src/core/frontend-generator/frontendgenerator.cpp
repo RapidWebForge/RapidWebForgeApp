@@ -1,6 +1,7 @@
 #include "frontendgenerator.h"
 #include <QFile>
 #include <QTextStream>
+#include "../../models/component-type/componenttype.h"
 #include "../../utils/file/fileutiils.h"
 #include <fmt/core.h>
 #include <fstream>
@@ -49,8 +50,20 @@ void FrontendGenerator::parseJson(const nlohmann::json &jsonSchema)
     // Parse routes
     for (const auto &routeJson : jsonSchema["routes"]) {
         Route route;
-        route.setComponent(routeJson["component"].get<std::string>());
-        route.setPath(routeJson["path"].get<std::string>());
+        if (routeJson.contains("component") && routeJson["component"].is_string()) {
+            route.setComponent(routeJson["component"].get<std::string>());
+        } else {
+            fmt::print(stderr, "Error: 'component' in 'routes' must be a string.\n");
+            continue;
+        }
+
+        if (routeJson.contains("path") && routeJson["path"].is_string()) {
+            route.setPath(routeJson["path"].get<std::string>());
+        } else {
+            fmt::print(stderr, "Error: 'path' in 'routes' must be a string.\n");
+            continue;
+        }
+
         routes.push_back(route);
     }
 
@@ -64,14 +77,26 @@ void FrontendGenerator::parseJson(const nlohmann::json &jsonSchema)
             std::vector<Component> components;
             for (const auto &componentJson : it.value()["components"]) {
                 Component component;
-                component.setType(componentJson["type"].get<std::string>());
+                if (componentJson.contains("type") && componentJson["type"].is_string()) {
+                    component.setType(
+                        stringToComponentType(componentJson["type"].get<std::string>()));
+                } else {
+                    fmt::print(stderr, "Error: 'type' in 'components' must be a string.\n");
+                    continue;
+                }
 
                 // Parse props
                 std::map<std::string, std::string> props;
                 for (auto propIt = componentJson["props"].begin();
                      propIt != componentJson["props"].end();
                      ++propIt) {
-                    props[propIt.key()] = propIt.value().get<std::string>();
+                    if (propIt.value().is_string()) {
+                        props[propIt.key()] = propIt.value().get<std::string>();
+                    } else {
+                        fmt::print(stderr,
+                                   "Error: Property value for '{}' must be a string.\n",
+                                   propIt.key());
+                    }
                 }
                 component.setProps(props);
 
@@ -104,7 +129,9 @@ bool FrontendGenerator::updateSchema()
 
         for (const auto &component : view.getComponents()) {
             nlohmann::json componentJson;
-            componentJson["type"] = component.getType();
+
+            // Convertir ComponentType a cadena antes de asignarlo al JSON
+            componentJson["type"] = componentTypeToString(component.getType());
 
             // Agregar las props
             nlohmann::json propsJson;
@@ -165,8 +192,18 @@ bool FrontendGenerator::updateFrontendJson(const std::string &componentName)
     if (!componentExists) {
         nlohmann::json newView;
         nlohmann::json newComponent;
-        newComponent["type"] = "Header H1";
-        newComponent["props"]["text"] = componentName + " View";
+
+        // Usar el tipo del componente "Header H1" por defecto
+        ComponentType defaultType = ComponentType::HeaderH1;
+        newComponent["type"] = componentTypeToString(defaultType);
+
+        // Obtener las propiedades por defecto del tipo de componente
+        auto it = componentPropertiesMap.find(defaultType);
+        if (it != componentPropertiesMap.end()) {
+            for (const auto &prop : it->second) {
+                newComponent["props"][prop.first] = prop.second;
+            }
+        }
 
         newView[componentName]["components"].push_back(newComponent);
         frontendJson["views"].push_back(newView);

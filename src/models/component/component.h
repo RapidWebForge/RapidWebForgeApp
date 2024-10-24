@@ -1,26 +1,28 @@
 #ifndef COMPONENT_H
 #define COMPONENT_H
 
+#include "../../models/component-type/componenttype.h"
 #include <map>
 #include <string>
 
 class Component
 {
 private:
-    std::string type;
+    ComponentType type;
     std::map<std::string, std::string> props;
 
 public:
     Component();
-    Component(const std::string &type);
-    Component(const std::string &type, const std::map<std::string, std::string> &props);
+    Component(ComponentType type);
+    Component(ComponentType type, const std::map<std::string, std::string> &props);
 
-    std::string getType() const;
+    ComponentType getType() const;
     const std::map<std::string, std::string> &getProps() const;
     std::map<std::string, std::string> &getProps();
 
-    void setType(const std::string &type);
+    void setType(ComponentType type);
     void setProps(const std::map<std::string, std::string> &props);
+    void initializeDefaultProps();
 };
 
 #endif // COMPONENT_H

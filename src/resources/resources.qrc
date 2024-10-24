@@ -33,5 +33,7 @@
     <qresource prefix="/inja/frontend">
         <file alias="main">inja_templates/frontend/main.inja</file>
         <file alias="view">inja_templates/frontend/view.inja</file>
+        <file alias="model">inja_templates/frontend/model.inja</file>
+        <file alias="service">inja_templates/frontend/service.inja</file>
     </qresource>
 </RCC>

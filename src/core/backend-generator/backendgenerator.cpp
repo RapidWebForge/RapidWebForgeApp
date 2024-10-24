@@ -179,7 +179,22 @@ bool BackendGenerator::generateBackendCode()
 // Regenerate backend with new information
 bool BackendGenerator::updateBackendCode()
 {
-    return updateSchema() ? generateBackendCode() : false;
+    // Actualizar el esquema del backend
+    if (updateSchema()) {
+        // Generar el código del backend
+        if (!generateBackendCode()) {
+            return false;
+        }
+
+        // Generar modelos y servicios para el frontend
+        if (!generateFrontendModels() || !generateFrontendServices()) {
+            fmt::print(stderr, "Error generating frontend code.\n");
+            return false;
+        }
+
+        return true;
+    }
+    return false;
 }
 
 void BackendGenerator::generateFile(const Transaction &transaction,
@@ -309,6 +324,97 @@ void BackendGenerator::generateIndexFiles()
     // Renderizar el template de routesIndex con el contexto
     std::string routesIndexResult = env.render(routesIndexTemplateContent.toStdString(), context);
     writeFile(projectPath + "/backend/routes/index.js", routesIndexResult);
+}
+
+bool BackendGenerator::generateFrontendModels()
+{
+    inja::Environment env;
+    std::string modelTemplatePath = ":/inja/frontend/model";
+
+    // Cargar la plantilla para modelos
+    QFile file(QString::fromStdString(modelTemplatePath));
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        fmt::print(stderr,
+                   "Unable to open model template file from resource: {}\n",
+                   modelTemplatePath);
+        return false;
+    }
+
+    QTextStream in(&file);
+    QString templateContent = in.readAll();
+    file.close();
+    std::string templateString = templateContent.toStdString();
+
+    // Iterar sobre las transacciones para generar modelos
+    for (const auto &transaction : transactions) {
+        nlohmann::json data;
+        data["model_name"] = transaction.getName();
+        data["fields"] = nlohmann::json::array();
+
+        for (const auto &field : transaction.getFields()) {
+            nlohmann::json fieldJson;
+            fieldJson["name"] = field.getName();
+            fieldJson["type"] = field.getType();
+            data["fields"].push_back(fieldJson);
+        }
+
+        // Crear el archivo de modelo en el frontend
+        std::string outputPath = projectPath + "/frontend/src/models/" + transaction.getName()
+                                 + ".ts";
+        try {
+            std::string result = env.render(templateString, data);
+            writeFile(outputPath, result);
+        } catch (const std::exception &e) {
+            fmt::print(stderr,
+                       "Error generating model for {}: {}\n",
+                       transaction.getName(),
+                       e.what());
+            return false;
+        }
+    }
+    return true;
+}
+
+bool BackendGenerator::generateFrontendServices()
+{
+    inja::Environment env;
+    std::string serviceTemplatePath = ":/inja/frontend/service";
+
+    // Cargar la plantilla para servicios
+    QFile file(QString::fromStdString(serviceTemplatePath));
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        fmt::print(stderr,
+                   "Unable to open service template file from resource: {}\n",
+                   serviceTemplatePath);
+        return false;
+    }
+
+    QTextStream in(&file);
+    QString templateContent = in.readAll();
+    file.close();
+    std::string templateString = templateContent.toStdString();
+
+    // Iterar sobre las transacciones para generar servicios
+    for (const auto &transaction : transactions) {
+        nlohmann::json data;
+        data["model_name"] = transaction.getName();
+        data["model_name_lower"] = transaction.getNameConst(); // Nombre en minúsculas
+
+        // Crear el archivo de servicio en el frontend
+        std::string outputPath = projectPath + "/frontend/src/services/" + transaction.getName()
+                                 + "Service.ts";
+        try {
+            std::string result = env.render(templateString, data);
+            writeFile(outputPath, result);
+        } catch (const std::exception &e) {
+            fmt::print(stderr,
+                       "Error generating service for {}: {}\n",
+                       transaction.getName(),
+                       e.what());
+            return false;
+        }
+    }
+    return true;
 }
 
 // Getter
