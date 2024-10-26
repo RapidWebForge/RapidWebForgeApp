@@ -6,6 +6,7 @@
 #include "../../models/route/route.h"
 #include "../../models/view/view.h"
 #include "../create-view/createview.h"
+#include "../custom-tree-widget/customtreewidget.h"
 #include <vector>
 
 namespace Ui {
@@ -38,9 +39,11 @@ private slots:
 
     void on_addColumnButton_clicked();
     void onCurrentViewTreeItemSelected(QTreeWidgetItem *item, int column);
+    void onItemDropped(QTreeWidgetItem *parentItem, QTreeWidgetItem *droppedItem);
 
 private:
     Ui::FrontendDashboard *ui;
+
     void applyStylesFront();
     void setUpTreeWidgets();
     void setComponentsDraggable();

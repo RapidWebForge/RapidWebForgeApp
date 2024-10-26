@@ -128,7 +128,7 @@
        </property>
        <layout class="QVBoxLayout" name="verticalLayoutMainView">
         <item>
-         <widget class="QTreeWidget" name="currentViewTree">
+         <widget class="CustomTreeWidget" name="currentViewTree">
           <property name="headerHidden">
            <bool>true</bool>
           </property>
@@ -227,6 +227,13 @@
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>CustomTreeWidget</class>
+   <extends>QTreeWidget</extends>
+   <header>customtreewidget.h</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>

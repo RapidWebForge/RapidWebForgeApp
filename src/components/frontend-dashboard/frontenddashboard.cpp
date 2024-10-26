@@ -12,6 +12,11 @@ FrontendDashboard::FrontendDashboard(QWidget *parent)
 {
     ui->setupUi(this);
 
+    connect(ui->currentViewTree,
+            &CustomTreeWidget::itemDropped,
+            this,
+            &FrontendDashboard::onItemDropped);
+
     connect(ui->addSectionButton,
             &QPushButton::clicked,
             this,
@@ -99,7 +104,6 @@ void FrontendDashboard::setUpTreeWidgets()
 {
     // Components Tree
     QTreeWidget *componentsTree = ui->componentsTree;
-
     componentsTree->setDragEnabled(true);
     componentsTree->setDropIndicatorShown(true);
     componentsTree->setDragDropMode(QAbstractItemView::InternalMove);
@@ -108,7 +112,6 @@ void FrontendDashboard::setUpTreeWidgets()
 
     // Current View Tree
     QTreeWidget *currentViewTree = ui->currentViewTree;
-
     currentViewTree->setAcceptDrops(true);
 }
 
@@ -139,24 +142,34 @@ void FrontendDashboard::setComponentsDraggable()
     }
 }
 
+void FrontendDashboard::onItemDropped(QTreeWidgetItem *parentItem, QTreeWidgetItem *droppedItem)
+{
+    std::string parentComponentTypeStr = parentItem->text(0).toStdString();
+    ComponentType parentComponentType = stringToComponentType(parentComponentTypeStr);
+
+    // Verificar si el componente padre permite anidar
+    Component parentComponent(parentComponentType);
+    if (!parentComponent.isAllowingItems()) {
+        QMessageBox::warning(this, "Invalid Operation", "This component does not allow nesting.");
+        return;
+    }
+}
+
 void FrontendDashboard::populateCurrentViewTree()
 {
-    // Limpiar currentViewTree
     ui->currentViewTree->clear();
 
-    // Verificar si hay componentes en el currentView
     if (currentView.getComponents().empty()) {
         qDebug() << "Nothing found!" << "\n";
         return;
     }
 
-    // Recorrer los componentes del currentView y agregarlos al QTreeWidget
     for (const auto &component : currentView.getComponents()) {
         QTreeWidgetItem *componentItem = new QTreeWidgetItem(ui->currentViewTree);
         componentItem->setText(0,
                                QString::fromStdString(componentTypeToString(component.getType())));
 
-        // Verificar si el componente permite anidar otros componentes
+        // Verificar si el componente permite anidar
         if (component.isAllowingItems()) {
             std::vector<Component> nestedComponents = component.getNestedComponents();
             populateNestedComponents(componentItem, nestedComponents);
@@ -168,44 +181,31 @@ void FrontendDashboard::populateCurrentViewTree()
 
 void FrontendDashboard::convertTreeToViews()
 {
-    // Obtén el nombre de la vista actual
     std::string viewName = currentView.getName();
-
-    // Encuentra la vista correspondiente en el vector de vistas
     auto it = std::find_if(views.begin(), views.end(), [&viewName](const View &v) {
         return v.getName() == viewName;
     });
 
     if (it != views.end()) {
-        // Limpiar los componentes actuales de currentView
         std::vector<Component> newComponents;
 
-        // Iterar sobre los componentes del QTreeWidget
         for (int i = 0; i < ui->currentViewTree->topLevelItemCount(); ++i) {
             QTreeWidgetItem *componentItem = ui->currentViewTree->topLevelItem(i);
-
-            // Crear un nuevo componente basado en el QTreeWidgetItem
             std::string componentTypeStr = componentItem->text(0).toStdString();
-
-            // Crear un objeto Component con el tipo y las propiedades obtenidas
             ComponentType componentType = stringToComponentType(componentTypeStr);
-
-            // Crear un nuevo componente con el tipo convertido
             Component newComponent(componentType);
 
-            // Si el componente tiene otros componentes anidados, manejarlos recursivamente
-            if (componentItem->childCount() > 0) {
-                populateNestedComponents(componentItem, newComponents);
+            // Verificar si permite anidar
+            if (componentItem->childCount() > 0 && newComponent.isAllowingItems()) {
+                std::vector<Component> nestedComponents;
+                populateNestedComponents(componentItem, nestedComponents);
+                newComponent.setNestedComponents(nestedComponents);
             }
 
-            // Agregar el componente al vector de componentes de la vista
             newComponents.push_back(newComponent);
         }
 
-        // Actualizar los componentes de currentView
         currentView.setComponents(newComponents);
-
-        // Actualizar la vista correspondiente en 'views'
         *it = currentView;
     }
 }
