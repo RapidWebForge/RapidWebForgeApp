@@ -77,9 +77,11 @@ void FrontendGenerator::parseJson(const nlohmann::json &jsonSchema)
             std::vector<Component> components;
             for (const auto &componentJson : it.value()["components"]) {
                 Component component;
+
+                // Asegurarse de que 'type' sea una cadena y convertirlo a ComponentType
                 if (componentJson.contains("type") && componentJson["type"].is_string()) {
-                    component.setType(
-                        stringToComponentType(componentJson["type"].get<std::string>()));
+                    std::string typeStr = componentJson["type"].get<std::string>();
+                    component.setType(stringToComponentType(typeStr));
                 } else {
                     fmt::print(stderr, "Error: 'type' in 'components' must be a string.\n");
                     continue;
@@ -131,7 +133,8 @@ bool FrontendGenerator::updateSchema()
             nlohmann::json componentJson;
 
             // Convertir ComponentType a cadena antes de asignarlo al JSON
-            componentJson["type"] = componentTypeToString(component.getType());
+            std::string typeStr = componentTypeToString(component.getType());
+            componentJson["type"] = typeStr;
 
             // Agregar las props
             nlohmann::json propsJson;
@@ -358,14 +361,93 @@ bool FrontendGenerator::generateViews()
 {
     inja::Environment env;
 
+    // Callback personalizado
+
+    try {
+        env.add_callback("render_component", 1, [&env](inja::Arguments &args) -> std::string {
+            // Verificar si el argumento es válido
+            if (args.empty() || !args[0]->is_object()) {
+                fmt::print(stderr, "Invalid argument passed to render_component.\n");
+                return "<!-- Invalid argument -->";
+            }
+
+            const nlohmann::json &componentJson = *args[0];
+
+            // Verificar si el JSON contiene 'type' y si es un string
+            std::string type;
+            if (componentJson.contains("type") && componentJson["type"].is_string()) {
+                type = componentJson["type"];
+            } else {
+                fmt::print(stderr,
+                           "Unsupported component type format or missing: {}\n",
+                           componentJson.dump());
+                return "<!-- Unsupported component type -->";
+            }
+
+            // Verificar si 'props' es un objeto
+            const auto &props = componentJson["props"];
+            if (!props.is_object()) {
+                fmt::print(stderr, "Invalid props format: must be an object.\n");
+                return "<!-- Invalid props format -->";
+            }
+
+            std::string output;
+            // Renderizar componentes según su tipo
+            if (type == "Header H1") {
+                output = "<h1>" + props.value("text", "Default Header") + "</h1>";
+            } else if (type == "Header H2") {
+                output = "<h2>" + props.value("text", "Default Header 2") + "</h2>";
+            } else if (type == "Paragraph") {
+                output = "<p>" + props.value("text", "Default Paragraph") + "</p>";
+            } else if (type == "Input") {
+                output = "<input placeholder='" + props.value("placeholder", "Default Input")
+                         + "' />";
+            } else if (type == "Text Area") {
+                output = "<textarea placeholder='" + props.value("placeholder", "Default TextArea")
+                         + "'></textarea>";
+            } else if (type == "Horizontal Layout" || type == "Vertical Layout") {
+                std::string layoutClass = (type == "Horizontal Layout") ? "flex flex-row"
+                                                                        : "flex flex-col";
+                output = "<div className='" + layoutClass + "'>";
+
+                // Renderizar componentes anidados recursivamente
+                if (componentJson.contains("nestedComponents")
+                    && componentJson["nestedComponents"].is_array()) {
+                    for (const auto &nestedComponent : componentJson["nestedComponents"]) {
+                        // Renderizar el componente anidado usando render_component
+                        try {
+                            output += env.render("{{ render_component(nestedComponent) }}",
+                                                 nestedComponent);
+                        } catch (const std::exception &e) {
+                            fmt::print(stderr, "Error rendering nested component: {}\n", e.what());
+                            output += "<!-- Error rendering nested component -->";
+                        }
+                    }
+                } else {
+                    fmt::print(stderr, "Invalid or missing nestedComponents array.\n");
+                }
+
+                output += "</div>";
+            } else {
+                fmt::print(stderr, "Unsupported component type: {}\n", type);
+                output = "<!-- Unsupported component type: " + type + " -->";
+            }
+
+            return output;
+        });
+    } catch (const std::exception &e) {
+        fmt::print(stderr, "Error adding callback: {}\n", e.what());
+        return false;
+    }
+
     for (const auto &view : views) {
         nlohmann::json data;
-        data["component"] = view.getName(); // Agregar la variable 'component' al contexto
+        data["component"] = view.getName();
         data["components"] = nlohmann::json::array();
 
         for (const auto &component : view.getComponents()) {
             nlohmann::json componentJson;
-            componentJson["type"] = component.getType();
+            componentJson["type"] = componentTypeToString(component.getType());
 
             // Agregar las props del componente
             nlohmann::json propsJson;

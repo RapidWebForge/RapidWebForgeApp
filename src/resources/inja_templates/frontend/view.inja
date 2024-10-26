@@ -4,31 +4,7 @@ export default function {{ component }}() {
   return (
     <div>
       {% for comp in components %}
-        {% if comp.type == "Header H1" %}
-          <h1>{{ default(comp.props.text, "Default Header") }}</h1>
-        {% else if comp.type == "Header H2" %}
-          <h2>{{ default(comp.props.text, "Default Header 2") }}</h2>
-        {% else if comp.type == "Header H3" %}
-          <h3>{{ default(comp.props.text, "Default Header 3") }}</h3>
-        {% else if comp.type == "Paragraph" %}
-          <p>{{ default(comp.props.text, "Default Paragraph") }}</p>
-        {% else if comp.type == "Input" %}
-          <input
-            placeholder="{{ default(comp.props.placeholder, "Default Input") }}"
-          />
-        {% endif %}
-        {% else if comp.type == "Text Area" %}
-          <textarea
-            placeholder="{{ default(comp.props.placeholder, "Default TextArea") }}"
-          />
-        {% endif %}
-        {% else if comp.type == "Horizontal Layout" %}
-          <div className="flex flex-row">
-            {% for comp in components %}
-
-            {% endfor %}
-          </div>
-        {% endif %}
+        {{ render_component(comp) }}
       {% endfor %}
     </div>
   );
