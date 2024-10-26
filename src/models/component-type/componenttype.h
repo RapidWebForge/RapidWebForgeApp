@@ -13,7 +13,8 @@ enum class ComponentType {
     Input,
     TextArea,
     HorizontalLayout,
-    VerticalLayout
+    VerticalLayout,
+    ModelLayout,
 };
 
 // Mapa de propiedades predeterminadas
@@ -25,7 +26,8 @@ const std::map<ComponentType, std::map<std::string, std::string>> componentPrope
        {ComponentType::Input, {{"placeholder", "Enter text"}, {"type", "text"}}},
        {ComponentType::TextArea, {{"placeholder", "Enter text"}}},
        {ComponentType::HorizontalLayout, {}},
-       {ComponentType::VerticalLayout, {}}};
+       {ComponentType::VerticalLayout, {}},
+       {ComponentType::ModelLayout, {{"model", "Default Model"}}}};
 
 // Función para convertir ComponentType a std::string
 inline std::string componentTypeToString(ComponentType type)
@@ -47,6 +49,8 @@ inline std::string componentTypeToString(ComponentType type)
         return "Horizontal Layout";
     case ComponentType::VerticalLayout:
         return "Vertical Layout";
+    case ComponentType::ModelLayout:
+        return "Model Layout";
     default:
         return "Undefined";
     }
@@ -71,6 +75,8 @@ inline ComponentType stringToComponentType(const std::string &typeStr)
         return ComponentType::HorizontalLayout;
     if (typeStr == "Vertical Layout")
         return ComponentType::VerticalLayout;
+    if (typeStr == "Model Layout")
+        return ComponentType::ModelLayout;
     return ComponentType::Undefined;
 }
 
