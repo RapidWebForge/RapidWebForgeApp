@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>AddFieldDialog</class>
- <widget class="QDialog" name="AddFieldDialog">
+ <class>EditFieldDialog</class>
+ <widget class="QDialog" name="EditFieldDialog">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>300</width>
-    <height>361</height>
+    <width>400</width>
+    <height>450</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Add field</string>
+   <string>Edit Field</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
@@ -24,10 +24,10 @@
       </font>
      </property>
      <property name="text">
-      <string>Add field</string>
+      <string>Edit field</string>
      </property>
      <property name="alignment">
-      <set>Qt::AlignmentFlag::AlignCenter</set>
+      <set>Qt::AlignCenter</set>
      </property>
     </widget>
    </item>
@@ -45,11 +45,7 @@
        </widget>
       </item>
       <item row="0" column="1">
-       <widget class="QLineEdit" name="fieldNameLineEdit">
-        <property name="text">
-         <string/>
-        </property>
-       </widget>
+       <widget class="QLineEdit" name="fieldNameLineEdit"/>
       </item>
       <item row="1" column="0">
        <widget class="QLabel" name="fieldTypeLabel">
@@ -105,47 +101,43 @@
        </widget>
       </item>
       <item row="4" column="1">
-       <widget class="QComboBox" name="foreignKeyTableComboBox">
-        <property name="enabled">
-         <bool>true</bool>
+       <widget class="QComboBox" name="foreignKeyTableComboBox"/>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="constraintsGroupBox">
+     <property name="title">
+      <string>Constraints</string>
+     </property>
+     <layout class="QVBoxLayout" name="verticalLayoutConstraints">
+      <item>
+       <widget class="QCheckBox" name="nullCheckBox">
+        <property name="text">
+         <string>NULL</string>
         </property>
        </widget>
       </item>
-      <item row="5" column="0" colspan="2">
-       <widget class="QGroupBox" name="constraintsGroupBox">
-        <property name="title">
-         <string>Constraints</string>
+      <item>
+       <widget class="QCheckBox" name="uniqueCheckBox">
+        <property name="text">
+         <string>UNIQUE</string>
         </property>
-        <layout class="QVBoxLayout" name="verticalLayoutConstraints">
-         <item>
-          <widget class="QCheckBox" name="nullCheckBox">
-           <property name="text">
-            <string>NULL</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QCheckBox" name="uniqueCheckBox">
-           <property name="text">
-            <string>UNIQUE</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QCheckBox" name="checkCheckBox">
-           <property name="text">
-            <string>CHECK</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QCheckBox" name="defaultCheckBox">
-           <property name="text">
-            <string>DEFAULT</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
+       </widget>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="checkCheckBox">
+        <property name="text">
+         <string>CHECK</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="defaultCheckBox">
+        <property name="text">
+         <string>DEFAULT</string>
+        </property>
        </widget>
       </item>
      </layout>
@@ -156,13 +148,7 @@
      <item>
       <spacer name="horizontalSpacer">
        <property name="orientation">
-        <enum>Qt::Orientation::Horizontal</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>0</width>
-         <height>0</height>
-        </size>
+        <enum>Qt::Horizontal</enum>
        </property>
       </spacer>
      </item>
@@ -181,7 +167,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="addButton">
+      <widget class="QPushButton" name="acceptButton">
        <property name="font">
         <font>
          <family>Segoe UI</family>
@@ -189,11 +175,11 @@
          <bold>true</bold>
         </font>
        </property>
+       <property name="text">
+        <string>Save</string>
+       </property>
        <property name="styleSheet">
         <string notr="true">background-color: #0F66DE; color: white; border-radius: 5px; padding: 5px 20px;</string>
-       </property>
-       <property name="text">
-        <string>Add</string>
        </property>
       </widget>
      </item>

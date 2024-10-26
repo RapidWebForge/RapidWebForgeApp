@@ -7,6 +7,7 @@
 #include "../../models/transaction/transaction.h"
 #include "../addfield-dashboard/addfielddialog.h"
 #include "../create-table-dashboard/createtabledialog.h"
+#include "../editfield-dashboard/editfielddialog.h"
 #include <vector>
 
 namespace Ui {
@@ -32,6 +33,12 @@ public slots:
     void onFieldSaved(const Field &field);
     void onTransactionSaved(const Transaction &transaction);
     void onTableSelected(QTreeWidgetItem *item, int column);
+    void on_editButton_clicked();
+    void on_deleteButton_clicked();
+    void onTableNameChanged(QTreeWidgetItem *item, int column);
+    void on_deleteFieldButton_clicked();
+    void showEditFieldDialog(); // Slot para mostrar el diálogo de edición de campos
+    void onFieldUpdated(const Field &updatedField);
 
 private slots:
     void showCreateTableDialog();
@@ -49,6 +56,11 @@ private:
     QTreeWidgetItem *rootItem;
     std::vector<Transaction> transactions;
     Transaction currentTransaction;
+    EditFieldDialog *editFieldDialog; // Añadir el puntero a la clase de diálogo de edición
+
+signals:
+    void transactionNameChanged(); // Señal emitida cuando se cambie el nombre de una transacción
+    void fieldEdited(const Field &field); // Señal que se emite cuando un campo es editado
 };
 
 #endif // BACKENDDASHBOARD_H

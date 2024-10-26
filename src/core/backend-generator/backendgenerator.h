@@ -21,6 +21,9 @@ public:
     std::vector<Transaction> &getTransactions();
     // Setters
     void setTransactions(const std::vector<Transaction> &transactions);
+    bool updateTransactionName(const std::string &currentName,
+                               const std::string &newName,
+                               const std::string &newNameConst);
 
 private:
     void generateFile(const Transaction &transaction,

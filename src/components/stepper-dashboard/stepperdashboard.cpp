@@ -32,6 +32,12 @@ StepperDashboard::StepperDashboard(QDialog *parent, const Project &project)
     ui->stackedWidget->addWidget(frontendDashboard);
     ui->stackedWidget->setCurrentWidget(backendDashboard);
 
+    // Conectar la señal de BackendDashboard para que se guarden los cambios
+    connect(backendDashboard,
+            &BackendDashboard::transactionNameChanged,
+            this,
+            &StepperDashboard::onSaveChanges);
+
     // Conectar los botones a los slots
     connect(ui->backendButton, &QPushButton::clicked, this, &StepperDashboard::showBackendPage);
     connect(ui->frontendButton, &QPushButton::clicked, this, &StepperDashboard::showFrontendPage);
