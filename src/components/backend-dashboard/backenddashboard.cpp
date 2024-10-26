@@ -11,6 +11,7 @@ BackendDashboard::BackendDashboard(QWidget *parent)
     , ui(new Ui::BackendDashboard)
     , createTableDialog(nullptr) // Inicialización del puntero a nullptr
     , addFieldDialog(nullptr)
+    , editFieldDialog(nullptr) // Inicializar editFieldDialog a nullptr
     , rootItem(nullptr)
 {
     ui->setupUi(this);
@@ -34,6 +35,8 @@ BackendDashboard::BackendDashboard(QWidget *parent)
     connect(ui->editDB, &QPushButton::clicked, this, &BackendDashboard::on_editButton_clicked);
     connect(ui->deleteDB, &QPushButton::clicked, this, &BackendDashboard::on_deleteButton_clicked);
 
+    // Conectar el evento del botón de editar
+    connect(ui->editButton, &QPushButton::clicked, this, &BackendDashboard::showEditFieldDialog);
     connect(ui->deleteButton,
             &QPushButton::clicked,
             this,
@@ -421,26 +424,28 @@ void BackendDashboard::setCurrentTransaction(Transaction &transaction)
 
 void BackendDashboard::onFieldSaved(const Field &field)
 {
-    // Verificar si ya existe una clave primaria en la tabla actual
-    if (field.isPrimaryKey()) {
-        for (auto &existingField : currentTransaction.getFields()) {
-            if (existingField.isPrimaryKey()) {
-                existingField.setIsPrimaryKey(false); // Desmarcar la PK anterior
-            }
-        }
-    }
-
-    currentTransaction.getFields().push_back(field);
-
-    // Buscar el currentTransaction en el vector de transactions
-    for (auto &transaction : transactions) {
-        if (transaction.getName() == currentTransaction.getName()) {
-            // Si es el mismo, actualizamos el vector de campos
-            transaction.setFields(currentTransaction.getFields());
+    // Buscar el campo existente y actualizarlo
+    bool fieldUpdated = false;
+    for (auto &existingField : currentTransaction.getFields()) {
+        if (existingField.getName() == field.getName()) {
+            existingField = field; // Actualizar el campo existente
+            fieldUpdated = true;
             break;
         }
     }
 
+    // Si no se encontró el campo, lo agregamos (esto no debería suceder durante una edición)
+    if (!fieldUpdated) {
+        qDebug() << "Error: trying to add a new field instead of updating the existing one.";
+    }
+
+    // Actualizar la transacción en la lista de transacciones
+    for (auto &transaction : transactions) {
+        if (transaction.getName() == currentTransaction.getName()) {
+            transaction.setFields(currentTransaction.getFields());
+            break;
+        }
+    }
     updateTasksTable(currentTransaction);
 }
 
@@ -734,4 +739,72 @@ void BackendDashboard::on_deleteFieldButton_clicked()
         // Mostrar un mensaje de advertencia si no hay un campo seleccionado
         QMessageBox::warning(this, "No Selection", "Please select a field to delete.");
     }
+}
+void BackendDashboard::showEditFieldDialog()
+{
+    int selectedRow = ui->tasksTableWidget->currentRow(); // Obtener la fila seleccionada
+
+    // Verificar que haya un campo seleccionado
+    if (selectedRow < 0 || selectedRow >= currentTransaction.getFields().size()) {
+        QMessageBox::warning(this, "No Selection", "Please select a field to edit.");
+        return;
+    }
+
+    // Obtener referencia al campo seleccionado
+    Field &selectedField = currentTransaction.getFields()[selectedRow];
+
+    // Inicializar el diálogo si no está inicializado
+    if (!editFieldDialog) {
+        editFieldDialog = new EditFieldDialog(this);
+        connect(editFieldDialog,
+                &EditFieldDialog::fieldSaved,
+                this,
+                &BackendDashboard::onFieldSaved);
+    }
+
+    // Establecer los datos actuales del campo seleccionado en el diálogo de edición
+    editFieldDialog->setField(selectedField);
+
+    // Ejecutar el diálogo
+    if (editFieldDialog->exec() == QDialog::Accepted) {
+        Field updatedField = editFieldDialog->getField();
+
+        // Actualizar el campo editado en la posición correspondiente
+        currentTransaction.getFields()[selectedRow] = updatedField;
+
+        // Actualizar las transacciones en la lista general
+        for (auto &transaction : transactions) {
+            if (transaction.getName() == currentTransaction.getName()) {
+                transaction.setFields(currentTransaction.getFields());
+                break;
+            }
+        }
+        // Actualizar la tabla visual (QTableWidget)
+        updateTasksTable(currentTransaction);
+    }
+}
+
+void BackendDashboard::onFieldUpdated(const Field &updatedField)
+{
+    bool fieldUpdated = false;
+
+    // Recorrer los campos de la transacción actual
+    for (auto &existingField : currentTransaction.getFields()) {
+        if (existingField.getName() == updatedField.getName()) {
+            // Si encontramos un campo con el mismo nombre, actualizamos sus valores
+            existingField = updatedField;
+            fieldUpdated = true;
+            break;
+        }
+    }
+
+    // Actualizar la transacción en el vector de transacciones
+    for (auto &transaction : transactions) {
+        if (transaction.getName() == currentTransaction.getName()) {
+            transaction.setFields(currentTransaction.getFields());
+            break;
+        }
+    }
+
+    updateTasksTable(currentTransaction); // Actualizar la tabla visual
 }

@@ -112,6 +112,7 @@ if(QT_VERSION_MAJOR GREATER_EQUAL 6)
 else()
     add_executable(RapidWebForgeApp ${PROJECT_SOURCES}
         src/utils/ziphelper/ziphelper.h src/utils/ziphelper/ziphelper.cpp
+        src/components/editfield-dashboard/editfielddialog.h src/components/editfield-dashboard/editfielddialog.cpp src/components/editfield-dashboard/editfielddialog.ui
     )
 endif()
 

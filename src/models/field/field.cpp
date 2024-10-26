@@ -128,4 +128,5 @@ void Field::setHasDefault(bool value)
 void Field::setForeignKeyTable(const std::string &tableName)
 {
     foreignKeyTable = tableName;
+    foreignKey = !tableName.empty(); // Si la tabla relacionada no está vacía, es una FK
 }

@@ -33,7 +33,7 @@ void ProjectsPanel::setupProjects(const std::vector<Project> &projects)
     // Crear el widget para agregar un nuevo proyecto
     QPushButton *addProjectButton = new QPushButton(this);
     addProjectButton->setText("+");
-    addProjectButton->setFixedSize(190, 108); // Tamaño del botón, puedes ajustarlo según el diseño
+    addProjectButton->setFixedSize(202, 118); // Tamaño del botón, puedes ajustarlo según el diseño
     addProjectButton->setStyleSheet("QPushButton {"
                                     "   font-size: 48px;"
                                     "   color: #555;"
