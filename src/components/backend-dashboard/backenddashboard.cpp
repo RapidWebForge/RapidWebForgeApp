@@ -39,10 +39,7 @@ BackendDashboard::BackendDashboard(QWidget *parent)
             this,
             &BackendDashboard::on_deleteFieldButton_clicked);
 
-    connect(ui->databaseTreeWidget,
-            &QTreeWidget::itemChanged,
-            this,
-            &BackendDashboard::onTableNameChanged);
+    //connect(ui->databaseTreeWidget,&QTreeWidget::itemChanged,this,&BackendDashboard::onTableNameChanged);
 
     //connect(ui->tasksTableWidget,&QTableWidget::cellChanged,this,&BackendDashboard::onCellChanged);
 
@@ -351,13 +348,23 @@ void BackendDashboard::showAddFieldDialog()
     }
 
     // Asegúrate de que `currentTransaction` esté asignado
-    //if (currentTransaction.getName().empty()) {
-    //    QMessageBox::warning(this, "Error", "No transaction is currently selected.");
-    //    return;
-    //}
+    if (currentTransaction.getName().empty()) {
+        QMessageBox::warning(this, "Error", "No transaction is currently selected.");
+        return;
+    }
+
+    // Supongamos que tienes una lista de transacciones disponibles
+    std::vector<QString> tableNames;
+    for (const auto &transaction :
+         transactions) { // Suponiendo que 'transactions' es tu vector de transacciones
+        tableNames.push_back(QString::fromStdString(transaction.getName()));
+    }
+
+    QString currentTableName = QString::fromStdString(currentTransaction.getName());
+    addFieldDialog->setAvailableTables(tableNames, currentTableName);
 
     // Asignar el currentTransaction al AddFieldDialog
-    //addFieldDialog->setTransaction(currentTransaction);
+    addFieldDialog->setTransaction(currentTransaction);
 
     addFieldDialog->exec();
 }
@@ -389,7 +396,7 @@ void BackendDashboard::setTransactions(const std::vector<Transaction> &newTransa
         // item->setIcon(0, QIcon(":/icons/delete.png"));
         // TODO: Replace for a custom widget to allow multiple icons
         // Habilitar la edición in-place para el nombre de la tabla
-        item->setFlags(item->flags() | Qt::ItemIsEditable);
+        //item->setFlags(item->flags() | Qt::ItemIsEditable);
     }
 
     // Expandir todo el árbol para mostrar todas las tablas
@@ -446,9 +453,15 @@ void BackendDashboard::onTransactionSaved(const Transaction &transaction)
 // Definición de la función onTableSelected
 void BackendDashboard::onTableSelected(QTreeWidgetItem *item, int column)
 {
+    // Desactivar temporalmente las señales de itemChanged para evitar interferencias
+    ui->databaseTreeWidget->blockSignals(true);
     // Verificar si el item seleccionado es válido y no es el rootItem
-    if (!item || item == rootItem)
+    if (!item || item == rootItem) {
+        ui->databaseTreeWidget->blockSignals(false); // Reactivar las señales antes de salir
         return;
+    }
+
+    qDebug() << "Table item selected: " << item->text(0); // Añade esto para verificar la ejecución
 
     // Buscar la transacción correspondiente en `transactions`
     for (const auto &transaction : transactions) {
@@ -465,6 +478,8 @@ void BackendDashboard::onTableSelected(QTreeWidgetItem *item, int column)
             break;
         }
     }
+    // Reactivar las señales después de completar la actualización
+    ui->databaseTreeWidget->blockSignals(false);
 }
 
 // Definición de la función updateTasksTable
@@ -472,11 +487,8 @@ void BackendDashboard::updateTasksTable(const Transaction &transaction)
 {
     // Limpiar el contenido de la tabla de tareas
     ui->tasksTableWidget->clearContents();
-    ui->tasksTableWidget->setRowCount(
-        transaction.getFields().size()); // Establecer número de filas según los campos
-
-    // Definir un tamaño mínimo para las celdas de la tabla
-    //ui->tasksTableWidget->setMinimumSize(400, 200); // Ajustar tamaño mínimo de la tabla
+    ui->tasksTableWidget->setRowCount(transaction.getFields().size());
+    ui->tasksTableWidget->setEditTriggers(QAbstractItemView::NoEditTriggers);
 
     // Agregar los datos de los campos a la tabla
     for (int row = 0; row < transaction.getFields().size(); ++row) {
@@ -492,13 +504,24 @@ void BackendDashboard::updateTasksTable(const Transaction &transaction)
         QTableWidgetItem *pkItem = new QTableWidgetItem();
         pkItem->setCheckState(field.isPrimaryKey() ? Qt::Checked : Qt::Unchecked);
         pkItem->setTextAlignment(Qt::AlignCenter);
+        pkItem->setFlags(pkItem->flags() & ~Qt::ItemIsEditable & ~Qt::ItemIsUserCheckable);
         ui->tasksTableWidget->setItem(row, 2, pkItem);
 
         QTableWidgetItem *fkItem = new QTableWidgetItem();
         fkItem->setCheckState(field.isForeignKey() ? Qt::Checked : Qt::Unchecked);
         fkItem->setTextAlignment(Qt::AlignCenter);
+        fkItem->setFlags(fkItem->flags() & ~Qt::ItemIsEditable & ~Qt::ItemIsUserCheckable);
+
         ui->tasksTableWidget->setItem(row, 3, fkItem);
 
+        // Restricciones adicionales (UNIQUE, NULL, etc.)
+        QString constraints;
+        if (field.getIsUnique()) {
+            constraints.append("UNIQUE ");
+        }
+        if (field.getIsNull()) {
+            constraints.append("NULL ");
+        }
         // Crear un elemento de la columna Const para mostrar restricciones adicionales como UNIQUE o CHECK
         ui->tasksTableWidget->setItem(row,
                                       4,
@@ -585,6 +608,10 @@ void BackendDashboard::on_editButton_clicked()
                 if (transaction.getName() == currentName.toStdString()) {
                     transaction.setName(newName.toStdString());
                     transaction.setNameConst(newName.toLower().toStdString());
+                    // Actualizar los labels de la UI
+                    ui->labelTable->setText(newName + " Table");
+                    ui->labelMethods->setText(newName + " Methods");
+
                     break;
                 }
             }
@@ -646,6 +673,11 @@ void BackendDashboard::onTableNameChanged(QTreeWidgetItem *item, int column)
 
     QString newName = item->text(0);
 
+    // Solo continuar si el nombre realmente ha cambiado
+    if (newName == QString::fromStdString(currentTransaction.getName())) {
+        return; // Si el nombre es el mismo, no hacer nada
+    }
+
     // Actualizar la transacción correspondiente en la lista de transacciones
     for (auto &transaction : transactions) {
         if (transaction.getName() == currentTransaction.getName()) {
@@ -689,48 +721,17 @@ void BackendDashboard::on_deleteFieldButton_clicked()
 
             // Actualizar la tabla visual (QTableWidget)
             updateTasksTable(currentTransaction);
+
+            // Actualizar las transacciones en BackendGenerator
+            for (auto &transaction : transactions) {
+                if (transaction.getName() == currentTransaction.getName()) {
+                    transaction.setFields(currentTransaction.getFields());
+                    break;
+                }
+            }
         }
     } else {
         // Mostrar un mensaje de advertencia si no hay un campo seleccionado
         QMessageBox::warning(this, "No Selection", "Please select a field to delete.");
     }
 }
-
-//void BackendDashboard::onCellChanged(int row, int column)
-//{
-//    if (row < 0 || column < 0) {
-//        return; // Verificar que el índice de fila y columna es válido
-//    }
-//
-//    // Obtener el campo modificado de la transacción actual
-//    Field &field = currentTransaction.getFields()[row];
-//
-//    // Actualizar el valor dependiendo de la columna editada
-//    if (column == 0) {
-//        // Si es la columna del nombre del campo
-//        field.setName(ui->tasksTableWidget->item(row, column)->text().toStdString());
-//    } else if (column == 1) {
-//        // Si es la columna del tipo de campo
-//        field.setType(ui->tasksTableWidget->item(row, column)->text().toStdString());
-//    } else if (column == 2) {
-//        // Si es la columna de Primary Key
-//        bool isChecked = (ui->tasksTableWidget->item(row, column)->checkState() == Qt::Checked);
-//        field.setIsPrimaryKey(isChecked);
-//    } else if (column == 3) {
-//        // Si es la columna de Foreign Key
-//        bool isChecked = (ui->tasksTableWidget->item(row, column)->checkState() == Qt::Checked);
-//        field.setIsForeignKey(isChecked); // Asegúrate de tener un método para setear esto
-//    } else if (column == 4) {
-//        // Si es la columna de constraint (Unique o NULL)
-//        QString constraint = ui->tasksTableWidget->item(row, column)->text();
-//        if (constraint == "UNIQUE") {
-//            field.setIsUnique(true);
-//        } else {
-//            field.setIsUnique(false);
-//        }
-//    }
-//
-//    // Actualizar los datos de la transacción y la tabla visual si es necesario
-//    updateTasksTable(currentTransaction);
-//}
-// Función para convertir a minúsculas

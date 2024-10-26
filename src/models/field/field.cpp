@@ -1,13 +1,20 @@
 #include "field.h"
 
 // Constructor with parameters
-Field::Field(std::string &name, std::string &type, bool isNull, bool isUnique)
+Field::Field(std::string &name,
+             std::string &type,
+             bool isNull,
+             bool isUnique,
+             const std::string &foreignKeyTable)
     : name(name)
     , type(type)
     , isNull(isNull)
     , isUnique(isUnique)
-    , primaryKey(false) // Inicializar como false por defecto
-    , foreignKey(false) // Inicializar como false por defecto
+    , primaryKey(false)                // Inicializar como false por defecto
+    , foreignKey(false)                // Inicializar como false por defecto
+    , hasCheck(false)                  // Inicializar como false por defecto
+    , hasDefault(false)                // Inicializar como false por defecto
+    , foreignKeyTable(foreignKeyTable) // Inicializa con el nombre de la tabla de Foreign Key
 {}
 // Copy constructor
 Field::Field(const Field &field)
@@ -17,6 +24,9 @@ Field::Field(const Field &field)
     , isUnique(field.isUnique)
     , primaryKey(field.primaryKey)
     , foreignKey(field.foreignKey)
+    , hasCheck(field.hasCheck)
+    , hasDefault(field.hasDefault)
+    , foreignKeyTable(field.foreignKeyTable) // Asegurarse de copiar la tabla de Foreign Key
 {}
 
 // Default constructor
@@ -27,6 +37,9 @@ Field::Field()
     , isUnique(false)
     , primaryKey(false)
     , foreignKey(false)
+    , hasCheck(false)
+    , hasDefault(false)
+    , foreignKeyTable("")
 {}
 // Getters
 std::string Field::getName() const
@@ -58,6 +71,20 @@ bool Field::isForeignKey() const
 { // Getter para FK
     return foreignKey;
 }
+bool Field::getHasCheck() const
+{
+    return hasCheck;
+}
+
+bool Field::getHasDefault() const
+{
+    return hasDefault;
+}
+
+std::string Field::getForeignKeyTable() const
+{
+    return foreignKeyTable;
+}
 
 // Setters
 void Field::setName(const std::string &newName)
@@ -88,4 +115,17 @@ void Field::setIsPrimaryKey(bool value)
 void Field::setIsForeignKey(bool value)
 { // Setter para FK
     foreignKey = value;
+}
+void Field::setHasCheck(bool value)
+{
+    hasCheck = value;
+}
+
+void Field::setHasDefault(bool value)
+{
+    hasDefault = value;
+}
+void Field::setForeignKeyTable(const std::string &tableName)
+{
+    foreignKeyTable = tableName;
 }

@@ -7,6 +7,7 @@
 #include "../../models/transaction/transaction.h"
 #include "../addfield-dashboard/addfielddialog.h"
 #include "../create-table-dashboard/createtabledialog.h"
+#include <vector>
 
 namespace Ui {
 class BackendDashboard;
@@ -55,6 +56,9 @@ private:
     QTreeWidgetItem *rootItem;
     std::vector<Transaction> transactions;
     Transaction currentTransaction;
+
+signals:
+    void transactionNameChanged(); // Señal emitida cuando se cambie el nombre de una transacción
 };
 
 #endif // BACKENDDASHBOARD_H

@@ -19,6 +19,9 @@ public:
     void setTransactions(const std::vector<Transaction> &newTransactions);
     const std::vector<Transaction> &getTransactions() const;
     std::vector<Transaction> &getTransactions();
+    bool updateTransactionName(const std::string &currentName,
+                               const std::string &newName,
+                               const std::string &newNameConst);
 
 private:
     void generateFile(const Transaction &transaction,

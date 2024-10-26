@@ -98,6 +98,27 @@ void BackendGenerator::parseJson(const nlohmann::json &jsonSchema)
             field.setType(fieldJson["type"].get<std::string>());
             field.setIsNull(fieldJson["isNull"].get<bool>());
             field.setIsUnique(fieldJson["isUnique"].get<bool>());
+            field.setIsPrimaryKey(
+                fieldJson["isPrimaryKey"].get<bool>()); // Asegúrate de cargar isPrimaryKey
+            field.setIsForeignKey(fieldJson["isForeignKey"].get<bool>());
+
+            // Cargar los nuevos constraints desde el JSON
+            if (fieldJson.contains("hasCheck")) {
+                field.setHasCheck(fieldJson["hasCheck"].get<bool>());
+            } else {
+                field.setHasCheck(false); // Si no está en el JSON, asigna false por defecto
+            }
+
+            if (fieldJson.contains("hasDefault")) {
+                field.setHasDefault(fieldJson["hasDefault"].get<bool>());
+            } else {
+                field.setHasDefault(false); // Si no está en el JSON, asigna false por defecto
+            }
+
+            // Si es una Foreign Key, leer la tabla relacionada
+            if (fieldJson["isForeignKey"].get<bool>()) {
+                field.setForeignKeyTable(fieldJson["foreignKeyTable"].get<std::string>());
+            }
 
             fields.push_back(field);
         }
@@ -130,7 +151,16 @@ bool BackendGenerator::updateSchema()
             fieldJson["type"] = field.getType();
             fieldJson["isNull"] = field.getIsNull();
             fieldJson["isUnique"] = field.getIsUnique();
+            fieldJson["isPrimaryKey"] = field.isPrimaryKey();
+            fieldJson["isForeignKey"] = field.isForeignKey();
+            // Incluir los nuevos constraints en el JSON
+            fieldJson["hasCheck"] = field.getHasCheck();
+            fieldJson["hasDefault"] = field.getHasDefault();
 
+            // Si es una Foreign Key, guarda la tabla relacionada
+            if (field.isForeignKey()) {
+                fieldJson["foreignKeyTable"] = field.getForeignKeyTable();
+            }
             // Add the field JSON object to the fields array
             transactionJson["fields"].push_back(fieldJson);
         }
@@ -328,4 +358,57 @@ std::vector<Transaction> &BackendGenerator::getTransactions()
 void BackendGenerator::setTransactions(const std::vector<Transaction> &newTransactions)
 {
     transactions = newTransactions;
+}
+
+bool BackendGenerator::updateTransactionName(const std::string &currentName,
+                                             const std::string &newName,
+                                             const std::string &newNameConst)
+{
+    // Cargar el JSON
+    std::ifstream file(projectPath + "/backend.json");
+    if (!file.is_open()) {
+        fmt::print(stderr, "Unable to open JSON file: {}/backend.json\n", projectPath);
+        return false;
+    }
+
+    nlohmann::json jsonSchema;
+    try {
+        file >> jsonSchema;
+    } catch (const nlohmann::json::parse_error &e) {
+        fmt::print(stderr, "Error parsing JSON: {}\n", e.what());
+        return false;
+    }
+
+    file.close();
+
+    // Buscar la transacción por el nombre actual
+    bool found = false;
+    for (auto &transaction : jsonSchema["transactions"]) {
+        if (transaction["name"] == currentName) {
+            // Actualizar "name" y "nameConst"
+            transaction["name"] = newName;
+            transaction["nameConst"] = newNameConst;
+            found = true;
+            break;
+        }
+    }
+
+    if (!found) {
+        fmt::print(stderr, "Transaction with name {} not found.\n", currentName);
+        return false;
+    }
+
+    // Guardar el JSON actualizado
+    std::ofstream jsonFile(projectPath + "/backend.json");
+    if (!jsonFile.is_open()) {
+        fmt::print(stderr, "Failed to open backend.json for writing\n");
+        return false;
+    }
+
+    jsonFile << jsonSchema.dump(
+        2); // Guardar con una indentación de 2 espacios para mejor legibilidad
+    jsonFile.close();
+
+    fmt::print("Transaction updated successfully: name={}, nameConst={}\n", newName, newNameConst);
+    return true;
 }
