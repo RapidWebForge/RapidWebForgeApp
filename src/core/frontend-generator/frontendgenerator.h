@@ -3,6 +3,7 @@
 
 #include "../../models/route/route.h"
 #include "../../models/view/view.h"
+#include <inja/inja.hpp>
 #include <nlohmann/json.hpp>
 #include <string>
 #include <vector>
@@ -28,6 +29,7 @@ private:
     std::string projectPath;
     std::vector<Route> routes;
     std::vector<View> views;
+    inja::Environment env;
 
     void parseJson(const nlohmann::json &jsonSchema);
     bool updateFrontendJson(const std::string &componentName);
