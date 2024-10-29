@@ -3,6 +3,7 @@
 
 #include <QWidget>
 #include "../../core/project-manager/projectmanager.h"
+#include "../../core/version-manager/versionmanager.h"
 #include "../../models/project/project.h"
 #include "../backend-assistant/backendassistant.h"
 #include "../creation-assistant/creationassistant.h"
@@ -29,7 +30,6 @@ private slots:
 private:
     Ui::Stepper *ui;
     void applyStyles();
-    void create_git_repo(const std::string &projectPath); // Método para crear repositorio Git
     CreationAssistant *creationAssistant;
     DatabaseAssistant *databaseAssistant;
     FrontendAssistant *frontendAssistant;

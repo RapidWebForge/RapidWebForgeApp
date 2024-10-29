@@ -93,6 +93,8 @@ set(PROJECT_SOURCES
         src/core/backend-generator/backendgenerator.cpp
         src/core/frontend-generator/frontendgenerator.h
         src/core/frontend-generator/frontendgenerator.cpp
+        src/core/version-manager/versionmanager.h
+        src/core/version-manager/versionmanager.cpp
         # Models
         src/models/project/project.h
         src/models/project/project.cpp

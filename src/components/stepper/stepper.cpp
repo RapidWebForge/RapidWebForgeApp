@@ -80,7 +80,8 @@ void Stepper::on_nextButton_clicked()
 
         // Inicializar repositorio Git si versions está habilitado
         if (this->newProject.getVersions()) {
-            create_git_repo(this->newProject.getPath());
+            VersionManager versionManager(this->newProject.getPath());
+            versionManager.initializeRepository();
         }
 
         // Copy folder template to choose path
@@ -111,18 +112,6 @@ void Stepper::on_backButton_clicked()
 
     if (currentIndex > 0) {
         ui->stepsWidget->setCurrentIndex(currentIndex - 1);
-    }
-}
-
-void Stepper::create_git_repo(const std::string &projectPath)
-{
-    std::string command = "cd " + projectPath + " && git init";
-    int result = system(command.c_str());
-
-    if (result == 0) {
-        std::cout << "Git repository initialized successfully in: " << projectPath << std::endl;
-    } else {
-        std::cerr << "Failed to initialize Git repository." << std::endl;
     }
 }
 
