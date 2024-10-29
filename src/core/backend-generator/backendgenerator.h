@@ -16,9 +16,11 @@ public:
     bool generateBackendCode();
     bool updateSchema();
     bool updateBackendCode();
-    void setTransactions(const std::vector<Transaction> &newTransactions);
+    // Getters
     const std::vector<Transaction> &getTransactions() const;
     std::vector<Transaction> &getTransactions();
+    // Setters
+    void setTransactions(const std::vector<Transaction> &transactions);
     bool updateTransactionName(const std::string &currentName,
                                const std::string &newName,
                                const std::string &newNameConst);
@@ -32,6 +34,8 @@ private:
     void generateModel(const Transaction &transaction);
     void generateRoute(const Transaction &transaction);
     void generateIndexFiles();
+    bool generateFrontendModels();
+    bool generateFrontendServices();
     void writeFile(const std::string &filePath, const std::string &content);
     void parseJson(const nlohmann::json &jsonSchema);
 

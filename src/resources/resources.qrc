@@ -19,14 +19,21 @@
         <file>table.png</file>
         <file>Recent.png</file>
     </qresource>
-    <qresource prefix="/inja_templates">
-        <file alias="controllers">inja_templates/controllers.inja</file>
-        <file alias="models">inja_templates/models.inja</file>
-        <file alias="modelsIndex">inja_templates/modelsIndex.inja</file>
-        <file alias="routes">inja_templates/routes.inja</file>
-        <file alias="routesIndex">inja_templates/routesIndex.inja</file>
+    <qresource prefix="/inja/backend">
+        <file alias="controllers">inja_templates/backend/controllers.inja</file>
+        <file alias="models">inja_templates/backend/models.inja</file>
+        <file alias="modelsIndex">inja_templates/backend/modelsIndex.inja</file>
+        <file alias="routes">inja_templates/backend/routes.inja</file>
+        <file alias="routesIndex">inja_templates/backend/routesIndex.inja</file>
     </qresource>
     <qresource prefix="/project_templates">
         <file alias="backend">project_templates/backend_template.zip</file>
+        <file alias="frontend">project_templates/frontend_template.zip</file>
+    </qresource>
+    <qresource prefix="/inja/frontend">
+        <file alias="main">inja_templates/frontend/main.inja</file>
+        <file alias="view">inja_templates/frontend/view.inja</file>
+        <file alias="model">inja_templates/frontend/model.inja</file>
+        <file alias="service">inja_templates/frontend/service.inja</file>
     </qresource>
 </RCC>

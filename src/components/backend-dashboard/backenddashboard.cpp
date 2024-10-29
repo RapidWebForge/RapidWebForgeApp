@@ -372,17 +372,6 @@ void BackendDashboard::showAddFieldDialog()
     addFieldDialog->exec();
 }
 
-// Getters
-std::vector<Transaction> &BackendDashboard::getTransactions()
-{
-    return transactions;
-}
-
-const std::vector<Transaction> &BackendDashboard::getTransactions() const
-{
-    return transactions;
-}
-
 // Setters
 void BackendDashboard::setTransactions(const std::vector<Transaction> &newTransactions)
 {
@@ -550,6 +539,19 @@ void BackendDashboard::setDatabaseLabel(const std::string &dbName)
 {
     ui->databaseLabel->setText(QString::fromStdString(dbName));
 }
+
+// Getters
+std::vector<Transaction> &BackendDashboard::getTransactions()
+{
+    return transactions;
+}
+
+const std::vector<Transaction> &BackendDashboard::getTransactions() const
+{
+    return transactions;
+}
+
+// Setters
 std::string toLowerCase(const std::string &str)
 {
     std::string lowerCaseStr = str;
@@ -559,6 +561,7 @@ std::string toLowerCase(const std::string &str)
                    [](unsigned char c) { return std::tolower(c); });
     return lowerCaseStr;
 }
+
 void BackendDashboard::on_editButton_clicked()
 {
     QTreeWidgetItem *selectedItem = ui->databaseTreeWidget->currentItem();
@@ -671,6 +674,7 @@ void BackendDashboard::on_deleteButton_clicked()
         ui->labelMethods->setText("No Methods Available");
     }
 }
+
 void BackendDashboard::onTableNameChanged(QTreeWidgetItem *item, int column)
 {
     if (!item || item == rootItem)
@@ -740,6 +744,7 @@ void BackendDashboard::on_deleteFieldButton_clicked()
         QMessageBox::warning(this, "No Selection", "Please select a field to delete.");
     }
 }
+
 void BackendDashboard::showEditFieldDialog()
 {
     int selectedRow = ui->tasksTableWidget->currentRow(); // Obtener la fila seleccionada

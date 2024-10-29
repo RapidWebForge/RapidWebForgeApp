@@ -1,0 +1,6 @@
+// src/models/{{ model_name }}.ts
+export interface {{ model_name }} {
+{% for field in fields %}
+    {{ field.name }}: {{ field.type }};
+{% endfor %}
+}

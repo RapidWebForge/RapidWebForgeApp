@@ -1,0 +1,11 @@
+import React from "react";
+
+export default function {{ component }}() {
+  return (
+    <div>
+      {% for comp in components %}
+        {{ render_component(comp) }}
+      {% endfor %}
+    </div>
+  );
+}

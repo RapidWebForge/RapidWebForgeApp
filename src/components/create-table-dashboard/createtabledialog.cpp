@@ -15,6 +15,7 @@ CreateTableDialog::CreateTableDialog(QWidget *parent)
 CreateTableDialog::~CreateTableDialog()
 {
     delete ui;
+    delete addFieldDialog;
 }
 
 void CreateTableDialog::showAddFieldDialog()

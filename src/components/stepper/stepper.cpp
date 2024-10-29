@@ -86,6 +86,7 @@ void Stepper::on_nextButton_clicked()
         // Copy folder template to choose path
         CodeGenerator codeGenerator(this->newProject);
         codeGenerator.createBaseBackendProject();
+        codeGenerator.createBaseFrontendProject();
 
         message = "Your project has been created successfully!";
         QMessageBox::information(this, "Successful", QString::fromStdString(message));

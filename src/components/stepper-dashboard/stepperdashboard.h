@@ -25,14 +25,16 @@ protected:
     void showEvent(QShowEvent *event) override;
 
 signals:
-    void schemaLoaded();
+    void backendSchemaLoaded();
+    void frontendSchemaLoaded();
 
 private slots:
     void showBackendPage();
     void showFrontendPage();
     void applyMenuStyles();
     void setupMenus();
-    void onSchemaLoaded();
+    void onBackendSchemaLoaded();
+    void onFrontendSchemaLoaded();
     void onSaveChanges();
 
 private:

@@ -1,0 +1,30 @@
+// src/services/{{ model_name }}Service.ts
+import axios from 'axios';
+import { {{ model_name }} } from '../models/{{ model_name }}';
+
+// Usar la variable de entorno para la base URL
+const baseURL = `${process.env.REACT_APP_API_BASE_URL}/{{ model_name_lower }}`;
+
+export const getAll{{ model_name }} = async (): Promise<{{ model_name }}[]> => {
+    const response = await axios.get(baseURL);
+    return response.data;
+};
+
+export const create{{ model_name }} = async (data: {{ model_name }}): Promise<{{ model_name }}> => {
+    const response = await axios.post(baseURL, data);
+    return response.data;
+};
+
+export const get{{ model_name }}ById = async (id: string): Promise<{{ model_name }}> => {
+    const response = await axios.get(`${baseURL}/${id}`);
+    return response.data;
+};
+
+export const update{{ model_name }}ById = async (id: string, data: {{ model_name }}): Promise<{{ model_name }}> => {
+    const response = await axios.put(`${baseURL}/${id}`, data);
+    return response.data;
+};
+
+export const delete{{ model_name }}ById = async (id: string): Promise<void> => {
+    await axios.delete(`${baseURL}/${id}`);
+};
