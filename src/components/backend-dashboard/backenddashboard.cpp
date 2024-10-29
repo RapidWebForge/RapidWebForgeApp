@@ -425,7 +425,8 @@ void BackendDashboard::onFieldSaved(const Field &field)
 
     // Si no se encontró el campo, lo agregamos (esto no debería suceder durante una edición)
     if (!fieldUpdated) {
-        qDebug() << "Error: trying to add a new field instead of updating the existing one.";
+        qDebug() << "Adding new field: " << QString::fromStdString(field.getName());
+        currentTransaction.getFields().push_back(field); // Agregar el nuevo campo
     }
 
     // Actualizar la transacción en la lista de transacciones

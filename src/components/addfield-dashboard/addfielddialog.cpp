@@ -16,6 +16,10 @@ AddFieldDialog::AddFieldDialog(QWidget *parent)
             &QCheckBox::checkStateChanged, // Cambiar stateChanged a checkStateChanged
             this,
             &AddFieldDialog::on_foreignKeyCheckBox_stateChanged);
+
+    //Ocultar defaul language
+    ui->primaryKeyLabel->hide();
+    ui->primaryKeyCheckBox->hide();
 }
 
 AddFieldDialog::~AddFieldDialog()

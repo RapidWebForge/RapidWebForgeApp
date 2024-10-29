@@ -98,8 +98,7 @@ void BackendGenerator::parseJson(const nlohmann::json &jsonSchema)
             field.setType(fieldJson["type"].get<std::string>());
             field.setIsNull(fieldJson["isNull"].get<bool>());
             field.setIsUnique(fieldJson["isUnique"].get<bool>());
-            field.setIsPrimaryKey(
-                fieldJson["isPrimaryKey"].get<bool>()); // Asegúrate de cargar isPrimaryKey
+            //field.setIsPrimaryKey(fieldJson["isPrimaryKey"].get<bool>()); // Asegúrate de cargar isPrimaryKey
             field.setIsForeignKey(fieldJson["isForeignKey"].get<bool>());
 
             // Cargar los nuevos constraints desde el JSON
@@ -151,7 +150,7 @@ bool BackendGenerator::updateSchema()
             fieldJson["type"] = field.getType();
             fieldJson["isNull"] = field.getIsNull();
             fieldJson["isUnique"] = field.getIsUnique();
-            fieldJson["isPrimaryKey"] = field.isPrimaryKey();
+            //fieldJson["isPrimaryKey"] = field.isPrimaryKey();
             fieldJson["isForeignKey"] = field.isForeignKey();
             // Incluir los nuevos constraints en el JSON
             fieldJson["hasCheck"] = field.getHasCheck();
@@ -246,6 +245,15 @@ void BackendGenerator::generateFile(const Transaction &transaction,
             fieldJson["isNull"] = field.getIsNull();
             fieldJson["isUnique"] = field.getIsUnique();
 
+            // Incluyendo los nuevos campos
+            fieldJson["hasCheck"] = field.getHasCheck();      // Nuevo campo
+            fieldJson["hasDefault"] = field.getHasDefault();  // Nuevo campo
+            fieldJson["isForeignKey"] = field.isForeignKey(); // Campo existente
+
+            // Si es una Foreign Key, incluir la tabla relacionada
+            if (field.isForeignKey()) {
+                fieldJson["foreignKeyTable"] = field.getForeignKeyTable();
+            }
             data["fields"].push_back(fieldJson);
         }
     }
