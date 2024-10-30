@@ -26,6 +26,12 @@ public:
                                const std::string &newNameConst);
 
 private:
+    void generateFileAll(
+        const Transaction &transaction,
+        const std::string &templatePath,
+        const std::string &outputPath,
+        bool includeFields,
+        const nlohmann::json &allTransactions = nlohmann::json::array()); // Valor por defecto
     void generateFile(const Transaction &transaction,
                       const std::string &templatePath,
                       const std::string &outputPath,
