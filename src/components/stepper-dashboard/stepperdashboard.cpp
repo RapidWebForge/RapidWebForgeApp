@@ -1,6 +1,9 @@
 #include "stepperdashboard.h"
 #include <QMessageBox>
 #include <QTimer>
+#include "../../components/create-version/createversion.h"
+#include "../../components/manage-version/manageversion.h"
+#include "../../components/version-history/versionhistory.h"
 #include "ui_stepperdashboard.h"
 #include <fmt/core.h>
 
@@ -319,10 +322,15 @@ void StepperDashboard::setupMenus()
     versionsMenu->addAction(deleteVersionAction);
 
     // Configurar las acciones de cada opción
-    deleteVersionAction->setEnabled(false); // Deshabilitar la opción de eliminar para estilo
+    // deleteVersionAction->setEnabled(false); // Deshabilitar la opción de eliminar para estilo
 
     // Conectar señales de las acciones a slots si es necesario
     connect(saveChangesAction, &QAction::triggered, this, &StepperDashboard::onSaveChanges);
+    // Versions
+    connect(createVersionAction, &QAction::triggered, this, &StepperDashboard::onCreateVersion);
+    connect(changeVersionAction, &QAction::triggered, this, &StepperDashboard::onChangeVersion);
+    connect(versionHistoryAction, &QAction::triggered, this, &StepperDashboard::onVersionHistory);
+    connect(deleteVersionAction, &QAction::triggered, this, &StepperDashboard::onDeleteVersion);
 }
 
 void StepperDashboard::onSaveChanges()
@@ -338,4 +346,42 @@ void StepperDashboard::onSaveChanges()
     codeGenerator->frontendGenerator.updateFrontendCode();
 
     QMessageBox::information(this, "Save Changes", "Changes have been saved successfully.");
+}
+
+void StepperDashboard::onCreateVersion()
+{
+    CreateVersion dialog(this);
+
+    dialog.exec();
+
+    // TODO: Usar el version manager
+}
+
+void StepperDashboard::onChangeVersion()
+{
+    // TODO: Validar el Manage Version para "Cambiar"
+    ManageVersion dialog(this);
+
+    dialog.exec();
+
+    // TODO: Usar el version manager
+}
+
+void StepperDashboard::onDeleteVersion()
+{
+    // TODO: Validar el Manage Version para "Eliminar"
+    ManageVersion dialog(this);
+
+    dialog.exec();
+
+    // TODO: Usar el version manager
+}
+
+void StepperDashboard::onVersionHistory()
+{
+    VersionHistory dialog(this);
+
+    dialog.exec();
+
+    // TODO: Usar el version manager
 }

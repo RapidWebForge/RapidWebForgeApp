@@ -37,6 +37,10 @@ private slots:
     void onBackendSchemaLoaded();
     void onFrontendSchemaLoaded();
     void onSaveChanges();
+    void onCreateVersion();
+    void onChangeVersion();
+    void onVersionHistory();
+    void onDeleteVersion();
 
 private:
     Ui::StepperDashboard *ui;
