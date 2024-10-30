@@ -88,6 +88,12 @@ set(PROJECT_SOURCES
         src/components/create-version/createversion.h
         src/components/create-version/createversion.cpp
         src/components/create-version/createversion.ui
+        src/components/manage-version/manageversion.h
+        src/components/manage-version/manageversion.cpp
+        src/components/manage-version/manageversion.ui
+        src/components/version-history/versionhistory.h
+        src/components/version-history/versionhistory.cpp
+        src/components/version-history/versionhistory.ui
         # Core
         src/core/project-manager/projectmanager.h
         src/core/project-manager/projectmanager.cpp
