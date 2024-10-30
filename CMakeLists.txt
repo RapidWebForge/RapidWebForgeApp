@@ -84,6 +84,9 @@ set(PROJECT_SOURCES
         src/components/create-view/createview.ui
         src/components/custom-tree-widget/customtreewidget.h
         src/components/custom-tree-widget/customtreewidget.cpp
+        src/components/create-version/createversion.h
+        src/components/create-version/createversion.cpp
+        src/components/create-version/createversion.ui
         # Core
         src/core/project-manager/projectmanager.h
         src/core/project-manager/projectmanager.cpp
