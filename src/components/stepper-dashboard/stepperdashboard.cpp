@@ -21,6 +21,7 @@ StepperDashboard::StepperDashboard(QDialog *parent, const Project &project)
     , deleteVersionAction(new QAction("Delete version", this))
     , project(project)
     , codeGenerator(new CodeGenerator(project))
+    , versionManager(new VersionManager(project.getPath()))
 {
     ui->setupUi(this);
 

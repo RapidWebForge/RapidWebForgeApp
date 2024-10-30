@@ -5,6 +5,7 @@
 #include <QMenu>
 #include <QWidget>
 #include "../../core/code-generator/codegenerator.h"
+#include "../../core/version-manager/versionmanager.h"
 #include "../../models/project/project.h"
 #include "../backend-dashboard/backenddashboard.h"
 #include "../frontend-dashboard/frontenddashboard.h"
@@ -59,6 +60,9 @@ private:
 
     // Code Generator definition
     CodeGenerator *codeGenerator;
+
+    // Version Manager
+    VersionManager *versionManager;
 
     // Project
     Project project;

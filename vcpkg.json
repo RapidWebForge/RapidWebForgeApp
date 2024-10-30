@@ -3,8 +3,9 @@
     "boost-algorithm",
     "fmt",
     "inja",
+    "libzip",
     "mysql-connector-cpp",
     "sqlite3",
-    "libzip"
+    "libgit2"
   ]
 }
