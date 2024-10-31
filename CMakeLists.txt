@@ -33,6 +33,7 @@ find_package(inja CONFIG REQUIRED)
 find_package(unofficial-mysql-connector-cpp CONFIG REQUIRED)
 find_package(unofficial-sqlite3 CONFIG REQUIRED)
 find_package(libzip CONFIG REQUIRED)
+find_package(PkgConfig REQUIRED)
 
 set(PROJECT_SOURCES
         src/main.cpp
@@ -119,6 +120,7 @@ set(PROJECT_SOURCES
         src/resources/resources.qrc
 )
 
+pkg_check_modules(LIBGIT2 REQUIRED IMPORTED_TARGET libgit2)
 
 # Define the executable based on Qt version
 if(QT_VERSION_MAJOR GREATER_EQUAL 6)
@@ -139,6 +141,7 @@ target_link_libraries(RapidWebForgeApp PRIVATE
     unofficial::mysql-connector-cpp::connector
     unofficial::sqlite3::sqlite3
     libzip::zip
+    PkgConfig::LIBGIT2
     ${MACOS_SPECIFIC_LIBS}
 )
 
