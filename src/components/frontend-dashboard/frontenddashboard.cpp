@@ -319,12 +319,23 @@ void FrontendDashboard::showCreateViewDialog()
 
 void FrontendDashboard::onRouteSaved(const Route &route)
 {
+    // Agregar la ruta a la lista de rutas
     routes.push_back(route);
 
-    // View view(route.getComponent());
-    // views.push_back(view);
+    // Crear una nueva vista si no existe
+    // auto it = std::find_if(views.begin(), views.end(), [&route](const View &view) {
+    //     return view.getName() == route.getComponent();
+    // });
 
+    // Si la vista no existe, crear una nueva y agregarla
+    // if (it == views.end()) {
+    //     View newView(route.getComponent());
+    //     views.push_back(newView);
+    // }
+
+    // Actualizar las rutas y vistas en la interfaz
     // setRoutes(routes);
+    // setViews(views);
 }
 
 // Getters

@@ -85,6 +85,15 @@ set(PROJECT_SOURCES
         src/components/create-view/createview.ui
         src/components/custom-tree-widget/customtreewidget.h
         src/components/custom-tree-widget/customtreewidget.cpp
+        src/components/create-version/createversion.h
+        src/components/create-version/createversion.cpp
+        src/components/create-version/createversion.ui
+        src/components/manage-version/manageversion.h
+        src/components/manage-version/manageversion.cpp
+        src/components/manage-version/manageversion.ui
+        src/components/version-history/versionhistory.h
+        src/components/version-history/versionhistory.cpp
+        src/components/version-history/versionhistory.ui
         # Core
         src/core/project-manager/projectmanager.h
         src/core/project-manager/projectmanager.cpp
@@ -94,6 +103,8 @@ set(PROJECT_SOURCES
         src/core/backend-generator/backendgenerator.cpp
         src/core/frontend-generator/frontendgenerator.h
         src/core/frontend-generator/frontendgenerator.cpp
+        src/core/version-manager/versionmanager.h
+        src/core/version-manager/versionmanager.cpp
         # Models
         src/models/project/project.h
         src/models/project/project.cpp
@@ -132,6 +143,8 @@ else()
     add_executable(RapidWebForgeApp ${PROJECT_SOURCES}
     )
 endif()
+
+pkg_check_modules(LIBGIT2 REQUIRED IMPORTED_TARGET libgit2)
 
 target_link_libraries(RapidWebForgeApp PRIVATE
     Qt${QT_VERSION_MAJOR}::Widgets
