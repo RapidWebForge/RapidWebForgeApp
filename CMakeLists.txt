@@ -144,8 +144,6 @@ else()
     )
 endif()
 
-pkg_check_modules(LIBGIT2 REQUIRED IMPORTED_TARGET libgit2)
-
 target_link_libraries(RapidWebForgeApp PRIVATE
     Qt${QT_VERSION_MAJOR}::Widgets
     Boost::algorithm
