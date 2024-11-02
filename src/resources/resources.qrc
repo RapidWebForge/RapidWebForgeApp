@@ -36,4 +36,7 @@
         <file alias="model">inja_templates/frontend/model.inja</file>
         <file alias="service">inja_templates/frontend/service.inja</file>
     </qresource>
+    <qresource prefix="/inja/nginx">
+        <file alias="nginx_conf">inja_templates/nginx/nginx_template.inja</file>
+    </qresource>
 </RCC>

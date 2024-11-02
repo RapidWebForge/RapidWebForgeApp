@@ -28,7 +28,7 @@ endif()
 
 # Vcpkg
 find_package(boost_algorithm CONFIG REQUIRED)
-find_package(Boost REQUIRED COMPONENTS process)
+find_package(boost_process REQUIRED CONFIG)
 find_package(fmt CONFIG REQUIRED)
 find_package(inja CONFIG REQUIRED)
 find_package(unofficial-mysql-connector-cpp CONFIG REQUIRED)
@@ -111,6 +111,8 @@ set(PROJECT_SOURCES
         src/core/version-manager/versionmanager.cpp
         src/core/configuration-manager/configurationmanager.h
         src/core/configuration-manager/configurationmanager.cpp
+        src/core/deploy-manager/deploymanager.h
+        src/core/deploy-manager/deploymanager.cpp
         # Models
         src/models/project/project.h
         src/models/project/project.cpp

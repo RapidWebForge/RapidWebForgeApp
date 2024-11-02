@@ -4,6 +4,8 @@
 #include "../../components/create-version/createversion.h"
 #include "../../components/manage-version/manageversion.h"
 #include "../../components/version-history/versionhistory.h"
+#include "../../core/configuration-manager/configurationmanager.h"
+#include "../../core/deploy-manager/deploymanager.h"
 #include "ui_stepperdashboard.h"
 #include <fmt/core.h>
 
@@ -18,6 +20,7 @@ StepperDashboard::StepperDashboard(QDialog *parent, const Project &project)
     , createNewProjectAction(new QAction("Create new project", this))
     , saveChangesAction(new QAction("Save changes", this))
     , deleteProjectAction(new QAction("Delete project", this))
+    , deployProjectAction(new QAction("Deploy project", this))
     , createVersionAction(new QAction("Create version", this))
     , changeVersionAction(new QAction("Change version", this))
     , versionHistoryAction(new QAction("Version history", this))
@@ -310,6 +313,7 @@ void StepperDashboard::setupMenus()
     projectMenu->addAction(saveChangesAction);
     projectMenu->addSeparator(); // Añadir un separador
     projectMenu->addAction(deleteProjectAction);
+    projectMenu->addAction(deployProjectAction);
 
     // Configurar las acciones de cada opción
     deleteProjectAction->setEnabled(false); // Deshabilitar la opción de eliminar para estilo
@@ -326,6 +330,7 @@ void StepperDashboard::setupMenus()
 
     // Conectar señales de las acciones a slots si es necesario
     connect(saveChangesAction, &QAction::triggered, this, &StepperDashboard::onSaveChanges);
+    connect(deployProjectAction, &QAction::triggered, this, &StepperDashboard::onDeployProject);
     // Versions
     connect(createVersionAction, &QAction::triggered, this, &StepperDashboard::onCreateVersion);
     connect(changeVersionAction, &QAction::triggered, this, &StepperDashboard::onChangeVersion);
@@ -384,4 +389,36 @@ void StepperDashboard::onVersionHistory()
     dialog.exec();
 
     // TODO: Usar el version manager
+}
+
+void StepperDashboard::onDeployProject()
+{
+    std::vector<Transaction> transactions = codeGenerator->backendGenerator.getTransactions();
+
+    if (transactions.empty()) {
+        QMessageBox::critical(this, "Critical", "You cannot deploy without generate transactions");
+        return;
+    }
+
+    ConfigurationManager configurationManager;
+
+    std::string ngInxPath = configurationManager.getConfiguration().getNgInxPath();
+    std::string bunPath = configurationManager.getConfiguration().getBunPath();
+
+    if (ngInxPath.empty()) {
+        QMessageBox::critical(this, "Critical", "You cannot deploy without set NgInx Path");
+        return;
+    }
+    if (bunPath.empty()) {
+        QMessageBox::critical(this, "Critical", "You cannot deploy without set bun Path");
+        return;
+    }
+
+    try {
+        DeployManager deployManager(codeGenerator->getProjectPath(), ngInxPath);
+        deployManager.start(bunPath);
+    } catch (const std::exception &e) {
+        QMessageBox::critical(this, "Critical Error", e.what());
+        return;
+    }
 }

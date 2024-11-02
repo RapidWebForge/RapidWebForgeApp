@@ -41,6 +41,7 @@ private slots:
     void onChangeVersion();
     void onVersionHistory();
     void onDeleteVersion();
+    void onDeployProject();
 
 private:
     Ui::StepperDashboard *ui;
@@ -56,6 +57,7 @@ private:
     QAction *createNewProjectAction;
     QAction *saveChangesAction;
     QAction *deleteProjectAction;
+    QAction *deployProjectAction;
 
     QAction *createVersionAction;
     QAction *changeVersionAction;

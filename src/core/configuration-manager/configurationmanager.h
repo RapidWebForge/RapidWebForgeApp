@@ -3,10 +3,8 @@
 
 #include "../../models/configuration/configuration.h"
 #include <functional>
-#include <optional>
 #include <sqlite3.h>
 #include <string>
-#include <vector>
 
 class ConfigurationManager
 {
