@@ -5,10 +5,13 @@
 #include "../stepper-dashboard/stepperdashboard.h"
 #include "../stepper/stepper.h"
 #include "ui_projectspanel.h"
+#include <boost/process.hpp>
+#include <string>
 
 ProjectsPanel::ProjectsPanel(QWidget *parent)
     : QWidget(parent)
     , ui(new Ui::ProjectsPanel)
+    , confManager()
 {
     ui->setupUi(this);
 
@@ -98,8 +101,55 @@ void ProjectsPanel::setupProjects(const std::vector<Project> &projects)
     gridLayout->setContentsMargins(10, 10, 10, 10);
 }
 
+bool ProjectsPanel::checkCommand(const std::string &command, bool dobleQuote)
+{
+    namespace bp = boost::process;
+    try {
+        bp::ipstream is; // Stream para capturar la salida
+        std::string version = dobleQuote ? " --version" : " -version";
+        bp::child c(command + version, bp::std_out > is);
+        std::string line;
+        while (is && std::getline(is, line) && !line.empty()) {
+            std::cout << line << std::endl; // Captura la salida
+        }
+        c.wait();
+        return c.exit_code() == 0;
+    } catch (...) {
+        return false;
+    }
+}
+
 void ProjectsPanel::onAddProjectClicked()
 {
+    std::vector<std::string> missingTech;
+    std::string tech[4] = {
+        confManager->getConfiguration().getNgInxPath(),
+        confManager->getConfiguration().getnodePath(),
+        confManager->getConfiguration().getBunPath(),
+        confManager->getConfiguration().getMysqlPath(),
+    };
+
+    for (const auto &t : tech) {
+        if (t.find("nginx") != std::string::npos) {
+            if (!checkCommand(t, false)) {
+                missingTech.push_back(t);
+            }
+        } else {
+            if (!checkCommand(t)) {
+                missingTech.push_back(t);
+            }
+        }
+    }
+
+    if (!missingTech.empty()) {
+        std::string message = "You are missing the following tech:\n";
+        for (const auto &tech : missingTech) {
+            message += "- " + tech + "\n";
+        }
+        QMessageBox::critical(this, "Warning", QString::fromStdString(message));
+        return;
+    }
+
     this->hide();
 
     // When the "+" button is clicked, open the Stepper window
@@ -224,4 +274,17 @@ void ProjectsPanel::applyStylesProj()
     )";
 
     this->setStyleSheet(stylesheet);
+}
+
+void ProjectsPanel::on_configurationButton_clicked()
+{
+    if (!configView) {
+        configView = new ConfigurationView();
+        configView->show();
+
+        connect(configView, &ConfigurationView::finished, this, [this]() { configView = nullptr; });
+    } else {
+        configView->raise();
+        configView->activateWindow();
+    }
 }

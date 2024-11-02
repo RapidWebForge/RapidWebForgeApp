@@ -1,6 +1,5 @@
 #include "creationassistant.h"
 #include <QFileDialog>
-#include <QMessageBox>
 #include "ui_creationassistant.h"
 
 CreationAssistant::CreationAssistant(QWidget *parent)

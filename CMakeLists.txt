@@ -28,6 +28,7 @@ endif()
 
 # Vcpkg
 find_package(boost_algorithm CONFIG REQUIRED)
+find_package(Boost REQUIRED COMPONENTS process)
 find_package(fmt CONFIG REQUIRED)
 find_package(inja CONFIG REQUIRED)
 find_package(unofficial-mysql-connector-cpp CONFIG REQUIRED)
@@ -94,6 +95,9 @@ set(PROJECT_SOURCES
         src/components/version-history/versionhistory.h
         src/components/version-history/versionhistory.cpp
         src/components/version-history/versionhistory.ui
+        src/components/configuration-view/configurationview.h
+        src/components/configuration-view/configurationview.cpp
+        src/components/configuration-view/configurationview.ui
         # Core
         src/core/project-manager/projectmanager.h
         src/core/project-manager/projectmanager.cpp
@@ -105,6 +109,8 @@ set(PROJECT_SOURCES
         src/core/frontend-generator/frontendgenerator.cpp
         src/core/version-manager/versionmanager.h
         src/core/version-manager/versionmanager.cpp
+        src/core/configuration-manager/configurationmanager.h
+        src/core/configuration-manager/configurationmanager.cpp
         # Models
         src/models/project/project.h
         src/models/project/project.cpp
@@ -120,6 +126,8 @@ set(PROJECT_SOURCES
         src/models/component/component.cpp
         src/models/view/view.h
         src/models/view/view.cpp
+        src/models/configuration/configuration.h
+        src/models/configuration/configuration.cpp
         # Utils
         src/utils/database/database.h
         src/utils/database/database.cpp
@@ -148,6 +156,7 @@ pkg_check_modules(LIBGIT2 REQUIRED IMPORTED_TARGET libgit2)
 target_link_libraries(RapidWebForgeApp PRIVATE
     Qt${QT_VERSION_MAJOR}::Widgets
     Boost::algorithm
+    Boost::process
     fmt::fmt
     pantor::inja
     unofficial::mysql-connector-cpp::connector
