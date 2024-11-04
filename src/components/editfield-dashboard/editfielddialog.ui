@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>EditFieldDialog</class>
+ <widget class="QDialog" name="EditFieldDialog">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>400</width>
+    <height>450</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Edit Field</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QLabel" name="titleLabel">
+     <property name="font">
+      <font>
+       <family>Segoe UI</family>
+       <pointsize>18</pointsize>
+       <bold>true</bold>
+      </font>
+     </property>
+     <property name="text">
+      <string>Edit field</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="requiredFieldsGroupBox">
+     <property name="title">
+      <string>Required fields</string>
+     </property>
+     <layout class="QFormLayout" name="formLayout">
+      <item row="0" column="0">
+       <widget class="QLabel" name="fieldNameLabel">
+        <property name="text">
+         <string>Field name</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QLineEdit" name="fieldNameLineEdit"/>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="fieldTypeLabel">
+        <property name="text">
+         <string>Type</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QComboBox" name="fieldTypeComboBox">
+        <item>
+         <property name="text">
+          <string>STRING</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>INTEGER</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>DATE</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="primaryKeyLabel">
+        <property name="text">
+         <string>Primary key</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QCheckBox" name="primaryKeyCheckBox"/>
+      </item>
+      <item row="3" column="0">
+       <widget class="QLabel" name="foreignKeyLabel">
+        <property name="text">
+         <string>Foreign key</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="1">
+       <widget class="QCheckBox" name="foreignKeyCheckBox"/>
+      </item>
+      <item row="4" column="0">
+       <widget class="QLabel" name="foreignKeyTableLabel">
+        <property name="text">
+         <string>Foreign Key Table</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="1">
+       <widget class="QComboBox" name="foreignKeyTableComboBox"/>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="constraintsGroupBox">
+     <property name="title">
+      <string>Constraints</string>
+     </property>
+     <layout class="QVBoxLayout" name="verticalLayoutConstraints">
+      <item>
+       <widget class="QCheckBox" name="nullCheckBox">
+        <property name="text">
+         <string>NULL</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="uniqueCheckBox">
+        <property name="text">
+         <string>UNIQUE</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="checkCheckBox">
+        <property name="text">
+         <string>CHECK</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="defaultCheckBox">
+        <property name="text">
+         <string>DEFAULT</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="buttonLayout">
+     <item>
+      <spacer name="horizontalSpacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QPushButton" name="cancelButton">
+       <property name="font">
+        <font>
+         <family>Segoe UI</family>
+         <pointsize>10</pointsize>
+         <bold>true</bold>
+        </font>
+       </property>
+       <property name="text">
+        <string>Cancel</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="acceptButton">
+       <property name="font">
+        <font>
+         <family>Segoe UI</family>
+         <pointsize>10</pointsize>
+         <bold>true</bold>
+        </font>
+       </property>
+       <property name="text">
+        <string>Save</string>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">background-color: #0F66DE; color: white; border-radius: 5px; padding: 5px 20px;</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

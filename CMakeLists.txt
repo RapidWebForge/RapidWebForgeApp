@@ -98,6 +98,9 @@ set(PROJECT_SOURCES
         src/components/configuration-view/configurationview.h
         src/components/configuration-view/configurationview.cpp
         src/components/configuration-view/configurationview.ui
+        src/components/editfield-dashboard/editfielddialog.h
+        src/components/editfield-dashboard/editfielddialog.cpp
+        src/components/editfield-dashboard/editfielddialog.ui
         # Core
         src/core/project-manager/projectmanager.h
         src/core/project-manager/projectmanager.cpp
