@@ -50,9 +50,10 @@ private:
     void setComponentsDraggable();
     void populateCurrentViewTree();
     void convertTreeToViews();
-    void populateNestedComponents(QTreeWidgetItem *parentItem,
-                                  const std::vector<Component> &component);
+    void populateNestedItems(QTreeWidgetItem *parentItem,
+                             const std::vector<Component> &nestedComponents);
     void populatePropertiesTable(const Component &component);
+    Component convertItemToComponent(QTreeWidgetItem *item);
 
     CreateView *createViewDialog;
     std::vector<Route> routes;

@@ -171,11 +171,26 @@ void FrontendDashboard::populateCurrentViewTree()
 
         // Verificar si el componente permite anidar
         if (component.isAllowingItems() && !component.getNestedComponents().empty()) {
-            populateNestedComponents(componentItem, component.getNestedComponents());
+            populateNestedItems(componentItem, component.getNestedComponents());
         }
     }
 
     ui->currentViewTree->expandAll();
+}
+
+void FrontendDashboard::populateNestedItems(QTreeWidgetItem *parentItem,
+                                            const std::vector<Component> &nestedComponents)
+{
+    for (const auto &nestedComponent : nestedComponents) {
+        QTreeWidgetItem *childItem = new QTreeWidgetItem(parentItem);
+        childItem->setText(0,
+                           QString::fromStdString(componentTypeToString(nestedComponent.getType())));
+
+        // Llamada recursiva si el componente tiene componentes anidados
+        if (nestedComponent.isAllowingItems() && !nestedComponent.getNestedComponents().empty()) {
+            populateNestedItems(childItem, nestedComponent.getNestedComponents());
+        }
+    }
 }
 
 void FrontendDashboard::convertTreeToViews()
@@ -190,19 +205,7 @@ void FrontendDashboard::convertTreeToViews()
 
         for (int i = 0; i < ui->currentViewTree->topLevelItemCount(); ++i) {
             QTreeWidgetItem *componentItem = ui->currentViewTree->topLevelItem(i);
-            std::string componentTypeStr = componentItem->text(0).toStdString();
-            ComponentType componentType = stringToComponentType(componentTypeStr);
-            Component newComponent(componentType);
-
-            // Verificar si el componente actual permite anidación y tiene hijos
-            if (componentItem->childCount() > 0 && newComponent.isAllowingItems()) {
-                std::vector<Component> nestedComponents;
-                populateNestedComponents(componentItem, nestedComponents);
-                newComponent.setNestedComponents(
-                    nestedComponents); // Guarda los componentes anidados
-            }
-
-            newComponents.push_back(newComponent);
+            newComponents.push_back(convertItemToComponent(componentItem));
         }
 
         currentView.setComponents(newComponents);
@@ -210,21 +213,25 @@ void FrontendDashboard::convertTreeToViews()
     }
 }
 
-void FrontendDashboard::populateNestedComponents(QTreeWidgetItem *parentItem,
-                                                 const std::vector<Component> &components)
+Component FrontendDashboard::convertItemToComponent(QTreeWidgetItem *item)
 {
-    for (const auto &nestedComponent : components) {
-        QTreeWidgetItem *childItem = new QTreeWidgetItem(parentItem);
-        childItem->setText(0,
-                           QString::fromStdString(componentTypeToString(nestedComponent.getType())));
+    std::string componentTypeStr = item->text(0).toStdString();
+    ComponentType componentType = stringToComponentType(componentTypeStr);
+    Component newComponent(componentType);
 
-        if (nestedComponent.isAllowingItems() && !nestedComponent.getNestedComponents().empty()) {
-            populateNestedComponents(childItem, nestedComponent.getNestedComponents());
+    // Verificar si el componente permite anidación y tiene hijos
+    if (item->childCount() > 0 && newComponent.isAllowingItems()) {
+        std::vector<Component> nestedComponents;
+        for (int i = 0; i < item->childCount(); ++i) {
+            QTreeWidgetItem *childItem = item->child(i);
+            nestedComponents.push_back(
+                convertItemToComponent(childItem)); // Recursión para anidamiento
         }
+        newComponent.setNestedComponents(nestedComponents);
     }
-}
 
-// void FrontendDashboard::populateNestedComponents(QTreeWidgetItem *parentItem,
+    return newComponent;
+} // void FrontendDashboard::populateNestedComponents(QTreeWidgetItem *parentItem,
 //                                                  std::vector<Component> &components)
 // {
 //     // Obtener el tipo del componente padre como cadena
