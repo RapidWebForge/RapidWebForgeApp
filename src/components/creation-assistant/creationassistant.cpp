@@ -32,7 +32,7 @@ std::string CreationAssistant::isValid(Project &project)
     if (projectPath == "Select path" || projectPath.empty()) {
         return "Select a path for your project";
     } else {
-        project.setPath(projectPath);
+        project.setPath(projectPath + "/" + projectName);
     }
 
     // Validar si se debe crear un repositorio Git

@@ -37,9 +37,10 @@ public slots:
 private slots:
     void showCreateViewDialog();
 
-    void on_addColumnButton_clicked();
+    void on_saveButton_clicked();
     void onCurrentViewTreeItemSelected(QTreeWidgetItem *item, int column);
     void onItemDropped(QTreeWidgetItem *parentItem, QTreeWidgetItem *droppedItem);
+    void onPropertyValueChanged(int row, int column);
 
 private:
     Ui::FrontendDashboard *ui;
@@ -49,7 +50,8 @@ private:
     void setComponentsDraggable();
     void populateCurrentViewTree();
     void convertTreeToViews();
-    void populateNestedComponents(QTreeWidgetItem *parentItem, std::vector<Component> &component);
+    void populateNestedComponents(QTreeWidgetItem *parentItem,
+                                  const std::vector<Component> &component);
     void populatePropertiesTable(const Component &component);
 
     CreateView *createViewDialog;

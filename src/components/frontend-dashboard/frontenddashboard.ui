@@ -100,6 +100,26 @@
           </item>
           <item>
            <property name="text">
+            <string>Actions</string>
+           </property>
+           <item>
+            <property name="text">
+             <string>Button</string>
+            </property>
+           </item>
+          </item>
+          <item>
+           <property name="text">
+            <string>Forms</string>
+           </property>
+           <item>
+            <property name="text">
+             <string>Form</string>
+            </property>
+           </item>
+          </item>
+          <item>
+           <property name="text">
             <string>Containers</string>
            </property>
            <item>
@@ -110,6 +130,11 @@
            <item>
             <property name="text">
              <string>Vertical Layout</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Model Layout</string>
             </property>
            </item>
           </item>
@@ -149,7 +174,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QPushButton" name="addColumnButton">
+           <widget class="QPushButton" name="saveButton">
             <property name="text">
              <string>Save</string>
             </property>
@@ -210,7 +235,7 @@
           <row/>
           <column>
            <property name="text">
-            <string>Propierties</string>
+            <string>Properties</string>
            </property>
           </column>
           <column>

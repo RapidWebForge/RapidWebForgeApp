@@ -1,6 +1,13 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+
+{{ render_services_imports(components) }}
 
 export default function {{ component }}() {
+
+  {{ render_states(components) }}
+
+  {{ render_requests(components) }}
+
   return (
     <div>
       {% for comp in components %}

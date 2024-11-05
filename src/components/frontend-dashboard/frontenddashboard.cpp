@@ -170,9 +170,8 @@ void FrontendDashboard::populateCurrentViewTree()
                                QString::fromStdString(componentTypeToString(component.getType())));
 
         // Verificar si el componente permite anidar
-        if (component.isAllowingItems()) {
-            std::vector<Component> nestedComponents = component.getNestedComponents();
-            populateNestedComponents(componentItem, nestedComponents);
+        if (component.isAllowingItems() && !component.getNestedComponents().empty()) {
+            populateNestedComponents(componentItem, component.getNestedComponents());
         }
     }
 
@@ -195,11 +194,12 @@ void FrontendDashboard::convertTreeToViews()
             ComponentType componentType = stringToComponentType(componentTypeStr);
             Component newComponent(componentType);
 
-            // Verificar si permite anidar
+            // Verificar si el componente actual permite anidación y tiene hijos
             if (componentItem->childCount() > 0 && newComponent.isAllowingItems()) {
                 std::vector<Component> nestedComponents;
                 populateNestedComponents(componentItem, nestedComponents);
-                newComponent.setNestedComponents(nestedComponents);
+                newComponent.setNestedComponents(
+                    nestedComponents); // Guarda los componentes anidados
             }
 
             newComponents.push_back(newComponent);
@@ -211,41 +211,64 @@ void FrontendDashboard::convertTreeToViews()
 }
 
 void FrontendDashboard::populateNestedComponents(QTreeWidgetItem *parentItem,
-                                                 std::vector<Component> &components)
+                                                 const std::vector<Component> &components)
 {
-    // Iterar sobre los hijos del QTreeWidgetItem actual
-    for (int i = 0; i < parentItem->childCount(); ++i) {
-        QTreeWidgetItem *childItem = parentItem->child(i);
+    for (const auto &nestedComponent : components) {
+        QTreeWidgetItem *childItem = new QTreeWidgetItem(parentItem);
+        childItem->setText(0,
+                           QString::fromStdString(componentTypeToString(nestedComponent.getType())));
 
-        // Obtener el tipo del componente hijo como cadena
-        std::string childComponentTypeStr = childItem->text(0).toStdString();
-
-        // Convertir la cadena a ComponentType
-        ComponentType childComponentType = stringToComponentType(childComponentTypeStr);
-
-        // Crear el componente hijo con el tipo convertido
-        Component childComponent(childComponentType);
-
-        // Verificar si el componente actual permite la anidación
-        if (!childComponent.isAllowingItems()) {
-            qDebug() << "Component does not allow nesting:"
-                     << QString::fromStdString(childComponentTypeStr);
-            continue; // No permite anidar, saltar este componente
+        if (nestedComponent.isAllowingItems() && !nestedComponent.getNestedComponents().empty()) {
+            populateNestedComponents(childItem, nestedComponent.getNestedComponents());
         }
-
-        // Si el componente hijo tiene otros componentes anidados, llamamos recursivamente
-        if (childItem->childCount() > 0) {
-            std::vector<Component> nestedComponents;
-            populateNestedComponents(childItem, nestedComponents);
-            childComponent.setNestedComponents(nestedComponents);
-        }
-
-        // Agregar el componente hijo al vector de componentes de la vista actual
-        components.push_back(childComponent);
     }
 }
 
-void FrontendDashboard::on_addColumnButton_clicked()
+// void FrontendDashboard::populateNestedComponents(QTreeWidgetItem *parentItem,
+//                                                  std::vector<Component> &components)
+// {
+//     // Obtener el tipo del componente padre como cadena
+//     std::string parentComponentTypeStr = parentItem->text(0).toStdString();
+
+//     // Convertir la cadena a ComponentType
+//     ComponentType parentComponentType = stringToComponentType(parentComponentTypeStr);
+
+//     // Crear el componente padre con el tipo convertido
+//     Component parentComponent(parentComponentType);
+
+//     // Verificar si el componente padre permite anidación antes de continuar
+//     if (!parentComponent.isAllowingItems()) {
+//         qDebug() << "Component does not allow nesting:"
+//                  << QString::fromStdString(parentComponentTypeStr);
+//         return; // Salir si el componente padre no permite anidación
+//     }
+
+//     // Iterar sobre los hijos del QTreeWidgetItem actual
+//     for (int i = 0; i < parentItem->childCount(); ++i) {
+//         QTreeWidgetItem *childItem = parentItem->child(i);
+
+//         // Obtener el tipo del componente hijo como cadena
+//         std::string childComponentTypeStr = childItem->text(0).toStdString();
+
+//         // Convertir la cadena a ComponentType
+//         ComponentType childComponentType = stringToComponentType(childComponentTypeStr);
+
+//         // Crear el componente hijo con el tipo convertido
+//         Component childComponent(childComponentType);
+
+//         // Verificar si el componente hijo permite anidación y procesar sus hijos recursivamente
+//         if (childItem->childCount() > 0 && childComponent.isAllowingItems()) {
+//             std::vector<Component> nestedComponents;
+//             populateNestedComponents(childItem, nestedComponents);
+//             childComponent.setNestedComponents(nestedComponents); // Guardar los anidados
+//         }
+
+//         // Agregar el componente hijo al vector de componentes de la vista actual
+//         components.push_back(childComponent);
+//     }
+// }
+
+void FrontendDashboard::on_saveButton_clicked()
 {
     convertTreeToViews();
 
@@ -297,6 +320,8 @@ void FrontendDashboard::populatePropertiesTable(const Component &component)
         QTableWidgetItem *keyItem = new QTableWidgetItem(QString::fromStdString(prop.first));
         QTableWidgetItem *valueItem = new QTableWidgetItem(QString::fromStdString(prop.second));
 
+        keyItem->setFlags(keyItem->flags() & ~Qt::ItemIsEditable);
+
         ui->propertiesTable->setItem(row, 0, keyItem);
         ui->propertiesTable->setItem(row, 1, valueItem);
 
@@ -305,6 +330,24 @@ void FrontendDashboard::populatePropertiesTable(const Component &component)
 
     // Ajustar el ancho de las columnas
     // ui->propertiesTable->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+}
+
+void FrontendDashboard::onPropertyValueChanged(int row, int column)
+{
+    // Solo queremos manejar cambios en la columna de valores
+    if (column == 1) {
+        QString propertyName = ui->propertiesTable->item(row, 0)->text();
+        QString newValue = ui->propertiesTable->item(row, 1)->text();
+
+        // Actualizar el modelo Component con el nuevo valor
+
+        std::map<std::string, std::string> currentProps = currentComponent.getProps();
+        currentProps[propertyName.toStdString()] = newValue.toStdString();
+
+        currentComponent.setProps(currentProps);
+
+        qDebug() << "Updated property" << propertyName << "to" << newValue;
+    }
 }
 
 void FrontendDashboard::showCreateViewDialog()
@@ -373,6 +416,18 @@ void FrontendDashboard::setViews(const std::vector<View> &views)
 void FrontendDashboard::setCurrentView(View &view)
 {
     currentView = view;
+
+    // Debug: Log de todos los componentes y sus nestedComponents
+    // for (const auto &component : currentView.getComponents()) {
+    //     qDebug() << "Component:"
+    //              << QString::fromStdString(componentTypeToString(component.getType()));
+    //     if (component.isAllowingItems()) {
+    //         for (const auto &nestedComponent : component.getNestedComponents()) {
+    //             qDebug() << "  Nested Component:"
+    //                      << QString::fromStdString(componentTypeToString(nestedComponent.getType()));
+    //         }
+    //     }
+    // }
 
     populateCurrentViewTree();
 }

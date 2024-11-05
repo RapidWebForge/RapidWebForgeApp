@@ -1,4 +1,5 @@
 #include "projectmanager.h"
+#include <filesystem>
 #include <fmt/core.h>
 
 ProjectManager::ProjectManager()
@@ -11,6 +12,8 @@ void ProjectManager::createTable()
     createDatabasesTable();
     createProjectsTable();
 }
+
+namespace fs = std::filesystem;
 
 void ProjectManager::createDatabasesTable()
 {
@@ -106,6 +109,19 @@ bool ProjectManager::executeSQL(sqlite3 *db,
 
 void ProjectManager::createProject(const Project &project)
 {
+    // Create folder
+    std::string pathToCreate = project.getPath();
+
+    try {
+        if (fs::create_directories(pathToCreate)) {
+            fmt::print("Directorio creado con éxito en: {}\n", pathToCreate);
+        } else {
+            fmt::print("El directorio ya existe o no se pudo crear.\n");
+        }
+    } catch (const fs::filesystem_error &e) {
+        fmt::print(stderr, "Error al crear el directorio: {}", e.what());
+    }
+
     sqlite3 *db = Database::getInstance().getConnection();
     DatabaseData dbData = project.getDatabaseData();
 
