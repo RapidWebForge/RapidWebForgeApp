@@ -54,7 +54,9 @@ private:
                              const std::vector<Component> &nestedComponents);
     void populatePropertiesTable(const Component &component);
     Component convertItemToComponent(QTreeWidgetItem *item);
-
+    Component *findComponentByHierarchy(std::vector<Component> &components,
+                                        const std::vector<QTreeWidgetItem *> &hierarchy,
+                                        int level);
     CreateView *createViewDialog;
     std::vector<Route> routes;
     std::vector<View> views;

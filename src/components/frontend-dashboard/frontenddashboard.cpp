@@ -231,49 +231,7 @@ Component FrontendDashboard::convertItemToComponent(QTreeWidgetItem *item)
     }
 
     return newComponent;
-} // void FrontendDashboard::populateNestedComponents(QTreeWidgetItem *parentItem,
-//                                                  std::vector<Component> &components)
-// {
-//     // Obtener el tipo del componente padre como cadena
-//     std::string parentComponentTypeStr = parentItem->text(0).toStdString();
-
-//     // Convertir la cadena a ComponentType
-//     ComponentType parentComponentType = stringToComponentType(parentComponentTypeStr);
-
-//     // Crear el componente padre con el tipo convertido
-//     Component parentComponent(parentComponentType);
-
-//     // Verificar si el componente padre permite anidación antes de continuar
-//     if (!parentComponent.isAllowingItems()) {
-//         qDebug() << "Component does not allow nesting:"
-//                  << QString::fromStdString(parentComponentTypeStr);
-//         return; // Salir si el componente padre no permite anidación
-//     }
-
-//     // Iterar sobre los hijos del QTreeWidgetItem actual
-//     for (int i = 0; i < parentItem->childCount(); ++i) {
-//         QTreeWidgetItem *childItem = parentItem->child(i);
-
-//         // Obtener el tipo del componente hijo como cadena
-//         std::string childComponentTypeStr = childItem->text(0).toStdString();
-
-//         // Convertir la cadena a ComponentType
-//         ComponentType childComponentType = stringToComponentType(childComponentTypeStr);
-
-//         // Crear el componente hijo con el tipo convertido
-//         Component childComponent(childComponentType);
-
-//         // Verificar si el componente hijo permite anidación y procesar sus hijos recursivamente
-//         if (childItem->childCount() > 0 && childComponent.isAllowingItems()) {
-//             std::vector<Component> nestedComponents;
-//             populateNestedComponents(childItem, nestedComponents);
-//             childComponent.setNestedComponents(nestedComponents); // Guardar los anidados
-//         }
-
-//         // Agregar el componente hijo al vector de componentes de la vista actual
-//         components.push_back(childComponent);
-//     }
-// }
+}
 
 void FrontendDashboard::on_saveButton_clicked()
 {
@@ -284,26 +242,65 @@ void FrontendDashboard::on_saveButton_clicked()
 
 void FrontendDashboard::onCurrentViewTreeItemSelected(QTreeWidgetItem *item, int column)
 {
-    // Obtener el tipo de componente del QTreeWidgetItem
-    std::string componentType = item->text(0).toStdString();
+    if (!item) {
+        qDebug() << "Selected item is null.";
+        return;
+    }
 
-    // Buscar el componente correspondiente en el currentView
-    const auto &components = currentView.getComponents();
-    auto it = std::find_if(components.begin(),
-                           components.end(),
-                           [&componentType](const Component &comp) {
-                               return componentTypeToString(comp.getType()) == componentType;
-                           });
+    // Usamos una pila de QTreeWidgetItem para guardar la jerarquía completa hasta el item actual
+    std::vector<QTreeWidgetItem *> hierarchy;
+    QTreeWidgetItem *currentItem = item;
+    while (currentItem) {
+        hierarchy.insert(hierarchy.begin(), currentItem);
+        currentItem = currentItem->parent();
+    }
 
-    if (it != components.end()) {
-        currentComponent = *it; // Actualizar currentComponent
+    // Buscar el componente en el currentView usando la jerarquía de items
+    Component *foundComponent = findComponentByHierarchy(currentView.getComponents(), hierarchy, 0);
 
-        qDebug() << "Found Component: "
+    if (foundComponent) {
+        currentComponent = *foundComponent;
+        qDebug() << "Found Component:"
                  << QString::fromStdString(componentTypeToString(currentComponent.getType()));
 
         // Llenar la tabla de propiedades con las propiedades del componente
         populatePropertiesTable(currentComponent);
+    } else {
+        qDebug() << "Component of type" << QString::fromStdString(item->text(0).toStdString())
+                 << "not found.";
     }
+}
+
+// Función recursiva que busca el componente utilizando la jerarquía
+Component *FrontendDashboard::findComponentByHierarchy(
+    std::vector<Component> &components, const std::vector<QTreeWidgetItem *> &hierarchy, int level)
+{
+    if (level >= hierarchy.size()) {
+        return nullptr;
+    }
+
+    const std::string type = hierarchy[level]->text(0).toStdString();
+
+    for (auto &component : components) {
+        if (componentTypeToString(component.getType()) == type) {
+            // Si estamos en el último nivel de la jerarquía, devolvemos el componente encontrado
+            if (level == hierarchy.size() - 1) {
+                return &component;
+            }
+
+            // Si hay más niveles, continuamos buscando en los nestedComponents
+            if (component.isAllowingItems()) {
+                Component *nested = findComponentByHierarchy(component.getNestedComponents(),
+                                                             hierarchy,
+                                                             level + 1);
+                if (nested) {
+                    return nested;
+                }
+            }
+        }
+    }
+
+    return nullptr;
 }
 
 void FrontendDashboard::populatePropertiesTable(const Component &component)
