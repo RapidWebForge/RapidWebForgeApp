@@ -195,10 +195,15 @@ bool FrontendGenerator::updateSchema()
     }
 
     // Crear las vistas
+
+    // std::cout << "Starting updateSchema..." << std::endl;
+
     jsonSchema["views"] = nlohmann::json::array();
     for (const auto &view : views) {
         nlohmann::json viewJson;
         viewJson[view.getName()]["components"] = nlohmann::json::array();
+
+        // std::cout << "Processing view: " << view.getName() << std::endl;
 
         for (const auto &component : view.getComponents()) {
             nlohmann::json componentJson;
@@ -209,8 +214,10 @@ bool FrontendGenerator::updateSchema()
 
             // Agregar las props
             nlohmann::json propsJson;
+            // std::cout << "  Component Type: " << typeStr << std::endl;
             for (const auto &prop : component.getProps()) {
                 propsJson[prop.first] = prop.second;
+                // std::cout << "    Prop: " << prop.first << " = " << prop.second << std::endl;
             }
             componentJson["props"] = propsJson;
 
@@ -223,11 +230,14 @@ bool FrontendGenerator::updateSchema()
                     // Convertir el tipo de componente anidado
                     std::string nestedTypeStr = componentTypeToString(nestedComponent.getType());
                     nestedComponentJson["type"] = nestedTypeStr;
+                    // std::cout << "    Nested Component Type: " << nestedTypeStr << std::endl;
 
                     // Agregar las props del componente anidado
                     nlohmann::json nestedPropsJson;
                     for (const auto &nestedProp : nestedComponent.getProps()) {
                         nestedPropsJson[nestedProp.first] = nestedProp.second;
+                        // std::cout << "      Nested Prop: " << nestedProp.first << " = "
+                        //           << nestedProp.second << std::endl;
                     }
                     nestedComponentJson["props"] = nestedPropsJson;
 
@@ -248,6 +258,8 @@ bool FrontendGenerator::updateSchema()
         fmt::print(stderr, "Failed to open the file for writing: {}\n", filePath);
         return false;
     }
+
+    // std::cout << jsonSchema.dump(2) << std::endl; // Imprime el JSON en la consola antes de guardar
 
     jsonFile << jsonSchema.dump(2);
     jsonFile.close();

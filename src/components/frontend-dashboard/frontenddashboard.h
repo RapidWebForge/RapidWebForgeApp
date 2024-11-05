@@ -57,6 +57,9 @@ private:
     Component *findComponentByHierarchy(std::vector<Component> &components,
                                         const std::vector<QTreeWidgetItem *> &hierarchy,
                                         int level);
+    Component *findComponentInTree(View &view, QTreeWidgetItem *item);
+    Component *findNestedComponent(Component &parent, QTreeWidgetItem *item);
+
     CreateView *createViewDialog;
     std::vector<Route> routes;
     std::vector<View> views;

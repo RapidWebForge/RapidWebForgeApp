@@ -25,6 +25,10 @@ FrontendDashboard::FrontendDashboard(QWidget *parent)
             &QTreeWidget::itemClicked,
             this,
             &FrontendDashboard::onCurrentViewTreeItemSelected);
+    connect(ui->propertiesTable,
+            &QTableWidget::cellChanged,
+            this,
+            &FrontendDashboard::onPropertyValueChanged);
 
     applyStylesFront();
     setUpTreeWidgets();
@@ -205,11 +209,36 @@ void FrontendDashboard::convertTreeToViews()
 
         for (int i = 0; i < ui->currentViewTree->topLevelItemCount(); ++i) {
             QTreeWidgetItem *componentItem = ui->currentViewTree->topLevelItem(i);
-            newComponents.push_back(convertItemToComponent(componentItem));
+            Component newComponent = convertItemToComponent(componentItem);
+
+            // Debugging de las propiedades de cada componente
+            qDebug() << "Component Type:"
+                     << QString::fromStdString(componentTypeToString(newComponent.getType()));
+            for (const auto &prop : newComponent.getProps()) {
+                qDebug() << "   Prop:" << QString::fromStdString(prop.first) << "="
+                         << QString::fromStdString(prop.second);
+            }
+
+            // Debugging de componentes anidados
+            if (newComponent.isAllowingItems()) {
+                for (const auto &nestedComponent : newComponent.getNestedComponents()) {
+                    qDebug() << "   Nested Component Type:"
+                             << QString::fromStdString(
+                                    componentTypeToString(nestedComponent.getType()));
+                    for (const auto &nestedProp : nestedComponent.getProps()) {
+                        qDebug() << "      Nested Prop:" << QString::fromStdString(nestedProp.first)
+                                 << "=" << QString::fromStdString(nestedProp.second);
+                    }
+                }
+            }
+
+            newComponents.push_back(newComponent); // Conversión recursiva
         }
 
+        // Reemplazar el contenido de currentView
         currentView.setComponents(newComponents);
         *it = currentView;
+        qDebug() << "Updated currentView in views with new component structure.";
     }
 }
 
@@ -225,7 +254,7 @@ Component FrontendDashboard::convertItemToComponent(QTreeWidgetItem *item)
         for (int i = 0; i < item->childCount(); ++i) {
             QTreeWidgetItem *childItem = item->child(i);
             nestedComponents.push_back(
-                convertItemToComponent(childItem)); // Recursión para anidamiento
+                convertItemToComponent(childItem)); // Conversión recursiva para anidamiento
         }
         newComponent.setNestedComponents(nestedComponents);
     }
@@ -305,6 +334,12 @@ Component *FrontendDashboard::findComponentByHierarchy(
 
 void FrontendDashboard::populatePropertiesTable(const Component &component)
 {
+    // Desconectar temporalmente onPropertyValueChanged para evitar bucles
+    disconnect(ui->propertiesTable,
+               &QTableWidget::cellChanged,
+               this,
+               &FrontendDashboard::onPropertyValueChanged);
+
     // Limpiar la tabla de propiedades y ajustar el número de filas
     ui->propertiesTable->clearContents();
     ui->propertiesTable->setRowCount(0);
@@ -332,26 +367,96 @@ void FrontendDashboard::populatePropertiesTable(const Component &component)
         ++row;
     }
 
-    // Ajustar el ancho de las columnas
-    // ui->propertiesTable->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    // Reconectar onPropertyValueChanged después de la actualización
+    connect(ui->propertiesTable,
+            &QTableWidget::cellChanged,
+            this,
+            &FrontendDashboard::onPropertyValueChanged);
 }
 
 void FrontendDashboard::onPropertyValueChanged(int row, int column)
 {
-    // Solo queremos manejar cambios en la columna de valores
-    if (column == 1) {
+    if (column == 1) { // Solo manejar cambios en la columna de valores
         QString propertyName = ui->propertiesTable->item(row, 0)->text();
         QString newValue = ui->propertiesTable->item(row, 1)->text();
 
-        // Actualizar el modelo Component con el nuevo valor
-
+        // Actualizar las propiedades en `currentComponent`
         std::map<std::string, std::string> currentProps = currentComponent.getProps();
         currentProps[propertyName.toStdString()] = newValue.toStdString();
-
         currentComponent.setProps(currentProps);
 
         qDebug() << "Updated property" << propertyName << "to" << newValue;
+
+        // Actualizar el componente en `currentView` usando el método `findComponentInTree`
+        Component *componentInView = findComponentInTree(currentView,
+                                                         ui->currentViewTree->currentItem());
+
+        if (componentInView) {
+            componentInView->setProps(currentComponent.getProps());
+            qDebug() << "Property updated in currentView. Updated Properties:";
+            for (const auto &prop : componentInView->getProps()) {
+                qDebug() << "  " << QString::fromStdString(prop.first) << "="
+                         << QString::fromStdString(prop.second);
+            }
+        } else {
+            qDebug() << "Could not find component in currentView.";
+        }
+
+        // Reflejar el currentView en views
+        auto it = std::find_if(views.begin(), views.end(), [this](const View &view) {
+            return view.getName() == currentView.getName();
+        });
+
+        if (it != views.end()) {
+            *it = currentView;
+            qDebug() << "Current view updated in views.";
+        } else {
+            qDebug() << "Could not update current view in views.";
+        }
     }
+}
+
+Component *FrontendDashboard::findComponentInTree(View &view, QTreeWidgetItem *item)
+{
+    // Usamos la jerarquía completa de item para realizar una búsqueda exacta
+    std::vector<QTreeWidgetItem *> hierarchy;
+    QTreeWidgetItem *currentItem = item;
+    while (currentItem) {
+        hierarchy.insert(hierarchy.begin(), currentItem);
+        currentItem = currentItem->parent();
+    }
+
+    // Inicia la búsqueda en los componentes de primer nivel del view usando la jerarquía
+    return findComponentByHierarchy(view.getComponents(), hierarchy, 0);
+}
+
+Component *FrontendDashboard::findNestedComponent(Component &parent, QTreeWidgetItem *item)
+{
+    const std::string type = item->text(0).toStdString();
+    std::vector<Component> &nestedComponents = parent.getNestedComponents();
+
+    qDebug() << "Searching for nested component of type" << QString::fromStdString(type);
+
+    for (auto &nestedComponent : nestedComponents) {
+        qDebug() << "Checking nested component of type"
+                 << QString::fromStdString(componentTypeToString(nestedComponent.getType()));
+
+        if (componentTypeToString(nestedComponent.getType()) == type && !item->parent()) {
+            qDebug() << "Nested component found.";
+            return &nestedComponent;
+        }
+
+        // Si el `QTreeWidgetItem` tiene más niveles, sigue buscando en niveles más profundos
+        if (nestedComponent.isAllowingItems() && item->parent()) {
+            Component *deepNested = findNestedComponent(nestedComponent, item->parent());
+            if (deepNested) {
+                return deepNested;
+            }
+        }
+    }
+
+    qDebug() << "Nested component of type" << QString::fromStdString(type) << "not found.";
+    return nullptr;
 }
 
 void FrontendDashboard::showCreateViewDialog()
