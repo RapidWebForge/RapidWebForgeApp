@@ -24,17 +24,17 @@ DeployManager::~DeployManager()
 
 bp::child DeployManager::runBackend(const std::string bunPath)
 {
-    // std::string command = bunPath + " run ./server.js";
-    std::string command = bunPath + " run server.js";
-    // return bp::child(command, bp::start_dir = this->projectPath + "\\backend");
-    return bp::child(command, bp::start_dir = this->projectPath + "/backend");
+    std::string command = bunPath + " run ./server.js";
+    // std::string command = bunPath + " run server.js";
+    return bp::child(command, bp::start_dir = this->projectPath + "\\backend");
+    // return bp::child(command, bp::start_dir = this->projectPath + "/backend");
 }
 
 bp::child DeployManager::runFrontend(const std::string bunPath)
 {
     std::string command = bunPath + " run dev";
-    // return bp::child(command, bp::start_dir = this->projectPath + "\\frontend");
-    return bp::child(command, bp::start_dir = this->projectPath + "/frontend");
+    return bp::child(command, bp::start_dir = this->projectPath + "\\frontend");
+    // return bp::child(command, bp::start_dir = this->projectPath + "/frontend");
 }
 
 bp::child DeployManager::runNgInx()

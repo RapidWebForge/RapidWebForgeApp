@@ -1,35 +1,69 @@
 #include "customtreewidget.h"
-
+#include <QApplication>
+#include <QDrag>
 #include <QDropEvent>
 #include <QMessageBox>
+#include <QMimeData>
+#include <QPainter>
 #include "../../models/component-type/componenttype.h"
 #include "../../models/component/component.h"
 
 CustomTreeWidget::CustomTreeWidget(QWidget *parent)
     : QTreeWidget(parent)
-{}
+{
+    setDragEnabled(true);
+    setAcceptDrops(true);
+    setDragDropMode(QAbstractItemView::InternalMove);
+    setSelectionMode(QAbstractItemView::SingleSelection);
+    setDropIndicatorShown(true);
+}
+
+void CustomTreeWidget::dragEnterEvent(QDragEnterEvent *event)
+{
+    QTreeWidget* source = qobject_cast<QTreeWidget*>(event->source());
+    qDebug() << "Drag Enter - Source:" << (source ? "TreeWidget" : "Other");
+    
+    event->acceptProposedAction();
+}
+
+void CustomTreeWidget::dragMoveEvent(QDragMoveEvent *event)
+{
+    QTreeWidgetItem* targetItem = itemAt(event->position().toPoint());
+    if (targetItem) {
+        qDebug() << "Can drop at:" << targetItem->text(0);
+        event->acceptProposedAction();
+    }
+}
 
 void CustomTreeWidget::dropEvent(QDropEvent *event)
 {
-    QTreeWidgetItem *targetItem = itemAt(event->position().toPoint());
-    QTreeWidgetItem *draggedItem = currentItem();
+    QTreeWidget* source = qobject_cast<QTreeWidget*>(event->source());
+    QTreeWidgetItem* sourceItem = nullptr;
+    
+    if (source) {
+        sourceItem = source->currentItem();
+    }
+    
+    QTreeWidgetItem* targetItem = itemAt(event->position().toPoint());
 
-    if (targetItem && draggedItem) {
-        std::string targetComponentTypeStr = targetItem->text(0).toStdString();
-        ComponentType targetComponentType = stringToComponentType(targetComponentTypeStr);
+    // qDebug() << "Drop Event Details:";
+    // qDebug() << "- Source Widget:" << (source ? "Valid" : "Invalid");
+    // qDebug() << "- Source Item:" << (sourceItem ? sourceItem->text(0) : "null");
+    // qDebug() << "- Target Item:" << (targetItem ? targetItem->text(0) : "null");
 
-        // Verificar si el componente destino permite anidar
-        Component targetComponent(targetComponentType);
-        if (!targetComponent.isAllowingItems()) {
-            QMessageBox::warning(this,
-                                 "Invalid Operation",
-                                 "This component does not allow nesting.");
-            event->ignore(); // Cancelar el evento de drop
-            return;
+    if (targetItem && sourceItem) {
+        event->acceptProposedAction();
+
+        // Obtener el índice de inserción
+        int dropIndex = indexOfTopLevelItem(targetItem);
+        if (dropIndex == -1 && targetItem->parent()) {
+            dropIndex = targetItem->parent()->indexOfChild(targetItem);
         }
 
-        emit itemDropped(targetItem, draggedItem); // Emitir la señal personalizada si es válido
+        emit itemDropped(targetItem, sourceItem, dropIndex);
+        // qDebug() << "Signal emitted!";
+    } else {
+        event->ignore();
+        qDebug() << "Drop ignored - missing items";
     }
-
-    QTreeWidget::dropEvent(event); // Continuar con el evento de drop si está permitido
 }

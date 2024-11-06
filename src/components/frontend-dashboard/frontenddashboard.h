@@ -39,7 +39,7 @@ private slots:
 
     void on_saveButton_clicked();
     void onCurrentViewTreeItemSelected(QTreeWidgetItem *item, int column);
-    void onItemDropped(QTreeWidgetItem *parentItem, QTreeWidgetItem *droppedItem);
+    void onItemDropped(QTreeWidgetItem *parentItem, QTreeWidgetItem *droppedItem, int dropIndex);
     void onPropertyValueChanged(int row, int column);
 
 private:

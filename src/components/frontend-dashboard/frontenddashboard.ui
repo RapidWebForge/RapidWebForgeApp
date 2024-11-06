@@ -49,7 +49,7 @@
        </property>
        <layout class="QVBoxLayout" name="verticalLayoutComponents">
         <item>
-         <widget class="QTreeWidget" name="componentsTree">
+         <widget class="CustomTreeWidget" name="componentsTree">
           <property name="headerHidden">
            <bool>true</bool>
           </property>

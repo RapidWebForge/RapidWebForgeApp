@@ -12,11 +12,7 @@ FrontendDashboard::FrontendDashboard(QWidget *parent)
 {
     ui->setupUi(this);
 
-    connect(ui->currentViewTree,
-            &CustomTreeWidget::itemDropped,
-            this,
-            &FrontendDashboard::onItemDropped);
-
+    connect(ui->currentViewTree, &CustomTreeWidget::itemDropped, this, &FrontendDashboard::onItemDropped);
     connect(ui->addSectionButton,
             &QPushButton::clicked,
             this,
@@ -106,56 +102,118 @@ void FrontendDashboard::applyStylesFront()
 
 void FrontendDashboard::setUpTreeWidgets()
 {
-    // Components Tree
-    QTreeWidget *componentsTree = ui->componentsTree;
+    // Components Tree (source)
+    CustomTreeWidget *componentsTree = ui->componentsTree;
     componentsTree->setDragEnabled(true);
-    componentsTree->setDropIndicatorShown(true);
-    componentsTree->setDragDropMode(QAbstractItemView::InternalMove);
-
-    setComponentsDraggable();
-
-    // Current View Tree
-    QTreeWidget *currentViewTree = ui->currentViewTree;
+    componentsTree->setDragDropMode(QAbstractItemView::DragOnly);
+    componentsTree->setSelectionMode(QAbstractItemView::SingleSelection);
+    
+    // Current View Tree (target)
+    CustomTreeWidget *currentViewTree = ui->currentViewTree;
     currentViewTree->setAcceptDrops(true);
+    currentViewTree->setDragDropMode(QAbstractItemView::DropOnly);
+    currentViewTree->setSelectionMode(QAbstractItemView::SingleSelection);
+    currentViewTree->setDropIndicatorShown(true);
+    
+    setComponentsDraggable();
 }
 
 void FrontendDashboard::setComponentsDraggable()
 {
-    QTreeWidgetItem *inputsGroup = ui->componentsTree->topLevelItem(0); // Primer grupo, "Inputs"
-    QTreeWidgetItem *labelsGroup = ui->componentsTree->topLevelItem(1); // Segundo grupo, "Labels"
+    int topLevelItemCount = ui->componentsTree->topLevelItemCount();
 
-    // Deshabilitar arrastre para el grupo "Inputs"
-    if (inputsGroup) {
-        inputsGroup->setFlags(inputsGroup->flags() & ~Qt::ItemIsDragEnabled);
-    }
+    for (int i = 0; i < topLevelItemCount; ++i) {
+        QTreeWidgetItem *groupItem = ui->componentsTree->topLevelItem(i);
 
-    // Deshabilitar arrastre para el grupo "Labels"
-    if (labelsGroup) {
-        labelsGroup->setFlags(labelsGroup->flags() & ~Qt::ItemIsDragEnabled);
-    }
+        // Deshabilita el arrastre para el grupo de nivel superior
+        if (groupItem) {
+            groupItem->setFlags(groupItem->flags() & ~Qt::ItemIsDragEnabled);
+        }
 
-    // Habilitar arrastre de los hijos
-    for (int i = 0; i < inputsGroup->childCount(); ++i) {
-        QTreeWidgetItem *child = inputsGroup->child(i);
-        child->setFlags(child->flags() | Qt::ItemIsDragEnabled);
-    }
-
-    for (int i = 0; i < labelsGroup->childCount(); ++i) {
-        QTreeWidgetItem *child = labelsGroup->child(i);
-        child->setFlags(child->flags() | Qt::ItemIsDragEnabled);
+        // Habilita el arrastre para los hijos del grupo
+        for (int j = 0; j < groupItem->childCount(); ++j) {
+            QTreeWidgetItem *childItem = groupItem->child(j);
+            if (childItem) {
+                childItem->setFlags(childItem->flags() | Qt::ItemIsDragEnabled);
+            }
+        }
     }
 }
 
-void FrontendDashboard::onItemDropped(QTreeWidgetItem *parentItem, QTreeWidgetItem *droppedItem)
+void FrontendDashboard::onItemDropped(QTreeWidgetItem *parentItem,
+                                      QTreeWidgetItem *droppedItem,
+                                      int dropIndex)
 {
-    std::string parentComponentTypeStr = parentItem->text(0).toStdString();
-    ComponentType parentComponentType = stringToComponentType(parentComponentTypeStr);
+    qDebug() << "onItemDropped called!";
+    qDebug() << "Parent:" << (parentItem ? parentItem->text(0) : "null");
+    qDebug() << "Dropped:" << (droppedItem ? droppedItem->text(0) : "null");
 
-    // Verificar si el componente padre permite anidar
-    Component parentComponent(parentComponentType);
-    if (!parentComponent.isAllowingItems()) {
-        QMessageBox::warning(this, "Invalid Operation", "This component does not allow nesting.");
+    if (!parentItem || !droppedItem) {
+        qDebug() << "Error: null items in onItemDropped";
         return;
+    }
+
+    // Obtener el tipo de componente del elemento padre
+    std::string parentComponentTypeStr = parentItem->text(0).toStdString();
+    bool isView = false;
+
+    for (auto &v : views) {
+        if (v.getName() == parentComponentTypeStr)
+            isView = true;
+    }
+
+    if (isView) {
+        std::vector<Component> _components = currentView.getComponents();
+
+        Component newComponent = convertItemToComponent(droppedItem);
+
+        _components.push_back(newComponent);
+
+        currentView.setComponents(_components);
+
+        QTreeWidgetItem *newChildItem = new QTreeWidgetItem(parentItem);
+        newChildItem->setText(0, droppedItem->text(0));
+
+        parentItem->insertChild(dropIndex, newChildItem);
+
+        // parentItem->addChild(newChildItem);
+    } else {
+        Component *parentComponent = findComponentInTree(currentView, parentItem);
+
+        if (!parentComponent) {
+            QMessageBox::warning(this, "Component error", "Parent wasn't found.");
+            return;
+        }
+
+        // Verificar si el componente padre permite anidar
+        if (!parentComponent->isAllowingItems()) {
+            QMessageBox::warning(this,
+                                 "Invalid Operation",
+                                 "This component does not allow nesting.");
+            return;
+        }
+
+        // Convertir droppedItem a un nuevo componente
+        Component newComponent = convertItemToComponent(droppedItem);
+
+        // Agregar el nuevo componente como componente anidado al padre
+        parentComponent->addNestedComponent(newComponent);
+
+        // Actualizar visualmente en el QTreeWidget
+        QTreeWidgetItem *newChildItem = new QTreeWidgetItem(parentItem);
+        newChildItem->setText(0, droppedItem->text(0));
+        // Configura el texto u otras propiedades según sea necesario
+        parentItem->addChild(newChildItem);
+
+        // Expandir el elemento padre para ver el nuevo componente
+        parentItem->setExpanded(true);
+
+        // Confirmación opcional con qDebug
+        qDebug() << "Component dropped and nested under parent component:";
+        qDebug() << "  Parent Component Type:"
+                 << QString::fromStdString(componentTypeToString(parentComponent->getType()));
+        qDebug() << "  Dropped Component Type:"
+                 << QString::fromStdString(componentTypeToString(newComponent.getType()));
     }
 }
 
@@ -163,19 +221,25 @@ void FrontendDashboard::populateCurrentViewTree()
 {
     ui->currentViewTree->clear();
 
-    if (currentView.getComponents().empty()) {
-        qDebug() << "Nothing found!" << "\n";
-        return;
-    }
+    // Iterar sobre todas las vistas (suponiendo que tienes un vector de vistas llamado `views`)
+    for (const auto &view : views) {
+        // Añadir cada vista como un item de primer nivel
+        QTreeWidgetItem *viewItem = new QTreeWidgetItem(ui->currentViewTree);
+        viewItem->setText(0,
+                          QString::fromStdString(
+                              view.getName())); // Suponiendo que la vista tiene un nombre
 
-    for (const auto &component : currentView.getComponents()) {
-        QTreeWidgetItem *componentItem = new QTreeWidgetItem(ui->currentViewTree);
-        componentItem->setText(0,
-                               QString::fromStdString(componentTypeToString(component.getType())));
+        // Añadir los componentes de la vista actual
+        for (const auto &component : view.getComponents()) {
+            QTreeWidgetItem *componentItem = new QTreeWidgetItem(viewItem);
+            componentItem->setText(0,
+                                   QString::fromStdString(
+                                       componentTypeToString(component.getType())));
 
-        // Verificar si el componente permite anidar
-        if (component.isAllowingItems() && !component.getNestedComponents().empty()) {
-            populateNestedItems(componentItem, component.getNestedComponents());
+            // Verificar si el componente permite anidar y tiene subcomponentes
+            if (component.isAllowingItems() && !component.getNestedComponents().empty()) {
+                populateNestedItems(componentItem, component.getNestedComponents());
+            }
         }
     }
 
@@ -185,14 +249,12 @@ void FrontendDashboard::populateCurrentViewTree()
 void FrontendDashboard::populateNestedItems(QTreeWidgetItem *parentItem,
                                             const std::vector<Component> &nestedComponents)
 {
-    for (const auto &nestedComponent : nestedComponents) {
-        QTreeWidgetItem *childItem = new QTreeWidgetItem(parentItem);
-        childItem->setText(0,
-                           QString::fromStdString(componentTypeToString(nestedComponent.getType())));
+    for (const auto &subcomponent : nestedComponents) {
+        QTreeWidgetItem *subItem = new QTreeWidgetItem(parentItem);
+        subItem->setText(0, QString::fromStdString(componentTypeToString(subcomponent.getType())));
 
-        // Llamada recursiva si el componente tiene componentes anidados
-        if (nestedComponent.isAllowingItems() && !nestedComponent.getNestedComponents().empty()) {
-            populateNestedItems(childItem, nestedComponent.getNestedComponents());
+        if (subcomponent.isAllowingItems() && !subcomponent.getNestedComponents().empty()) {
+            populateNestedItems(subItem, subcomponent.getNestedComponents());
         }
     }
 }
@@ -205,41 +267,30 @@ void FrontendDashboard::convertTreeToViews()
     });
 
     if (it != views.end()) {
-        std::vector<Component> newComponents;
-
-        for (int i = 0; i < ui->currentViewTree->topLevelItemCount(); ++i) {
-            QTreeWidgetItem *componentItem = ui->currentViewTree->topLevelItem(i);
-            Component newComponent = convertItemToComponent(componentItem);
-
-            // Debugging de las propiedades de cada componente
-            qDebug() << "Component Type:"
-                     << QString::fromStdString(componentTypeToString(newComponent.getType()));
-            for (const auto &prop : newComponent.getProps()) {
-                qDebug() << "   Prop:" << QString::fromStdString(prop.first) << "="
-                         << QString::fromStdString(prop.second);
-            }
-
-            // Debugging de componentes anidados
-            if (newComponent.isAllowingItems()) {
-                for (const auto &nestedComponent : newComponent.getNestedComponents()) {
-                    qDebug() << "   Nested Component Type:"
-                             << QString::fromStdString(
-                                    componentTypeToString(nestedComponent.getType()));
-                    for (const auto &nestedProp : nestedComponent.getProps()) {
-                        qDebug() << "      Nested Prop:" << QString::fromStdString(nestedProp.first)
-                                 << "=" << QString::fromStdString(nestedProp.second);
-                    }
-                }
-            }
-
-            newComponents.push_back(newComponent); // Conversión recursiva
-        }
-
-        // Reemplazar el contenido de currentView
-        currentView.setComponents(newComponents);
         *it = currentView;
-        qDebug() << "Updated currentView in views with new component structure.";
     }
+
+    // for (const auto &component : it->getComponents()) {
+    //     qDebug() << "  Component Type:"
+    //              << QString::fromStdString(componentTypeToString(component.getType()));
+    //     for (const auto &prop : component.getProps()) {
+    //         qDebug() << "     Prop:" << QString::fromStdString(prop.first) << "="
+    //                  << QString::fromStdString(prop.second);
+    //     }
+
+    //     if (component.isAllowingItems()) {
+    //         for (const auto &nestedComponent : component.getNestedComponents()) {
+    //             qDebug() << "     Nested Component Type:"
+    //                      << QString::fromStdString(
+    //                             componentTypeToString(nestedComponent.getType()));
+    //             for (const auto &nestedProp : nestedComponent.getProps()) {
+    //                 qDebug() << "        Nested Prop:"
+    //                          << QString::fromStdString(nestedProp.first) << "="
+    //                          << QString::fromStdString(nestedProp.second);
+    //             }
+    //         }
+    //     }
+    // }
 }
 
 Component FrontendDashboard::convertItemToComponent(QTreeWidgetItem *item)
@@ -285,7 +336,7 @@ void FrontendDashboard::onCurrentViewTreeItemSelected(QTreeWidgetItem *item, int
     }
 
     // Buscar el componente en el currentView usando la jerarquía de items
-    Component *foundComponent = findComponentByHierarchy(currentView.getComponents(), hierarchy, 0);
+    Component *foundComponent = findComponentByHierarchy(currentView.getComponents(), hierarchy, 1);
 
     if (foundComponent) {
         currentComponent = *foundComponent;
@@ -385,7 +436,7 @@ void FrontendDashboard::onPropertyValueChanged(int row, int column)
         currentProps[propertyName.toStdString()] = newValue.toStdString();
         currentComponent.setProps(currentProps);
 
-        qDebug() << "Updated property" << propertyName << "to" << newValue;
+        // qDebug() << "Updated property" << propertyName << "to" << newValue;
 
         // Actualizar el componente en `currentView` usando el método `findComponentInTree`
         Component *componentInView = findComponentInTree(currentView,
@@ -409,7 +460,9 @@ void FrontendDashboard::onPropertyValueChanged(int row, int column)
 
         if (it != views.end()) {
             *it = currentView;
+
             qDebug() << "Current view updated in views.";
+
         } else {
             qDebug() << "Could not update current view in views.";
         }
@@ -421,13 +474,21 @@ Component *FrontendDashboard::findComponentInTree(View &view, QTreeWidgetItem *i
     // Usamos la jerarquía completa de item para realizar una búsqueda exacta
     std::vector<QTreeWidgetItem *> hierarchy;
     QTreeWidgetItem *currentItem = item;
+
+    // Construir la jerarquía desde el item hasta la raíz
     while (currentItem) {
         hierarchy.insert(hierarchy.begin(), currentItem);
         currentItem = currentItem->parent();
     }
 
-    // Inicia la búsqueda en los componentes de primer nivel del view usando la jerarquía
-    return findComponentByHierarchy(view.getComponents(), hierarchy, 0);
+    // Comprobamos que el primer nivel en hierarchy es la vista
+    if (hierarchy.size() > 0 && hierarchy[0]->text(0).toStdString() == view.getName()) {
+        // Ignorar el nivel de la vista y comenzar desde el siguiente
+        return findComponentByHierarchy(view.getComponents(), hierarchy, 1);
+    } else {
+        qDebug() << "Error: La vista no coincide con el nivel superior de hierarchy.";
+        return nullptr;
+    }
 }
 
 Component *FrontendDashboard::findNestedComponent(Component &parent, QTreeWidgetItem *item)
@@ -471,7 +532,6 @@ void FrontendDashboard::showCreateViewDialog()
 
 void FrontendDashboard::onRouteSaved(const Route &route)
 {
-    // Agregar la ruta a la lista de rutas
     routes.push_back(route);
 
     // Crear una nueva vista si no existe
@@ -525,18 +585,6 @@ void FrontendDashboard::setViews(const std::vector<View> &views)
 void FrontendDashboard::setCurrentView(View &view)
 {
     currentView = view;
-
-    // Debug: Log de todos los componentes y sus nestedComponents
-    // for (const auto &component : currentView.getComponents()) {
-    //     qDebug() << "Component:"
-    //              << QString::fromStdString(componentTypeToString(component.getType()));
-    //     if (component.isAllowingItems()) {
-    //         for (const auto &nestedComponent : component.getNestedComponents()) {
-    //             qDebug() << "  Nested Component:"
-    //                      << QString::fromStdString(componentTypeToString(nestedComponent.getType()));
-    //         }
-    //     }
-    // }
 
     populateCurrentViewTree();
 }
