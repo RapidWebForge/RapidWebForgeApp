@@ -63,6 +63,53 @@ bool FrontendGenerator::loadSchema()
     return true;
 }
 
+bool allowsNestedComponents(ComponentType type)
+{
+    return type == ComponentType::Form || type == ComponentType::HorizontalLayout
+           || type == ComponentType::VerticalLayout || type == ComponentType::ModelLayout;
+}
+
+Component FrontendGenerator::parseComponent(const nlohmann::json &componentJson)
+{
+    Component component;
+
+    // Parse props
+    std::map<std::string, std::string> props;
+    for (auto propIt = componentJson["props"].begin(); propIt != componentJson["props"].end();
+         ++propIt) {
+        if (propIt.value().is_string()) {
+            props[propIt.key()] = propIt.value().get<std::string>();
+        }
+    }
+    component.setProps(props);
+
+    // Parse type
+    if (componentJson.contains("type") && componentJson["type"].is_string()) {
+        component.setType(stringToComponentType(componentJson["type"].get<std::string>()));
+
+        // Parse nested components if applicable
+        if (allowsNestedComponents(component.getType())
+            && componentJson.contains("nestedComponents")
+            && componentJson["nestedComponents"].is_array()) {
+            component.setNestedComponents(parseNestedComponents(componentJson["nestedComponents"]));
+        }
+    } else {
+        fmt::print(stderr, "Error: 'type' in 'components' must be a string.\n");
+    }
+
+    return component;
+}
+
+std::vector<Component> FrontendGenerator::parseNestedComponents(const nlohmann::json &nestedJsonArray)
+{
+    std::vector<Component> nestedComponents;
+    for (const auto &nestedJson : nestedJsonArray) {
+        Component nestedComponent = parseComponent(nestedJson);
+        nestedComponents.push_back(nestedComponent);
+    }
+    return nestedComponents;
+}
+
 void FrontendGenerator::parseJson(const nlohmann::json &jsonSchema)
 {
     // Parse routes
@@ -94,71 +141,11 @@ void FrontendGenerator::parseJson(const nlohmann::json &jsonSchema)
             // Parse components
             std::vector<Component> components;
             for (const auto &componentJson : it.value()["components"]) {
-                Component component;
-
-                // Parse props
-                std::map<std::string, std::string> props;
-                for (auto propIt = componentJson["props"].begin();
-                     propIt != componentJson["props"].end();
-                     ++propIt) {
-                    if (propIt.value().is_string()) {
-                        props[propIt.key()] = propIt.value().get<std::string>();
-                    } else {
-                        fmt::print(stderr,
-                                   "Error: Property value for '{}' must be a string.\n",
-                                   propIt.key());
-                    }
-                }
-                component.setProps(props);
-
-                // Asegurarse de que 'type' sea una cadena y convertirlo a ComponentType
-                if (componentJson.contains("type") && componentJson["type"].is_string()) {
-                    std::string typeStr = componentJson["type"].get<std::string>();
-                    component.setType(stringToComponentType(typeStr));
-
-                    // Only add 'nestedComponents' for specific component types
-
-                    if (component.getType() == ComponentType::Form
-                        || component.getType() == ComponentType::HorizontalLayout
-                        || component.getType() == ComponentType::VerticalLayout
-                        || component.getType() == ComponentType::ModelLayout) {
-                        if (componentJson.contains("nestedComponents")
-                            && componentJson["nestedComponents"].is_array()) {
-
-                            std::vector<Component> nestedComponents;
-                            for (const auto &nestedJson : componentJson["nestedComponents"]) {
-                                Component nestedComponent;
-                                if (nestedJson.contains("type") && nestedJson["type"].is_string()) {
-                                    std::string nestedTypeStr = nestedJson["type"].get<std::string>();
-                                    nestedComponent.setType(stringToComponentType(nestedTypeStr));
-
-                                    // Parse nested props
-                                    std::map<std::string, std::string> nestedProps;
-                                    for (auto propIt = nestedJson["props"].begin();
-                                         propIt != nestedJson["props"].end();
-                                         ++propIt) {
-                                        if (propIt.value().is_string()) {
-                                            nestedProps[propIt.key()] = propIt.value()
-                                                                            .get<std::string>();
-                                        }
-                                    }
-                                    nestedComponent.setProps(nestedProps);
-                                    nestedComponents.push_back(nestedComponent);
-                                }
-                            }
-                            component.setNestedComponents(nestedComponents);
-                        }
-                    }
-                } else {
-                    fmt::print(stderr, "Error: 'type' in 'components' must be a string.\n");
-                    continue;
-                }
-
+                Component component = parseComponent(componentJson);
                 components.push_back(component);
             }
 
             view.setComponents(components);
-
             views.push_back(view);
         }
     }
@@ -273,9 +260,15 @@ bool FrontendGenerator::updateFrontendJson(const std::string &componentName)
     bool componentExists = false;
     for (auto &view : frontendJson["views"]) {
         if (view.contains(componentName)) {
-            componentExists = true;
-            break;
+            for (const auto &comp : view[componentName]["components"]) {
+                if (comp["type"] == componentTypeToString(ComponentType::HeaderH1)) {
+                    componentExists = true;
+                    break;
+                }
+            }
         }
+        if (componentExists)
+            break;
     }
 
     // Si el componente no existe, agregarlo al JSON
