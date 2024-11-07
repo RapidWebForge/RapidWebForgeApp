@@ -16,7 +16,7 @@ ProjectsPanel::ProjectsPanel(QWidget *parent)
     ui->setupUi(this);
 
     ProjectManager projectManager;
-    setupProjects(projectManager.getAllProjects());
+    setupProjects(projectManager.getAllProjects());    
     applyStylesProj();
 }
 
@@ -26,11 +26,13 @@ void ProjectsPanel::setupProjects(const std::vector<Project> &projects)
 
     QGridLayout *gridLayout = ui->gridLayout;
 
-    // Clean the layout
+    // Limpiar el layout eliminando los widgets de manera segura
     QLayoutItem *child;
     while ((child = gridLayout->takeAt(0)) != nullptr) {
-        delete child->widget();
-        delete child;
+        if (child->widget()) {
+            child->widget()->deleteLater(); // Elimina los widgets de forma asíncrona
+        }
+        delete child; // Borra el item del layout
     }
 
     // Crear el widget para agregar un nuevo proyecto
@@ -86,6 +88,10 @@ void ProjectsPanel::setupProjects(const std::vector<Project> &projects)
                 &ProjectPreview::projectClicked,
                 this,
                 &ProjectsPanel::onProjectPreviewClicked);
+        connect(projectPreview,
+                &ProjectPreview::deleteRequested,
+                this,
+                &ProjectsPanel::onDeleteProjectRequested);
 
         gridLayout->addWidget(projectPreview, row, column);
 
@@ -95,10 +101,14 @@ void ProjectsPanel::setupProjects(const std::vector<Project> &projects)
             row++;
         }
     }
+    // Ajuste del tamaño mínimo para que el scroll funcione correctamente
+    ui->scrollAreaWidgetContents->adjustSize(); // Ajusta el tamaño del contenedor según el contenido
 
+    ui->scrollAreaWidgetContents->setMinimumHeight(gridLayout->sizeHint().height());
     // Optionally set spacing and margins for better visual appearance
     gridLayout->setSpacing(10);
     gridLayout->setContentsMargins(10, 10, 10, 10);
+    gridLayout->setSizeConstraint(QLayout::SetMinAndMaxSize);
 }
 
 bool ProjectsPanel::checkCommand(const std::string &command, bool dobleQuote)
@@ -286,5 +296,30 @@ void ProjectsPanel::on_configurationButton_clicked()
     } else {
         configView->raise();
         configView->activateWindow();
+    }
+}
+void ProjectsPanel::onDeleteProjectRequested(int projectId)
+{
+    qDebug() << "Intentando eliminar el proyecto con ID:" << projectId;
+
+    QMessageBox::StandardButton reply;
+    reply = QMessageBox::question(this,
+                                  "Confirmar eliminación",
+                                  "¿Estás seguro de que deseas eliminar este proyecto?",
+                                  QMessageBox::Yes | QMessageBox::No);
+
+    if (reply == QMessageBox::Yes) {
+        qDebug() << "Confirmación recibida para eliminar el proyecto con ID:" << projectId;
+
+        // Eliminar el proyecto de la base de datos sin recargar el QGridLayout
+        ProjectManager projectManager;
+        projectManager.deleteProjectById(projectId);
+        // Aquí solo obtenemos los proyectos nuevamente sin eliminar en la base de datos
+        setupProjects(projectManager.getAllProjects());
+
+        qDebug() << "Proyecto con ID:" << projectId
+                 << "ha sido eliminado exitosamente de la base de datos.";
+    } else {
+        qDebug() << "Eliminación cancelada para el proyecto con ID:" << projectId;
     }
 }

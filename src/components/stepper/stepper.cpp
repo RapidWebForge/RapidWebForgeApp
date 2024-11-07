@@ -1,6 +1,15 @@
 #include "stepper.h"
+#include <QCoreApplication>
+#include <QDialog>
+#include <QLabel>
 #include <QMessageBox>
+#include <QMovie>
+#include <QProgressDialog>
+#include <QThread> // Para QThread::sleep si necesitas simular una carga
+#include <QThreadPool>
+#include <QVBoxLayout>
 #include "../../core/code-generator/codegenerator.h"
+#include "../customprogress-dialog/customprogressdialog.h"
 #include "../stepper-dashboard/stepperdashboard.h"
 #include "ui_stepper.h"
 #include <cstdlib>
@@ -75,22 +84,33 @@ void Stepper::on_nextButton_clicked()
 
     // Create Project before Summary
     if (currentIndex == ui->stepsWidget->count() - 2) {
-        // Create project in sqlite
-        projectManager.createProject(this->newProject);
+        // Crear y mostrar el diálogo personalizado
+        CustomProgressDialog progressDialog(this);
+        progressDialog.setWindowModality(Qt::WindowModal);
+        progressDialog.show();
 
-        // Inicializar repositorio Git si versions está habilitado
-        if (this->newProject.getVersions()) {
-            VersionManager versionManager(this->newProject.getPath());
-            versionManager.initializeRepository();
-        }
+        // Procesar eventos para mostrar el diálogo
+        QCoreApplication::processEvents();
+
+        // Ejecutar tareas de creación de proyecto en segundo plano
+        projectManager.createProject(this->newProject);
 
         // Copy folder template to choose path
         CodeGenerator codeGenerator(this->newProject);
         codeGenerator.createBaseBackendProject();
         codeGenerator.createBaseFrontendProject();
 
-        message = "Your project has been created successfully!";
-        QMessageBox::information(this, "Successful", QString::fromStdString(message));
+        // Cerrar el diálogo al finalizar las tareas
+        progressDialog.close();
+
+        QString message = "Your project has been created successfully!";
+        QMessageBox::information(this, "Successful", message);
+
+        // Inicializar repositorio Git si versions está habilitado
+        if (this->newProject.getVersions()) {
+            VersionManager versionManager(this->newProject.getPath());
+            versionManager.initializeRepository();
+        }
     }
 
     // Show dashboard
@@ -103,6 +123,12 @@ void Stepper::on_nextButton_clicked()
 
         // Show when dashboard is closed
         connect(stprDashboard, &StepperDashboard::destroyed, this, &Stepper::show);
+
+        // Realizar el commit inicial al pasar al summary o finalizar el proyecto
+        if (this->newProject.getVersions()) {
+            VersionManager versionManager(this->newProject.getPath());
+            versionManager.saveChanges(); // Aquí se realiza el commit inicial
+        }
     }
 }
 

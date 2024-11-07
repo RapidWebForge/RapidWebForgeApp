@@ -39,4 +39,7 @@
     <qresource prefix="/inja/nginx">
         <file alias="nginx_conf">inja_templates/nginx/nginx_template.inja</file>
     </qresource>
+    <qresource prefix="/gifs">
+        <file>loading.gif</file>
+    </qresource>
 </RCC>

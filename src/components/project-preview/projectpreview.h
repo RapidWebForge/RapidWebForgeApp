@@ -18,9 +18,11 @@ public:
 
 signals:
     void projectClicked(const Project &project);
+    void deleteRequested(int projectId);
 
 protected:
     void mousePressEvent(QMouseEvent *event) override;
+    void contextMenuEvent(QContextMenuEvent *event) override;
 
 private:
     Ui::ProjectPreview *ui;

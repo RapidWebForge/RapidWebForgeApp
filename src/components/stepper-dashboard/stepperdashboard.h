@@ -28,6 +28,7 @@ protected:
 signals:
     void backendSchemaLoaded();
     void frontendSchemaLoaded();
+    void projectDeleteRequested(const Project &project);
 
 private slots:
     void showBackendPage();
@@ -42,6 +43,8 @@ private slots:
     void onVersionHistory();
     void onDeleteVersion();
     void onDeployProject();
+    void onProjectChange();
+    void onCreateProject();
 
 private:
     Ui::StepperDashboard *ui;

@@ -23,7 +23,7 @@ public:
 private slots:
     void onAddProjectClicked();
     void onProjectPreviewClicked(const Project &project);
-
+    void onDeleteProjectRequested(int projectId);
     void on_configurationButton_clicked();
 
 private:

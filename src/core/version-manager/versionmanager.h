@@ -13,6 +13,7 @@ public:
     void deleteVersion(const std::string &versionName);
     void changeVersion(const std::string &versionName);
     void saveChanges();
+    std::vector<std::string> listCommits();
     std::vector<std::string> listVersions();
 
 private:
