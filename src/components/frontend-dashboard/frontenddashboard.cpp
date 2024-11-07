@@ -12,7 +12,10 @@ FrontendDashboard::FrontendDashboard(QWidget *parent)
 {
     ui->setupUi(this);
 
-    connect(ui->currentViewTree, &CustomTreeWidget::itemDropped, this, &FrontendDashboard::onItemDropped);
+    connect(ui->currentViewTree,
+            &CustomTreeWidget::itemDropped,
+            this,
+            &FrontendDashboard::onItemDropped);
     connect(ui->addSectionButton,
             &QPushButton::clicked,
             this,
@@ -141,13 +144,9 @@ void FrontendDashboard::setComponentsDraggable()
 }
 
 void FrontendDashboard::onItemDropped(QTreeWidgetItem *parentItem,
-                                      QTreeWidgetItem *droppedItem,
-                                      int dropIndex)
+                                     QTreeWidgetItem *droppedItem,
+                                     int dropIndex)
 {
-    qDebug() << "onItemDropped called!";
-    qDebug() << "Parent:" << (parentItem ? parentItem->text(0) : "null");
-    qDebug() << "Dropped:" << (droppedItem ? droppedItem->text(0) : "null");
-
     if (!parentItem || !droppedItem) {
         qDebug() << "Error: null items in onItemDropped";
         return;
@@ -162,58 +161,48 @@ void FrontendDashboard::onItemDropped(QTreeWidgetItem *parentItem,
             isView = true;
     }
 
+    Component newComponent = convertItemToComponent(droppedItem);
+
     if (isView) {
-        std::vector<Component> _components = currentView.getComponents();
-
-        Component newComponent = convertItemToComponent(droppedItem);
-
-        _components.push_back(newComponent);
-
-        currentView.setComponents(_components);
-
-        QTreeWidgetItem *newChildItem = new QTreeWidgetItem(parentItem);
-        newChildItem->setText(0, droppedItem->text(0));
-
-        parentItem->insertChild(dropIndex, newChildItem);
-
-        // parentItem->addChild(newChildItem);
+        std::vector<Component> &components = currentView.getComponents();
+        
+        if (dropIndex >= 0 && dropIndex <= components.size()) {
+            components.insert(components.begin() + dropIndex, newComponent);
+        } else {
+            components.push_back(newComponent);
+        }
+        
+        QTreeWidgetItem *newItem = new QTreeWidgetItem();
+        newItem->setText(0, droppedItem->text(0));
+        if (parentItem == ui->currentViewTree->invisibleRootItem()) {
+            ui->currentViewTree->insertTopLevelItem(dropIndex, newItem);
+        } else {
+            parentItem->insertChild(dropIndex, newItem);
+        }
     } else {
         Component *parentComponent = findComponentInTree(currentView, parentItem);
-
+        
         if (!parentComponent) {
             QMessageBox::warning(this, "Component error", "Parent wasn't found.");
             return;
         }
 
-        // Verificar si el componente padre permite anidar
         if (!parentComponent->isAllowingItems()) {
-            QMessageBox::warning(this,
-                                 "Invalid Operation",
-                                 "This component does not allow nesting.");
+            QMessageBox::warning(this, "Invalid Operation", "This component does not allow nesting.");
             return;
         }
 
-        // Convertir droppedItem a un nuevo componente
-        Component newComponent = convertItemToComponent(droppedItem);
+        std::vector<Component> &nestedComponents = parentComponent->getNestedComponents();
+        
+        if (dropIndex >= 0 && dropIndex <= nestedComponents.size()) {
+            nestedComponents.insert(nestedComponents.begin() + dropIndex, newComponent);
+        } else {
+            nestedComponents.push_back(newComponent);
+        }
 
-        // Agregar el nuevo componente como componente anidado al padre
-        parentComponent->addNestedComponent(newComponent);
-
-        // Actualizar visualmente en el QTreeWidget
-        QTreeWidgetItem *newChildItem = new QTreeWidgetItem(parentItem);
-        newChildItem->setText(0, droppedItem->text(0));
-        // Configura el texto u otras propiedades según sea necesario
-        parentItem->addChild(newChildItem);
-
-        // Expandir el elemento padre para ver el nuevo componente
-        parentItem->setExpanded(true);
-
-        // Confirmación opcional con qDebug
-        qDebug() << "Component dropped and nested under parent component:";
-        qDebug() << "  Parent Component Type:"
-                 << QString::fromStdString(componentTypeToString(parentComponent->getType()));
-        qDebug() << "  Dropped Component Type:"
-                 << QString::fromStdString(componentTypeToString(newComponent.getType()));
+        QTreeWidgetItem *newItem = new QTreeWidgetItem();
+        newItem->setText(0, droppedItem->text(0));
+        parentItem->insertChild(dropIndex, newItem);
     }
 }
 
