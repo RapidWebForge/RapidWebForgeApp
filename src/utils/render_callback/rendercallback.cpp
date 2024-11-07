@@ -47,9 +47,14 @@ std::string renderComponentCallback(inja::Environment &env, inja::Arguments &arg
         output = "<h1 className=\"" + className + "\">" + value + "</h1>";
     } else if (type == "Header H2") {
         std::string className = props.value("class", "");
-        std::string value = props.value("text", "Default Header");
+        std::string value = props.value("text", "Default Header 2");
 
         output = "<h2 className=\"" + className + "\">" + value + "</h2>";
+    } else if (type == "Header H3") {
+        std::string className = props.value("class", "");
+        std::string value = props.value("text", "Default Header 3");
+
+        output = "<h3 className=\"" + className + "\">" + value + "</h3>";
     } else if (type == "Paragraph") {
         std::string className = props.value("class", "");
         std::string value = props.value("text", "Default Header");
@@ -58,8 +63,11 @@ std::string renderComponentCallback(inja::Environment &env, inja::Arguments &arg
     } else if (type == "Input") {
         std::string className = props.value("class", "");
         std::string placeholder = props.value("placeholder", "");
+        std::string type = props.value("type", "text");
+        std::string value = props.value("value", "");
 
-        output = "<input className=\"" + className + "\" placeholder=" + placeholder + "\" /> ";
+        output = "<input className=\"" + className + "\" type=\"" + type + "\" placeholder=\""
+                 + placeholder + "\" value=\"" + value + "\" /> ";
     } else if (type == "Text Area") {
         std::string className = props.value("class", "");
         std::string placeholder = props.value("placeholder", "");
@@ -68,9 +76,11 @@ std::string renderComponentCallback(inja::Environment &env, inja::Arguments &arg
                  + "\"></textarea>";
     } else if (type == "Button") {
         std::string className = props.value("class", "");
-        std::string value = props.value("text", "Default Header");
+        std::string value = props.value("text", "Default Button");
+        std::string type = props.value("type", "button");
 
-        output = "<button className=\"" + className + "\">" + value + "</h2>";
+        output = "<button className=\"" + className + "\" type=\"" + type + "\" >" + value
+                 + "</button>";
     } else if (type == "Horizontal Layout" || type == "Vertical Layout" || type == "Model Layout"
                || type == "Form") {
         std::string layoutClass;

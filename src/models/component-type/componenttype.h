@@ -22,7 +22,7 @@ enum class ComponentType {
 // Mapa de propiedades predeterminadas
 const std::map<ComponentType, std::map<std::string, std::string>> componentPropertiesMap
     = {{ComponentType::HeaderH1, {{"class", ""}, {"text", "Default Header"}}},
-       {ComponentType::HeaderH2, {{"class", ""}, {"text", "Default Subheader"}}},
+       {ComponentType::HeaderH2, {{"class", ""}, {"text", "Default Header 2"}}},
        {ComponentType::HeaderH3, {{"class", ""}, {"text", "Default Header 3"}}},
        {ComponentType::Paragraph, {{"class", ""}, {"text", "Default Paragraph"}}},
        {ComponentType::Input,

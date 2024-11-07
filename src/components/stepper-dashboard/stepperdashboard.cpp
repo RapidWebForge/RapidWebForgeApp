@@ -104,21 +104,6 @@ void StepperDashboard::onFrontendSchemaLoaded()
     std::vector<View> views = codeGenerator->frontendGenerator.getViews();
     std::vector<Route> routes = codeGenerator->frontendGenerator.getRoutes();
 
-    // for (const auto &view : views) {
-    //     qDebug() << "View:" << QString::fromStdString(view.getName());
-    //     for (const auto &component : view.getComponents()) {
-    //         qDebug() << "Component type:"
-    //                  << QString::fromStdString(componentTypeToString(component.getType()));
-    //         if (component.isAllowingItems()) {
-    //             qDebug() << "Has nested components:";
-    //             for (const auto &nested : component.getNestedComponents()) {
-    //                 qDebug() << "  Nested component type:"
-    //                          << QString::fromStdString(componentTypeToString(nested.getType()));
-    //             }
-    //         }
-    //     }
-    // }
-
     frontendDashboard->setViews(views);
     frontendDashboard->setRoutes(routes);
 
@@ -368,39 +353,6 @@ void StepperDashboard::onSaveChanges()
     codeGenerator->frontendGenerator.setRoutes(frontendDashboard->getRoutes());
 
     codeGenerator->frontendGenerator.setViews(frontendDashboard->getViews());
-
-    qDebug() << "Render from onSaveChanges" << "\n";
-    for (const auto &view : frontendDashboard->getViews()) {
-        qDebug() << "View:" << QString::fromStdString(view.getName());
-        for (const auto &component : view.getComponents()) {
-            qDebug() << "  Component Type:"
-                     << QString::fromStdString(componentTypeToString(component.getType()));
-
-            // Imprimir las propiedades del componente principal
-            qDebug() << "    Properties:";
-            for (const auto &prop : component.getProps()) {
-                qDebug() << "      " << QString::fromStdString(prop.first) << "="
-                         << QString::fromStdString(prop.second);
-            }
-
-            // Si el componente permite componentes anidados, imprimirlos también
-            if (component.isAllowingItems()) {
-                for (const auto &nestedComponent : component.getNestedComponents()) {
-                    qDebug() << "    Nested Component Type:"
-                             << QString::fromStdString(
-                                    componentTypeToString(nestedComponent.getType()));
-
-                    // Imprimir las propiedades del componente anidado
-                    qDebug() << "      Nested Properties:";
-                    for (const auto &nestedProp : nestedComponent.getProps()) {
-                        qDebug() << "        " << QString::fromStdString(nestedProp.first) << "="
-                                 << QString::fromStdString(nestedProp.second);
-                    }
-                }
-            }
-        }
-    }
-    qDebug() << "END from onSaveChanges" << "\n";
 
     if (codeGenerator->frontendGenerator.updateFrontendCode()) {
         QMessageBox::information(this, "Successful", "View and JSON updated");

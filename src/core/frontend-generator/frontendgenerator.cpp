@@ -162,23 +162,6 @@ void FrontendGenerator::parseJson(const nlohmann::json &jsonSchema)
             views.push_back(view);
         }
     }
-
-    // qDebug() << "Render from parseJson" << "\n";
-    // for (const auto &view : views) {
-    //     for (const auto &component : view.getComponents()) {
-    //         qDebug() << "Component:"
-    //                  << QString::fromStdString(componentTypeToString(component.getType()));
-    //         qDebug() << (component.isAllowingItems() ? "SI" : "NO") << "\n";
-    //         if (!component.getNestedComponents().empty()) {
-    //             for (const auto &nestedComponent : component.getNestedComponents()) {
-    //                 qDebug() << "  Nested Component:"
-    //                          << QString::fromStdString(
-    //                                 componentTypeToString(nestedComponent.getType()));
-    //             }
-    //         }
-    //     }
-    // }
-    // qDebug() << "END from parseJson" << "\n";
 }
 
 bool FrontendGenerator::updateSchema()

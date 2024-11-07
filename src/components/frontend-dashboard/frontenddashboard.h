@@ -46,8 +46,15 @@ private:
     Ui::FrontendDashboard *ui;
 
     void applyStylesFront();
+
+    void configureTreeWidget(CustomTreeWidget *treeWidget,
+                             bool acceptDrops,
+                             QAbstractItemView::DragDropMode mode);
     void setUpTreeWidgets();
+
+    void setDraggableFlags(QTreeWidgetItem *item, bool isDraggable);
     void setComponentsDraggable();
+
     void populateCurrentViewTree();
     void convertTreeToViews();
     void populateNestedItems(QTreeWidgetItem *parentItem,
@@ -59,6 +66,15 @@ private:
                                         int level);
     Component *findComponentInTree(View &view, QTreeWidgetItem *item);
     Component *findNestedComponent(Component &parent, QTreeWidgetItem *item);
+
+    // Auxiliar functions to onItemDropped
+    QTreeWidgetItem *createTreeItem(const QString &text);
+    void insertComponentInView(Component &newComponent, QTreeWidgetItem *parentItem, int dropIndex);
+    void insertNestedComponent(Component *parentComponent,
+                               Component &newComponent,
+                               QTreeWidgetItem *parentItem,
+                               int dropIndex);
+    bool isParentView(QTreeWidgetItem *item) const;
 
     CreateView *createViewDialog;
     std::vector<Route> routes;

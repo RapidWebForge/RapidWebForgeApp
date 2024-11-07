@@ -1,6 +1,7 @@
 #include "frontenddashboard.h"
 #include <QDebug>
 #include <QDropEvent>
+#include <QFile>
 #include <QMessageBox>
 #include "../../models/component-type/componenttype.h"
 #include "ui_frontenddashboard.h"
@@ -31,6 +32,7 @@ FrontendDashboard::FrontendDashboard(QWidget *parent)
 
     applyStylesFront();
     setUpTreeWidgets();
+    setComponentsDraggable();
 }
 
 FrontendDashboard::~FrontendDashboard()
@@ -40,169 +42,138 @@ FrontendDashboard::~FrontendDashboard()
 
 void FrontendDashboard::applyStylesFront()
 {
-    this->setStyleSheet("QTreeWidget {"
-                        "   border: 1px solid #eaeaea;"
-                        "   border-radius: 8px;"
-                        "   background-color: white;"
-                        "   font-size: 14px;"
-                        "   margin: 10px;"
-                        "   padding: 5px;"
-                        "}"
-                        "QTreeWidget::item {"
-                        "   border-radius: 5px;"
-                        "   margin: 2px;"
-                        "   padding: 5px;"
-                        "}"
-                        "QTreeWidget::item:selected {"
-                        "   background-color: #0F66DE;"
-                        "   color: white;"
-                        "}"
-                        "QGroupBox {"
-                        "   border: 1px solid #dcdcdc;"
-                        "   border-radius: 8px;"
-                        "   margin-top: 15px;"
-                        "   padding: 10px;"
-                        "   font-size: 16px;"
-                        "   color: #333;"
-                        "}"
-                        "QTreeWidget, QTableWidget, QListWidget {"
-                        "   border: 1px solid #eaeaea;"
-                        "   border-radius: 5px;"
-                        "   font-size: 14px;"
-                        "   background-color: #fafafa;"
-                        "}"
-                        "QPushButton {"
-                        "   background-color: white;"
-                        "   color: white;"
-                        "   border: none;"
-                        "   border-radius: 12px;"
-                        "   padding: 5px 5px;"
-                        "   font-size: 12px;"
-                        "}"
-                        "QPushButton:hover {"
-                        "   background-color: #eaeaea;"
-                        "   color: white;"
-                        "}"
-                        "QPushButton:pressed {"
-                        "   background-color: #eaeaea;"
-                        "}"
-                        "QLabel#titleLabel {"
-                        "   font-size: 36px;"
-                        "   font-weight: bold;"
-                        "   color: #333;"
-                        "}"
-                        "QGroupBox {"
-                        "   border: 1px solid #dcdcdc;"
-                        "   border-radius: 8px;"
-                        "   padding: 10px;"
-                        "   font-size: 16px;"
-                        "   color: #333;"
-                        "}");
+    QFile styleFile(":/styles/frontenddashboard");
+    if (styleFile.open(QFile::ReadOnly)) {
+        QString styleSheet = QLatin1String(styleFile.readAll());
+        this->setStyleSheet(styleSheet);
+    }
 
     ui->titleLabel->setStyleSheet("font-size: 35px; color: #27292A; padding-top: 10px; "
                                   "padding-left: 40px; padding-bottom: 20px;");
 }
 
+// TreeWidgets config
+
+void FrontendDashboard::configureTreeWidget(CustomTreeWidget *treeWidget,
+                                            bool acceptDrops,
+                                            QAbstractItemView::DragDropMode mode)
+{
+    treeWidget->setDragEnabled(mode != QAbstractItemView::DropOnly);
+    treeWidget->setAcceptDrops(acceptDrops);
+    treeWidget->setDragDropMode(mode);
+    treeWidget->setSelectionMode(QAbstractItemView::SingleSelection);
+    treeWidget->setDropIndicatorShown(true);
+}
+
 void FrontendDashboard::setUpTreeWidgets()
 {
-    // Components Tree (source)
-    CustomTreeWidget *componentsTree = ui->componentsTree;
-    componentsTree->setDragEnabled(true);
-    componentsTree->setDragDropMode(QAbstractItemView::DragOnly);
-    componentsTree->setSelectionMode(QAbstractItemView::SingleSelection);
-    
-    // Current View Tree (target)
-    CustomTreeWidget *currentViewTree = ui->currentViewTree;
-    currentViewTree->setAcceptDrops(true);
-    currentViewTree->setDragDropMode(QAbstractItemView::DropOnly);
-    currentViewTree->setSelectionMode(QAbstractItemView::SingleSelection);
-    currentViewTree->setDropIndicatorShown(true);
-    
-    setComponentsDraggable();
+    configureTreeWidget(ui->componentsTree, false, QAbstractItemView::DragOnly);
+    configureTreeWidget(ui->currentViewTree, true, QAbstractItemView::DropOnly);
+}
+
+// Draggable settings
+
+void FrontendDashboard::setDraggableFlags(QTreeWidgetItem *item, bool isDraggable)
+{
+    if (isDraggable) {
+        item->setFlags(item->flags() | Qt::ItemIsDragEnabled);
+    } else {
+        item->setFlags(item->flags() & ~Qt::ItemIsDragEnabled);
+    }
 }
 
 void FrontendDashboard::setComponentsDraggable()
 {
     int topLevelItemCount = ui->componentsTree->topLevelItemCount();
-
     for (int i = 0; i < topLevelItemCount; ++i) {
         QTreeWidgetItem *groupItem = ui->componentsTree->topLevelItem(i);
-
-        // Deshabilita el arrastre para el grupo de nivel superior
         if (groupItem) {
-            groupItem->setFlags(groupItem->flags() & ~Qt::ItemIsDragEnabled);
-        }
-
-        // Habilita el arrastre para los hijos del grupo
-        for (int j = 0; j < groupItem->childCount(); ++j) {
-            QTreeWidgetItem *childItem = groupItem->child(j);
-            if (childItem) {
-                childItem->setFlags(childItem->flags() | Qt::ItemIsDragEnabled);
+            setDraggableFlags(groupItem, false); // No arrastrar grupos
+            for (int j = 0; j < groupItem->childCount(); ++j) {
+                setDraggableFlags(groupItem->child(j), true); // Arrastrar solo hijos
             }
         }
     }
 }
 
+// Auxiliar functions to onItemDropped
+
+QTreeWidgetItem *FrontendDashboard::createTreeItem(const QString &text)
+{
+    QTreeWidgetItem *item = new QTreeWidgetItem();
+    item->setText(0, text);
+    return item;
+}
+
+void FrontendDashboard::insertComponentInView(Component &newComponent,
+                                              QTreeWidgetItem *parentItem,
+                                              int dropIndex)
+{
+    std::vector<Component> &components = currentView.getComponents();
+    dropIndex = std::clamp(dropIndex, 0, static_cast<int>(components.size()));
+    components.insert(components.begin() + dropIndex, newComponent);
+
+    QTreeWidgetItem *newItem = createTreeItem(
+        QString::fromStdString(componentTypeToString(newComponent.getType())));
+    if (parentItem == ui->currentViewTree->invisibleRootItem()) {
+        ui->currentViewTree->insertTopLevelItem(dropIndex, newItem);
+    } else {
+        parentItem->insertChild(dropIndex, newItem);
+    }
+}
+
+void FrontendDashboard::insertNestedComponent(Component *parentComponent,
+                                              Component &newComponent,
+                                              QTreeWidgetItem *parentItem,
+                                              int dropIndex)
+{
+    if (!parentComponent->isAllowingItems()) {
+        QMessageBox::warning(this, "Invalid Operation", "This component does not allow nesting.");
+        return;
+    }
+    std::vector<Component> &nestedComponents = parentComponent->getNestedComponents();
+    dropIndex = std::clamp(dropIndex, 0, static_cast<int>(nestedComponents.size()));
+    nestedComponents.insert(nestedComponents.begin() + dropIndex, newComponent);
+
+    QTreeWidgetItem *newItem = createTreeItem(
+        QString::fromStdString(componentTypeToString(newComponent.getType())));
+    parentItem->insertChild(dropIndex, newItem);
+}
+
+// End of Auxiliar functions to onItemDropped
+
+bool FrontendDashboard::isParentView(QTreeWidgetItem *item) const
+{
+    std::string itemType = item->text(0).toStdString();
+    return std::any_of(views.begin(), views.end(), [&](const auto &v) {
+        return v.getName() == itemType;
+    });
+}
+
 void FrontendDashboard::onItemDropped(QTreeWidgetItem *parentItem,
-                                     QTreeWidgetItem *droppedItem,
-                                     int dropIndex)
+                                      QTreeWidgetItem *droppedItem,
+                                      int dropIndex)
 {
     if (!parentItem || !droppedItem) {
         qDebug() << "Error: null items in onItemDropped";
         return;
     }
 
-    // Obtener el tipo de componente del elemento padre
-    std::string parentComponentTypeStr = parentItem->text(0).toStdString();
-    bool isView = false;
-
-    for (auto &v : views) {
-        if (v.getName() == parentComponentTypeStr)
-            isView = true;
-    }
+    bool isView = isParentView(parentItem);
 
     Component newComponent = convertItemToComponent(droppedItem);
 
     if (isView) {
-        std::vector<Component> &components = currentView.getComponents();
-        
-        if (dropIndex >= 0 && dropIndex <= components.size()) {
-            components.insert(components.begin() + dropIndex, newComponent);
-        } else {
-            components.push_back(newComponent);
-        }
-        
-        QTreeWidgetItem *newItem = new QTreeWidgetItem();
-        newItem->setText(0, droppedItem->text(0));
-        if (parentItem == ui->currentViewTree->invisibleRootItem()) {
-            ui->currentViewTree->insertTopLevelItem(dropIndex, newItem);
-        } else {
-            parentItem->insertChild(dropIndex, newItem);
-        }
+        insertComponentInView(newComponent, parentItem, dropIndex);
     } else {
         Component *parentComponent = findComponentInTree(currentView, parentItem);
-        
+
         if (!parentComponent) {
             QMessageBox::warning(this, "Component error", "Parent wasn't found.");
             return;
         }
 
-        if (!parentComponent->isAllowingItems()) {
-            QMessageBox::warning(this, "Invalid Operation", "This component does not allow nesting.");
-            return;
-        }
-
-        std::vector<Component> &nestedComponents = parentComponent->getNestedComponents();
-        
-        if (dropIndex >= 0 && dropIndex <= nestedComponents.size()) {
-            nestedComponents.insert(nestedComponents.begin() + dropIndex, newComponent);
-        } else {
-            nestedComponents.push_back(newComponent);
-        }
-
-        QTreeWidgetItem *newItem = new QTreeWidgetItem();
-        newItem->setText(0, droppedItem->text(0));
-        parentItem->insertChild(dropIndex, newItem);
+        insertNestedComponent(parentComponent, newComponent, parentItem, dropIndex);
     }
 }
 
@@ -210,13 +181,11 @@ void FrontendDashboard::populateCurrentViewTree()
 {
     ui->currentViewTree->clear();
 
-    // Iterar sobre todas las vistas (suponiendo que tienes un vector de vistas llamado `views`)
+    // Iterar sobre todas las vistas
     for (const auto &view : views) {
         // Añadir cada vista como un item de primer nivel
         QTreeWidgetItem *viewItem = new QTreeWidgetItem(ui->currentViewTree);
-        viewItem->setText(0,
-                          QString::fromStdString(
-                              view.getName())); // Suponiendo que la vista tiene un nombre
+        viewItem->setText(0, QString::fromStdString(view.getName()));
 
         // Añadir los componentes de la vista actual
         for (const auto &component : view.getComponents()) {
@@ -258,28 +227,6 @@ void FrontendDashboard::convertTreeToViews()
     if (it != views.end()) {
         *it = currentView;
     }
-
-    // for (const auto &component : it->getComponents()) {
-    //     qDebug() << "  Component Type:"
-    //              << QString::fromStdString(componentTypeToString(component.getType()));
-    //     for (const auto &prop : component.getProps()) {
-    //         qDebug() << "     Prop:" << QString::fromStdString(prop.first) << "="
-    //                  << QString::fromStdString(prop.second);
-    //     }
-
-    //     if (component.isAllowingItems()) {
-    //         for (const auto &nestedComponent : component.getNestedComponents()) {
-    //             qDebug() << "     Nested Component Type:"
-    //                      << QString::fromStdString(
-    //                             componentTypeToString(nestedComponent.getType()));
-    //             for (const auto &nestedProp : nestedComponent.getProps()) {
-    //                 qDebug() << "        Nested Prop:"
-    //                          << QString::fromStdString(nestedProp.first) << "="
-    //                          << QString::fromStdString(nestedProp.second);
-    //             }
-    //         }
-    //     }
-    // }
 }
 
 Component FrontendDashboard::convertItemToComponent(QTreeWidgetItem *item)
@@ -425,8 +372,6 @@ void FrontendDashboard::onPropertyValueChanged(int row, int column)
         currentProps[propertyName.toStdString()] = newValue.toStdString();
         currentComponent.setProps(currentProps);
 
-        // qDebug() << "Updated property" << propertyName << "to" << newValue;
-
         // Actualizar el componente en `currentView` usando el método `findComponentInTree`
         Component *componentInView = findComponentInTree(currentView,
                                                          ui->currentViewTree->currentItem());
@@ -449,7 +394,6 @@ void FrontendDashboard::onPropertyValueChanged(int row, int column)
 
         if (it != views.end()) {
             *it = currentView;
-
             qDebug() << "Current view updated in views.";
 
         } else {
