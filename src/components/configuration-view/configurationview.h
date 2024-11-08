@@ -24,6 +24,7 @@ private slots:
 private:
     Ui::ConfigurationView *ui;
     ConfigurationManager configManager;
+    bool checkPathValid(const std::string &path, const std::string &versionFlag);
 };
 
 #endif // CONFIGURATIONVIEW_H
