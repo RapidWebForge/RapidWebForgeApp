@@ -263,6 +263,23 @@ void FrontendDashboard::onCurrentViewTreeItemSelected(QTreeWidgetItem *item, int
         return;
     }
 
+    // Obtener el nombre del elemento seleccionado
+    std::string selectedItemName = item->text(0).toStdString();
+
+    // Verificar si el elemento seleccionado es una vista
+    auto viewIt = std::find_if(views.begin(), views.end(), [&selectedItemName](const View &view) {
+        return view.getName() == selectedItemName;
+    });
+
+    if (viewIt != views.end()) {
+        // Si el elemento seleccionado es una vista, actualizar `currentView`
+        currentView = *viewIt;
+        qDebug() << "Current view updated to:" << QString::fromStdString(currentView.getName());
+        return;
+    }
+
+    // Si el elemento seleccionado no es una vista, buscar el componente en `currentView`
+
     // Usamos una pila de QTreeWidgetItem para guardar la jerarquía completa hasta el item actual
     std::vector<QTreeWidgetItem *> hierarchy;
     QTreeWidgetItem *currentItem = item;
@@ -271,7 +288,7 @@ void FrontendDashboard::onCurrentViewTreeItemSelected(QTreeWidgetItem *item, int
         currentItem = currentItem->parent();
     }
 
-    // Buscar el componente en el currentView usando la jerarquía de items
+    // Buscar el componente en `currentView` usando la jerarquía de items
     Component *foundComponent = findComponentByHierarchy(currentView.getComponents(), hierarchy, 1);
 
     if (foundComponent) {
@@ -465,22 +482,104 @@ void FrontendDashboard::showCreateViewDialog()
 
 void FrontendDashboard::onRouteSaved(const Route &route)
 {
+    // Agregar la ruta a `routes`
     routes.push_back(route);
 
-    // Crear una nueva vista si no existe
-    // auto it = std::find_if(views.begin(), views.end(), [&route](const View &view) {
-    //     return view.getName() == route.getComponent();
-    // });
+    // Crear un nuevo QTreeWidgetItem para la vista y agregarlo al `currentViewTree`
+    QTreeWidgetItem *viewItem = new QTreeWidgetItem(ui->currentViewTree);
+    viewItem->setText(0, QString::fromStdString(route.getComponent()));
+    ui->currentViewTree->addTopLevelItem(viewItem);
 
-    // Si la vista no existe, crear una nueva y agregarla
-    // if (it == views.end()) {
-    //     View newView(route.getComponent());
-    //     views.push_back(newView);
-    // }
+    // Crear una nueva vista y un componente `Header H1` predeterminado
+    View view(route.getComponent());
+    Component headerComponent(ComponentType::HeaderH1);
 
-    // Actualizar las rutas y vistas en la interfaz
-    // setRoutes(routes);
-    // setViews(views);
+    // Asignar propiedades predeterminadas al `Header H1`
+    headerComponent.setProps({{"class", ""}, {"text", "Default Header"}});
+
+    // Agregar `Header H1` a los componentes de la vista
+    view.getComponents().push_back(headerComponent);
+    view.setComponents(view.getComponents());
+
+    // Sincronizar la vista con `currentView` y `views`
+    if (route.getComponent() == currentView.getName()) {
+        currentView = view;
+    }
+    views.push_back(view);
+
+    // Asociar el `QTreeWidgetItem` con la vista para facilitar la búsqueda en drag and drop
+    viewItem->setData(0, Qt::UserRole, QVariant::fromValue(&view));
+
+    // Agregar `Header H1` como un elemento hijo en `currentViewTree` bajo el elemento de la vista
+    QTreeWidgetItem *headerItem = new QTreeWidgetItem(viewItem);
+    headerItem->setText(0, "Header H1");
+
+    // Asociar `headerItem` con el componente `headerComponent`
+    headerItem->setData(0, Qt::UserRole, QVariant::fromValue(&headerComponent));
+
+    // Expandir el elemento de la vista para mostrar `Header H1`
+    viewItem->setExpanded(true);
+
+    // Actualizar las rutas y vistas en la interfaz si es necesario
+    setRoutes(routes);
+}
+
+void FrontendDashboard::on_deleteButton_clicked()
+{
+    // Obtener el elemento seleccionado en `currentViewTree`
+    QTreeWidgetItem *selectedItem = ui->currentViewTree->currentItem();
+    if (!selectedItem) {
+        qDebug() << "No item selected for deletion.";
+        return;
+    }
+
+    // Obtener el nombre del elemento seleccionado
+    std::string selectedItemName = selectedItem->text(0).toStdString();
+
+    // Verificar si el elemento seleccionado es una vista
+    auto viewIt = std::find_if(views.begin(), views.end(), [&selectedItemName](const View &view) {
+        return view.getName() == selectedItemName;
+    });
+
+    if (viewIt != views.end()) {
+        // Si es una vista, eliminar la vista de `views` y de `currentViewTree`
+        views.erase(viewIt);
+        delete selectedItem; // Esto eliminará el elemento del árbol
+        qDebug() << "View deleted:" << QString::fromStdString(selectedItemName);
+    } else {
+        // Si no es una vista, buscar y eliminar el componente en `currentView`
+
+        // Usamos una pila de QTreeWidgetItem para guardar la jerarquía completa hasta el item actual
+        std::vector<QTreeWidgetItem *> hierarchy;
+        QTreeWidgetItem *currentItem = selectedItem;
+        while (currentItem) {
+            hierarchy.insert(hierarchy.begin(), currentItem);
+            currentItem = currentItem->parent();
+        }
+
+        // Buscar el componente en `currentView` usando la jerarquía de items
+        Component *foundComponent = findComponentByHierarchy(currentView.getComponents(),
+                                                             hierarchy,
+                                                             1);
+
+        if (foundComponent) {
+            // Eliminar el componente de `currentView`
+            auto &components = currentView.getComponents();
+            components.erase(std::remove_if(components.begin(),
+                                            components.end(),
+                                            [foundComponent](const Component &component) {
+                                                return &component == foundComponent;
+                                            }),
+                             components.end());
+
+            // Eliminar el elemento del árbol
+            delete selectedItem;
+            qDebug() << "Component deleted:"
+                     << QString::fromStdString(componentTypeToString(foundComponent->getType()));
+        } else {
+            qDebug() << "Component not found for deletion.";
+        }
+    }
 }
 
 // Getters

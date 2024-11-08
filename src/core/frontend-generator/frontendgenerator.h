@@ -35,7 +35,7 @@ private:
     std::vector<Component> parseNestedComponents(const nlohmann::json &nestedJsonArray);
     void parseJson(const nlohmann::json &jsonSchema);
     bool updateFrontendJson(const std::string &componentName);
-    bool generateComponentBase(const std::string &componentName);
+    bool generateView(const std::string &viewName);
     bool generateMain();
     bool generateViews();
 };

@@ -165,15 +165,10 @@ bool FrontendGenerator::updateSchema()
     }
 
     // Crear las vistas
-
-    // std::cout << "Starting updateSchema..." << std::endl;
-
     jsonSchema["views"] = nlohmann::json::array();
     for (const auto &view : views) {
         nlohmann::json viewJson;
         viewJson[view.getName()]["components"] = nlohmann::json::array();
-
-        // std::cout << "Processing view: " << view.getName() << std::endl;
 
         for (const auto &component : view.getComponents()) {
             nlohmann::json componentJson;
@@ -200,14 +195,11 @@ bool FrontendGenerator::updateSchema()
                     // Convertir el tipo de componente anidado
                     std::string nestedTypeStr = componentTypeToString(nestedComponent.getType());
                     nestedComponentJson["type"] = nestedTypeStr;
-                    // std::cout << "    Nested Component Type: " << nestedTypeStr << std::endl;
 
                     // Agregar las props del componente anidado
                     nlohmann::json nestedPropsJson;
                     for (const auto &nestedProp : nestedComponent.getProps()) {
                         nestedPropsJson[nestedProp.first] = nestedProp.second;
-                        // std::cout << "      Nested Prop: " << nestedProp.first << " = "
-                        //           << nestedProp.second << std::endl;
                     }
                     nestedComponentJson["props"] = nestedPropsJson;
 
@@ -330,25 +322,25 @@ bool FrontendGenerator::updateFrontendJson(const std::string &componentName)
     return true;
 }
 
-bool FrontendGenerator::generateComponentBase(const std::string &componentName)
+bool FrontendGenerator::generateView(const std::string &viewName)
 {
     nlohmann::json data;
 
     // Inserta el nombre del componente en el contexto de Inja
-    data["component"] = componentName;
+    data["component"] = viewName;
 
-    // Agrega los componentes actuales si existen
-    auto it = std::find_if(views.begin(), views.end(), [&componentName](const View &view) {
-        return view.getName() == componentName;
+    // Buscar la vista en views
+    auto it = std::find_if(views.begin(), views.end(), [&viewName](const View &view) {
+        return view.getName() == viewName;
     });
 
     data["components"] = nlohmann::json::array(); // Asegúrate de inicializar el array
 
     // Si la vista ya existe, agrega sus componentes al contexto
     if (it != views.end()) {
-        for (const auto &component : it->getComponents()) {
+        for (const Component &component : it->getComponents()) {
             nlohmann::json componentJson;
-            componentJson["type"] = component.getType();
+            componentJson["type"] = componentTypeToString(component.getType());
 
             // Agrega las props si existen
             nlohmann::json propsJson;
@@ -376,20 +368,20 @@ bool FrontendGenerator::generateComponentBase(const std::string &componentName)
 
     std::string templateString = templateContent.toStdString();
 
-    std::string outputPath = projectPath + "/frontend/src/views/" + componentName + ".tsx";
+    std::string outputPath = projectPath + "/frontend/src/views/" + viewName + ".tsx";
 
     try {
         // Renderizar con Inja usando el contenido del archivo como una cadena
         std::string result = env.render(templateString, data);
         FileUtils::writeFile(outputPath, result);
 
-        updateFrontendJson(componentName); // Actualizar el frontend.json
+        // updateFrontendJson(componentName); // Actualizar el frontend.json
     } catch (const std::exception &e) {
-        fmt::print(stderr, "Error generating component base for {}: {}\n", componentName, e.what());
+        fmt::print(stderr, "Error generating component base for {}: {}\n", viewName, e.what());
         return false;
     }
 
-    fmt::print("Component base generated successfully for {}\n", componentName);
+    fmt::print("Component base generated successfully for {}\n", viewName);
     return true;
 }
 
@@ -399,31 +391,34 @@ bool FrontendGenerator::generateMain()
 
     // Insert the routes into the JSON context for Inja
     data["routes"] = nlohmann::json::array();
+
     for (const auto &route : routes) {
         nlohmann::json routeJson;
         routeJson["component"] = route.getComponent();
         routeJson["path"] = route.getPath();
         data["routes"].push_back(routeJson);
 
-        bool componentExists = false;
-        for (const auto &view : views) {
-            if (view.getName() == route.getComponent()) {
-                componentExists = true;
-                break;
-            }
+        bool viewExists = false;
+
+        std::string viewFilePath = projectPath + "frontend/src/views/" + route.getComponent()
+                                   + ".tsx";
+
+        // Verificar si el archivo ya existe
+        std::ifstream fileCheck(viewFilePath);
+        if (fileCheck.is_open()) {
+            // El archivo ya existe, no es necesario generarlo de nuevo
+            fileCheck.close();
+        } else {
+            viewExists = true;
         }
 
-        if (!componentExists) {
-            if (!generateComponentBase(route.getComponent())) {
+        if (!viewExists) {
+            if (!generateView(route.getComponent())) {
                 fmt::print(stderr,
                            "Failed to generate component base for {}\n",
                            route.getComponent());
                 return false;
             }
-
-            // Agregar la nueva vista al vector de vistas
-            View newView(route.getComponent());
-            views.push_back(newView);
         }
     }
 

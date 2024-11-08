@@ -42,6 +42,8 @@ private slots:
     void onItemDropped(QTreeWidgetItem *parentItem, QTreeWidgetItem *droppedItem, int dropIndex);
     void onPropertyValueChanged(int row, int column);
 
+    void on_deleteButton_clicked();
+
 private:
     Ui::FrontendDashboard *ui;
 
