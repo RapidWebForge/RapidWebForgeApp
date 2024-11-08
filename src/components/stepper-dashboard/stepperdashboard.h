@@ -5,6 +5,7 @@
 #include <QMenu>
 #include <QWidget>
 #include "../../core/code-generator/codegenerator.h"
+#include "../../core/configuration-manager/configurationmanager.h"
 #include "../../core/version-manager/versionmanager.h"
 #include "../../models/project/project.h"
 #include "../backend-dashboard/backenddashboard.h"
@@ -50,7 +51,6 @@ private:
     Ui::StepperDashboard *ui;
     BackendDashboard *backendDashboard;
     FrontendDashboard *frontendDashboard;
-
     // Definición de menús
     QMenu *projectMenu;
     QMenu *versionsMenu;

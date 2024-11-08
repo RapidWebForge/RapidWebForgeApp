@@ -486,7 +486,12 @@ void StepperDashboard::onDeployProject()
     }
 
     try {
-        DeployManager deployManager(codeGenerator->getProjectPath(), ngInxPath);
+        DeployManager deployManager(project.getPath(), ngInxPath);
+
+        // Recargar la configuración de Nginx antes de desplegar
+        deployManager.reload();
+
+        // Iniciar el despliegue
         deployManager.start(bunPath);
     } catch (const std::exception &e) {
         QMessageBox::critical(this, "Critical Error", e.what());
@@ -495,6 +500,18 @@ void StepperDashboard::onDeployProject()
 }
 void StepperDashboard::onProjectChange()
 {
+    ConfigurationManager configurationManager;
+    // Detener Nginx al cerrar el proyecto
+    try {
+        DeployManager deployManager(project.getPath(),
+                                    configurationManager.getConfiguration().getNgInxPath());
+        deployManager.kill();
+    } catch (const std::exception &e) {
+        QMessageBox::warning(this,
+                             "Warning",
+                             "Failed to stop Nginx: " + QString::fromStdString(e.what()));
+    }
+
     // Cerrar el StepperDashboard
     this->close();
 

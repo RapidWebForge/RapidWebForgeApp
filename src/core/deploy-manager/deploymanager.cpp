@@ -30,8 +30,24 @@ bp::child DeployManager::runBackend(const std::string bunPath)
 
 bp::child DeployManager::runFrontend(const std::string bunPath)
 {
-    std::string command = bunPath + " run dev";
-    return bp::child(command, bp::start_dir = this->projectPath + "\\frontend");
+    namespace bp = boost::process;
+
+    try {
+        // Ejecutar `bun install` primero
+        std::string installCommand = bunPath + " install";
+        int installResult = bp::system(installCommand,
+                                       bp::start_dir = this->projectPath + "\\frontend");
+        if (installResult != 0) {
+            throw std::runtime_error("Error en bun install");
+        }
+
+        // Ejecutar `bun run dev` para iniciar el servidor de desarrollo
+        std::string runCommand = bunPath + " run dev";
+        return bp::child(runCommand, bp::start_dir = this->projectPath + "\\frontend");
+    } catch (const std::exception &e) {
+        std::cerr << "Error al iniciar el frontend: " << e.what() << std::endl;
+        throw; // Propaga la excepción
+    }
 }
 
 bp::child DeployManager::runNgInx()
