@@ -25,16 +25,13 @@ DeployManager::~DeployManager()
 bp::child DeployManager::runBackend(const std::string bunPath)
 {
     std::string command = bunPath + " run ./server.js";
-    // std::string command = bunPath + " run server.js";
     return bp::child(command, bp::start_dir = this->projectPath + "\\backend");
-    // return bp::child(command, bp::start_dir = this->projectPath + "/backend");
 }
 
 bp::child DeployManager::runFrontend(const std::string bunPath)
 {
     std::string command = bunPath + " run dev";
     return bp::child(command, bp::start_dir = this->projectPath + "\\frontend");
-    // return bp::child(command, bp::start_dir = this->projectPath + "/frontend");
 }
 
 bp::child DeployManager::runNgInx()
@@ -42,20 +39,36 @@ bp::child DeployManager::runNgInx()
     return bp::child(ngInxPath, bp::start_dir = ngInxDirectory);
 }
 
+bool isNginxRunning()
+{
+    bp::ipstream pipe_stream;
+    bp::child c("tasklist /fi \"imagename eq nginx.exe\"", bp::std_out > pipe_stream);
+    c.wait();
+
+    std::string line;
+    while (std::getline(pipe_stream, line)) {
+        if (line.find("nginx.exe") != std::string::npos) {
+            // Si encontramos "nginx.exe" en la salida, significa que el proceso está en ejecución
+            return true;
+        }
+    }
+    return false;
+}
+
 void DeployManager::start(const std::string bunPath)
 {
-    std::string pidFilePath = ngInxDirectory + "\\logs\\nginx.pid";
-
     createNginxConfig(9000, 3000);
 
-    try {
-        if (!std::filesystem::exists(pidFilePath)) {
-            qDebug() << "El archivo PID no existe, iniciando Nginx...";
-            bp::child nginx = runNgInx();
+    if (!isNginxRunning()) {
+        qDebug() << "Nginx no está en ejecución, iniciando Nginx...";
+        try {
+            bp::child nginx = runNgInx(); // Asegúrate de tener esta función implementada
             nginx.detach();
+        } catch (const std::exception &e) {
+            qDebug() << "Error al iniciar Nginx:" << e.what();
         }
-    } catch (const std::filesystem::filesystem_error &e) {
-        qDebug() << "Error al verificar la existencia del archivo PID:" << e.what();
+    } else {
+        qDebug() << "Nginx ya está en ejecución.";
     }
 
     // Lanza el backend en un hilo

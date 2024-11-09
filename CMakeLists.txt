@@ -101,6 +101,11 @@ set(PROJECT_SOURCES
         src/components/editfield-dashboard/editfielddialog.h
         src/components/editfield-dashboard/editfielddialog.cpp
         src/components/editfield-dashboard/editfielddialog.ui
+        src/components/customprogress-dialog/customprogressdialog.h
+        src/components/customprogress-dialog/customprogressdialog.cpp
+        src/components/delete-version/deleteversion.h
+        src/components/delete-version/deleteversion.cpp
+        src/components/delete-version/deleteversion.ui
         # Core
         src/core/project-manager/projectmanager.h
         src/core/project-manager/projectmanager.cpp
@@ -155,8 +160,6 @@ if(QT_VERSION_MAJOR GREATER_EQUAL 6)
     )
 else()
     add_executable(RapidWebForgeApp ${PROJECT_SOURCES}
-        src/components/customprogress-dialog/customprogressdialog.h src/components/customprogress-dialog/customprogressdialog.cpp
-        src/components/delete-version/deleteversion.h src/components/delete-version/deleteversion.cpp src/components/delete-version/deleteversion.ui
     )
 endif()
 

@@ -491,7 +491,7 @@ void StepperDashboard::onDeployProject()
         DeployManager deployManager(project.getPath(), ngInxPath);
 
         // Recargar la configuración de Nginx antes de desplegar
-        deployManager.reload();
+        // deployManager.reload();
 
         // Iniciar el despliegue
         deployManager.start(bunPath);
