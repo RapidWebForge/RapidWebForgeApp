@@ -119,8 +119,7 @@ void ConfigurationManager::setConfiguration(const Configuration &configuration)
         sqlite3_bind_text(stmt, 2, nodePath.c_str(), -1, SQLITE_STATIC);
         sqlite3_bind_text(stmt, 3, bunPath.c_str(), -1, SQLITE_STATIC);
         sqlite3_bind_text(stmt, 4, mysqlPath.c_str(), -1, SQLITE_STATIC);
-        sqlite3_bind_int(stmt,
-                         5,
-                         status ? 1 : 0); // Convertir bool a int (1 para true, 0 para false)
+        sqlite3_bind_int(stmt, 5, status ? 1 : 0); // Guardar status como 1 o 0
+
     });
 }

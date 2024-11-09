@@ -18,7 +18,7 @@ public:
 
 private slots:
     void on_ngInxPathButton_clicked();
-
+    void on_testButton_clicked();
     void on_saveButton_clicked();
 
 private:
