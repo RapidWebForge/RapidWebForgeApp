@@ -50,6 +50,32 @@ void FrontendDashboard::applyStylesFront()
 
     ui->titleLabel->setStyleSheet("font-size: 35px; color: #27292A; padding-top: 10px; "
                                   "padding-left: 40px; padding-bottom: 20px;");
+    ui->saveButton->setStyleSheet("QPushButton {"
+                                  "   background-color: #0F66DE;"
+                                  "   color: white;"
+                                  "   border-radius: 5px;"
+                                  "   padding: 4px 30px;"
+                                  "   font-size: 14px;"
+                                  "}"
+                                  "QPushButton:hover {"
+                                  "   background-color: #0056b3;"
+                                  "}"
+                                  "QPushButton:pressed {"
+                                  "   background-color: #004494;"
+                                  "}");
+
+    ui->addSectionButton->setStyleSheet("QPushButton {"
+                                        "   color: black;"
+                                        "   border-radius: 5px;"
+                                        "   padding: 4px 30px;"
+                                        "   font-size: 14px;"
+                                        "}"
+                                        "QPushButton:hover {"
+                                        "   background-color: #eaeaea;"
+                                        "}"
+                                        "QPushButton:pressed {"
+                                        "   background-color: #004494;"
+                                        "}");
 }
 
 // TreeWidgets config
@@ -275,6 +301,9 @@ void FrontendDashboard::onCurrentViewTreeItemSelected(QTreeWidgetItem *item, int
         // Si el elemento seleccionado es una vista, actualizar `currentView`
         currentView = *viewIt;
         qDebug() << "Current view updated to:" << QString::fromStdString(currentView.getName());
+
+        ui->currentViewLabel->setText(
+            QString::fromStdString("Current View: " + currentView.getName()));
         return;
     }
 
@@ -617,6 +646,8 @@ void FrontendDashboard::setViews(const std::vector<View> &views)
 void FrontendDashboard::setCurrentView(View &view)
 {
     currentView = view;
+
+    ui->currentViewLabel->setText(QString::fromStdString("Current View: " + currentView.getName()));
 
     populateCurrentViewTree();
 }
