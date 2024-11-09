@@ -1,4 +1,4 @@
-import "./main.css";
+import "./App.css";
 import React, { Suspense } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
@@ -6,7 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 const {{ route.component }} = React.lazy(() => import("./views/{{ route.component }}"));
 {% endfor %}
 
-export function Main() {
+const App = () => {
   return (
     <BrowserRouter>
       <Suspense fallback={<div>Loading...</div>}>
@@ -18,4 +18,6 @@ export function Main() {
       </Suspense>
     </BrowserRouter>
   );
-}
+};
+
+export default App;

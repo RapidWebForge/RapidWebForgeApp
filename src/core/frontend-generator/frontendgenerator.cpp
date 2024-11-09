@@ -385,7 +385,7 @@ bool FrontendGenerator::generateView(const std::string &viewName)
     return true;
 }
 
-bool FrontendGenerator::generateMain()
+bool FrontendGenerator::generateApp()
 {
     nlohmann::json data;
 
@@ -422,7 +422,7 @@ bool FrontendGenerator::generateMain()
         }
     }
 
-    std::string templatePath = ":/inja/frontend/main";
+    std::string templatePath = ":/inja/frontend/app";
 
     QFile file(QString::fromStdString(templatePath));
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
@@ -436,13 +436,13 @@ bool FrontendGenerator::generateMain()
 
     std::string templateString = templateContent.toStdString();
 
-    std::string outputPath = projectPath + "/frontend/src/main.tsx";
+    std::string outputPath = projectPath + "/frontend/src/App.tsx";
 
     try {
         std::string result = env.render(templateString, data);
         FileUtils::writeFile(outputPath, result);
     } catch (const std::exception &e) {
-        fmt::print(stderr, "Error generating main.tsx: {}\n", e.what());
+        fmt::print(stderr, "Error generating App.tsx: {}\n", e.what());
         return false;
     }
 
@@ -519,7 +519,7 @@ bool FrontendGenerator::generateViews()
 
 bool FrontendGenerator::generateFrontendCode()
 {
-    if (!generateMain())
+    if (!generateApp())
         return false;
 
     if (!generateViews())

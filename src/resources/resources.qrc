@@ -31,7 +31,7 @@
         <file alias="frontend">project_templates/frontend_template.zip</file>
     </qresource>
     <qresource prefix="/inja/frontend">
-        <file alias="main">inja_templates/frontend/main.inja</file>
+        <file alias="app">inja_templates/frontend/app.inja</file>
         <file alias="view">inja_templates/frontend/view.inja</file>
         <file alias="model">inja_templates/frontend/model.inja</file>
         <file alias="service">inja_templates/frontend/service.inja</file>
