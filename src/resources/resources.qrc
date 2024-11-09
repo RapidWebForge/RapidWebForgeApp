@@ -42,4 +42,7 @@
     <qresource prefix="/styles">
         <file alias="frontenddashboard">styles/frontenddashboard.qss</file>
     </qresource>
+    <qresource prefix="/gifs">
+        <file>loading.gif</file>
+    </qresource>
 </RCC>

@@ -16,7 +16,7 @@ ProjectsPanel::ProjectsPanel(QWidget *parent)
     ui->setupUi(this);
 
     ProjectManager projectManager;
-    setupProjects(projectManager.getAllProjects());
+    setupProjects(projectManager.getAllProjects());    
     applyStylesProj();
 }
 
@@ -26,11 +26,13 @@ void ProjectsPanel::setupProjects(const std::vector<Project> &projects)
 
     QGridLayout *gridLayout = ui->gridLayout;
 
-    // Clean the layout
+    // Limpiar el layout eliminando los widgets de manera segura
     QLayoutItem *child;
     while ((child = gridLayout->takeAt(0)) != nullptr) {
-        delete child->widget();
-        delete child;
+        if (child->widget()) {
+            child->widget()->deleteLater(); // Elimina los widgets de forma asíncrona
+        }
+        delete child; // Borra el item del layout
     }
 
     // Crear el widget para agregar un nuevo proyecto
@@ -86,6 +88,10 @@ void ProjectsPanel::setupProjects(const std::vector<Project> &projects)
                 &ProjectPreview::projectClicked,
                 this,
                 &ProjectsPanel::onProjectPreviewClicked);
+        connect(projectPreview,
+                &ProjectPreview::deleteRequested,
+                this,
+                &ProjectsPanel::onDeleteProjectRequested);
 
         gridLayout->addWidget(projectPreview, row, column);
 
@@ -95,22 +101,28 @@ void ProjectsPanel::setupProjects(const std::vector<Project> &projects)
             row++;
         }
     }
+    // Ajuste del tamaño mínimo para que el scroll funcione correctamente
+    ui->scrollAreaWidgetContents->adjustSize(); // Ajusta el tamaño del contenedor según el contenido
 
+    ui->scrollAreaWidgetContents->setMinimumHeight(gridLayout->sizeHint().height());
     // Optionally set spacing and margins for better visual appearance
     gridLayout->setSpacing(10);
     gridLayout->setContentsMargins(10, 10, 10, 10);
+    gridLayout->setSizeConstraint(QLayout::SetMinAndMaxSize);
 }
 
 bool ProjectsPanel::checkCommand(const std::string &command, bool dobleQuote)
 {
     namespace bp = boost::process;
     try {
-        bp::ipstream is; // Stream para capturar la salida
         std::string version = dobleQuote ? " --version" : " -version";
-        bp::child c(command + version, bp::std_out > is);
+        bp::ipstream is; // Stream para capturar la salida
+
+        // Ejecutar el comando en segundo plano y redirigir la salida a null
+        bp::child c(command + version, bp::std_out > is, bp::std_err > bp::null);
         std::string line;
-        while (is && std::getline(is, line) && !line.empty()) {
-            std::cout << line << std::endl; // Captura la salida
+        while (std::getline(is, line) && !line.empty()) {
+            std::cout << line << std::endl; // Opcional: para registro interno
         }
         c.wait();
         return c.exit_code() == 0;
@@ -122,24 +134,49 @@ bool ProjectsPanel::checkCommand(const std::string &command, bool dobleQuote)
 void ProjectsPanel::onAddProjectClicked()
 {
     std::vector<std::string> missingTech;
-    std::string tech[4] = {
-        confManager->getConfiguration().getNgInxPath(),
-        confManager->getConfiguration().getnodePath(),
-        confManager->getConfiguration().getBunPath(),
-        confManager->getConfiguration().getMysqlPath(),
-    };
+    std::string nginxPath = confManager->getConfiguration().getNgInxPath();
+    std::string nodePath = confManager->getConfiguration().getnodePath();
+    std::string bunPath = confManager->getConfiguration().getBunPath();
+    std::string mysqlPath = confManager->getConfiguration().getMysqlPath();
 
-    for (const auto &t : tech) {
-        if (t.find("nginx") != std::string::npos) {
-            if (!checkCommand(t, false)) {
-                missingTech.push_back(t);
-            }
-        } else {
-            if (!checkCommand(t)) {
-                missingTech.push_back(t);
-            }
+    // Crear un comando compuesto que ejecute cada verificación de versión en una sola consola
+    std::string composedCommand = "cmd /C \"";
+
+    if (!nginxPath.empty()) {
+        composedCommand += nginxPath + " -version || echo nginx_path_missing && ";
+    }
+    if (!nodePath.empty()) {
+        composedCommand += nodePath + " --version || echo node_path_missing && ";
+    }
+    if (!bunPath.empty()) {
+        composedCommand += bunPath + " --version || echo bun_path_missing && ";
+    }
+    if (!mysqlPath.empty()) {
+        composedCommand += mysqlPath + " --version || echo mysql_path_missing && ";
+    }
+
+    // Remover el último `&& ` y cerrar el comando
+    composedCommand = composedCommand.substr(0, composedCommand.size() - 4) + "\"";
+
+    namespace bp = boost::process;
+    bp::ipstream is; // Stream para capturar la salida
+    bp::child c(composedCommand, bp::std_out > is);
+
+    // Leer la salida para detectar errores
+    std::string line;
+    while (std::getline(is, line)) {
+        if (line.find("nginx_path_missing") != std::string::npos) {
+            missingTech.push_back("nginx");
+        } else if (line.find("node_path_missing") != std::string::npos) {
+            missingTech.push_back("node");
+        } else if (line.find("bun_path_missing") != std::string::npos) {
+            missingTech.push_back("bun");
+        } else if (line.find("mysql_path_missing") != std::string::npos) {
+            missingTech.push_back("mysql");
         }
     }
+
+    c.wait(); // Esperar a que el proceso termine
 
     if (!missingTech.empty()) {
         std::string message = "You are missing the following tech:\n";
@@ -286,5 +323,30 @@ void ProjectsPanel::on_configurationButton_clicked()
     } else {
         configView->raise();
         configView->activateWindow();
+    }
+}
+void ProjectsPanel::onDeleteProjectRequested(int projectId)
+{
+    qDebug() << "Intentando eliminar el proyecto con ID:" << projectId;
+
+    QMessageBox::StandardButton reply;
+    reply = QMessageBox::question(this,
+                                  "Confirmar eliminación",
+                                  "¿Estás seguro de que deseas eliminar este proyecto?",
+                                  QMessageBox::Yes | QMessageBox::No);
+
+    if (reply == QMessageBox::Yes) {
+        qDebug() << "Confirmación recibida para eliminar el proyecto con ID:" << projectId;
+
+        // Eliminar el proyecto de la base de datos sin recargar el QGridLayout
+        ProjectManager projectManager;
+        projectManager.deleteProjectById(projectId);
+        // Aquí solo obtenemos los proyectos nuevamente sin eliminar en la base de datos
+        setupProjects(projectManager.getAllProjects());
+
+        qDebug() << "Proyecto con ID:" << projectId
+                 << "ha sido eliminado exitosamente de la base de datos.";
+    } else {
+        qDebug() << "Eliminación cancelada para el proyecto con ID:" << projectId;
     }
 }

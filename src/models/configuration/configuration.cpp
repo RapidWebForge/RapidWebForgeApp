@@ -6,6 +6,8 @@ Configuration::Configuration()
     , bunPath("")
     , nodePath("")
     , mysqlPath("")
+    , status(true) // Inicialmente en true
+
 {}
 
 Configuration::Configuration(int id,
@@ -18,6 +20,8 @@ Configuration::Configuration(int id,
     , nodePath(nodePath)
     , bunPath(bunPath)
     , mysqlPath(mysqlPath)
+    , status(true) // Inicialmente en true
+
 {}
 
 Configuration::Configuration(const Configuration &configuration)
@@ -26,6 +30,8 @@ Configuration::Configuration(const Configuration &configuration)
     , nodePath(configuration.getnodePath())
     , bunPath(configuration.getBunPath())
     , mysqlPath(configuration.getMysqlPath())
+    , status(configuration.isStatus()) // Copiar el estado
+
 {}
 
 int Configuration::getId() const
@@ -53,6 +59,12 @@ std::string Configuration::getMysqlPath() const
     return this->mysqlPath;
 }
 
+// Función para obtener el estado de pathsValidated
+bool Configuration::isStatus() const
+{
+    return this->status;
+}
+
 void Configuration::setNgInxPath(const std::string &ngInxPath)
 {
     this->ngInxPath = ngInxPath;
@@ -71,4 +83,9 @@ void Configuration::setBunPath(const std::string &bunPath)
 void Configuration::setMysqlPath(const std::string &mysqlPath)
 {
     this->mysqlPath = mysqlPath;
+}
+// Función para establecer el estado de pathsValidated
+void Configuration::setStatus(bool status)
+{
+    this->status = status;
 }

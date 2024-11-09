@@ -11,6 +11,7 @@ private:
     std::string nodePath;
     std::string bunPath;
     std::string mysqlPath;
+    bool status; // Nuevo campo para el estado de validación
 
 public:
     Configuration();
@@ -26,11 +27,13 @@ public:
     std::string getnodePath() const;
     std::string getBunPath() const;
     std::string getMysqlPath() const;
+    bool isStatus() const; // Nuevo getter para el estado
 
     void setNgInxPath(const std::string &ngInxPath);
     void setnodePath(const std::string &nodePath);
     void setBunPath(const std::string &bunPath);
     void setMysqlPath(const std::string &mysqlPath);
+    void setStatus(bool status);
 };
 
 #endif // CONFIGURATION_H

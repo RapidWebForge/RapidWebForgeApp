@@ -5,6 +5,7 @@
 #include <QMenu>
 #include <QWidget>
 #include "../../core/code-generator/codegenerator.h"
+#include "../../core/configuration-manager/configurationmanager.h"
 #include "../../core/version-manager/versionmanager.h"
 #include "../../models/project/project.h"
 #include "../backend-dashboard/backenddashboard.h"
@@ -28,6 +29,7 @@ protected:
 signals:
     void backendSchemaLoaded();
     void frontendSchemaLoaded();
+    void projectDeleteRequested(const Project &project);
 
 private slots:
     void showBackendPage();
@@ -42,12 +44,13 @@ private slots:
     void onVersionHistory();
     void onDeleteVersion();
     void onDeployProject();
+    void onProjectChange();
+    void onCreateProject();
 
 private:
     Ui::StepperDashboard *ui;
     BackendDashboard *backendDashboard;
     FrontendDashboard *frontendDashboard;
-
     // Definición de menús
     QMenu *projectMenu;
     QMenu *versionsMenu;

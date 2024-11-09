@@ -17,10 +17,28 @@ void ConfigurationManager::createConfigDatabase()
             nginx_path TEXT NOT NULL,
             node_path TEXT NOT NULL,
             bun_path TEXT NOT NULL,
-            mysql_path TEXT NOT NULL
+            mysql_path TEXT NOT NULL,
+            status INTEGER NOT NULL DEFAULT 1
         );
     )";
     executeSQL(db, sql, nullptr);
+
+    // Verificar si la columna 'status' ya existe
+    bool columnExists = false;
+    std::string sqlCheckColumn = "PRAGMA table_info(configuration);";
+    executeSQL(db, sqlCheckColumn, nullptr, [&](sqlite3_stmt *stmt) {
+        std::string columnName = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 1));
+        if (columnName == "status") {
+            columnExists = true;
+        }
+    });
+
+    // Solo intentar agregar la columna 'status' si no existe
+    if (!columnExists) {
+        std::string sqlAddStatusColumn
+            = "ALTER TABLE configuration ADD COLUMN status INTEGER DEFAULT 1;";
+        executeSQL(db, sqlAddStatusColumn, nullptr);
+    }
 }
 
 bool ConfigurationManager::executeSQL(sqlite3 *db,
@@ -57,8 +75,8 @@ Configuration ConfigurationManager::getConfiguration() const
 {
     sqlite3 *db = Database::getInstance("db/config.db").getConnection();
 
-    std::string sql
-        = "SELECT id, nginx_path, node_path, bun_path, mysql_path FROM configuration WHERE id = 1;";
+    std::string sql = "SELECT id, nginx_path, node_path, bun_path, mysql_path, status FROM "
+                      "configuration WHERE id = 1;";
 
     Configuration configuration;
 
@@ -68,8 +86,12 @@ Configuration ConfigurationManager::getConfiguration() const
         std::string nodePath = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 2));
         std::string bunPath = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 3));
         std::string mysqlPath = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 4));
+        bool status = sqlite3_column_int(stmt, 5)
+                      != 0; // 0 para false, cualquier otro valor para true
 
         configuration = Configuration(id, nginxPath, nodePath, bunPath, mysqlPath);
+        configuration.setStatus(status); // Establecer el estado
+        
     });
 
     return configuration;
@@ -82,19 +104,23 @@ void ConfigurationManager::setConfiguration(const Configuration &configuration)
     sqlite3 *db = Database::getInstance("db/config.db").getConnection();
 
     std::string sqlUpdateConfig = R"(
-        INSERT OR REPLACE INTO configuration (id, nginx_path, node_path, bun_path, mysql_path) 
-        VALUES (1, ?, ?, ?, ?);
+        INSERT OR REPLACE INTO configuration (id, nginx_path, node_path, bun_path, mysql_path, status) 
+        VALUES (1, ?, ?, ?, ?, ?);
     )";
 
     std::string ngInxPath = configuration.getNgInxPath();
     std::string nodePath = configuration.getnodePath();
     std::string bunPath = configuration.getBunPath();
     std::string mysqlPath = configuration.getMysqlPath();
+    bool status = configuration.isStatus();
 
     executeSQL(db, sqlUpdateConfig, [&](sqlite3_stmt *stmt) {
         sqlite3_bind_text(stmt, 1, ngInxPath.c_str(), -1, SQLITE_STATIC);
         sqlite3_bind_text(stmt, 2, nodePath.c_str(), -1, SQLITE_STATIC);
         sqlite3_bind_text(stmt, 3, bunPath.c_str(), -1, SQLITE_STATIC);
         sqlite3_bind_text(stmt, 4, mysqlPath.c_str(), -1, SQLITE_STATIC);
+        sqlite3_bind_int(stmt,
+                         5,
+                         status ? 1 : 0); // Convertir bool a int (1 para true, 0 para false)
     });
 }

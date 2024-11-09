@@ -2,6 +2,7 @@
 #include <QFileDialog>
 #include <QMessageBox>
 #include "ui_configurationview.h"
+#include <boost/process.hpp> // Incluir Boost.Process
 
 ConfigurationView::ConfigurationView(QWidget *parent)
     : QDialog(parent)
@@ -78,37 +79,93 @@ void ConfigurationView::on_saveButton_clicked()
     QString nodePath = ui->nodePathLineEdit->text();
     QString bunPath = ui->bunPathLineEdit->text();
     QString mysqlPath = ui->mysqlPathLineEdit->text();
+
+    // Crear un comando compuesto para verificar todas las rutas en una sola ventana de cmd
+    std::string composedCommand = "cmd /C \"";
+
+    if (!nginxPath.isEmpty()) {
+        composedCommand += "\"" + nginxPath.toStdString()
+                           + "\" -version || echo nginx_path_invalid && ";
+    }
+    if (!nodePath.isEmpty()) {
+        composedCommand += "\"" + nodePath.toStdString()
+                           + "\" --version || echo node_path_invalid && ";
+    }
+    if (!bunPath.isEmpty()) {
+        composedCommand += "\"" + bunPath.toStdString()
+                           + "\" --version || echo bun_path_invalid && ";
+    }
+    if (!mysqlPath.isEmpty()) {
+        composedCommand += "\"" + mysqlPath.toStdString()
+                           + "\" --version || echo mysql_path_invalid && ";
+    }
+
+    // Remover el último `&& ` y cerrar el comando
+    composedCommand = composedCommand.substr(0, composedCommand.size() - 4) + "\"";
+
+    namespace bp = boost::process;
+    bp::ipstream is; // Stream para capturar la salida
+    bp::child c(composedCommand,
+                bp::std_out > is,
+                bp::std_err > bp::null); // Redirigir errores para evitar ventanas de error
+
+    std::vector<std::string> invalidPaths;
+    std::string line;
+    while (std::getline(is, line)) {
+        if (line.find("nginx_path_invalid") != std::string::npos) {
+            invalidPaths.push_back("Nginx");
+        } else if (line.find("node_path_invalid") != std::string::npos) {
+            invalidPaths.push_back("Node.js");
+        } else if (line.find("bun_path_invalid") != std::string::npos) {
+            invalidPaths.push_back("Bun");
+        } else if (line.find("mysql_path_invalid") != std::string::npos) {
+            invalidPaths.push_back("MySQL");
+        }
+    }
+
+    c.wait(); // Esperar a que el proceso termine
+
+    // Verificar si hubo rutas inválidas y mostrar un mensaje
+    if (!invalidPaths.empty()) {
+        std::string message = "The following paths are invalid:\n";
+        for (const auto &path : invalidPaths) {
+            message += "- " + path + "\n";
+        }
+        QMessageBox::critical(this, "Invalid Paths", QString::fromStdString(message));
+        return;
+    }
+
+    // Guardar la configuración si todas las rutas son válidas
     Configuration conf = configManager.getConfiguration();
 
-    if (ui->ngInxPathButton->text() == "Path") {
-        QMessageBox::warning(this, "Invalid Operation", "You must to select a nginx path to save");
-        return;
-    }
     if (configManager.getConfiguration().getNgInxPath() != nginxPath.toStdString())
         conf.setNgInxPath(nginxPath.toStdString());
-
-    if (ui->nodePathButton->text() == "Path") {
-        QMessageBox::warning(this, "Invalid Operation", "You must to select a node path to save");
-        return;
-    }
     if (configManager.getConfiguration().getnodePath() != nodePath.toStdString())
         conf.setnodePath(nodePath.toStdString());
-
-    if (ui->bunPathButton->text() == "Path") {
-        QMessageBox::warning(this, "Invalid Operation", "You must to select a bun path to save");
-        return;
-    }
     if (configManager.getConfiguration().getBunPath() != bunPath.toStdString())
         conf.setBunPath(bunPath.toStdString());
-
-    if (ui->mysqlPathButton->text() == "Path") {
-        QMessageBox::warning(this, "Invalid Operation", "You must to select a mysql path to save");
-        return;
-    }
     if (configManager.getConfiguration().getMysqlPath() != mysqlPath.toStdString())
         conf.setMysqlPath(mysqlPath.toStdString());
 
     configManager.setConfiguration(conf);
 
-    QMessageBox::information(this, "Successfully", "Path set successfully");
+    QMessageBox::information(this, "Success", "Paths have been saved successfully.");
+}
+// Función auxiliar para verificar cada path
+bool ConfigurationView::checkPathValid(const std::string &path, const std::string &versionFlag)
+{
+    namespace bp = boost::process;
+    try {
+        // Ejecutar el comando de prueba
+        std::string command = path + versionFlag;
+        bp::ipstream is; // Stream para capturar la salida
+        bp::child c(command,
+                    bp::std_out > is,
+                    bp::std_err > bp::null); // Redirigir errores para evitar ventanas
+
+        c.wait();                  // Esperar a que el proceso termine
+        return c.exit_code() == 0; // Retornar verdadero si el comando fue exitoso
+    } catch (...) {
+        return false; // Si ocurre una excepción, retornar falso
+    }
 }

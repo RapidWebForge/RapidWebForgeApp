@@ -155,6 +155,8 @@ if(QT_VERSION_MAJOR GREATER_EQUAL 6)
     )
 else()
     add_executable(RapidWebForgeApp ${PROJECT_SOURCES}
+        src/components/customprogress-dialog/customprogressdialog.h src/components/customprogress-dialog/customprogressdialog.cpp
+        src/components/delete-version/deleteversion.h src/components/delete-version/deleteversion.cpp src/components/delete-version/deleteversion.ui
     )
 endif()
 
