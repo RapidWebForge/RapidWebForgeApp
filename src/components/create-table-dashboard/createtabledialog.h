@@ -32,6 +32,8 @@ private:
     Ui::CreateTableDialog *ui;
     AddFieldDialog *addFieldDialog;
     Transaction transaction;
+
+    void applyStyles();
 };
 
 #endif // CREATETABLEDIALOG_H

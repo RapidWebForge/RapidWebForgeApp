@@ -24,6 +24,9 @@ public:
     explicit Stepper(QWidget *parent = nullptr);
     ~Stepper();
 
+signals:
+    void backToProjectsPanel();
+
 private slots:
     void on_backButton_clicked();
     void on_nextButton_clicked();

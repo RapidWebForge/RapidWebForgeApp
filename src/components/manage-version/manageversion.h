@@ -22,6 +22,8 @@ private:
     Ui::ManageVersion *ui;
     VersionManager *versionManager;
     QStandardItemModel *model; // Modelo para QListView
+
+    void applyStyles();
 };
 
 #endif // MANAGEVERSION_H

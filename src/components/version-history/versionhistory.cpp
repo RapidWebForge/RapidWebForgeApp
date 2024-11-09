@@ -1,4 +1,5 @@
 #include "versionhistory.h"
+#include <QFile>
 #include "ui_versionhistory.h"
 
 VersionHistory::VersionHistory(QWidget *parent)
@@ -9,12 +10,24 @@ VersionHistory::VersionHistory(QWidget *parent)
 
     // Conectar el botón de cerrar
     connect(ui->closeButton, &QPushButton::clicked, this, &QDialog::accept);
+
+    applyStyles();
 }
 
 VersionHistory::~VersionHistory()
 {
     delete ui;
 }
+
+void VersionHistory::applyStyles()
+{
+    QFile primaryButtonstyleFile(":/styles/primarybutton");
+    if (primaryButtonstyleFile.open(QFile::ReadOnly)) {
+        QString styleSheet = QLatin1String(primaryButtonstyleFile.readAll());
+        ui->closeButton->setStyleSheet(styleSheet);
+    }
+}
+
 void VersionHistory::setVersions(const std::vector<std::string> &versions)
 {
     ui->listWidget->clear(); // Asegúrate de que la lista esté vacía al inicio

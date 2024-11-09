@@ -11,9 +11,8 @@ ConfigurationView::ConfigurationView(QWidget *parent)
 {
     ui->setupUi(this);
 
-    // Verificar el estado inicial de `status` en la configuración
-    bool status = configManager.getConfiguration().isStatus();
-    ui->saveButton->setEnabled(status); // Habilita o deshabilita el botón según `status`
+    bool status = configManager.getConfiguration().getStatus();
+    ui->saveButton->setEnabled(status);
 
     std::string nginxPath = configManager.getConfiguration().getNgInxPath();
     std::string nodePath = configManager.getConfiguration().getnodePath();
@@ -103,7 +102,6 @@ void ConfigurationView::on_testButton_clicked()
     }
 
     if (!allPathsValid) {
-        // Almacena el estado como `false` en ConfigurationManager
         configManager.getConfiguration().setStatus(false);
         ui->saveButton->setEnabled(false); // Deshabilita el botón de guardar
 
@@ -113,7 +111,6 @@ void ConfigurationView::on_testButton_clicked()
         }
         QMessageBox::critical(this, "Invalid Paths", QString::fromStdString(message));
     } else {
-        // Almacena el estado como `true` en ConfigurationManager
         configManager.getConfiguration().setStatus(true);
         ui->saveButton->setEnabled(true); // Habilita el botón de guardar
 
@@ -159,19 +156,18 @@ void ConfigurationView::on_saveButton_clicked()
 
     QMessageBox::information(this, "Successfully", "Path set successfully");
 }
-// Función auxiliar para verificar cada path en una sola consola
+
 bool ConfigurationView::checkPathValid(const std::string &path, const std::string &versionFlag)
 {
     namespace bp = boost::process;
     try {
-        // Ejecutar el comando de prueba en una sola consola
-        bp::ipstream is; // Stream para capturar la salida
+        bp::ipstream is;
         bp::child c(path + versionFlag,
                     bp::std_out > is,
                     bp::std_err > bp::null); // Redirigir errores a null
 
-        c.wait();                  // Esperar a que el proceso termine
-        return c.exit_code() == 0; // Retornar verdadero si el comando fue exitoso
+        c.wait();
+        return c.exit_code() == 0;
     } catch (...) {
         return false; // Si ocurre una excepción, retornar falso
     }

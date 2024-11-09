@@ -5,7 +5,7 @@
 #include <QMessageBox>
 #include <QMovie>
 #include <QProgressDialog>
-#include <QThread> // Para QThread::sleep si necesitas simular una carga
+#include <QThread>
 #include <QThreadPool>
 #include <QVBoxLayout>
 #include "../../core/code-generator/codegenerator.h"
@@ -70,6 +70,8 @@ void Stepper::on_nextButton_clicked()
         if (summaryAssistantWidget) {
             summaryAssistantWidget->setProjectInformation(this->newProject);
         }
+        // Hide to avoid create the project twice
+        ui->backButton->hide();
     }
 
     if (message != "") {
@@ -138,6 +140,8 @@ void Stepper::on_backButton_clicked()
 
     if (currentIndex > 0) {
         ui->stepsWidget->setCurrentIndex(currentIndex - 1);
+    } else if (currentIndex == 0) {
+        emit backToProjectsPanel();
     }
 }
 

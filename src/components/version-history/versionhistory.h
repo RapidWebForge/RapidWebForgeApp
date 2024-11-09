@@ -26,6 +26,8 @@ public:
 private:
     Ui::VersionHistory *ui;
     QListWidget *branchesListWidget; // Definición de branchesListWidget para mostrar las ramas
+
+    void applyStyles();
 };
 
 #endif // VERSIONHISTORY_H

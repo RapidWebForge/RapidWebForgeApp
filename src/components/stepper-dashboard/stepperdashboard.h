@@ -59,7 +59,6 @@ private:
     QAction *projectChangeAction;
     QAction *createNewProjectAction;
     QAction *saveChangesAction;
-    QAction *deleteProjectAction;
     QAction *deployProjectAction;
 
     QAction *createVersionAction;

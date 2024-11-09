@@ -1,4 +1,5 @@
 #include "projectspanel.h"
+#include <QFile>
 #include <QMessageBox>
 #include "../../core/project-manager/projectmanager.h"
 #include "../project-preview/projectpreview.h"
@@ -133,57 +134,10 @@ bool ProjectsPanel::checkCommand(const std::string &command, bool dobleQuote)
 
 void ProjectsPanel::onAddProjectClicked()
 {
-    std::vector<std::string> missingTech;
-    std::string nginxPath = confManager->getConfiguration().getNgInxPath();
-    std::string nodePath = confManager->getConfiguration().getnodePath();
-    std::string bunPath = confManager->getConfiguration().getBunPath();
-    std::string mysqlPath = confManager->getConfiguration().getMysqlPath();
+    bool pathStatus = confManager->getConfiguration().getStatus();
 
-    // Crear un comando compuesto que ejecute cada verificación de versión en una sola consola
-    std::string composedCommand = "cmd /C \"";
-
-    if (!nginxPath.empty()) {
-        composedCommand += nginxPath + " -version || echo nginx_path_missing && ";
-    }
-    if (!nodePath.empty()) {
-        composedCommand += nodePath + " --version || echo node_path_missing && ";
-    }
-    if (!bunPath.empty()) {
-        composedCommand += bunPath + " --version || echo bun_path_missing && ";
-    }
-    if (!mysqlPath.empty()) {
-        composedCommand += mysqlPath + " --version || echo mysql_path_missing && ";
-    }
-
-    // Remover el último `&& ` y cerrar el comando
-    composedCommand = composedCommand.substr(0, composedCommand.size() - 4) + "\"";
-
-    namespace bp = boost::process;
-    bp::ipstream is; // Stream para capturar la salida
-    bp::child c(composedCommand, bp::std_out > is);
-
-    // Leer la salida para detectar errores
-    std::string line;
-    while (std::getline(is, line)) {
-        if (line.find("nginx_path_missing") != std::string::npos) {
-            missingTech.push_back("nginx");
-        } else if (line.find("node_path_missing") != std::string::npos) {
-            missingTech.push_back("node");
-        } else if (line.find("bun_path_missing") != std::string::npos) {
-            missingTech.push_back("bun");
-        } else if (line.find("mysql_path_missing") != std::string::npos) {
-            missingTech.push_back("mysql");
-        }
-    }
-
-    c.wait(); // Esperar a que el proceso termine
-
-    if (!missingTech.empty()) {
-        std::string message = "You are missing the following tech:\n";
-        for (const auto &tech : missingTech) {
-            message += "- " + tech + "\n";
-        }
-        QMessageBox::critical(this, "Warning", QString::fromStdString(message));
+    if (!pathStatus) {
+        QMessageBox::critical(this, "Warning", "You need to set the tech paths in 'Configuration'");
         return;
     }
 
@@ -195,6 +149,11 @@ void ProjectsPanel::onAddProjectClicked()
 
     // Show when create assistant is closed
     connect(stepper, &Stepper::destroyed, this, &ProjectsPanel::show);
+
+    connect(stepper, &Stepper::backToProjectsPanel, this, [this, stepper]() {
+        stepper->close();
+        this->show();
+    });
 }
 
 void ProjectsPanel::onProjectPreviewClicked(const Project &project)
@@ -216,101 +175,11 @@ ProjectsPanel::~ProjectsPanel()
 
 void ProjectsPanel::applyStylesProj()
 {
-    // Aplica el stylesheet a los elementos del panel
-    QString stylesheet = R"(
-
-
-        QWidget#widget {
-            background-color: #f9f9f9;
-        }
-
-        QWidget#ProjectsPanel {
-            background-color: white;
-        }
-
-        QPushButton#recentsButton{
-            font-size: 14px;
-            color: #000000;
-            background-color: #ffffff;
-            border-radius: 5px;
-            padding: 7px 7px;
-            text-align: left; /* Alineación del texto dentro del botón */
-        }
-
-        QPushButton#configurationButton {
-            font-size: 14px;
-            color: #000000;
-            background-color: #ffffff;
-            border: 0.5px solid #dddddd;
-            border-radius: 5px;
-            padding: 7px 7px;
-        }
-
-
-        QPushButton#recentsButton:hover, QPushButton#configurationButton:hover {
-            background-color: #f0f0f0;
-        }
-
-        QPushButton#recentsButton:pressed, QPushButton#configurationButton:pressed {
-            background-color: #e0e0e0;
-        }
-
-        QPushButton#addProjectButton {
-            font-size: 36px;
-            color: #666666;
-            background-color: #f9f9f9;
-            border: 2px dashed #cccccc;
-            border-radius: 10px;
-            min-width: 150px;
-            min-height: 150px;
-        }
-
-        QPushButton#addProjectButton:hover {
-            background-color: #e9e9e9;
-        }
-
-        QPushButton#addProjectButton:pressed {
-            background-color: #d9d9d9;
-        }
-
-        QScrollArea {
-            border: none;
-            background-color: #ffffff;
-        }
-
-        QWidget#scrollAreaWidgetContents {
-            background-color: #ffffff;
-        }
-
-        QLabel#label {
-            font-size: 35px;
-            font-weight: bold;
-            color: #333333;
-        }
-
-        QWidget#projectPreview {
-            background-color: #ffffff;
-            border: 1px solid #e0e0e0;
-            border-radius: 10px;
-            padding: 10px;
-            margin: 5px;
-        }
-
-        QWidget#projectPreview:hover {
-            background-color: #f0f0f0;
-        }
-
-        QWidget#projectPreview:pressed {
-            background-color: #e0e0e0;
-        }
-
-        QLabel#projectName {
-            font-size: 18px;
-            color: #333333;
-        }
-    )";
-
-    this->setStyleSheet(stylesheet);
+    QFile styleFile(":/styles/projectspanel");
+    if (styleFile.open(QFile::ReadOnly)) {
+        QString styleSheet = QLatin1String(styleFile.readAll());
+        this->setStyleSheet(styleSheet);
+    }
 }
 
 void ProjectsPanel::on_configurationButton_clicked()

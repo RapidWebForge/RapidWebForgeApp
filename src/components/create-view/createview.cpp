@@ -1,4 +1,5 @@
 #include "createview.h"
+#include <QFile>
 #include <QMessageBox>
 #include "ui_createview.h"
 #include <boost/algorithm/string.hpp>
@@ -18,19 +19,11 @@ CreateView::~CreateView()
 
 void CreateView::applyStyles()
 {
-    ui->createButton->setStyleSheet("QPushButton {"
-                                    "   background-color: #0F66DE;"
-                                    "   color: white;"
-                                    "   border-radius: 5px;"
-                                    "   padding: 4px 30px;"
-                                    "   font-size: 14px;"
-                                    "}"
-                                    "QPushButton:hover {"
-                                    "   background-color: #0056b3;"
-                                    "}"
-                                    "QPushButton:pressed {"
-                                    "   background-color: #004494;"
-                                    "}");
+    QFile primaryButtonStyleFile(":/styles/primarybutton");
+    if (primaryButtonStyleFile.open(QFile::ReadOnly)) {
+        QString styleSheet = QLatin1String(primaryButtonStyleFile.readAll());
+        ui->createButton->setStyleSheet(styleSheet);
+    }
 
     ui->cancelButton->setStyleSheet("QPushButton {"
                                     "   color: black;"

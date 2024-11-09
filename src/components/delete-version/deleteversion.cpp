@@ -1,4 +1,5 @@
 #include "deleteversion.h"
+#include <QFile>
 #include "ui_deleteversion.h"
 
 DeleteVersion::DeleteVersion(QWidget *parent)
@@ -16,11 +17,27 @@ DeleteVersion::DeleteVersion(QWidget *parent)
 
     // Conectar el botón de "Cancel" para cerrar el diálogo sin cambios
     connect(ui->cancelButton, &QPushButton::clicked, this, &QDialog::reject);
+
+    applyStyles();
 }
 
 DeleteVersion::~DeleteVersion()
 {
     delete ui;
+}
+
+void DeleteVersion::applyStyles()
+{
+    QFile primaryButtonstyleFile(":/styles/deletebutton");
+    if (primaryButtonstyleFile.open(QFile::ReadOnly)) {
+        QString styleSheet = QLatin1String(primaryButtonstyleFile.readAll());
+        ui->deleteButton->setStyleSheet(styleSheet);
+    }
+    QFile secondaryButtonstyleFile(":/styles/secondarybutton");
+    if (secondaryButtonstyleFile.open(QFile::ReadOnly)) {
+        QString styleSheet = QLatin1String(secondaryButtonstyleFile.readAll());
+        ui->cancelButton->setStyleSheet(styleSheet);
+    }
 }
 
 void DeleteVersion::setVersions(const std::vector<std::string> &versions)

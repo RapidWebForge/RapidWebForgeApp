@@ -150,9 +150,6 @@ void DatabaseAssistant::on_testConnectionButton_clicked()
             mysqlx::Schema schema
                 = session.getSchema(database, true); // true: forzar verificación de existencia
 
-            //QMessageBox::information(this, "Successful", "Connection successfully");
-            //testCompleted = true;
-
             if (schema.existsInDatabase()) {
                 QMessageBox::information(this,
                                          "Successful",

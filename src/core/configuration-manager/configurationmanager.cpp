@@ -18,7 +18,7 @@ void ConfigurationManager::createConfigDatabase()
             node_path TEXT NOT NULL,
             bun_path TEXT NOT NULL,
             mysql_path TEXT NOT NULL,
-            status INTEGER NOT NULL DEFAULT 1
+            status INTEGER NOT NULL DEFAULT 0
         );
     )";
     executeSQL(db, sql, nullptr);
@@ -86,11 +86,10 @@ Configuration ConfigurationManager::getConfiguration() const
         std::string nodePath = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 2));
         std::string bunPath = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 3));
         std::string mysqlPath = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 4));
-        bool status = sqlite3_column_int(stmt, 5)
-                      != 0; // 0 para false, cualquier otro valor para true
+        bool status = sqlite3_column_int(stmt, 5) != 0;
 
         configuration = Configuration(id, nginxPath, nodePath, bunPath, mysqlPath);
-        configuration.setStatus(status); // Establecer el estado
+        configuration.setStatus(status);
         
     });
 
@@ -112,14 +111,13 @@ void ConfigurationManager::setConfiguration(const Configuration &configuration)
     std::string nodePath = configuration.getnodePath();
     std::string bunPath = configuration.getBunPath();
     std::string mysqlPath = configuration.getMysqlPath();
-    bool status = configuration.isStatus();
+    bool status = configuration.getStatus();
 
     executeSQL(db, sqlUpdateConfig, [&](sqlite3_stmt *stmt) {
         sqlite3_bind_text(stmt, 1, ngInxPath.c_str(), -1, SQLITE_STATIC);
         sqlite3_bind_text(stmt, 2, nodePath.c_str(), -1, SQLITE_STATIC);
         sqlite3_bind_text(stmt, 3, bunPath.c_str(), -1, SQLITE_STATIC);
         sqlite3_bind_text(stmt, 4, mysqlPath.c_str(), -1, SQLITE_STATIC);
-        sqlite3_bind_int(stmt, 5, status ? 1 : 0); // Guardar status como 1 o 0
-
+        sqlite3_bind_int(stmt, 5, status ? 1 : 0);
     });
 }

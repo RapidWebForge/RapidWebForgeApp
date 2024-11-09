@@ -41,6 +41,11 @@
     </qresource>
     <qresource prefix="/styles">
         <file alias="frontenddashboard">styles/frontenddashboard.qss</file>
+        <file alias="projectspanel">styles/projectspanel.qss</file>
+        <file alias="primarybutton">styles/primarybutton.qss</file>
+        <file alias="secondarybutton">styles/secondarybutton.qss</file>
+        <file alias="backenddashboard">styles/backenddasboard.qss</file>
+        <file alias="deletebutton">styles/deletebutton.qss</file>
     </qresource>
     <qresource prefix="/gifs">
         <file>loading.gif</file>

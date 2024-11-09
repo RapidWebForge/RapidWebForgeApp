@@ -33,16 +33,17 @@ public slots:
     void onFieldSaved(const Field &field);
     void onTransactionSaved(const Transaction &transaction);
     void onTableSelected(QTreeWidgetItem *item, int column);
-    void on_editButton_clicked();
-    void on_deleteButton_clicked();
     void onTableNameChanged(QTreeWidgetItem *item, int column);
-    void on_deleteFieldButton_clicked();
-    void showEditFieldDialog(); // Slot para mostrar el diálogo de edición de campos
     void onFieldUpdated(const Field &updatedField);
 
 private slots:
-    void showCreateTableDialog();
     void showAddFieldDialog();
+
+    void on_editButton_clicked();
+    void on_deleteButton_clicked();
+    void on_editDB_clicked();
+    void on_deleteFieldButton_clicked();
+    void on_createTableButton_clicked();
 
 private:
     Ui::BackendDashboard *ui;

@@ -23,6 +23,8 @@ private slots:
 private:
     Ui::CreateVersion *ui;
     VersionManager *versionManager; // Puntero a VersionManager para interactuar con el repositorio
+
+    void applyStyles();
 };
 
 #endif // CREATEVERSION_H

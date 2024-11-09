@@ -22,6 +22,8 @@ public:
 private:
     Ui::DeleteVersion *ui;
     QStandardItemModel *model;
+
+    void applyStyles();
 };
 
 #endif // DELETEVERSION_H

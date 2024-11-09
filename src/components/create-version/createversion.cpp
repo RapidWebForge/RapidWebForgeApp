@@ -1,4 +1,5 @@
 #include "createversion.h"
+#include <QFile>
 #include <QMessageBox>
 #include "ui_createversion.h"
 
@@ -15,11 +16,27 @@ CreateVersion::CreateVersion(VersionManager *versionManager, QWidget *parent)
             &QPushButton::clicked,
             this,
             &CreateVersion::reject); // Cerrar el diálogo al cancelar
+
+    applyStyles();
 }
 
 CreateVersion::~CreateVersion()
 {
     delete ui;
+}
+
+void CreateVersion::applyStyles()
+{
+    QFile primaryButtonstyleFile(":/styles/primarybutton");
+    if (primaryButtonstyleFile.open(QFile::ReadOnly)) {
+        QString styleSheet = QLatin1String(primaryButtonstyleFile.readAll());
+        ui->registerButton->setStyleSheet(styleSheet);
+    }
+    QFile secondaryButtonstyleFile(":/styles/secondarybutton");
+    if (secondaryButtonstyleFile.open(QFile::ReadOnly)) {
+        QString styleSheet = QLatin1String(secondaryButtonstyleFile.readAll());
+        ui->cancelButton->setStyleSheet(styleSheet);
+    }
 }
 
 void CreateVersion::onRegisterButtonClicked()

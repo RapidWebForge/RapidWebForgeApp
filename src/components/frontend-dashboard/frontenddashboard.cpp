@@ -50,32 +50,17 @@ void FrontendDashboard::applyStylesFront()
 
     ui->titleLabel->setStyleSheet("font-size: 35px; color: #27292A; padding-top: 10px; "
                                   "padding-left: 40px; padding-bottom: 20px;");
-    ui->saveButton->setStyleSheet("QPushButton {"
-                                  "   background-color: #0F66DE;"
-                                  "   color: white;"
-                                  "   border-radius: 5px;"
-                                  "   padding: 4px 30px;"
-                                  "   font-size: 14px;"
-                                  "}"
-                                  "QPushButton:hover {"
-                                  "   background-color: #0056b3;"
-                                  "}"
-                                  "QPushButton:pressed {"
-                                  "   background-color: #004494;"
-                                  "}");
 
-    ui->addSectionButton->setStyleSheet("QPushButton {"
-                                        "   color: black;"
-                                        "   border-radius: 5px;"
-                                        "   padding: 4px 30px;"
-                                        "   font-size: 14px;"
-                                        "}"
-                                        "QPushButton:hover {"
-                                        "   background-color: #eaeaea;"
-                                        "}"
-                                        "QPushButton:pressed {"
-                                        "   background-color: #004494;"
-                                        "}");
+    QFile primaryButtonstyleFile(":/styles/primarybutton");
+    if (primaryButtonstyleFile.open(QFile::ReadOnly)) {
+        QString styleSheet = QLatin1String(primaryButtonstyleFile.readAll());
+        ui->saveButton->setStyleSheet(styleSheet);
+    }
+    QFile secondaryButtonstyleFile(":/styles/secondarybutton");
+    if (secondaryButtonstyleFile.open(QFile::ReadOnly)) {
+        QString styleSheet = QLatin1String(secondaryButtonstyleFile.readAll());
+        ui->addSectionButton->setStyleSheet(styleSheet);
+    }
 }
 
 // TreeWidgets config

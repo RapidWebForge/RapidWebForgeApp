@@ -20,10 +20,9 @@ StepperDashboard::StepperDashboard(QDialog *parent, const Project &project)
     , backendDashboard(new BackendDashboard())
     , projectMenu(new QMenu("Project", this))
     , versionsMenu(new QMenu("Versions", this))
-    , projectChangeAction(new QAction("Project change", this))
+    , projectChangeAction(new QAction("Change project", this))
     , createNewProjectAction(new QAction("Create new project", this))
     , saveChangesAction(new QAction("Save changes", this))
-    , deleteProjectAction(new QAction("Delete project", this))
     , deployProjectAction(new QAction("Deploy project", this))
     , createVersionAction(new QAction("Create version", this))
     , changeVersionAction(new QAction("Change version", this))
@@ -322,11 +321,7 @@ void StepperDashboard::setupMenus()
     projectMenu->addAction(createNewProjectAction);
     projectMenu->addAction(saveChangesAction);
     projectMenu->addSeparator(); // Añadir un separador
-    projectMenu->addAction(deleteProjectAction);
     projectMenu->addAction(deployProjectAction);
-
-    // Configurar las acciones de cada opción
-    deleteProjectAction->setEnabled(false); // Deshabilitar la opción de eliminar para estilo
 
     // Configurar acciones para el menú de Versions
     versionsMenu->addAction(createVersionAction);
@@ -338,8 +333,6 @@ void StepperDashboard::setupMenus()
     // Configurar las acciones de cada opción
 
     connect(projectChangeAction, &QAction::triggered, this, &StepperDashboard::onProjectChange);
-
-    // deleteVersionAction->setEnabled(false); // Deshabilitar la opción de eliminar para estilo
 
     // Conectar señales de las acciones a slots si es necesario
     connect(createNewProjectAction, &QAction::triggered, this, &StepperDashboard::onCreateProject);
@@ -489,10 +482,6 @@ void StepperDashboard::onDeployProject()
 
     try {
         DeployManager deployManager(project.getPath(), ngInxPath);
-
-        // Recargar la configuración de Nginx antes de desplegar
-        // deployManager.reload();
-
         // Iniciar el despliegue
         deployManager.start(bunPath);
     } catch (const std::exception &e) {
@@ -500,6 +489,7 @@ void StepperDashboard::onDeployProject()
         return;
     }
 }
+
 void StepperDashboard::onProjectChange()
 {
     ConfigurationManager configurationManager;
@@ -522,6 +512,7 @@ void StepperDashboard::onProjectChange()
     projectsPanel->setAttribute(Qt::WA_DeleteOnClose); // Liberar memoria automáticamente al cerrar
     projectsPanel->show();
 }
+
 void StepperDashboard::onCreateProject()
 {
     // Cerrar el StepperDashboard
