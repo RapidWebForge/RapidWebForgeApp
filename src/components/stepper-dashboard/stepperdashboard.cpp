@@ -362,9 +362,11 @@ void StepperDashboard::onSaveChanges()
 
     codeGenerator->frontendGenerator.setViews(frontendDashboard->getViews());
 
-    codeGenerator->frontendGenerator.updateFrontendCode();
-
-    QMessageBox::information(this, "Save Changes", "Changes have been saved successfully.");
+    if (codeGenerator->frontendGenerator.updateFrontendCode()) {
+        QMessageBox::information(this, "Save Changes", "Changes have been saved successfully.");
+    } else {
+        QMessageBox::warning(this, "Failed", "Failed to update JSON and generate code.");
+    }
 }
 
 void StepperDashboard::onCreateVersion()

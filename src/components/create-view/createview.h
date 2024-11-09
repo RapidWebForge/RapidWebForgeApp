@@ -22,9 +22,13 @@ signals:
 private slots:
     void on_createButton_clicked();
 
+    void on_cancelButton_clicked();
+
 private:
     Ui::CreateView *ui;
     Route route;
+
+    void applyStyles();
 };
 
 #endif // CREATEVIEW_H

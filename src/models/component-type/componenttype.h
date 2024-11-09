@@ -12,6 +12,8 @@ enum class ComponentType {
     Paragraph,
     Input,
     TextArea,
+    Button,
+    Form,
     HorizontalLayout,
     VerticalLayout,
     ModelLayout,
@@ -19,15 +21,19 @@ enum class ComponentType {
 
 // Mapa de propiedades predeterminadas
 const std::map<ComponentType, std::map<std::string, std::string>> componentPropertiesMap
-    = {{ComponentType::HeaderH1, {{"text", "Default Header"}}},
-       {ComponentType::HeaderH2, {{"text", "Default Subheader"}}},
-       {ComponentType::HeaderH3, {{"text", "Default Header 3"}}},
-       {ComponentType::Paragraph, {{"text", "Default Paragraph"}}},
-       {ComponentType::Input, {{"placeholder", "Enter text"}, {"type", "text"}}},
-       {ComponentType::TextArea, {{"placeholder", "Enter text"}}},
-       {ComponentType::HorizontalLayout, {}},
-       {ComponentType::VerticalLayout, {}},
-       {ComponentType::ModelLayout, {{"model", "Default Model"}}}};
+    = {{ComponentType::HeaderH1, {{"class", ""}, {"text", "Default Header"}}},
+       {ComponentType::HeaderH2, {{"class", ""}, {"text", "Default Header 2"}}},
+       {ComponentType::HeaderH3, {{"class", ""}, {"text", "Default Header 3"}}},
+       {ComponentType::Paragraph, {{"class", ""}, {"text", "Default Paragraph"}}},
+       {ComponentType::Input,
+        {{"class", ""}, {"placeholder", "Enter text"}, {"type", "text"}, {"value", ""}}},
+       {ComponentType::TextArea, {{"class", ""}, {"placeholder", "Enter text"}}},
+       {ComponentType::Button,
+        {{"class", ""}, {"text", "Default Button"}, {"type", "button"}, {"click", ""}}},
+       {ComponentType::Form, {{"class", ""}}},
+       {ComponentType::HorizontalLayout, {{"class", ""}}},
+       {ComponentType::VerticalLayout, {{"class", ""}}},
+       {ComponentType::ModelLayout, {{"class", ""}, {"model", ""}}}};
 
 // Función para convertir ComponentType a std::string
 inline std::string componentTypeToString(ComponentType type)
@@ -45,6 +51,10 @@ inline std::string componentTypeToString(ComponentType type)
         return "Input";
     case ComponentType::TextArea:
         return "Text Area";
+    case ComponentType::Button:
+        return "Button";
+    case ComponentType::Form:
+        return "Form";
     case ComponentType::HorizontalLayout:
         return "Horizontal Layout";
     case ComponentType::VerticalLayout:
@@ -71,6 +81,10 @@ inline ComponentType stringToComponentType(const std::string &typeStr)
         return ComponentType::Input;
     if (typeStr == "Text Area")
         return ComponentType::TextArea;
+    if (typeStr == "Button")
+        return ComponentType::Button;
+    if (typeStr == "Form")
+        return ComponentType::Form;
     if (typeStr == "Horizontal Layout")
         return ComponentType::HorizontalLayout;
     if (typeStr == "Vertical Layout")
