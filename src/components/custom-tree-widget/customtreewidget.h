@@ -10,11 +10,13 @@ class CustomTreeWidget : public QTreeWidget
 public:
     explicit CustomTreeWidget(QWidget *parent = nullptr);
 
-signals:
-    void itemDropped(QTreeWidgetItem *parentItem, QTreeWidgetItem *droppedItem);
-
 protected:
+    void dragEnterEvent(QDragEnterEvent *event) override;
+    void dragMoveEvent(QDragMoveEvent *event) override;
     void dropEvent(QDropEvent *event) override;
+
+signals:
+    void itemDropped(QTreeWidgetItem* parent, QTreeWidgetItem* item, int index);
 };
 
 #endif // CUSTOMTREEWIDGET_H

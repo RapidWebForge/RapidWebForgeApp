@@ -1,6 +1,7 @@
 #ifndef STEPPER_H
 #define STEPPER_H
 
+#include <QKeyEvent>
 #include <QWidget>
 #include "../../core/project-manager/projectmanager.h"
 #include "../../core/version-manager/versionmanager.h"

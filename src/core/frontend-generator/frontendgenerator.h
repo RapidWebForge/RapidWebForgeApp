@@ -31,10 +31,12 @@ private:
     std::vector<View> views;
     inja::Environment env;
 
+    Component parseComponent(const nlohmann::json &componentJson);
+    std::vector<Component> parseNestedComponents(const nlohmann::json &nestedJsonArray);
     void parseJson(const nlohmann::json &jsonSchema);
     bool updateFrontendJson(const std::string &componentName);
-    bool generateComponentBase(const std::string &componentName);
-    bool generateMain();
+    bool generateView(const std::string &viewName);
+    bool generateApp();
     bool generateViews();
 };
 

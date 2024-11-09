@@ -25,11 +25,14 @@ DeployManager::~DeployManager()
 bp::child DeployManager::runBackend(const std::string bunPath)
 {
     std::string command = bunPath + " run ./server.js";
+    // std::string command = bunPath + " run server.js";
     return bp::child(command, bp::start_dir = this->projectPath + "\\backend");
+    // return bp::child(command, bp::start_dir = this->projectPath + "/backend");
 }
 
 bp::child DeployManager::runFrontend(const std::string bunPath)
 {
+
     namespace bp = boost::process;
 
     try {
@@ -48,6 +51,7 @@ bp::child DeployManager::runFrontend(const std::string bunPath)
         std::cerr << "Error al iniciar el frontend: " << e.what() << std::endl;
         throw; // Propaga la excepción
     }
+
 }
 
 bp::child DeployManager::runNgInx()

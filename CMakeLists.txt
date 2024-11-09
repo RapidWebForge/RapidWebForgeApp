@@ -140,6 +140,8 @@ set(PROJECT_SOURCES
         src/utils/ziphelper/ziphelper.cpp
         src/utils/file/fileutiils.h
         src/utils/file/fileutiils.cpp
+        src/utils/render_callback/rendercallback.h
+        src/utils/render_callback/rendercallback.cpp
         # Resources
         src/resources/resources.qrc
 )

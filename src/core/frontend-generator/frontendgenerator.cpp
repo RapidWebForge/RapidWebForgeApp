@@ -1,8 +1,10 @@
 #include "frontendgenerator.h"
+#include <QDebug>
 #include <QFile>
 #include <QTextStream>
 #include "../../models/component-type/componenttype.h"
 #include "../../utils/file/fileutiils.h"
+#include "../../utils/render_callback/rendercallback.h"
 #include <fmt/core.h>
 #include <fstream>
 
@@ -11,75 +13,16 @@ FrontendGenerator::FrontendGenerator(const std::string &projectPath)
 {
     try {
         env.add_callback("render_component", 1, [this](inja::Arguments &args) -> std::string {
-            // Verificar si el argumento es válido
-            if (args.empty() || !args[0]->is_object()) {
-                fmt::print(stderr, "Invalid argument passed to render_component.\n");
-                return "<!-- Invalid argument -->";
-            }
-
-            const nlohmann::json &componentJson = *args[0];
-
-            // Verificar si el JSON contiene 'type' y si es un string
-            std::string type;
-            if (componentJson.contains("type") && componentJson["type"].is_string()) {
-                type = componentJson["type"];
-            } else {
-                fmt::print(stderr,
-                           "Unsupported component type format or missing: {}\n",
-                           componentJson.dump());
-                return "<!-- Unsupported component type -->";
-            }
-
-            // Verificar si 'props' es un objeto
-            const auto &props = componentJson["props"];
-            if (!props.is_object()) {
-                fmt::print(stderr, "Invalid props format: must be an object.\n");
-                return "<!-- Invalid props format -->";
-            }
-
-            std::string output;
-            // Renderizar componentes según su tipo
-            if (type == "Header H1") {
-                output = "<h1>" + props.value("text", "Default Header") + "</h1>";
-            } else if (type == "Header H2") {
-                output = "<h2>" + props.value("text", "Default Header 2") + "</h2>";
-            } else if (type == "Paragraph") {
-                output = "<p>" + props.value("text", "Default Paragraph") + "</p>";
-            } else if (type == "Input") {
-                output = "<input placeholder='" + props.value("placeholder", "Default Input")
-                         + "' />";
-            } else if (type == "Text Area") {
-                output = "<textarea placeholder='" + props.value("placeholder", "Default TextArea")
-                         + "'></textarea>";
-            } else if (type == "Horizontal Layout" || type == "Vertical Layout") {
-                std::string layoutClass = (type == "Horizontal Layout") ? "flex flex-row"
-                                                                        : "flex flex-col";
-                output = "<div className='" + layoutClass + "'>";
-
-                // Renderizar componentes anidados recursivamente
-                if (componentJson.contains("nestedComponents")
-                    && componentJson["nestedComponents"].is_array()) {
-                    for (const auto &nestedComponent : componentJson["nestedComponents"]) {
-                        // Renderizar el componente anidado usando render_component
-                        try {
-                            output += env.render("{{ render_component(nestedComponent) }}",
-                                                 nestedComponent);
-                        } catch (const std::exception &e) {
-                            fmt::print(stderr, "Error rendering nested component: {}\n", e.what());
-                            output += "<!-- Error rendering nested component -->";
-                        }
-                    }
-                } else {
-                    fmt::print(stderr, "Invalid or missing nestedComponents array.\n");
-                }
-
-                output += "</div>";
-            } else {
-                fmt::print(stderr, "Unsupported component type: {}\n", type);
-                output = "<!-- Unsupported component type: " + type + " -->";
-            }
-
-            return output;
+            return RenderCallback::renderComponentCallback(this->env, args);
+        });
+        env.add_callback("render_services_imports", 1, [this](inja::Arguments &args) -> std::string {
+            return RenderCallback::renderServiceImportsCallback(this->env, args);
+        });
+        env.add_callback("render_states", 1, [this](inja::Arguments &args) -> std::string {
+            return RenderCallback::renderStatesCallback(this->env, args);
+        });
+        env.add_callback("render_requests", 1, [this](inja::Arguments &args) -> std::string {
+            return RenderCallback::renderRequestsCallback(this->env, args);
         });
     } catch (const std::exception &e) {
         fmt::print(stderr, "Error adding callback: {}\n", e.what());
@@ -120,6 +63,53 @@ bool FrontendGenerator::loadSchema()
     return true;
 }
 
+bool allowsNestedComponents(ComponentType type)
+{
+    return type == ComponentType::Form || type == ComponentType::HorizontalLayout
+           || type == ComponentType::VerticalLayout || type == ComponentType::ModelLayout;
+}
+
+Component FrontendGenerator::parseComponent(const nlohmann::json &componentJson)
+{
+    Component component;
+
+    // Parse props
+    std::map<std::string, std::string> props;
+    for (auto propIt = componentJson["props"].begin(); propIt != componentJson["props"].end();
+         ++propIt) {
+        if (propIt.value().is_string()) {
+            props[propIt.key()] = propIt.value().get<std::string>();
+        }
+    }
+    component.setProps(props);
+
+    // Parse type
+    if (componentJson.contains("type") && componentJson["type"].is_string()) {
+        component.setType(stringToComponentType(componentJson["type"].get<std::string>()));
+
+        // Parse nested components if applicable
+        if (allowsNestedComponents(component.getType())
+            && componentJson.contains("nestedComponents")
+            && componentJson["nestedComponents"].is_array()) {
+            component.setNestedComponents(parseNestedComponents(componentJson["nestedComponents"]));
+        }
+    } else {
+        fmt::print(stderr, "Error: 'type' in 'components' must be a string.\n");
+    }
+
+    return component;
+}
+
+std::vector<Component> FrontendGenerator::parseNestedComponents(const nlohmann::json &nestedJsonArray)
+{
+    std::vector<Component> nestedComponents;
+    for (const auto &nestedJson : nestedJsonArray) {
+        Component nestedComponent = parseComponent(nestedJson);
+        nestedComponents.push_back(nestedComponent);
+    }
+    return nestedComponents;
+}
+
 void FrontendGenerator::parseJson(const nlohmann::json &jsonSchema)
 {
     // Parse routes
@@ -151,34 +141,10 @@ void FrontendGenerator::parseJson(const nlohmann::json &jsonSchema)
             // Parse components
             std::vector<Component> components;
             for (const auto &componentJson : it.value()["components"]) {
-                Component component;
-
-                // Asegurarse de que 'type' sea una cadena y convertirlo a ComponentType
-                if (componentJson.contains("type") && componentJson["type"].is_string()) {
-                    std::string typeStr = componentJson["type"].get<std::string>();
-                    component.setType(stringToComponentType(typeStr));
-                } else {
-                    fmt::print(stderr, "Error: 'type' in 'components' must be a string.\n");
-                    continue;
-                }
-
-                // Parse props
-                std::map<std::string, std::string> props;
-                for (auto propIt = componentJson["props"].begin();
-                     propIt != componentJson["props"].end();
-                     ++propIt) {
-                    if (propIt.value().is_string()) {
-                        props[propIt.key()] = propIt.value().get<std::string>();
-                    } else {
-                        fmt::print(stderr,
-                                   "Error: Property value for '{}' must be a string.\n",
-                                   propIt.key());
-                    }
-                }
-                component.setProps(props);
-
+                Component component = parseComponent(componentJson);
                 components.push_back(component);
             }
+
             view.setComponents(components);
             views.push_back(view);
         }
@@ -213,10 +179,33 @@ bool FrontendGenerator::updateSchema()
 
             // Agregar las props
             nlohmann::json propsJson;
+            // std::cout << "  Component Type: " << typeStr << std::endl;
             for (const auto &prop : component.getProps()) {
                 propsJson[prop.first] = prop.second;
+                // std::cout << "    Prop: " << prop.first << " = " << prop.second << std::endl;
             }
             componentJson["props"] = propsJson;
+
+            // Si el componente permite nestedComponents, agregarlo al JSON
+            if (component.isAllowingItems()) {
+                componentJson["nestedComponents"] = nlohmann::json::array();
+                for (const auto &nestedComponent : component.getNestedComponents()) {
+                    nlohmann::json nestedComponentJson;
+
+                    // Convertir el tipo de componente anidado
+                    std::string nestedTypeStr = componentTypeToString(nestedComponent.getType());
+                    nestedComponentJson["type"] = nestedTypeStr;
+
+                    // Agregar las props del componente anidado
+                    nlohmann::json nestedPropsJson;
+                    for (const auto &nestedProp : nestedComponent.getProps()) {
+                        nestedPropsJson[nestedProp.first] = nestedProp.second;
+                    }
+                    nestedComponentJson["props"] = nestedPropsJson;
+
+                    componentJson["nestedComponents"].push_back(nestedComponentJson);
+                }
+            }
 
             viewJson[view.getName()]["components"].push_back(componentJson);
         }
@@ -231,6 +220,8 @@ bool FrontendGenerator::updateSchema()
         fmt::print(stderr, "Failed to open the file for writing: {}\n", filePath);
         return false;
     }
+
+    // std::cout << jsonSchema.dump(2) << std::endl; // Imprime el JSON en la consola antes de guardar
 
     jsonFile << jsonSchema.dump(2);
     jsonFile.close();
@@ -261,9 +252,15 @@ bool FrontendGenerator::updateFrontendJson(const std::string &componentName)
     bool componentExists = false;
     for (auto &view : frontendJson["views"]) {
         if (view.contains(componentName)) {
-            componentExists = true;
-            break;
+            for (const auto &comp : view[componentName]["components"]) {
+                if (comp["type"] == componentTypeToString(ComponentType::HeaderH1)) {
+                    componentExists = true;
+                    break;
+                }
+            }
         }
+        if (componentExists)
+            break;
     }
 
     // Si el componente no existe, agregarlo al JSON
@@ -281,6 +278,13 @@ bool FrontendGenerator::updateFrontendJson(const std::string &componentName)
             for (const auto &prop : it->second) {
                 newComponent["props"][prop.first] = prop.second;
             }
+        }
+
+        // Verificar si el tipo permite `nestedComponents` y agregarlo si es necesario
+        if (defaultType == ComponentType::Form || defaultType == ComponentType::HorizontalLayout
+            || defaultType == ComponentType::VerticalLayout
+            || defaultType == ComponentType::ModelLayout) {
+            newComponent["nestedComponents"] = nlohmann::json::array();
         }
 
         // Agregar el nuevo componente a la nueva vista
@@ -318,25 +322,25 @@ bool FrontendGenerator::updateFrontendJson(const std::string &componentName)
     return true;
 }
 
-bool FrontendGenerator::generateComponentBase(const std::string &componentName)
+bool FrontendGenerator::generateView(const std::string &viewName)
 {
     nlohmann::json data;
 
     // Inserta el nombre del componente en el contexto de Inja
-    data["component"] = componentName;
+    data["component"] = viewName;
 
-    // Agrega los componentes actuales si existen
-    auto it = std::find_if(views.begin(), views.end(), [&componentName](const View &view) {
-        return view.getName() == componentName;
+    // Buscar la vista en views
+    auto it = std::find_if(views.begin(), views.end(), [&viewName](const View &view) {
+        return view.getName() == viewName;
     });
 
     data["components"] = nlohmann::json::array(); // Asegúrate de inicializar el array
 
     // Si la vista ya existe, agrega sus componentes al contexto
     if (it != views.end()) {
-        for (const auto &component : it->getComponents()) {
+        for (const Component &component : it->getComponents()) {
             nlohmann::json componentJson;
-            componentJson["type"] = component.getType();
+            componentJson["type"] = componentTypeToString(component.getType());
 
             // Agrega las props si existen
             nlohmann::json propsJson;
@@ -364,58 +368,61 @@ bool FrontendGenerator::generateComponentBase(const std::string &componentName)
 
     std::string templateString = templateContent.toStdString();
 
-    std::string outputPath = projectPath + "/frontend/src/views/" + componentName + ".tsx";
+    std::string outputPath = projectPath + "/frontend/src/views/" + viewName + ".tsx";
 
     try {
         // Renderizar con Inja usando el contenido del archivo como una cadena
         std::string result = env.render(templateString, data);
         FileUtils::writeFile(outputPath, result);
 
-        updateFrontendJson(componentName); // Actualizar el frontend.json
+        // updateFrontendJson(componentName); // Actualizar el frontend.json
     } catch (const std::exception &e) {
-        fmt::print(stderr, "Error generating component base for {}: {}\n", componentName, e.what());
+        fmt::print(stderr, "Error generating component base for {}: {}\n", viewName, e.what());
         return false;
     }
 
-    fmt::print("Component base generated successfully for {}\n", componentName);
+    fmt::print("Component base generated successfully for {}\n", viewName);
     return true;
 }
 
-bool FrontendGenerator::generateMain()
+bool FrontendGenerator::generateApp()
 {
     nlohmann::json data;
 
     // Insert the routes into the JSON context for Inja
     data["routes"] = nlohmann::json::array();
+
     for (const auto &route : routes) {
         nlohmann::json routeJson;
         routeJson["component"] = route.getComponent();
         routeJson["path"] = route.getPath();
         data["routes"].push_back(routeJson);
 
-        bool componentExists = false;
-        for (const auto &view : views) {
-            if (view.getName() == route.getComponent()) {
-                componentExists = true;
-                break;
-            }
+        bool viewExists = false;
+
+        std::string viewFilePath = projectPath + "frontend/src/views/" + route.getComponent()
+                                   + ".tsx";
+
+        // Verificar si el archivo ya existe
+        std::ifstream fileCheck(viewFilePath);
+        if (fileCheck.is_open()) {
+            // El archivo ya existe, no es necesario generarlo de nuevo
+            fileCheck.close();
+        } else {
+            viewExists = true;
         }
 
-        if (!componentExists) {
-            if (!generateComponentBase(route.getComponent())) {
+        if (!viewExists) {
+            if (!generateView(route.getComponent())) {
                 fmt::print(stderr,
                            "Failed to generate component base for {}\n",
                            route.getComponent());
                 return false;
             }
-
-            // Agregar la nueva vista al vector de vistas
-            View newView(route.getComponent());
-            views.push_back(newView);
         }
     }
 
-    std::string templatePath = ":/inja/frontend/main";
+    std::string templatePath = ":/inja/frontend/app";
 
     QFile file(QString::fromStdString(templatePath));
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
@@ -429,13 +436,13 @@ bool FrontendGenerator::generateMain()
 
     std::string templateString = templateContent.toStdString();
 
-    std::string outputPath = projectPath + "/frontend/src/main.tsx";
+    std::string outputPath = projectPath + "/frontend/src/App.tsx";
 
     try {
         std::string result = env.render(templateString, data);
         FileUtils::writeFile(outputPath, result);
     } catch (const std::exception &e) {
-        fmt::print(stderr, "Error generating main.tsx: {}\n", e.what());
+        fmt::print(stderr, "Error generating App.tsx: {}\n", e.what());
         return false;
     }
 
@@ -459,6 +466,24 @@ bool FrontendGenerator::generateViews()
                 propsJson[prop.first] = prop.second;
             }
             componentJson["props"] = propsJson;
+
+            // Manejo de nestedComponents para tipos permitidos
+            if (component.isAllowingItems()) {
+                componentJson["nestedComponents"] = nlohmann::json::array();
+                for (const auto &nestedComponent : component.getNestedComponents()) {
+                    nlohmann::json nestedComponentJson;
+                    nestedComponentJson["type"] = componentTypeToString(nestedComponent.getType());
+
+                    // Agregar las props del nestedComponent
+                    nlohmann::json nestedPropsJson;
+                    for (const auto &nestedProp : nestedComponent.getProps()) {
+                        nestedPropsJson[nestedProp.first] = nestedProp.second;
+                    }
+                    nestedComponentJson["props"] = nestedPropsJson;
+
+                    componentJson["nestedComponents"].push_back(nestedComponentJson);
+                }
+            }
 
             data["components"].push_back(componentJson);
         }
@@ -494,7 +519,7 @@ bool FrontendGenerator::generateViews()
 
 bool FrontendGenerator::generateFrontendCode()
 {
-    if (!generateMain())
+    if (!generateApp())
         return false;
 
     if (!generateViews())
