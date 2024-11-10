@@ -22,23 +22,6 @@ void ConfigurationManager::createConfigDatabase()
         );
     )";
     executeSQL(db, sql, nullptr);
-
-    // Verificar si la columna 'status' ya existe
-    bool columnExists = false;
-    std::string sqlCheckColumn = "PRAGMA table_info(configuration);";
-    executeSQL(db, sqlCheckColumn, nullptr, [&](sqlite3_stmt *stmt) {
-        std::string columnName = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 1));
-        if (columnName == "status") {
-            columnExists = true;
-        }
-    });
-
-    // Solo intentar agregar la columna 'status' si no existe
-    if (!columnExists) {
-        std::string sqlAddStatusColumn
-            = "ALTER TABLE configuration ADD COLUMN status INTEGER DEFAULT 1;";
-        executeSQL(db, sqlAddStatusColumn, nullptr);
-    }
 }
 
 bool ConfigurationManager::executeSQL(sqlite3 *db,

@@ -101,10 +101,12 @@ void ConfigurationView::on_testButton_clicked()
         }
     }
 
-    if (!allPathsValid) {
-        configManager.getConfiguration().setStatus(false);
+    Configuration conf = configManager.getConfiguration();
 
-        configManager.setConfiguration(configManager.getConfiguration());
+    if (!allPathsValid) {
+        conf.setStatus(false);
+
+        configManager.setConfiguration(conf);
 
         ui->saveButton->setEnabled(false); // Deshabilita el botón de guardar
 
@@ -114,9 +116,9 @@ void ConfigurationView::on_testButton_clicked()
         }
         QMessageBox::critical(this, "Invalid Paths", QString::fromStdString(message));
     } else {
-        configManager.getConfiguration().setStatus(true);
+        conf.setStatus(true);
 
-        configManager.setConfiguration(configManager.getConfiguration());
+        configManager.setConfiguration(conf);
 
         ui->saveButton->setEnabled(true); // Habilita el botón de guardar
 
