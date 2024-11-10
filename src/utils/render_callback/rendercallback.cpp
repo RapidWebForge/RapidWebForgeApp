@@ -40,51 +40,62 @@ std::string renderComponentCallback(inja::Environment &env, inja::Arguments &arg
         return "<!-- Invalid props format -->";
     }
 
-    std::string output;
+    std::string output = "";
+
+    if (!parentType.empty()) {
+        output = "\n";
+    }
 
     if (type == "Header H1") {
         std::string className = props.value("class", "");
         std::string value = props.value("text", "Default Header");
 
-        output = "<h1 className=\"" + className + "\">" + value + "</h1>";
+        output += "<h1 className=\"" + className + "\">" + value + "</h1>";
     } else if (type == "Header H2") {
         std::string className = props.value("class", "");
         std::string value = props.value("text", "Default Header 2");
 
-        output = "<h2 className=\"" + className + "\">" + value + "</h2>";
+        output += "<h2 className=\"" + className + "\">" + value + "</h2>";
     } else if (type == "Header H3") {
         std::string className = props.value("class", "");
         std::string value = props.value("text", "Default Header 3");
 
-        output = "<h3 className=\"" + className + "\">" + value + "</h3>";
+        output += "<h3 className=\"" + className + "\">" + value + "</h3>";
     } else if (type == "Paragraph") {
         std::string className = props.value("class", "");
         std::string value = props.value("text", "Default Header");
 
-        output = "<p className=\"" + className + "\">" + value + "</p>";
+        output += "<p className=\"" + className + "\">" + value + "</p>";
     } else if (type == "Input") {
         std::string className = props.value("class", "");
         std::string placeholder = props.value("placeholder", "");
         std::string type = props.value("type", "text");
         std::string value = props.value("value", "");
+        std::string inputValue = "value=";
 
-        output = "<input className=\"" + className + "\" type=\"" + type + "\" placeholder=\""
-                 + placeholder + "\" value=\"" + value + "\""
-                 + (parentType == "Form" ? "onChange={handleChange}" : "") + " /> ";
+        if (value[0] == '{') {
+            inputValue += value;
+        } else {
+            inputValue += "\"" + value + "\" ";
+        }
+
+        output += "<input className=\"" + className + "\" type=\"" + type + "\" placeholder=\""
+                  + placeholder + "\" " + inputValue
+                  + (parentType == "Form" ? "onChange={handleChange}" : "") + " /> ";
 
     } else if (type == "Text Area") {
         std::string className = props.value("class", "");
         std::string placeholder = props.value("placeholder", "");
 
-        output = "<textarea className=\"" + className + "\" placeholder=\"" + placeholder
-                 + "\"></textarea>";
+        output += "<textarea className=\"" + className + "\" placeholder=\"" + placeholder
+                  + "\"></textarea>";
     } else if (type == "Button") {
         std::string className = props.value("class", "");
         std::string value = props.value("text", "Default Button");
         std::string type = props.value("type", "button");
 
-        output = "<button className=\"" + className + "\" type=\"" + type + "\" >" + value
-                 + "</button>";
+        output += "<button className=\"" + className + "\" type=\"" + type + "\" >" + value
+                  + "</button>";
     } else if (type == "Horizontal Layout" || type == "Vertical Layout" || type == "Model Layout") {
         std::string layoutClass;
 
@@ -97,7 +108,7 @@ std::string renderComponentCallback(inja::Environment &env, inja::Arguments &arg
                 layoutClass += " " + props["class"].get<std::string>();
             }
         }
-        output = "<div className=\"" + layoutClass + "\">";
+        output += "<div className=\"" + layoutClass + "\">";
 
         if (type == "Model Layout") {
             // Add map to iterate only if 'model' is valid
@@ -144,7 +155,7 @@ std::string renderComponentCallback(inja::Environment &env, inja::Arguments &arg
                 onSubmit += "handleSubmit";
         }
 
-        output = "<form className=\"" + className + "\" onSubmit={" + onSubmit + "} >";
+        output += "<form className=\"" + className + "\" onSubmit={" + onSubmit + "} >";
 
         if (componentJson.contains("nestedComponents")
             && componentJson["nestedComponents"].is_array()) {
@@ -289,13 +300,12 @@ std::string renderHandleFoosCallback(inja::Environment &env, inja::Arguments &ar
     }
 
     // Generar el handleChange
-    handleChange = "const handleChange = (e) => {\n";
+    handleChange = "const handleChange = (e: any) => {\n";
     handleChange += "  const { name, value } = e.target;\n";
 
     // Generar el handleSubmit
-    handleSubmit = "const handleSubmit = async (e) => {\n";
+    handleSubmit = "const handleSubmit = async (e: React.FormEvent) => {\n";
     handleSubmit += "  e.preventDefault();\n\n";
-    handleSubmit += "  try {\n";
 
     for (const auto &componentJson : components) {
         if (componentJson.contains("type") && componentJson["type"] == "Form") {
@@ -314,6 +324,11 @@ std::string renderHandleFoosCallback(inja::Environment &env, inja::Arguments &ar
                 handleChange += "  }));\n";
 
                 // Agregar código para handleSubmit
+                handleSubmit += "  if (!" + lowerMethod + modelName + ") {\n";
+                handleSubmit += "  console.error(\"Data is undefined\");\n";
+                handleSubmit += "  return;\n";
+                handleSubmit += "  }\n\n";
+                handleSubmit += "  try {\n";
                 handleSubmit += "    const response = await " + modelName + "Service.create"
                                 + modelName + "(" + lowerMethod + modelName + ");\n";
                 handleSubmit += "    console.log(\"Form submitted successfully:\", response);\n";

@@ -3,7 +3,7 @@ import axios from 'axios';
 import {{ model_name }} from '../models/{{ model_name }}';
 
 // Usar la variable de entorno para la base URL
-const baseURL = `${process.env.REACT_APP_API_BASE_URL}/{{ model_name_lower }}`;
+const baseURL = `${import.meta.env.API_BASE_URL}/{{ model_name_lower }}`;
 
 export const getAll{{ model_name }} = async (): Promise<{{ model_name }}[]> => {
     const response = await axios.get(baseURL);
