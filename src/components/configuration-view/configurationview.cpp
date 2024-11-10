@@ -103,6 +103,9 @@ void ConfigurationView::on_testButton_clicked()
 
     if (!allPathsValid) {
         configManager.getConfiguration().setStatus(false);
+
+        configManager.setConfiguration(configManager.getConfiguration());
+
         ui->saveButton->setEnabled(false); // Deshabilita el botón de guardar
 
         std::string message = "The following paths are invalid:\n";
@@ -112,6 +115,9 @@ void ConfigurationView::on_testButton_clicked()
         QMessageBox::critical(this, "Invalid Paths", QString::fromStdString(message));
     } else {
         configManager.getConfiguration().setStatus(true);
+
+        configManager.setConfiguration(configManager.getConfiguration());
+
         ui->saveButton->setEnabled(true); // Habilita el botón de guardar
 
         QMessageBox::information(this, "Success", "All paths are valid.");
