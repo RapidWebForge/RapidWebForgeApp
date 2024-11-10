@@ -105,6 +105,7 @@ void StepperDashboard::onBackendSchemaLoaded()
 void StepperDashboard::onFrontendSchemaLoaded()
 {
     std::vector<View> views = codeGenerator->frontendGenerator.getViews();
+
     std::vector<Route> routes = codeGenerator->frontendGenerator.getRoutes();
 
     frontendDashboard->setViews(views);

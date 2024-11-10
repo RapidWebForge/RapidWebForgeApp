@@ -30,7 +30,7 @@ const std::map<ComponentType, std::map<std::string, std::string>> componentPrope
        {ComponentType::TextArea, {{"class", ""}, {"placeholder", "Enter text"}}},
        {ComponentType::Button,
         {{"class", ""}, {"text", "Default Button"}, {"type", "button"}, {"click", ""}}},
-       {ComponentType::Form, {{"class", ""}}},
+       {ComponentType::Form, {{"class", ""}, {"method", ""}, {"model", ""}}},
        {ComponentType::HorizontalLayout, {{"class", ""}}},
        {ComponentType::VerticalLayout, {{"class", ""}}},
        {ComponentType::ModelLayout, {{"class", ""}, {"model", ""}}}};

@@ -12,7 +12,7 @@ FrontendGenerator::FrontendGenerator(const std::string &projectPath)
     : projectPath(projectPath)
 {
     try {
-        env.add_callback("render_component", 1, [this](inja::Arguments &args) -> std::string {
+        env.add_callback("render_component", [this](inja::Arguments &args) -> std::string {
             return RenderCallback::renderComponentCallback(this->env, args);
         });
         env.add_callback("render_services_imports", 1, [this](inja::Arguments &args) -> std::string {
@@ -20,6 +20,9 @@ FrontendGenerator::FrontendGenerator(const std::string &projectPath)
         });
         env.add_callback("render_states", 1, [this](inja::Arguments &args) -> std::string {
             return RenderCallback::renderStatesCallback(this->env, args);
+        });
+        env.add_callback("render_handles", 1, [this](inja::Arguments &args) -> std::string {
+            return RenderCallback::renderHandleFoosCallback(this->env, args);
         });
         env.add_callback("render_requests", 1, [this](inja::Arguments &args) -> std::string {
             return RenderCallback::renderRequestsCallback(this->env, args);
@@ -69,19 +72,20 @@ bool allowsNestedComponents(ComponentType type)
            || type == ComponentType::VerticalLayout || type == ComponentType::ModelLayout;
 }
 
+std::vector<Component> FrontendGenerator::parseNestedComponents(const nlohmann::json &nestedJsonArray)
+{
+    std::vector<Component> nestedComponents;
+    for (const auto &nestedJson : nestedJsonArray) {
+        Component nestedComponent = parseComponent(nestedJson);
+
+        nestedComponents.push_back(nestedComponent);
+    }
+    return nestedComponents;
+}
+
 Component FrontendGenerator::parseComponent(const nlohmann::json &componentJson)
 {
     Component component;
-
-    // Parse props
-    std::map<std::string, std::string> props;
-    for (auto propIt = componentJson["props"].begin(); propIt != componentJson["props"].end();
-         ++propIt) {
-        if (propIt.value().is_string()) {
-            props[propIt.key()] = propIt.value().get<std::string>();
-        }
-    }
-    component.setProps(props);
 
     // Parse type
     if (componentJson.contains("type") && componentJson["type"].is_string()) {
@@ -97,17 +101,22 @@ Component FrontendGenerator::parseComponent(const nlohmann::json &componentJson)
         fmt::print(stderr, "Error: 'type' in 'components' must be a string.\n");
     }
 
-    return component;
-}
+    // Parse props
+    std::map<std::string, std::string> props;
 
-std::vector<Component> FrontendGenerator::parseNestedComponents(const nlohmann::json &nestedJsonArray)
-{
-    std::vector<Component> nestedComponents;
-    for (const auto &nestedJson : nestedJsonArray) {
-        Component nestedComponent = parseComponent(nestedJson);
-        nestedComponents.push_back(nestedComponent);
+    if (componentJson.contains("props") && componentJson["props"].is_object()) {
+        for (auto it = componentJson["props"].begin(); it != componentJson["props"].end(); ++it) {
+            if (it.value().is_string()) {
+                props[it.key()] = it.value().get<std::string>();
+            } else {
+                fmt::print(stderr, "Error: 'props' value for '{}' must be a string.\n", it.key());
+            }
+        }
     }
-    return nestedComponents;
+
+    component.setProps(props);
+
+    return component;
 }
 
 void FrontendGenerator::parseJson(const nlohmann::json &jsonSchema)
@@ -142,6 +151,7 @@ void FrontendGenerator::parseJson(const nlohmann::json &jsonSchema)
             std::vector<Component> components;
             for (const auto &componentJson : it.value()["components"]) {
                 Component component = parseComponent(componentJson);
+
                 components.push_back(component);
             }
 

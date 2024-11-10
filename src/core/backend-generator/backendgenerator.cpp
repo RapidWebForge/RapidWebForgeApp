@@ -2,6 +2,7 @@
 #include <QDebug>
 #include <QFile>
 #include <QTextStream>
+#include "../../utils/render_callback/rendercallback.h"
 #include <fmt/core.h>
 #include <fstream>
 #include <inja/inja.hpp>
@@ -468,6 +469,15 @@ void BackendGenerator::generateIndexFiles()
 bool BackendGenerator::generateFrontendModels()
 {
     inja::Environment env;
+
+    try {
+        env.add_callback("render_type", 1, [&env](inja::Arguments &args) -> std::string {
+            return RenderCallback::renderTypeFrontendModel(env, args);
+        });
+    } catch (const std::exception &e) {
+        fmt::print(stderr, "Error adding callback: {}\n", e.what());
+    }
+
     std::string modelTemplatePath = ":/inja/frontend/model";
 
     // Cargar la plantilla para modelos
