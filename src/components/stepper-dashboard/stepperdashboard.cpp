@@ -1,6 +1,15 @@
 #include "stepperdashboard.h"
 #include <QMessageBox>
 #include <QTimer>
+#include "../../components/create-version/createversion.h"
+#include "../../components/delete-version/deleteversion.h"
+#include "../../components/manage-version/manageversion.h"
+#include "../../components/projects-panel/projectspanel.h"
+#include "../../components/stepper/stepper.h"
+#include "../../components/version-history/versionhistory.h"
+#include "../../core/configuration-manager/configurationmanager.h"
+#include "../../core/deploy-manager/deploymanager.h"
+#include "../../core/version-manager/versionmanager.h"
 #include "ui_stepperdashboard.h"
 #include <fmt/core.h>
 
@@ -11,16 +20,17 @@ StepperDashboard::StepperDashboard(QDialog *parent, const Project &project)
     , backendDashboard(new BackendDashboard())
     , projectMenu(new QMenu("Project", this))
     , versionsMenu(new QMenu("Versions", this))
-    , projectChangeAction(new QAction("Project change", this))
+    , projectChangeAction(new QAction("Change project", this))
     , createNewProjectAction(new QAction("Create new project", this))
     , saveChangesAction(new QAction("Save changes", this))
-    , deleteProjectAction(new QAction("Delete project", this))
+    , deployProjectAction(new QAction("Deploy project", this))
     , createVersionAction(new QAction("Create version", this))
     , changeVersionAction(new QAction("Change version", this))
     , versionHistoryAction(new QAction("Version history", this))
     , deleteVersionAction(new QAction("Delete version", this))
     , project(project)
     , codeGenerator(new CodeGenerator(project))
+    , versionManager(new VersionManager(project.getPath()))
 {
     ui->setupUi(this);
 
@@ -95,6 +105,7 @@ void StepperDashboard::onBackendSchemaLoaded()
 void StepperDashboard::onFrontendSchemaLoaded()
 {
     std::vector<View> views = codeGenerator->frontendGenerator.getViews();
+
     std::vector<Route> routes = codeGenerator->frontendGenerator.getRoutes();
 
     frontendDashboard->setViews(views);
@@ -311,10 +322,7 @@ void StepperDashboard::setupMenus()
     projectMenu->addAction(createNewProjectAction);
     projectMenu->addAction(saveChangesAction);
     projectMenu->addSeparator(); // Añadir un separador
-    projectMenu->addAction(deleteProjectAction);
-
-    // Configurar las acciones de cada opción
-    deleteProjectAction->setEnabled(false); // Deshabilitar la opción de eliminar para estilo
+    projectMenu->addAction(deployProjectAction);
 
     // Configurar acciones para el menú de Versions
     versionsMenu->addAction(createVersionAction);
@@ -324,10 +332,18 @@ void StepperDashboard::setupMenus()
     versionsMenu->addAction(deleteVersionAction);
 
     // Configurar las acciones de cada opción
-    deleteVersionAction->setEnabled(false); // Deshabilitar la opción de eliminar para estilo
+
+    connect(projectChangeAction, &QAction::triggered, this, &StepperDashboard::onProjectChange);
 
     // Conectar señales de las acciones a slots si es necesario
+    connect(createNewProjectAction, &QAction::triggered, this, &StepperDashboard::onCreateProject);
     connect(saveChangesAction, &QAction::triggered, this, &StepperDashboard::onSaveChanges);
+    connect(deployProjectAction, &QAction::triggered, this, &StepperDashboard::onDeployProject);
+    // Versions
+    connect(createVersionAction, &QAction::triggered, this, &StepperDashboard::onCreateVersion);
+    connect(changeVersionAction, &QAction::triggered, this, &StepperDashboard::onChangeVersion);
+    connect(versionHistoryAction, &QAction::triggered, this, &StepperDashboard::onVersionHistory);
+    connect(deleteVersionAction, &QAction::triggered, this, &StepperDashboard::onDeleteVersion);
 }
 
 void StepperDashboard::onSaveChanges()
@@ -340,7 +356,171 @@ void StepperDashboard::onSaveChanges()
 
     codeGenerator->frontendGenerator.setViews(frontendDashboard->getViews());
 
-    codeGenerator->frontendGenerator.updateFrontendCode();
+    if (codeGenerator->frontendGenerator.updateFrontendCode()) {
+        QMessageBox::information(this, "Save Changes", "Changes have been saved successfully.");
+    } else {
+        QMessageBox::warning(this, "Failed", "Failed to update JSON and generate code.");
+    }
+}
 
-    QMessageBox::information(this, "Save Changes", "Changes have been saved successfully.");
+void StepperDashboard::onCreateVersion()
+{
+    // Mostrar el diálogo para ingresar el nombre de la versión
+    CreateVersion dialog(versionManager, this);
+
+    if (dialog.exec() == QDialog::Accepted) {
+        // Obtener el nombre de la versión del diálogo
+        QString versionName = dialog.getVersionName();
+
+        if (versionName.isEmpty()) {
+            QMessageBox::warning(this, "Invalid Version", "Version name cannot be empty.");
+            return;
+        }
+
+        // Crear la versión en el repositorio (crear una nueva rama)
+        versionManager->createVersion(versionName.toStdString());
+
+        // Confirmación de éxito
+        QMessageBox::information(this, "Success", "Version created successfully.");
+    }
+}
+
+void StepperDashboard::onChangeVersion()
+{
+    // Crear el diálogo y pasar el `versionManager`
+    ManageVersion dialog(versionManager, this);
+
+    if (dialog.exec() == QDialog::Accepted) {
+        // Obtener la rama seleccionada del diálogo
+        QString selectedBranch = dialog.getSelectedBranch();
+        if (selectedBranch.isEmpty()) {
+            QMessageBox::warning(this, "Change Version", "No branch selected.");
+            return;
+        }
+
+        // Cambiar a la rama seleccionada
+        versionManager->changeVersion(selectedBranch.toStdString());
+
+        // Confirmación de éxito
+        QMessageBox::information(this, "Change Version", "Switched to version: " + selectedBranch);
+    }
+    // TODO: Usar el version manager
+}
+
+void StepperDashboard::onDeleteVersion()
+{
+    // Crear el diálogo para eliminar versiones
+    DeleteVersion dialog(this);
+
+    // Obtener la lista de versiones y establecerlas en el diálogo
+    std::vector<std::string> versions = versionManager->listVersions();
+    dialog.setVersions(versions);
+
+    if (dialog.exec() == QDialog::Accepted) {
+        // Obtener la versión seleccionada
+        QString selectedVersion = dialog.getSelectedVersion();
+
+        if (selectedVersion.isEmpty()) {
+            QMessageBox::warning(this, "Delete Version", "No version selected.");
+            return;
+        }
+
+        // Eliminar la versión seleccionada
+        versionManager->deleteVersion(selectedVersion.toStdString());
+
+        // Confirmación de éxito
+        QMessageBox::information(this,
+                                 "Delete Version",
+                                 "Version '" + selectedVersion + "' deleted successfully.");
+    }
+}
+
+void StepperDashboard::onVersionHistory()
+{
+    VersionHistory dialog(this);
+
+    // Obtener el historial de commits y ramas
+    std::vector<std::string> commits = versionManager->listCommits();
+    std::vector<std::string> branches = versionManager->listVersions();
+
+    // Verificar que la lista de commits no esté vacía
+    if (commits.empty() && branches.empty()) {
+        QMessageBox::information(this, "Version History", "No commits or branches found.");
+        return;
+    }
+
+    // Establecer la lista de commits y ramas en el diálogo
+    dialog.setCommits(commits);
+    dialog.setBranches(branches);
+
+    // Mostrar el diálogo
+    dialog.exec();
+    // TODO: Usar el version manager
+}
+
+void StepperDashboard::onDeployProject()
+{
+    std::vector<Transaction> transactions = codeGenerator->backendGenerator.getTransactions();
+
+    if (transactions.empty()) {
+        QMessageBox::critical(this, "Critical", "You cannot deploy without generate transactions");
+        return;
+    }
+
+    ConfigurationManager configurationManager;
+
+    std::string ngInxPath = configurationManager.getConfiguration().getNgInxPath();
+    std::string bunPath = configurationManager.getConfiguration().getBunPath();
+
+    if (ngInxPath.empty()) {
+        QMessageBox::critical(this, "Critical", "You cannot deploy without set NgInx Path");
+        return;
+    }
+    if (bunPath.empty()) {
+        QMessageBox::critical(this, "Critical", "You cannot deploy without set bun Path");
+        return;
+    }
+
+    try {
+        DeployManager deployManager(project.getPath(), ngInxPath);
+        // Iniciar el despliegue
+        deployManager.start(bunPath);
+    } catch (const std::exception &e) {
+        QMessageBox::critical(this, "Critical Error", e.what());
+        return;
+    }
+}
+
+void StepperDashboard::onProjectChange()
+{
+    ConfigurationManager configurationManager;
+    // Detener Nginx al cerrar el proyecto
+    try {
+        DeployManager deployManager(project.getPath(),
+                                    configurationManager.getConfiguration().getNgInxPath());
+        deployManager.kill();
+    } catch (const std::exception &e) {
+        QMessageBox::warning(this,
+                             "Warning",
+                             "Failed to stop Nginx: " + QString::fromStdString(e.what()));
+    }
+
+    // Cerrar el StepperDashboard
+    this->close();
+
+    // Crear y mostrar el ProjectsPanel
+    ProjectsPanel *projectsPanel = new ProjectsPanel();
+    projectsPanel->setAttribute(Qt::WA_DeleteOnClose); // Liberar memoria automáticamente al cerrar
+    projectsPanel->show();
+}
+
+void StepperDashboard::onCreateProject()
+{
+    // Cerrar el StepperDashboard
+    this->close();
+
+    // Crear y mostrar el ProjectsPanel
+    Stepper *createProjects = new Stepper();
+    createProjects->setAttribute(Qt::WA_DeleteOnClose); // Liberar memoria automáticamente al cerrar
+    createProjects->show();
 }

@@ -42,9 +42,13 @@ bool CodeGenerator::unzipFile(const std::string &zipPath, const std::string &ext
     QByteArray zipData = zipFile.readAll();
     zipFile.close();
 
-    // Descomprimir archivo
+    if (zipData.isEmpty()) {
+        fmt::print(stderr, "Zip file is empty or could not be read: {}\n", zipPath);
+        return false;
+    }
+
     if (!ZipHelper::unzip(zipData, extractPath)) {
-        fmt::print(stderr, "Failed to unzip base project\n");
+        fmt::print(stderr, "Failed to unzip base project to path: {}\n", extractPath);
         return false;
     }
 

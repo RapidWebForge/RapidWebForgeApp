@@ -1,6 +1,5 @@
 #include "creationassistant.h"
 #include <QFileDialog>
-#include <QMessageBox>
 #include "ui_creationassistant.h"
 
 CreationAssistant::CreationAssistant(QWidget *parent)
@@ -33,7 +32,7 @@ std::string CreationAssistant::isValid(Project &project)
     if (projectPath == "Select path" || projectPath.empty()) {
         return "Select a path for your project";
     } else {
-        project.setPath(projectPath);
+        project.setPath(projectPath + "/" + projectName);
     }
 
     // Validar si se debe crear un repositorio Git
@@ -92,4 +91,14 @@ void CreationAssistant::applyStylesCA()
     // Ajustar margenes y espaciamiento del layout principal (opcional)
     ui->verticalLayout->setContentsMargins(20, 0, 20, 0); // Ajusta los márgenes del layout
     ui->verticalLayout->setSpacing(10);                   // Ajusta el espaciado entre widgets
+}
+
+void CreationAssistant::keyPressEvent(QKeyEvent *event)
+{
+    if (event->key() == Qt::Key_Escape) {
+        // Ignorar la tecla "Escape" globalmente o asignarle otra función
+        event->ignore();
+    } else {
+        QWidget::keyPressEvent(event); // Ajusta esto si Stepper no hereda de QMainWindow
+    }
 }

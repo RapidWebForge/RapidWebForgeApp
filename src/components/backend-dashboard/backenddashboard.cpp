@@ -1,4 +1,5 @@
 #include "backenddashboard.h"
+#include <QFile>
 #include <QInputDialog>
 #include <QLineEdit>
 #include <QMessageBox>
@@ -29,14 +30,10 @@ BackendDashboard::BackendDashboard(QWidget *parent)
             this,
             &BackendDashboard::onTableSelected);
 
-    connect(ui->pushButton, &QPushButton::clicked, this, &BackendDashboard::showCreateTableDialog);
     connect(ui->addButton, &QPushButton::clicked, this, &BackendDashboard::showAddFieldDialog);
 
-    connect(ui->editDB, &QPushButton::clicked, this, &BackendDashboard::on_editButton_clicked);
     connect(ui->deleteDB, &QPushButton::clicked, this, &BackendDashboard::on_deleteButton_clicked);
 
-    // Conectar el evento del botón de editar
-    connect(ui->editButton, &QPushButton::clicked, this, &BackendDashboard::showEditFieldDialog);
     connect(ui->deleteButton,
             &QPushButton::clicked,
             this,
@@ -60,62 +57,11 @@ BackendDashboard::~BackendDashboard()
 
 void BackendDashboard::applyStylesBack()
 {
-    this->setStyleSheet("QTreeWidget {"
-                        "   border: 1px solid #eaeaea;"
-                        "   border-radius: 8px;"
-                        "   background-color: white;"
-                        "   font-size: 14px;"
-                        "   margin: 10px;"
-                        "   padding: 5px;"
-                        "}"
-                        "QTreeWidget::item {"
-                        "   padding: 5px;"
-                        "}"
-                        "QTreeWidget::item:selected {"
-                        "   background-color: #0F66DE;"
-                        "   color: white;"
-                        "}"
-                        "QGroupBox {"
-                        "   border: 1px solid #dcdcdc;"
-                        "   border-radius: 8px;"
-                        "   margin-top: 15px;"
-                        "   padding: 10px;"
-                        "   font-size: 16px;"
-                        "   color: #333;"
-                        "}"
-                        "QTreeWidget, QTableWidget, QListWidget {"
-                        "   border: 1px solid #eaeaea;"
-                        "   border-radius: 5px;"
-                        "   font-size: 14px;"
-                        "   background-color: #fafafa;"
-                        "}"
-                        "QPushButton {"
-                        "   background-color: white;"
-                        "   color: white;"
-                        "   border: none;"
-                        "   border-radius: 12px;"
-                        "   padding: 5px 5px;"
-                        "   font-size: 12px;"
-                        "}"
-                        "QPushButton:hover {"
-                        "   background-color: #eaeaea;"
-                        "   color: white;"
-                        "}"
-                        "QPushButton:pressed {"
-                        "   background-color: #eaeaea;"
-                        "}"
-                        "QLabel#titleLabel {"
-                        "   font-size: 36px;"
-                        "   font-weight: bold;"
-                        "   color: #333;"
-                        "}"
-                        "QGroupBox {"
-                        "   border: 1px solid #dcdcdc;"
-                        "   border-radius: 8px;"
-                        "   padding: 10px;"
-                        "   font-size: 16px;"
-                        "   color: #333;"
-                        "}");
+    QFile styleFile(":/styles/backenddashboard");
+    if (styleFile.open(QFile::ReadOnly)) {
+        QString styleSheet = QLatin1String(styleFile.readAll());
+        this->setStyleSheet(styleSheet);
+    }
 
     ui->titleLabel->setStyleSheet("font-size: 35px; color: #27292A; padding-top: 10px; "
                                   "padding-left: 40px; padding-bottom: 20px;");
@@ -142,9 +88,9 @@ void BackendDashboard::applyStylesBack()
     ui->deleteButton->setIconSize(QSize(16, 16));
     ui->deleteButton->setToolTip("Delete table");
 
-    ui->pushButton->setIcon(QIcon(":/icons/adddb.png"));
-    ui->pushButton->setIconSize(QSize(16, 16));
-    ui->pushButton->setToolTip("Delete table");
+    ui->createTableButton->setIcon(QIcon(":/icons/adddb.png"));
+    ui->createTableButton->setIconSize(QSize(16, 16));
+    ui->createTableButton->setToolTip("Delete table");
 
     ui->deleteDB->setIcon(QIcon(":/icons/delete.png"));
     ui->deleteDB->setIconSize(QSize(16, 16));
@@ -162,41 +108,6 @@ void BackendDashboard::setupTasksTable()
     QStringList headers;
     headers << "Field name" << "Type" << "PK" << "FK" << "Const";
     ui->tasksTableWidget->setHorizontalHeaderLabels(headers);
-
-    // Definir el ancho mínimo de las columnas
-    //for (int column = 0; column < ui->tasksTableWidget->columnCount(); ++column) {
-    //    ui->tasksTableWidget->setColumnWidth(column,
-    //                                         30); // Establece el ancho mínimo para cada columna
-    //    ui->tasksTableWidget->horizontalHeader()->setMinimumSectionSize(
-    //        30); // Mínimo tamaño por sección
-    //}
-
-    //ui->tasksTableWidget->setRowCount(4); // Número de filas
-
-    // Agregar datos a la tabla
-    //ui->tasksTableWidget->setItem(0, 0, new QTableWidgetItem("id"));
-    //ui->tasksTableWidget->setItem(0, 1, new QTableWidgetItem("int"));
-    //ui->tasksTableWidget->setItem(0, 2, new QTableWidgetItem(""));
-    //ui->tasksTableWidget->setItem(0, 3, new QTableWidgetItem(""));
-    //ui->tasksTableWidget->setItem(0, 4, new QTableWidgetItem("NOT NULL"));
-
-    //ui->tasksTableWidget->setItem(1, 0, new QTableWidgetItem("title"));
-    //ui->tasksTableWidget->setItem(1, 1, new QTableWidgetItem("chart(55)"));
-    //ui->tasksTableWidget->setItem(1, 2, new QTableWidgetItem(""));
-    //ui->tasksTableWidget->setItem(1, 3, new QTableWidgetItem(""));
-    //ui->tasksTableWidget->setItem(1, 4, new QTableWidgetItem("UNIQUE"));
-
-    //ui->tasksTableWidget->setItem(2, 0, new QTableWidgetItem("description"));
-    //ui->tasksTableWidget->setItem(2, 1, new QTableWidgetItem("chart(55)"));
-    //ui->tasksTableWidget->setItem(2, 2, new QTableWidgetItem(""));
-    //ui->tasksTableWidget->setItem(2, 3, new QTableWidgetItem(""));
-    //ui->tasksTableWidget->setItem(2, 4, new QTableWidgetItem("CHECK"));
-
-    //ui->tasksTableWidget->setItem(3, 0, new QTableWidgetItem("creation date"));
-    //ui->tasksTableWidget->setItem(3, 1, new QTableWidgetItem("chart(55)"));
-    //ui->tasksTableWidget->setItem(3, 2, new QTableWidgetItem(""));
-    //ui->tasksTableWidget->setItem(3, 3, new QTableWidgetItem(""));
-    //ui->tasksTableWidget->setItem(3, 4, new QTableWidgetItem("DEFAULT"));
 
     // Configurar la propiedad de ajuste de texto (WordWrap)
     ui->tasksTableWidget->setWordWrap(true);
@@ -251,22 +162,6 @@ void BackendDashboard::setupTasksTable()
         QHeaderView::Stretch);                                 // Extiende las columnas
     ui->tasksTableWidget->verticalHeader()->setVisible(false); // Oculta el encabezado vertical
     ui->tasksTableWidget->setSelectionBehavior(QAbstractItemView::SelectRows); // Selección por filas
-
-    // Ajustes de estilo
-    ui->tasksTableWidget->setStyleSheet("QTableWidget {"
-                                        "   background-color: #ffffff;"
-                                        "   border: 1px solid #dcdcdc;"
-                                        "   border-radius: 8px;"
-                                        "   font-size: 14px;"
-                                        "   color: #333;"
-                                        "}"
-                                        "QTableWidget::item {"
-                                        "   padding: 10px;"
-                                        "}"
-                                        "QTableWidget::item:selected {"
-                                        "   background-color: #0F66DE;"
-                                        "   color: white;"
-                                        "}");
 }
 
 void BackendDashboard::setupTasksMethodsList()
@@ -329,19 +224,6 @@ void BackendDashboard::setupTasksMethodsList()
                                               "}");
 }
 
-void BackendDashboard::showCreateTableDialog()
-{
-    if (!createTableDialog) {
-        createTableDialog = new CreateTableDialog(this);
-
-        connect(createTableDialog,
-                &CreateTableDialog::transactionSaved,
-                this,
-                &BackendDashboard::onTransactionSaved);
-    }
-    createTableDialog->exec();
-}
-
 void BackendDashboard::showAddFieldDialog()
 {
     if (!addFieldDialog) {
@@ -384,11 +266,6 @@ void BackendDashboard::setTransactions(const std::vector<Transaction> &newTransa
     for (const auto &transaction : transactions) {
         QTreeWidgetItem *item = new QTreeWidgetItem(rootItem);
         item->setText(0, QString::fromStdString(transaction.getName()));
-        // item->setIcon(0, QIcon(":/icons/table.png"));
-        // item->setIcon(0, QIcon(":/icons/delete.png"));
-        // TODO: Replace for a custom widget to allow multiple icons
-        // Habilitar la edición in-place para el nombre de la tabla
-        //item->setFlags(item->flags() | Qt::ItemIsEditable);
     }
 
     // Expandir todo el árbol para mostrar todas las tablas
@@ -425,7 +302,8 @@ void BackendDashboard::onFieldSaved(const Field &field)
 
     // Si no se encontró el campo, lo agregamos (esto no debería suceder durante una edición)
     if (!fieldUpdated) {
-        qDebug() << "Error: trying to add a new field instead of updating the existing one.";
+        qDebug() << "Adding new field: " << QString::fromStdString(field.getName());
+        currentTransaction.getFields().push_back(field); // Agregar el nuevo campo
     }
 
     // Actualizar la transacción en la lista de transacciones
@@ -562,71 +440,6 @@ std::string toLowerCase(const std::string &str)
     return lowerCaseStr;
 }
 
-void BackendDashboard::on_editButton_clicked()
-{
-    QTreeWidgetItem *selectedItem = ui->databaseTreeWidget->currentItem();
-    if (!selectedItem || selectedItem == rootItem)
-        return; // Si no hay nada seleccionado o es el nodo raíz, no hacer nada
-
-    QString currentName = selectedItem->text(0);
-
-    // Crear un diálogo personalizado
-    QDialog dialog(this);
-    dialog.setWindowTitle("Edit Table Name");
-
-    // Crear un layout vertical para los widgets
-    QVBoxLayout *layout = new QVBoxLayout(&dialog);
-
-    // Crear un label y un line edit para el nuevo nombre
-    QLabel *label = new QLabel("New table name:", &dialog);
-    QLineEdit *lineEdit = new QLineEdit(currentName, &dialog);
-
-    // Crear botones OK y Cancel
-    QPushButton *okButton = new QPushButton("Save", &dialog);
-    QPushButton *cancelButton = new QPushButton("Cancel", &dialog);
-
-    // Aplicar estilos a los botones
-    okButton->setStyleSheet("background-color: #0F66DE; padding: 5px 10px;");
-    cancelButton->setStyleSheet("background-color: #F44336; padding: 5px 10px;");
-
-    // Crear un layout horizontal para los botones
-    QHBoxLayout *buttonLayout = new QHBoxLayout;
-    buttonLayout->addWidget(okButton);
-    buttonLayout->addWidget(cancelButton);
-
-    // Añadir los widgets al layout principal
-    layout->addWidget(label);
-    layout->addWidget(lineEdit);
-    layout->addLayout(buttonLayout);
-
-    // Conectar los botones a las funciones de aceptación y rechazo
-    connect(okButton, &QPushButton::clicked, &dialog, &QDialog::accept);
-    connect(cancelButton, &QPushButton::clicked, &dialog, &QDialog::reject);
-
-    // Mostrar el diálogo
-    if (dialog.exec() == QDialog::Accepted) {
-        QString newName = lineEdit->text();
-
-        if (!newName.isEmpty() && newName != currentName) {
-            // Actualizar el nombre en la interfaz gráfica
-            selectedItem->setText(0, newName);
-
-            // Actualizar el nombre en la lista de transacciones
-            for (auto &transaction : transactions) {
-                if (transaction.getName() == currentName.toStdString()) {
-                    transaction.setName(newName.toStdString());
-                    transaction.setNameConst(newName.toLower().toStdString());
-                    // Actualizar los labels de la UI
-                    ui->labelTable->setText(newName + " Table");
-                    ui->labelMethods->setText(newName + " Methods");
-
-                    break;
-                }
-            }
-        }
-    }
-}
-
 void BackendDashboard::on_deleteButton_clicked()
 {
     // Obtener el elemento seleccionado en el árbol de tablas
@@ -745,7 +558,97 @@ void BackendDashboard::on_deleteFieldButton_clicked()
     }
 }
 
-void BackendDashboard::showEditFieldDialog()
+void BackendDashboard::onFieldUpdated(const Field &updatedField)
+{
+    bool fieldUpdated = false;
+
+    // Recorrer los campos de la transacción actual
+    for (auto &existingField : currentTransaction.getFields()) {
+        if (existingField.getName() == updatedField.getName()) {
+            // Si encontramos un campo con el mismo nombre, actualizamos sus valores
+            existingField = updatedField;
+            fieldUpdated = true;
+            break;
+        }
+    }
+
+    // Actualizar la transacción en el vector de transacciones
+    for (auto &transaction : transactions) {
+        if (transaction.getName() == currentTransaction.getName()) {
+            transaction.setFields(currentTransaction.getFields());
+            break;
+        }
+    }
+
+    updateTasksTable(currentTransaction); // Actualizar la tabla visual
+}
+
+void BackendDashboard::on_editDB_clicked()
+{
+    QTreeWidgetItem *selectedItem = ui->databaseTreeWidget->currentItem();
+    if (!selectedItem || selectedItem == rootItem)
+        return; // Si no hay nada seleccionado o es el nodo raíz, no hacer nada
+
+    QString currentName = selectedItem->text(0);
+
+    // Crear un diálogo personalizado
+    QDialog dialog(this);
+    dialog.setWindowTitle("Edit Table Name");
+
+    // Crear un layout vertical para los widgets
+    QVBoxLayout *layout = new QVBoxLayout(&dialog);
+
+    // Crear un label y un line edit para el nuevo nombre
+    QLabel *label = new QLabel("New table name:", &dialog);
+    QLineEdit *lineEdit = new QLineEdit(currentName, &dialog);
+
+    // Crear botones OK y Cancel
+    QPushButton *okButton = new QPushButton("Save", &dialog);
+    QPushButton *cancelButton = new QPushButton("Cancel", &dialog);
+
+    // Aplicar estilos a los botones
+    okButton->setStyleSheet("background-color: #0F66DE; padding: 5px 10px;");
+    cancelButton->setStyleSheet("background-color: #F44336; padding: 5px 10px;");
+
+    // Crear un layout horizontal para los botones
+    QHBoxLayout *buttonLayout = new QHBoxLayout;
+    buttonLayout->addWidget(okButton);
+    buttonLayout->addWidget(cancelButton);
+
+    // Añadir los widgets al layout principal
+    layout->addWidget(label);
+    layout->addWidget(lineEdit);
+    layout->addLayout(buttonLayout);
+
+    // Conectar los botones a las funciones de aceptación y rechazo
+    connect(okButton, &QPushButton::clicked, &dialog, &QDialog::accept);
+    connect(cancelButton, &QPushButton::clicked, &dialog, &QDialog::reject);
+
+    // Mostrar el diálogo
+    if (dialog.exec() == QDialog::Accepted) {
+        QString newName = lineEdit->text();
+
+        if (!newName.isEmpty() && newName != currentName) {
+            // Actualizar el nombre en la interfaz gráfica
+            selectedItem->setText(0, newName);
+
+            // Actualizar el nombre en la lista de transacciones
+            for (auto &transaction : transactions) {
+                if (transaction.getName() == currentName.toStdString()) {
+                    transaction.setName(newName.toStdString());
+                    transaction.setNameConst(newName.toLower().toStdString());
+                    // Actualizar los labels de la UI
+                    ui->labelTable->setText(newName + " Table");
+                    ui->labelMethods->setText(newName + " Methods");
+
+                    break;
+                }
+            }
+        }
+    }
+}
+
+void BackendDashboard::on_editButton_clicked()
 {
     int selectedRow = ui->tasksTableWidget->currentRow(); // Obtener la fila seleccionada
 
@@ -789,27 +692,15 @@ void BackendDashboard::showEditFieldDialog()
     }
 }
 
-void BackendDashboard::onFieldUpdated(const Field &updatedField)
+void BackendDashboard::on_createTableButton_clicked()
 {
-    bool fieldUpdated = false;
+    if (!createTableDialog) {
+        createTableDialog = new CreateTableDialog(this);
 
-    // Recorrer los campos de la transacción actual
-    for (auto &existingField : currentTransaction.getFields()) {
-        if (existingField.getName() == updatedField.getName()) {
-            // Si encontramos un campo con el mismo nombre, actualizamos sus valores
-            existingField = updatedField;
-            fieldUpdated = true;
-            break;
-        }
+        connect(createTableDialog,
+                &CreateTableDialog::transactionSaved,
+                this,
+                &BackendDashboard::onTransactionSaved);
     }
-
-    // Actualizar la transacción en el vector de transacciones
-    for (auto &transaction : transactions) {
-        if (transaction.getName() == currentTransaction.getName()) {
-            transaction.setFields(currentTransaction.getFields());
-            break;
-        }
-    }
-
-    updateTasksTable(currentTransaction); // Actualizar la tabla visual
+    createTableDialog->exec();
 }

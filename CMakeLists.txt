@@ -28,11 +28,13 @@ endif()
 
 # Vcpkg
 find_package(boost_algorithm CONFIG REQUIRED)
+find_package(boost_process REQUIRED CONFIG)
 find_package(fmt CONFIG REQUIRED)
 find_package(inja CONFIG REQUIRED)
 find_package(unofficial-mysql-connector-cpp CONFIG REQUIRED)
 find_package(unofficial-sqlite3 CONFIG REQUIRED)
 find_package(libzip CONFIG REQUIRED)
+find_package(PkgConfig REQUIRED)
 
 set(PROJECT_SOURCES
         src/main.cpp
@@ -84,9 +86,26 @@ set(PROJECT_SOURCES
         src/components/create-view/createview.ui
         src/components/custom-tree-widget/customtreewidget.h
         src/components/custom-tree-widget/customtreewidget.cpp
+        src/components/create-version/createversion.h
+        src/components/create-version/createversion.cpp
+        src/components/create-version/createversion.ui
+        src/components/manage-version/manageversion.h
+        src/components/manage-version/manageversion.cpp
+        src/components/manage-version/manageversion.ui
+        src/components/version-history/versionhistory.h
+        src/components/version-history/versionhistory.cpp
+        src/components/version-history/versionhistory.ui
+        src/components/configuration-view/configurationview.h
+        src/components/configuration-view/configurationview.cpp
+        src/components/configuration-view/configurationview.ui
         src/components/editfield-dashboard/editfielddialog.h
         src/components/editfield-dashboard/editfielddialog.cpp
         src/components/editfield-dashboard/editfielddialog.ui
+        src/components/customprogress-dialog/customprogressdialog.h
+        src/components/customprogress-dialog/customprogressdialog.cpp
+        src/components/delete-version/deleteversion.h
+        src/components/delete-version/deleteversion.cpp
+        src/components/delete-version/deleteversion.ui
         # Core
         src/core/project-manager/projectmanager.h
         src/core/project-manager/projectmanager.cpp
@@ -96,6 +115,12 @@ set(PROJECT_SOURCES
         src/core/backend-generator/backendgenerator.cpp
         src/core/frontend-generator/frontendgenerator.h
         src/core/frontend-generator/frontendgenerator.cpp
+        src/core/version-manager/versionmanager.h
+        src/core/version-manager/versionmanager.cpp
+        src/core/configuration-manager/configurationmanager.h
+        src/core/configuration-manager/configurationmanager.cpp
+        src/core/deploy-manager/deploymanager.h
+        src/core/deploy-manager/deploymanager.cpp
         # Models
         src/models/project/project.h
         src/models/project/project.cpp
@@ -111,6 +136,8 @@ set(PROJECT_SOURCES
         src/models/component/component.cpp
         src/models/view/view.h
         src/models/view/view.cpp
+        src/models/configuration/configuration.h
+        src/models/configuration/configuration.cpp
         # Utils
         src/utils/database/database.h
         src/utils/database/database.cpp
@@ -118,6 +145,8 @@ set(PROJECT_SOURCES
         src/utils/ziphelper/ziphelper.cpp
         src/utils/file/fileutiils.h
         src/utils/file/fileutiils.cpp
+        src/utils/render_callback/rendercallback.h
+        src/utils/render_callback/rendercallback.cpp
         # Resources
         src/resources/resources.qrc
 )
@@ -134,14 +163,18 @@ else()
     )
 endif()
 
+pkg_check_modules(LIBGIT2 REQUIRED IMPORTED_TARGET libgit2)
+
 target_link_libraries(RapidWebForgeApp PRIVATE
     Qt${QT_VERSION_MAJOR}::Widgets
     Boost::algorithm
+    Boost::process
     fmt::fmt
     pantor::inja
     unofficial::mysql-connector-cpp::connector
     unofficial::sqlite3::sqlite3
     libzip::zip
+    PkgConfig::LIBGIT2
     ${MACOS_SPECIFIC_LIBS}
 )
 

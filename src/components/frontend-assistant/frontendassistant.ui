@@ -100,6 +100,9 @@
         <property name="text">
          <string>9000</string>
         </property>
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
        </widget>
       </item>
      </layout>

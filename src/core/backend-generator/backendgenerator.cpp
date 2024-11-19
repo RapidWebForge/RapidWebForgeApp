@@ -2,6 +2,7 @@
 #include <QDebug>
 #include <QFile>
 #include <QTextStream>
+#include "../../utils/render_callback/rendercallback.h"
 #include <fmt/core.h>
 #include <fstream>
 #include <inja/inja.hpp>
@@ -98,8 +99,7 @@ void BackendGenerator::parseJson(const nlohmann::json &jsonSchema)
             field.setType(fieldJson["type"].get<std::string>());
             field.setIsNull(fieldJson["isNull"].get<bool>());
             field.setIsUnique(fieldJson["isUnique"].get<bool>());
-            field.setIsPrimaryKey(
-                fieldJson["isPrimaryKey"].get<bool>()); // Asegúrate de cargar isPrimaryKey
+            //field.setIsPrimaryKey(fieldJson["isPrimaryKey"].get<bool>()); // Asegúrate de cargar isPrimaryKey
             field.setIsForeignKey(fieldJson["isForeignKey"].get<bool>());
 
             // Cargar los nuevos constraints desde el JSON
@@ -115,9 +115,20 @@ void BackendGenerator::parseJson(const nlohmann::json &jsonSchema)
                 field.setHasDefault(false); // Si no está en el JSON, asigna false por defecto
             }
 
-            // Si es una Foreign Key, leer la tabla relacionada
+            /// Si es una Foreign Key, leer la tabla relacionada y almacenar tanto el nombre original como la versión en minúsculas
             if (fieldJson["isForeignKey"].get<bool>()) {
-                field.setForeignKeyTable(fieldJson["foreignKeyTable"].get<std::string>());
+                // Obtener la tabla de la clave foránea
+                std::string foreignKeyTable = fieldJson["foreignKeyTable"].get<std::string>();
+                field.setForeignKeyTable(foreignKeyTable); // Guardar el nombre original
+
+                // Convertir a minúsculas y guardar
+                std::string foreignKeyTableLower = foreignKeyTable;
+                std::transform(foreignKeyTableLower.begin(),
+                               foreignKeyTableLower.end(),
+                               foreignKeyTableLower.begin(),
+                               ::tolower);
+                field.setForeignKeyTableLower(
+                    foreignKeyTableLower); // Asignar la versión en minúsculas
             }
 
             fields.push_back(field);
@@ -151,7 +162,7 @@ bool BackendGenerator::updateSchema()
             fieldJson["type"] = field.getType();
             fieldJson["isNull"] = field.getIsNull();
             fieldJson["isUnique"] = field.getIsUnique();
-            fieldJson["isPrimaryKey"] = field.isPrimaryKey();
+            //fieldJson["isPrimaryKey"] = field.isPrimaryKey();
             fieldJson["isForeignKey"] = field.isForeignKey();
             // Incluir los nuevos constraints en el JSON
             fieldJson["hasCheck"] = field.getHasCheck();
@@ -160,6 +171,10 @@ bool BackendGenerator::updateSchema()
             // Si es una Foreign Key, guarda la tabla relacionada
             if (field.isForeignKey()) {
                 fieldJson["foreignKeyTable"] = field.getForeignKeyTable();
+                // Asegúrate de que se está añadiendo el campo en minúsculas
+                std::string foreignKeyTableLower = field.getForeignKeyTableLower();
+                fieldJson["foreignKeyTableLower"]
+                    = foreignKeyTableLower; // Guardar la versión en minúsculas
             }
             // Add the field JSON object to the fields array
             transactionJson["fields"].push_back(fieldJson);
@@ -227,6 +242,80 @@ bool BackendGenerator::updateBackendCode()
     return false;
 }
 
+void BackendGenerator::generateFileAll(const Transaction &transaction,
+                                       const std::string &templatePath,
+                                       const std::string &outputPath,
+                                       bool includeFields,
+                                       const nlohmann::json &allTransactions)
+{
+    inja::Environment env;
+    nlohmann::json data;
+    data["name"] = transaction.getName();
+    data["nameConst"] = transaction.getNameConst();
+
+    // Verificar si hay campos y si se deben incluir en el contexto
+    if (includeFields) {
+        data["fields"] = nlohmann::json::array();
+        for (const auto &field : transaction.getFields()) {
+            nlohmann::json fieldJson;
+            fieldJson["name"] = field.getName();
+            fieldJson["type"] = field.getType();
+            fieldJson["isNull"] = field.getIsNull();
+            fieldJson["isUnique"] = field.getIsUnique();
+            fieldJson["isForeignKey"] = field.isForeignKey(); // Campo existente
+
+            // Si es una Foreign Key, agregar la tabla relacionada
+            if (field.isForeignKey()) {
+                fieldJson["foreignKeyTable"] = field.getForeignKeyTable();
+                fieldJson["foreignKeyTableLower"]
+                    = field.getForeignKeyTableLower(); // Nombre en minúsculas
+            }
+
+            data["fields"].push_back(fieldJson);
+        }
+    }
+
+    // Verificar que `allTransactions` no esté vacío
+    if (allTransactions.is_null() || allTransactions.empty()) {
+        fmt::print(stderr, "allTransactions is empty or null.\n");
+        return;
+    }
+    data["allTransactions"] = allTransactions;
+    // Verificar si el archivo de plantilla existe y puede abrirse
+    QFile file(QString::fromStdString(templatePath));
+    if (!file.exists()) {
+        fmt::print(stderr, "Template file does not exist: {}\n", templatePath);
+        return;
+    }
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        fmt::print(stderr, "Unable to open template file from resource: {}\n", templatePath);
+        return;
+    }
+
+    QTextStream in(&file);
+    QString templateContent = in.readAll();
+    file.close();
+
+    // Convertir el contenido a std::string para usarlo con Inja
+    std::string templateString = templateContent.toStdString();
+
+    // Depuración: Imprimir el JSON para verificar su estructura antes de renderizar
+    fmt::print("Data being passed to Inja:\n{}\n", data.dump(2));
+
+    try {
+        // Renderizar la plantilla con Inja
+        std::string result = env.render(templateString, data);
+
+        // Escribir el archivo de salida
+        writeFile(outputPath, result);
+    } catch (const std::exception &e) {
+        fmt::print(stderr,
+                   "General error generating file for {}: {}\n",
+                   transaction.getName(),
+                   e.what());
+    }
+}
+
 void BackendGenerator::generateFile(const Transaction &transaction,
                                     const std::string &templatePath,
                                     const std::string &outputPath,
@@ -245,6 +334,18 @@ void BackendGenerator::generateFile(const Transaction &transaction,
             fieldJson["type"] = field.getType();
             fieldJson["isNull"] = field.getIsNull();
             fieldJson["isUnique"] = field.getIsUnique();
+
+            // Incluyendo los nuevos campos
+            fieldJson["hasCheck"] = field.getHasCheck();      // Nuevo campo
+            fieldJson["hasDefault"] = field.getHasDefault();  // Nuevo campo
+            fieldJson["isForeignKey"] = field.isForeignKey(); // Campo existente
+
+            // Si es una Foreign Key, incluir la tabla relacionada
+            if (field.isForeignKey()) {
+                fieldJson["foreignKeyTable"] = field.getForeignKeyTable(); // Nombre original
+                fieldJson["foreignKeyTableLower"]
+                    = field.getForeignKeyTableLower(); // Nombre en minúsculas
+            }
 
             data["fields"].push_back(fieldJson);
         }
@@ -277,6 +378,15 @@ void BackendGenerator::generateController(const Transaction &transaction)
     std::string templatePath = ":/inja/backend/controllers";
     std::string outputPath = projectPath + "/backend/controllers/" + transaction.getNameConst()
                              + "Controller.js";
+
+    // Crear un JSON con todas las transacciones
+    nlohmann::json allTransactionsData = nlohmann::json::array();
+    for (const auto &otherTransaction : transactions) {
+        nlohmann::json transactionJson;
+        transactionJson["name"] = otherTransaction.getName();
+        transactionJson["nameConst"] = otherTransaction.getNameConst();
+        allTransactionsData.push_back(transactionJson);
+    }
     generateFile(transaction, templatePath, outputPath);
 }
 
@@ -292,7 +402,7 @@ void BackendGenerator::generateRoute(const Transaction &transaction)
     std::string templatePath = ":/inja/backend/routes";
     std::string outputPath = projectPath + "/backend/routes/" + transaction.getNameConst()
                              + "Routes.js";
-    generateFile(transaction, templatePath, outputPath, false);
+    generateFile(transaction, templatePath, outputPath);
 }
 
 void BackendGenerator::generateIndexFiles()
@@ -359,6 +469,15 @@ void BackendGenerator::generateIndexFiles()
 bool BackendGenerator::generateFrontendModels()
 {
     inja::Environment env;
+
+    try {
+        env.add_callback("render_type", 1, [&env](inja::Arguments &args) -> std::string {
+            return RenderCallback::renderTypeFrontendModel(env, args);
+        });
+    } catch (const std::exception &e) {
+        fmt::print(stderr, "Error adding callback: {}\n", e.what());
+    }
+
     std::string modelTemplatePath = ":/inja/frontend/model";
 
     // Cargar la plantilla para modelos

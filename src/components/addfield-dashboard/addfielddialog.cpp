@@ -1,4 +1,5 @@
 #include "addfielddialog.h"
+#include <QFile>
 #include <QMessageBox>
 #include "ui_addfielddialog.h"
 
@@ -16,11 +17,33 @@ AddFieldDialog::AddFieldDialog(QWidget *parent)
             &QCheckBox::checkStateChanged, // Cambiar stateChanged a checkStateChanged
             this,
             &AddFieldDialog::on_foreignKeyCheckBox_stateChanged);
+
+    connect(ui->cancelButton, &QPushButton::clicked, this, &QDialog::close);
+
+    //Ocultar defaul language
+    ui->primaryKeyLabel->hide();
+    ui->primaryKeyCheckBox->hide();
+
+    applyStyles();
 }
 
 AddFieldDialog::~AddFieldDialog()
 {
     delete ui;
+}
+
+void AddFieldDialog::applyStyles()
+{
+    QFile primaryButtonstyleFile(":/styles/primarybutton");
+    if (primaryButtonstyleFile.open(QFile::ReadOnly)) {
+        QString styleSheet = QLatin1String(primaryButtonstyleFile.readAll());
+        ui->addButton->setStyleSheet(styleSheet);
+    }
+    QFile secondaryButtonstyleFile(":/styles/secondarybutton");
+    if (secondaryButtonstyleFile.open(QFile::ReadOnly)) {
+        QString styleSheet = QLatin1String(secondaryButtonstyleFile.readAll());
+        ui->cancelButton->setStyleSheet(styleSheet);
+    }
 }
 
 void AddFieldDialog::setTransaction(Transaction &transaction)

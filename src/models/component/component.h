@@ -29,7 +29,7 @@ public:
     void setType(ComponentType type);
     void setProps(const std::map<std::string, std::string> &props);
     void addNestedComponent(const Component &component);
-    void setNestedComponents(const std::vector<Component> &components); // Nuevo método
+    void setNestedComponents(const std::vector<Component> &components);
     void initializeDefaultProps();
     void setAllowItems(bool allow);
 };

@@ -1,8 +1,10 @@
 #ifndef STEPPER_H
 #define STEPPER_H
 
+#include <QKeyEvent>
 #include <QWidget>
 #include "../../core/project-manager/projectmanager.h"
+#include "../../core/version-manager/versionmanager.h"
 #include "../../models/project/project.h"
 #include "../backend-assistant/backendassistant.h"
 #include "../creation-assistant/creationassistant.h"
@@ -22,6 +24,9 @@ public:
     explicit Stepper(QWidget *parent = nullptr);
     ~Stepper();
 
+signals:
+    void backToProjectsPanel();
+
 private slots:
     void on_backButton_clicked();
     void on_nextButton_clicked();
@@ -29,7 +34,6 @@ private slots:
 private:
     Ui::Stepper *ui;
     void applyStyles();
-    void create_git_repo(const std::string &projectPath); // Método para crear repositorio Git
     CreationAssistant *creationAssistant;
     DatabaseAssistant *databaseAssistant;
     FrontendAssistant *frontendAssistant;

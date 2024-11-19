@@ -37,20 +37,46 @@ public slots:
 private slots:
     void showCreateViewDialog();
 
-    void on_addColumnButton_clicked();
+    void on_saveButton_clicked();
     void onCurrentViewTreeItemSelected(QTreeWidgetItem *item, int column);
-    void onItemDropped(QTreeWidgetItem *parentItem, QTreeWidgetItem *droppedItem);
+    void onItemDropped(QTreeWidgetItem *parentItem, QTreeWidgetItem *droppedItem, int dropIndex);
+    void onPropertyValueChanged(int row, int column);
+
+    void on_deleteButton_clicked();
 
 private:
     Ui::FrontendDashboard *ui;
 
     void applyStylesFront();
+
+    void configureTreeWidget(CustomTreeWidget *treeWidget,
+                             bool acceptDrops,
+                             QAbstractItemView::DragDropMode mode);
     void setUpTreeWidgets();
+
+    void setDraggableFlags(QTreeWidgetItem *item, bool isDraggable);
     void setComponentsDraggable();
+
     void populateCurrentViewTree();
     void convertTreeToViews();
-    void populateNestedComponents(QTreeWidgetItem *parentItem, std::vector<Component> &component);
+    void populateNestedItems(QTreeWidgetItem *parentItem,
+                             const std::vector<Component> &nestedComponents);
     void populatePropertiesTable(const Component &component);
+    Component convertItemToComponent(QTreeWidgetItem *item);
+    Component *findComponentByHierarchy(std::vector<Component> &components,
+                                        const std::vector<QTreeWidgetItem *> &hierarchy,
+                                        int level);
+    Component *findComponentInTree(View &view, QTreeWidgetItem *item);
+    Component *findNestedComponent(Component &parent, QTreeWidgetItem *item);
+
+    // Auxiliar functions to onItemDropped
+    QTreeWidgetItem *createTreeItem(const QString &text);
+    void insertComponentInView(Component &newComponent, QTreeWidgetItem *parentItem, int dropIndex);
+    void insertNestedComponent(Component *parentComponent,
+                               Component &newComponent,
+                               QTreeWidgetItem *parentItem,
+                               int dropIndex);
+    bool isParentView(QTreeWidgetItem *item) const;
 
     CreateView *createViewDialog;
     std::vector<Route> routes;

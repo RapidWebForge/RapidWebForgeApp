@@ -3,8 +3,11 @@
     "boost-algorithm",
     "fmt",
     "inja",
+    "libgit2",
+    "libzip",
     "mysql-connector-cpp",
     "sqlite3",
-    "libzip"
+    "boost-process",
+    "pkgconf"
   ]
 }

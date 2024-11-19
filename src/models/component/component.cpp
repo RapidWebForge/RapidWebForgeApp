@@ -2,18 +2,14 @@
 
 Component::Component()
     : type(ComponentType::Undefined)
-    , props()
     , nestedComponents()
-    , allowItems(false)
 {
     initializeDefaultProps();
 }
 
 Component::Component(ComponentType type)
     : type(type)
-    , props()
     , nestedComponents()
-    , allowItems(false)
 {
     initializeDefaultProps();
 }
@@ -37,12 +33,14 @@ void Component::initializeDefaultProps()
     }
 
     switch (type) {
+    case ComponentType::Form:
     case ComponentType::HorizontalLayout:
     case ComponentType::VerticalLayout:
-        allowItems = true;
+    case ComponentType::ModelLayout:
+        this->allowItems = true;
         break;
     default:
-        allowItems = false;
+        this->allowItems = false;
         break;
     }
 }
@@ -71,17 +69,17 @@ std::map<std::string, std::string> &Component::getProps()
 
 const std::vector<Component> &Component::getNestedComponents() const
 {
-    return nestedComponents;
+    return this->nestedComponents;
 }
 
 std::vector<Component> &Component::getNestedComponents()
 {
-    return nestedComponents;
+    return this->nestedComponents;
 }
 
 bool Component::isAllowingItems() const
 {
-    return allowItems;
+    return this->allowItems;
 }
 
 // Setters
@@ -89,6 +87,8 @@ bool Component::isAllowingItems() const
 void Component::setType(ComponentType type)
 {
     this->type = type;
+
+    initializeDefaultProps();
 }
 
 void Component::setProps(const std::map<std::string, std::string> &props)
@@ -98,10 +98,10 @@ void Component::setProps(const std::map<std::string, std::string> &props)
 
 void Component::setAllowItems(bool allow)
 {
-    allowItems = allow;
+    this->allowItems = allow;
 }
 
 void Component::setNestedComponents(const std::vector<Component> &components)
 {
-    nestedComponents = components;
+    this->nestedComponents = components;
 }

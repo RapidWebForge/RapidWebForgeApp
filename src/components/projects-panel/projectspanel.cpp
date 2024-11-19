@@ -1,19 +1,29 @@
 #include "projectspanel.h"
+#include <QFile>
 #include <QMessageBox>
 #include "../../core/project-manager/projectmanager.h"
 #include "../project-preview/projectpreview.h"
 #include "../stepper-dashboard/stepperdashboard.h"
 #include "../stepper/stepper.h"
 #include "ui_projectspanel.h"
+#include <boost/process.hpp>
+#include <string>
 
 ProjectsPanel::ProjectsPanel(QWidget *parent)
     : QWidget(parent)
     , ui(new Ui::ProjectsPanel)
+    , confManager()
 {
     ui->setupUi(this);
 
+    // Verificar el estado inicial
+    bool pathStatus = confManager->getConfiguration().getStatus();
+    if (!pathStatus) {
+        QMessageBox::warning(this, "Warning", "You need to set the tech paths in 'Configuration'");
+    }
+
     ProjectManager projectManager;
-    setupProjects(projectManager.getAllProjects());
+    setupProjects(projectManager.getAllProjects());    
     applyStylesProj();
 }
 
@@ -23,11 +33,13 @@ void ProjectsPanel::setupProjects(const std::vector<Project> &projects)
 
     QGridLayout *gridLayout = ui->gridLayout;
 
-    // Clean the layout
+    // Limpiar el layout eliminando los widgets de manera segura
     QLayoutItem *child;
     while ((child = gridLayout->takeAt(0)) != nullptr) {
-        delete child->widget();
-        delete child;
+        if (child->widget()) {
+            child->widget()->deleteLater(); // Elimina los widgets de forma asíncrona
+        }
+        delete child; // Borra el item del layout
     }
 
     // Crear el widget para agregar un nuevo proyecto
@@ -83,6 +95,10 @@ void ProjectsPanel::setupProjects(const std::vector<Project> &projects)
                 &ProjectPreview::projectClicked,
                 this,
                 &ProjectsPanel::onProjectPreviewClicked);
+        connect(projectPreview,
+                &ProjectPreview::deleteRequested,
+                this,
+                &ProjectsPanel::onDeleteProjectRequested);
 
         gridLayout->addWidget(projectPreview, row, column);
 
@@ -92,14 +108,45 @@ void ProjectsPanel::setupProjects(const std::vector<Project> &projects)
             row++;
         }
     }
+    // Ajuste del tamaño mínimo para que el scroll funcione correctamente
+    ui->scrollAreaWidgetContents->adjustSize(); // Ajusta el tamaño del contenedor según el contenido
 
+    ui->scrollAreaWidgetContents->setMinimumHeight(gridLayout->sizeHint().height());
     // Optionally set spacing and margins for better visual appearance
     gridLayout->setSpacing(10);
     gridLayout->setContentsMargins(10, 10, 10, 10);
+    gridLayout->setSizeConstraint(QLayout::SetMinAndMaxSize);
+}
+
+bool ProjectsPanel::checkCommand(const std::string &command, bool dobleQuote)
+{
+    namespace bp = boost::process;
+    try {
+        std::string version = dobleQuote ? " --version" : " -version";
+        bp::ipstream is; // Stream para capturar la salida
+
+        // Ejecutar el comando en segundo plano y redirigir la salida a null
+        bp::child c(command + version, bp::std_out > is, bp::std_err > bp::null);
+        std::string line;
+        while (std::getline(is, line) && !line.empty()) {
+            std::cout << line << std::endl; // Opcional: para registro interno
+        }
+        c.wait();
+        return c.exit_code() == 0;
+    } catch (...) {
+        return false;
+    }
 }
 
 void ProjectsPanel::onAddProjectClicked()
 {
+    bool pathStatus = confManager->getConfiguration().getStatus();
+
+    if (!pathStatus) {
+        QMessageBox::critical(this, "Warning", "You need to set the tech paths in 'Configuration'");
+        return;
+    }
+
     this->hide();
 
     // When the "+" button is clicked, open the Stepper window
@@ -108,6 +155,11 @@ void ProjectsPanel::onAddProjectClicked()
 
     // Show when create assistant is closed
     connect(stepper, &Stepper::destroyed, this, &ProjectsPanel::show);
+
+    connect(stepper, &Stepper::backToProjectsPanel, this, [this, stepper]() {
+        stepper->close();
+        this->show();
+    });
 }
 
 void ProjectsPanel::onProjectPreviewClicked(const Project &project)
@@ -129,99 +181,47 @@ ProjectsPanel::~ProjectsPanel()
 
 void ProjectsPanel::applyStylesProj()
 {
-    // Aplica el stylesheet a los elementos del panel
-    QString stylesheet = R"(
+    QFile styleFile(":/styles/projectspanel");
+    if (styleFile.open(QFile::ReadOnly)) {
+        QString styleSheet = QLatin1String(styleFile.readAll());
+        this->setStyleSheet(styleSheet);
+    }
+}
 
+void ProjectsPanel::on_configurationButton_clicked()
+{
+    if (!configView) {
+        configView = new ConfigurationView();
+        configView->show();
 
-        QWidget#widget {
-            background-color: #f9f9f9;
-        }
+        connect(configView, &ConfigurationView::finished, this, [this]() { configView = nullptr; });
+    } else {
+        configView->raise();
+        configView->activateWindow();
+    }
+}
+void ProjectsPanel::onDeleteProjectRequested(int projectId)
+{
+    qDebug() << "Intentando eliminar el proyecto con ID:" << projectId;
 
-        QWidget#ProjectsPanel {
-            background-color: white;
-        }
+    QMessageBox::StandardButton reply;
+    reply = QMessageBox::question(this,
+                                  "Confirmar eliminación",
+                                  "¿Estás seguro de que deseas eliminar este proyecto?",
+                                  QMessageBox::Yes | QMessageBox::No);
 
-        QPushButton#recentsButton{
-            font-size: 14px;
-            color: #000000;
-            background-color: #ffffff;
-            border-radius: 5px;
-            padding: 7px 7px;
-            text-align: left; /* Alineación del texto dentro del botón */
-        }
+    if (reply == QMessageBox::Yes) {
+        qDebug() << "Confirmación recibida para eliminar el proyecto con ID:" << projectId;
 
-        QPushButton#configurationButton {
-            font-size: 14px;
-            color: #000000;
-            background-color: #ffffff;
-            border: 0.5px solid #dddddd;
-            border-radius: 5px;
-            padding: 7px 7px;
-        }
+        // Eliminar el proyecto de la base de datos sin recargar el QGridLayout
+        ProjectManager projectManager;
+        projectManager.deleteProjectById(projectId);
+        // Aquí solo obtenemos los proyectos nuevamente sin eliminar en la base de datos
+        setupProjects(projectManager.getAllProjects());
 
-
-        QPushButton#recentsButton:hover, QPushButton#configurationButton:hover {
-            background-color: #f0f0f0;
-        }
-
-        QPushButton#recentsButton:pressed, QPushButton#configurationButton:pressed {
-            background-color: #e0e0e0;
-        }
-
-        QPushButton#addProjectButton {
-            font-size: 36px;
-            color: #666666;
-            background-color: #f9f9f9;
-            border: 2px dashed #cccccc;
-            border-radius: 10px;
-            min-width: 150px;
-            min-height: 150px;
-        }
-
-        QPushButton#addProjectButton:hover {
-            background-color: #e9e9e9;
-        }
-
-        QPushButton#addProjectButton:pressed {
-            background-color: #d9d9d9;
-        }
-
-        QScrollArea {
-            border: none;
-            background-color: #ffffff;
-        }
-
-        QWidget#scrollAreaWidgetContents {
-            background-color: #ffffff;
-        }
-
-        QLabel#label {
-            font-size: 35px;
-            font-weight: bold;
-            color: #333333;
-        }
-
-        QWidget#projectPreview {
-            background-color: #ffffff;
-            border: 1px solid #e0e0e0;
-            border-radius: 10px;
-            padding: 10px;
-            margin: 5px;
-        }
-
-        QWidget#projectPreview:hover {
-            background-color: #f0f0f0;
-        }
-
-        QWidget#projectPreview:pressed {
-            background-color: #e0e0e0;
-        }
-
-        QLabel#projectName {
-            font-size: 18px;
-            color: #333333;
-        }
-    )";
-
-    this->setStyleSheet(stylesheet);
+        qDebug() << "Proyecto con ID:" << projectId
+                 << "ha sido eliminado exitosamente de la base de datos.";
+    } else {
+        qDebug() << "Eliminación cancelada para el proyecto con ID:" << projectId;
+    }
 }

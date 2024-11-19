@@ -37,6 +37,8 @@ private:
     Ui::AddFieldDialog *ui;
     Field field;
     Transaction *currentTransaction; // Referencia a la transacción actual
+
+    void applyStyles();
 };
 
 #endif // ADDFIELDDIALOG_H

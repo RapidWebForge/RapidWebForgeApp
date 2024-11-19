@@ -145,9 +145,22 @@ void DatabaseAssistant::on_testConnectionButton_clicked()
         try {
             int portInt = std::stoi(port);
             mysqlx::Session session(server, portInt, user, password);
-            mysqlx::Schema schema = session.getSchema(database);
-            QMessageBox::information(this, "Successful", "Connection successfully");
-            testCompleted = true;
+
+            // Obtener el esquema (base de datos) y verificar su existencia
+            mysqlx::Schema schema
+                = session.getSchema(database, true); // true: forzar verificación de existencia
+
+            if (schema.existsInDatabase()) {
+                QMessageBox::information(this,
+                                         "Successful",
+                                         "Connection successful. Database exists.");
+                testCompleted = true;
+            } else {
+                QMessageBox::warning(this,
+                                     "Database Not Found",
+                                     "The specified database does not exist on the server.");
+            }
+
         } catch (const mysqlx::Error &err) {
             QString errorMsg = QString("MySQL Error: %1").arg(err.what());
             QMessageBox::critical(this, "Connection Failed", errorMsg);

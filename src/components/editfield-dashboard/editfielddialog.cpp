@@ -6,6 +6,10 @@ EditFieldDialog::EditFieldDialog(QWidget *parent)
     , ui(new Ui::EditFieldDialog)
 {
     ui->setupUi(this);
+
+    //Ocultar defaul language
+    ui->primaryKeyLabel->hide();
+    ui->primaryKeyCheckBox->hide();
 }
 
 EditFieldDialog::~EditFieldDialog()
