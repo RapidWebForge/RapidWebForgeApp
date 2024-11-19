@@ -1,0 +1,13 @@
+{
+  "dependencies": [
+    "boost-algorithm",
+    "fmt",
+    "inja",
+    "libgit2",
+    "libzip",
+    "mysql-connector-cpp",
+    "sqlite3",
+    "boost-process",
+    "pkgconf"
+  ]
+}

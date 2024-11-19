@@ -1,0 +1,53 @@
+<RCC>
+    <qresource prefix="/images">
+        <file>MySQL.png</file>
+        <file>Back.png</file>
+        <file>Front.png</file>
+        <file>DB2.png</file>
+        <file>grupo.png</file>
+    </qresource>
+    <qresource prefix="/icons">
+        <file>add.png</file>
+        <file>adddb.png</file>
+        <file>delete.png</file>
+        <file>edit.png</file>
+        <file>database.png</file>
+        <file>DB2.png</file>
+        <file>Front.png</file>
+        <file>MySQL.png</file>
+        <file>resources.qrc</file>
+        <file>table.png</file>
+        <file>Recent.png</file>
+    </qresource>
+    <qresource prefix="/inja/backend">
+        <file alias="controllers">inja_templates/backend/controllers.inja</file>
+        <file alias="models">inja_templates/backend/models.inja</file>
+        <file alias="modelsIndex">inja_templates/backend/modelsIndex.inja</file>
+        <file alias="routes">inja_templates/backend/routes.inja</file>
+        <file alias="routesIndex">inja_templates/backend/routesIndex.inja</file>
+    </qresource>
+    <qresource prefix="/project_templates">
+        <file alias="backend">project_templates/backend_template.zip</file>
+        <file alias="frontend">project_templates/frontend_template.zip</file>
+    </qresource>
+    <qresource prefix="/inja/frontend">
+        <file alias="app">inja_templates/frontend/app.inja</file>
+        <file alias="view">inja_templates/frontend/view.inja</file>
+        <file alias="model">inja_templates/frontend/model.inja</file>
+        <file alias="service">inja_templates/frontend/service.inja</file>
+    </qresource>
+    <qresource prefix="/inja/nginx">
+        <file alias="nginx_conf">inja_templates/nginx/nginx_template.inja</file>
+    </qresource>
+    <qresource prefix="/styles">
+        <file alias="frontenddashboard">styles/frontenddashboard.qss</file>
+        <file alias="projectspanel">styles/projectspanel.qss</file>
+        <file alias="primarybutton">styles/primarybutton.qss</file>
+        <file alias="secondarybutton">styles/secondarybutton.qss</file>
+        <file alias="backenddashboard">styles/backenddasboard.qss</file>
+        <file alias="deletebutton">styles/deletebutton.qss</file>
+    </qresource>
+    <qresource prefix="/gifs">
+        <file>loading.gif</file>
+    </qresource>
+</RCC>

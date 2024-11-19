@@ -1,0 +1,19 @@
+const express = require('express');
+const router = express.Router();
+const {{ nameConst }}Controller = require('../controllers/{{ nameConst }}Controller'); // Importa el controlador
+
+// Rutas CRUD
+router.post('/{{ nameConst }}', {{ nameConst }}Controller.create{{ name }});
+router.get('/{{ nameConst }}', {{ nameConst }}Controller.getAll{{ name }});
+router.get('/{{ nameConst }}/:id', {{ nameConst }}Controller.get{{ name }}ById);
+router.put('/{{ nameConst }}/:id', {{ nameConst }}Controller.update{{ name }}ById);
+router.delete('/{{ nameConst }}/:id', {{ nameConst }}Controller.delete{{ name }}ById);
+
+
+{% for field in fields %}
+{% if field.isForeignKey %}
+// Nueva ruta para obtener todas las órdenes de una persona
+router.get('/{{ field.foreignKeyTableLower }}/:id/{{ nameConst }}s', {{ nameConst }}Controller.getAll{{ name }}For{{ field.foreignKeyTable }});
+{% endif %}
+{% endfor %}
+module.exports = router;

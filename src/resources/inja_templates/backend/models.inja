@@ -1,0 +1,44 @@
+const { DataTypes } = require('sequelize');
+
+module.exports = (sequelize) => {
+  const {{ name }} = sequelize.define('{{ name }}', {
+    {% for field in fields %}
+    {{ field.name }}: {
+      type: DataTypes.{{ field.type }},
+      {% if field.isForeignKey %}
+      references: {
+        model: '{{ field.foreignKeyTableLower }}', // Nombre de la tabla que referencia
+        key: 'id',
+      },
+      {% else %}
+      allowNull: {{ field.isNull }},
+      unique: {{ field.isUnique }}
+      {% endif %}
+
+    }{% if loop.is_last %}{% else %},{% endif %}
+
+    {% endfor %}
+  },{
+  tableName: '{{ nameConst }}',
+  timestamps: true,});
+
+
+{% for field in fields %}
+{% if field.isForeignKey %}
+// Definir la relación con el modelo `Person`
+{{ name }}.associate = (models) => {
+  // Una orden pertenece a una persona
+  {{ name }}.belongsTo(models.{{ field.foreignKeyTable }}, {
+    foreignKey: '{{ field.name }}', // Clave foránea en la tabla `{{ name }}s`
+    onDelete: 'SET NULL', // Qué hacer al eliminar la persona (puedes ajustar esto)
+    onUpdate: 'CASCADE',
+  });
+};
+{% endif %}
+{% endfor %}
+
+
+
+  // Retornar el modelo {{ name }}
+  return {{ name }};
+}

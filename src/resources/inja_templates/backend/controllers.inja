@@ -1,0 +1,115 @@
+const {
+    {{ name }},{% for field in fields %} {% if field.isForeignKey %}{{ field.foreignKeyTable }} {% if loop.is_last %}{% else %},{% endif %}{% endif %} {% endfor %}
+} = require('../models'); // Importa los modelos
+
+
+// Crear un nuevo {{ name }}
+exports.create{{ name }} = async (req, res) => {
+  try {
+    const { {% for field in fields %} {{ field.name }} {% if loop.is_last %}{% else %},{% endif %} {% endfor %} } = req.body;
+
+    const {{ nameConst }} = await {{ name }}.create(
+      { {% for field in fields %} {{ field.name }} {% if loop.is_last %} {% else %}, {% endif %} {% endfor %} },
+    );
+
+    {% for field in fields %}
+    {% if field.isForeignKey %}
+    // Verificar si la transacción relacionada {{ field.foreignKeyTable }} existe
+    const {{ field.foreignKeyTableLower }} = await {{ field.foreignKeyTable }}.findByPk({{ field.name }});
+    if (!{{ field.foreignKeyTableLower }}) {
+      return res.status(404).json({ error: '{{ field.foreignKeyTable }} not found' });
+    }
+    {% endif %}
+    {% endfor %}
+
+    // Crear el nuevo {{ name }}
+    const new{{ name }} = await {{ name }}.create({ {% for field in fields %}{{ field.name }}{% if loop.is_last %}{% else %}, {% endif %}{% endfor %} });
+    res.status(201).json(new{{ name }});
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+};
+
+// Obtener todos los {{ name }}
+exports.getAll{{ name }} = async (req, res) => {
+  try {
+    const {{ nameConst }}List = await {{ name }}.findAll();
+    res.json({{ nameConst }}List);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Obtener un {{ name }} por ID
+exports.get{{ name }}ById = async (req, res) => {
+  try {
+    const {{ nameConst }} = await {{ name }}.findByPk(req.params.id);
+    if ({{ nameConst }}) {
+      res.json({{ nameConst }});
+    } else {
+      res.status(404).json({ error: '{{ name }} not found' });
+    }
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Actualizar un {{ name }} por ID
+exports.update{{ name }}ById = async (req, res) => {
+  try {
+    const { {% for field in fields %} {{ field.name }} {% if loop.is_last %} {% else %}, {% endif %} {% endfor %} } = req.body;
+    const {{ nameConst }} = await {{ name }}.findByPk(req.params.id);
+    if ({{ nameConst }}) {
+      {% for field in fields %}
+        {{ nameConst }}.{{ field.name }} = {{ field.name }};
+      {% endfor %}
+      await {{ nameConst }}.save();
+      res.json({{ nameConst }});
+    } else {
+      res.status(404).json({ error: '{{ name }} not found' });
+    }
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+};
+
+// Eliminar un {{ name }} por ID
+exports.delete{{ name }}ById = async (req, res) => {
+  try {
+    const {{ nameConst }} = await {{ name }}.findByPk(req.params.id);
+    if ({{ nameConst }}) {
+      await {{ nameConst }}.destroy();
+      res.json({ message: '{{ name }} deleted' });
+    } else {
+      res.status(404).json({ error: '{{ name }} not found' });
+    }
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+
+
+{% for field in fields %}
+{% if field.isForeignKey %}
+
+// Obtener todas las {{ field.isForeignKey }}s de un {{ field.foreignKeyTable }}
+exports.getAll{{ name }}For{{ field.foreignKeyTable }} = async (req, res) => {
+  try {
+    // Verificar si la transacción relacionada {{ field.foreignKeyTable }} existe
+    const {{ field.foreignKeyTableLower }} = await {{ field.foreignKeyTable }}.findByPk(req.params.id, {
+      include: [{{ name }}] // Incluye la transacción actual
+    });
+
+    if ({{ field.foreignKeyTableLower }}) {
+      res.json({{ field.foreignKeyTableLower }}.{{ name }}s); // Debe ser en plural
+    } else {
+      res.status(404).json({ error: '{{ field.foreignKeyTable }} not found' });
+    }
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+{% endif %}
+{% endfor %}
