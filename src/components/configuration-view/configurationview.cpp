@@ -11,13 +11,23 @@ ConfigurationView::ConfigurationView(QWidget *parent)
 {
     ui->setupUi(this);
 
+    // Valores por defecto
+    const std::string defaultNgInxPath = "C:\\nginx-1.26.2\\nginx.exe";
+    const std::string defaultNodePath = "C:\\Program Files\\nodejs\\node.exe";
+    const std::string defaultBunPath = "C:\\Users\\{{ user }}\\.bun\\bin\\bun.exe";
+    const std::string defaultMysqlPath
+        = "C:\\Program Files\\MySQL\\MySQL Server 9.0\\bin\\mysql.exe";
+
     bool status = configManager.getConfiguration().getStatus();
     ui->saveButton->setEnabled(status);
 
-    std::string nginxPath = configManager.getConfiguration().getNgInxPath();
-    std::string nodePath = configManager.getConfiguration().getnodePath();
-    std::string bunPath = configManager.getConfiguration().getBunPath();
-    std::string mysqlPath = configManager.getConfiguration().getMysqlPath();
+    // Obtener los valores de la configuración
+    Configuration conf = configManager.getConfiguration();
+
+    std::string nginxPath = conf.getNgInxPath().empty() ? defaultNgInxPath : conf.getNgInxPath();
+    std::string nodePath = conf.getnodePath().empty() ? defaultNodePath : conf.getnodePath();
+    std::string bunPath = conf.getBunPath().empty() ? defaultBunPath : conf.getBunPath();
+    std::string mysqlPath = conf.getMysqlPath().empty() ? defaultMysqlPath : conf.getMysqlPath();
 
     if (!nginxPath.empty()) {
         QString path = QString::fromStdString(nginxPath);

@@ -16,6 +16,12 @@ ProjectsPanel::ProjectsPanel(QWidget *parent)
 {
     ui->setupUi(this);
 
+    // Verificar el estado inicial
+    bool pathStatus = confManager->getConfiguration().getStatus();
+    if (!pathStatus) {
+        QMessageBox::warning(this, "Warning", "You need to set the tech paths in 'Configuration'");
+    }
+
     ProjectManager projectManager;
     setupProjects(projectManager.getAllProjects());    
     applyStylesProj();
