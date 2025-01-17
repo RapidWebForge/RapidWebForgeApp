@@ -5,7 +5,7 @@
 #include <QTreeWidget>
 #include "../../models/route/route.h"
 #include "../../models/view/view.h"
-#include "../create-view/createview.h"
+#include "../create-section/createsection.h"
 #include "../custom-tree-widget/customtreewidget.h"
 #include <vector>
 
@@ -33,9 +33,10 @@ public:
 
 public slots:
     void onRouteSaved(const Route &route);
+    void onComponentSaved(const Component &component);
 
 private slots:
-    void showCreateViewDialog();
+    void showCreateSectionDialog();
 
     void on_saveButton_clicked();
     void onCurrentViewTreeItemSelected(QTreeWidgetItem *item, int column);
@@ -43,6 +44,7 @@ private slots:
     void onPropertyValueChanged(int row, int column);
 
     void on_deleteButton_clicked();
+    void on_addSectionButton_clicked();
 
 private:
     Ui::FrontendDashboard *ui;
@@ -78,8 +80,9 @@ private:
                                int dropIndex);
     bool isParentView(QTreeWidgetItem *item) const;
 
-    CreateView *createViewDialog;
+    CreateSection *createSectionDialog;
     std::vector<Route> routes;
+    std::vector<Component> components;
     std::vector<View> views;
     View currentView;
     Component currentComponent;

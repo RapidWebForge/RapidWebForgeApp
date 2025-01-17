@@ -6,6 +6,7 @@
 
 enum class ComponentType {
     Undefined,
+    Custom,
     HeaderH1,
     HeaderH2,
     HeaderH3,
@@ -33,7 +34,8 @@ const std::map<ComponentType, std::map<std::string, std::string>> componentPrope
        {ComponentType::Form, {{"class", ""}, {"method", ""}, {"model", ""}}},
        {ComponentType::HorizontalLayout, {{"class", ""}}},
        {ComponentType::VerticalLayout, {{"class", ""}}},
-       {ComponentType::ModelLayout, {{"class", ""}, {"model", ""}}}};
+       {ComponentType::ModelLayout, {{"class", ""}, {"model", ""}}},
+       {ComponentType::ModelLayout, {{"name", ""}}}};
 
 // Función para convertir ComponentType a std::string
 inline std::string componentTypeToString(ComponentType type)
@@ -61,6 +63,8 @@ inline std::string componentTypeToString(ComponentType type)
         return "Vertical Layout";
     case ComponentType::ModelLayout:
         return "Model Layout";
+    case ComponentType::Custom:
+        return "Custom";
     default:
         return "Undefined";
     }
@@ -91,6 +95,8 @@ inline ComponentType stringToComponentType(const std::string &typeStr)
         return ComponentType::VerticalLayout;
     if (typeStr == "Model Layout")
         return ComponentType::ModelLayout;
+    if (typeStr == "Custom")
+        return ComponentType::Custom;
     return ComponentType::Undefined;
 }
 

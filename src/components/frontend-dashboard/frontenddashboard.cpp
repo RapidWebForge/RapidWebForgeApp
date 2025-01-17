@@ -5,11 +5,12 @@
 #include <QMessageBox>
 #include "../../models/component-type/componenttype.h"
 #include "ui_frontenddashboard.h"
+#include <assert.h>
 
 FrontendDashboard::FrontendDashboard(QWidget *parent)
     : QDialog(parent)
     , ui(new Ui::FrontendDashboard)
-    , createViewDialog(nullptr)
+    , createSectionDialog(nullptr)
 {
     ui->setupUi(this);
 
@@ -17,10 +18,6 @@ FrontendDashboard::FrontendDashboard(QWidget *parent)
             &CustomTreeWidget::itemDropped,
             this,
             &FrontendDashboard::onItemDropped);
-    connect(ui->addSectionButton,
-            &QPushButton::clicked,
-            this,
-            &FrontendDashboard::showCreateViewDialog);
     connect(ui->currentViewTree,
             &QTreeWidget::itemClicked,
             this,
@@ -484,14 +481,22 @@ Component *FrontendDashboard::findNestedComponent(Component &parent, QTreeWidget
     return nullptr;
 }
 
-void FrontendDashboard::showCreateViewDialog()
+void FrontendDashboard::showCreateSectionDialog()
 {
-    if (!createViewDialog) {
-        createViewDialog = new CreateView(this);
+    if (!createSectionDialog) {
+        createSectionDialog = new CreateSection(this);
 
-        connect(createViewDialog, &CreateView::routeSaved, this, &FrontendDashboard::onRouteSaved);
+        connect(createSectionDialog,
+                &CreateSection::routeSaved,
+                this,
+                &FrontendDashboard::onRouteSaved);
+
+        connect(createSectionDialog,
+                &CreateSection::componentSaved,
+                this,
+                &FrontendDashboard::onComponentSaved);
     }
-    createViewDialog->exec();
+    createSectionDialog->exec();
 }
 
 void FrontendDashboard::onRouteSaved(const Route &route)
@@ -536,6 +541,41 @@ void FrontendDashboard::onRouteSaved(const Route &route)
 
     // Actualizar las rutas y vistas en la interfaz si es necesario
     setRoutes(routes);
+}
+
+void FrontendDashboard::onComponentSaved(const Component &component)
+{
+    components.push_back(component);
+
+    // Get the first QTreeWidgetItem (Custom)
+    QTreeWidgetItem *customComponents = ui->componentsTree->topLevelItem(0);
+
+    // Crear un nuevo QTreeWidgetItem para el component y agregarlo al
+    // `Custom` QTreeWidgetItem del `componentsTree`
+    QTreeWidgetItem *newComponent = new QTreeWidgetItem();
+
+    // Get the name
+    auto it = component.getProps().find("name");
+
+    // If name exists set the value on QTreeWidgetItem
+    // if not show a message and end the function
+    if (it != component.getProps().end()) {
+        QString componentName = QString::fromStdString(it->second);
+        newComponent->setText(0, componentName);
+    } else {
+        QMessageBox::warning(this, "Custom Component Error", "Custom component name wasn't found.");
+        return;
+    }
+
+    // Add the new component in case it have a name
+    customComponents->addChild(newComponent);
+
+    // Verification
+    bool childAdded = (customComponents->childCount() > 0
+                       && customComponents->child(customComponents->childCount() - 1)
+                              == newComponent);
+
+    assert(childAdded && "Custom Component added");
 }
 
 void FrontendDashboard::on_deleteButton_clicked()
@@ -594,6 +634,11 @@ void FrontendDashboard::on_deleteButton_clicked()
             qDebug() << "Component not found for deletion.";
         }
     }
+}
+
+void FrontendDashboard::on_addSectionButton_clicked()
+{
+    showCreateSectionDialog();
 }
 
 // Getters

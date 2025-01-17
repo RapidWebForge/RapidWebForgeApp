@@ -112,6 +112,7 @@ void ProjectManager::createProject(const Project &project)
     // Create folder
     std::string pathToCreate = project.getPath();
 
+    // Check if the directory exists
     try {
         if (fs::create_directories(pathToCreate)) {
             fmt::print("Directorio creado con éxito en: {}\n", pathToCreate);
@@ -122,6 +123,7 @@ void ProjectManager::createProject(const Project &project)
         fmt::print(stderr, "Error al crear el directorio: {}", e.what());
     }
 
+    // Add the new database's project to the sqlite database
     sqlite3 *db = Database::getInstance().getConnection();
     DatabaseData dbData = project.getDatabaseData();
 
@@ -144,6 +146,7 @@ void ProjectManager::createProject(const Project &project)
 
     int databaseId = sqlite3_last_insert_rowid(db);
 
+    // Add the new project's info to the sqlite database
     std::string sqlProject
         = "INSERT INTO projects (name, description, path, frontendPort, backendPort, created_at, "
           "updated_at, database_id, versions) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);";
@@ -156,7 +159,7 @@ void ProjectManager::createProject(const Project &project)
     std::string backendPort = project.getBackendPort();
     std::string createdAt = project.getCreatedAt();
     std::string updatedAt = project.getUpdatedAt();
-    bool versions = project.getVersions(); // Obtener el valor de versions
+    bool versions = project.getVersions();
 
     executeSQL(db, sqlProject, [&](sqlite3_stmt *stmt) {
         sqlite3_bind_text(stmt, 1, projectName.c_str(), -1, SQLITE_STATIC);
@@ -167,8 +170,7 @@ void ProjectManager::createProject(const Project &project)
         sqlite3_bind_text(stmt, 6, createdAt.c_str(), -1, SQLITE_STATIC);
         sqlite3_bind_text(stmt, 7, updatedAt.c_str(), -1, SQLITE_STATIC);
         sqlite3_bind_int(stmt, 8, databaseId);
-        sqlite3_bind_int(stmt, 9, versions ? 1 : 0); // Agregar el campo versions (1 o 0)
-        
+        sqlite3_bind_int(stmt, 9, versions ? 1 : 0);
     });
 }
 

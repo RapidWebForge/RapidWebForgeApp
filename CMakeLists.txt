@@ -81,9 +81,12 @@ set(PROJECT_SOURCES
         src/components/project-preview/projectpreview.h
         src/components/project-preview/projectpreview.cpp
         src/components/project-preview/projectpreview.ui
-        src/components/create-view/createview.h
-        src/components/create-view/createview.cpp
-        src/components/create-view/createview.ui
+        # src/components/create-view/createview.h
+        # src/components/create-view/createview.cpp
+        # src/components/create-view/createview.ui
+        src/components/create-section/createsection.h
+        src/components/create-section/createsection.cpp
+        src/components/create-section/createsection.ui
         src/components/custom-tree-widget/customtreewidget.h
         src/components/custom-tree-widget/customtreewidget.cpp
         src/components/create-version/createversion.h
