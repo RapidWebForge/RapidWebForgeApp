@@ -1,9 +1,14 @@
 // customtreewidget.cpp
 #include "customtreewidget.h"
 #include <QApplication>
+#include <QDebug>
 #include <QDrag>
 #include <QDropEvent>
 #include <QMimeData>
+#include <QPaintEvent>
+#include <QPainter>
+#include <QPen>
+#include <QTreeWidget>
 #include "../../models/component-type/componenttype.h"
 #include "../../models/component/component.h"
 
@@ -12,8 +17,14 @@ CustomTreeWidget::CustomTreeWidget(QWidget *parent)
 {
     setDragEnabled(true);
     setAcceptDrops(true);
-    setDragDropMode(QAbstractItemView::InternalMove);
+    // setDragDropMode(QAbstractItemView::InternalMove);
+    setDragDropMode(QAbstractItemView::DragDrop);
     setDropIndicatorShown(true);
+
+    setStyleSheet("QTreeView::dropIndicator {"
+                  "    border: 2px dashed red;"
+                  "    background-color: rgba(255, 0, 0, 50);"
+                  "}");
 }
 
 void CustomTreeWidget::dragEnterEvent(QDragEnterEvent *event)
@@ -26,12 +37,29 @@ void CustomTreeWidget::dragMoveEvent(QDragMoveEvent *event)
     QTreeWidgetItem *targetItem = itemAt(event->position().toPoint());
     if (!targetItem) {
         event->ignore();
+        showDropIndicator = false; // Oculta el indicador si no hay target
+        viewport()->update();      // Redibuja el widget
         return;
     }
 
-    setDropIndicatorShown(true);
-    event->setDropAction(Qt::MoveAction);
-    event->accept();
+    QRect itemRect = visualItemRect(targetItem); // Obtén el rectángulo visual del targetItem
+    QPoint pos = event->position().toPoint();    // Obtén la posición actual del cursor
+
+    // Decide si el indicador debe estar encima, en medio o debajo del target
+    if (pos.y() < itemRect.top() + itemRect.height() / 3) {
+        // Caso 1: Soltar encima
+        dropIndicatorRect = QRect(itemRect.left(), itemRect.top() - 4, itemRect.width(), 8);
+    } else if (pos.y() > itemRect.bottom() - itemRect.height() / 3) {
+        // Caso 2: Soltar debajo
+        dropIndicatorRect = QRect(itemRect.left(), itemRect.bottom() - 4, itemRect.width(), 8);
+    } else {
+        // Caso 3: Soltar como hijo (en el centro)
+        dropIndicatorRect = itemRect.adjusted(4, 4, -4, -4); // Pequeño borde interno
+    }
+
+    showDropIndicator = true; // Muestra el indicador
+    viewport()->update();     // Redibuja el widget
+    event->acceptProposedAction();
 }
 
 void CustomTreeWidget::dropEvent(QDropEvent *event)
@@ -52,33 +80,52 @@ void CustomTreeWidget::dropEvent(QDropEvent *event)
     QTreeWidgetItem *parentItem;
     int dropIndex;
 
+    QRect itemRect = visualItemRect(targetItem); // Obtén el rectángulo visual del targetItem
+    QPoint pos = event->position().toPoint();    // Obtén la posición actual del cursor
+
     // Verificar si el componente permite hijos
     std::string componentTypeStr = targetItem->text(0).toStdString();
     ComponentType type = stringToComponentType(componentTypeStr);
     Component tempComponent(type);
 
-    if (tempComponent.isAllowingItems()) {
-        // Insertar como hijo
+    if (tempComponent.isAllowingItems() && pos.y() > itemRect.top() + itemRect.height() / 3
+        && pos.y() < itemRect.bottom() - itemRect.height() / 3) {
+        // Caso 3: Insertar como hijo
         parentItem = targetItem;
-        dropIndex = 0; // Insertar como el primer hijo en caso de que sea "en medio"
-    } else {
-        // Insertar al mismo nivel (como hermano)
+        dropIndex = 0; // Insertar como el primer hijo
+    } else if (pos.y() < itemRect.top() + itemRect.height() / 3) {
+        // Caso 1: Insertar encima
         parentItem = targetItem->parent() ? targetItem->parent() : invisibleRootItem();
         dropIndex = parentItem->indexOfChild(targetItem);
-
-        // Si estamos tratando de insertar encima del primer elemento del grupo, ajustamos el índice a 0
-        if (dropIndex == 0
-            && event->position().toPoint().y()
-                   < visualItemRect(targetItem).top() + visualItemRect(targetItem).height() / 2) {
-            dropIndex = 0; // Asegura que se inserte al principio
-        } else {
-            dropIndex += 1; // Inserta después en otros casos
-        }
+    } else if (pos.y() > itemRect.bottom() - itemRect.height() / 3) {
+        // Caso 2: Insertar debajo
+        parentItem = targetItem->parent() ? targetItem->parent() : invisibleRootItem();
+        dropIndex = parentItem->indexOfChild(targetItem) + 1;
+    } else {
+        event->ignore();
+        return;
     }
 
-    // Mover el elemento y emitir la señal
+    // Mover el elemento
     if (parentItem && sourceItem) {
         event->acceptProposedAction();
         emit itemDropped(parentItem, sourceItem, dropIndex);
+    }
+
+    // Oculta el indicador después del drop
+    showDropIndicator = false;
+    viewport()->update();
+}
+
+void CustomTreeWidget::paintEvent(QPaintEvent *event)
+{
+    QTreeWidget::paintEvent(event); // Llama al comportamiento predeterminado
+
+    // Dibuja el indicador solo si está habilitado
+    if (showDropIndicator) {
+        QPainter painter(viewport());
+        painter.setPen(QPen(Qt::red, 2, Qt::DashLine));
+        painter.setBrush(Qt::NoBrush);
+        painter.drawRect(dropIndicatorRect); // Dibuja el rectángulo del indicador
     }
 }
