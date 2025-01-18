@@ -4,7 +4,7 @@
 #include <QDialog>
 #include <QTreeWidget>
 #include "../../models/route/route.h"
-#include "../../models/view/view.h"
+#include "../../models/section/section.h"
 #include "../create-section/createsection.h"
 #include "../custom-tree-widget/customtreewidget.h"
 #include <vector>
@@ -24,16 +24,19 @@ public:
     // Getters
     const std::vector<Route> &getRoutes() const;
     std::vector<Route> &getRoutes();
-    const std::vector<View> &getViews() const;
-    std::vector<View> &getViews();
+    const std::vector<Section> &getViews() const;
+    std::vector<Section> &getViews();
+    const std::vector<Section> &getCustomComponents() const;
+    std::vector<Section> &getCustomComponents();
     // Setters
     void setRoutes(const std::vector<Route> &routes);
-    void setViews(const std::vector<View> &views);
-    void setCurrentView(View &view);
+    void setViews(const std::vector<Section> &views);
+    void setCustomComponents(const std::vector<Section> &custComponents);
+    void setCurrentView(Section &view);
 
 public slots:
     void onRouteSaved(const Route &route);
-    void onComponentSaved(const Component &component);
+    void onCustomComponentSaved(const Section &component);
 
 private slots:
     void showCreateSectionDialog();
@@ -68,7 +71,7 @@ private:
     Component *findComponentByHierarchy(std::vector<Component> &components,
                                         const std::vector<QTreeWidgetItem *> &hierarchy,
                                         int level);
-    Component *findComponentInTree(View &view, QTreeWidgetItem *item);
+    Component *findComponentInTree(Section &view, QTreeWidgetItem *item);
     Component *findNestedComponent(Component &parent, QTreeWidgetItem *item);
 
     // Auxiliar functions to onItemDropped
@@ -82,9 +85,9 @@ private:
 
     CreateSection *createSectionDialog;
     std::vector<Route> routes;
-    std::vector<Component> components;
-    std::vector<View> views;
-    View currentView;
+    std::vector<Section> custComponents;
+    std::vector<Section> views;
+    Section currentView;
     Component currentComponent;
 };
 

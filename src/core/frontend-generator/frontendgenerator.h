@@ -2,7 +2,7 @@
 #define FRONTENDGENERATOR_H
 
 #include "../../models/route/route.h"
-#include "../../models/view/view.h"
+#include "../../models/section/section.h"
 #include <inja/inja.hpp>
 #include <nlohmann/json.hpp>
 #include <string>
@@ -19,25 +19,27 @@ public:
     // Getters
     const std::vector<Route> &getRoutes() const;
     std::vector<Route> &getRoutes();
-    const std::vector<View> &getViews() const;
-    std::vector<View> &getViews();
+    const std::vector<Section> &getViews() const;
+    std::vector<Section> &getViews();
+    const std::vector<Section> &getCustomComponents() const;
+    std::vector<Section> &getCustomComponents();
     // Setters
     void setRoutes(const std::vector<Route> &routes);
-    void setViews(const std::vector<View> &views);
+    void setViews(const std::vector<Section> &views);
+    void setCustomComponents(const std::vector<Section> &custComponents);
 
 private:
     std::string projectPath;
     std::vector<Route> routes;
-    std::vector<View> views;
+    std::vector<Section> views;
+    std::vector<Section> custComponents;
     inja::Environment env;
 
     Component parseComponent(const nlohmann::json &componentJson);
     std::vector<Component> parseNestedComponents(const nlohmann::json &nestedJsonArray);
     void parseJson(const nlohmann::json &jsonSchema);
-    bool updateFrontendJson(const std::string &componentName);
     bool generateView(const std::string &viewName);
     bool generateApp();
-    bool generateViews();
 };
 
 #endif // FRONTENDGENERATOR_H

@@ -3,10 +3,10 @@
 
 #include <map>
 #include <string>
+#include <unordered_map>
 
 enum class ComponentType {
     Undefined,
-    Custom,
     HeaderH1,
     HeaderH2,
     HeaderH3,
@@ -63,8 +63,6 @@ inline std::string componentTypeToString(ComponentType type)
         return "Vertical Layout";
     case ComponentType::ModelLayout:
         return "Model Layout";
-    case ComponentType::Custom:
-        return "Custom";
     default:
         return "Undefined";
     }
@@ -73,31 +71,22 @@ inline std::string componentTypeToString(ComponentType type)
 // Función para convertir std::string a ComponentType
 inline ComponentType stringToComponentType(const std::string &typeStr)
 {
-    if (typeStr == "Header H1")
-        return ComponentType::HeaderH1;
-    if (typeStr == "Header H2")
-        return ComponentType::HeaderH2;
-    if (typeStr == "Header H3")
-        return ComponentType::HeaderH3;
-    if (typeStr == "Paragraph")
-        return ComponentType::Paragraph;
-    if (typeStr == "Input")
-        return ComponentType::Input;
-    if (typeStr == "Text Area")
-        return ComponentType::TextArea;
-    if (typeStr == "Button")
-        return ComponentType::Button;
-    if (typeStr == "Form")
-        return ComponentType::Form;
-    if (typeStr == "Horizontal Layout")
-        return ComponentType::HorizontalLayout;
-    if (typeStr == "Vertical Layout")
-        return ComponentType::VerticalLayout;
-    if (typeStr == "Model Layout")
-        return ComponentType::ModelLayout;
-    if (typeStr == "Custom")
-        return ComponentType::Custom;
-    return ComponentType::Undefined;
+    static const std::unordered_map<std::string, ComponentType> typeMap = {
+        {"Header H1", ComponentType::HeaderH1},
+        {"Header H2", ComponentType::HeaderH2},
+        {"Header H3", ComponentType::HeaderH3},
+        {"Paragraph", ComponentType::Paragraph},
+        {"Input", ComponentType::Input},
+        {"Text Area", ComponentType::TextArea},
+        {"Button", ComponentType::Button},
+        {"Form", ComponentType::Form},
+        {"Horizontal Layout", ComponentType::HorizontalLayout},
+        {"Vertical Layout", ComponentType::VerticalLayout},
+        {"Model Layout", ComponentType::ModelLayout},
+    };
+    
+    auto it = typeMap.find(typeStr);
+    return (it != typeMap.end()) ? it->second : ComponentType::Undefined;
 }
 
 #endif // COMPONENTTYPE_H

@@ -81,9 +81,6 @@ set(PROJECT_SOURCES
         src/components/project-preview/projectpreview.h
         src/components/project-preview/projectpreview.cpp
         src/components/project-preview/projectpreview.ui
-        # src/components/create-view/createview.h
-        # src/components/create-view/createview.cpp
-        # src/components/create-view/createview.ui
         src/components/create-section/createsection.h
         src/components/create-section/createsection.cpp
         src/components/create-section/createsection.ui
@@ -137,8 +134,8 @@ set(PROJECT_SOURCES
         src/models/route/route.cpp
         src/models/component/component.h
         src/models/component/component.cpp
-        src/models/view/view.h
-        src/models/view/view.cpp
+        src/models/section/section.h
+        src/models/section/section.cpp
         src/models/configuration/configuration.h
         src/models/configuration/configuration.cpp
         # Utils

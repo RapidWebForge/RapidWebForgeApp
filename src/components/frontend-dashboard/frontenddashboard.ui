@@ -158,16 +158,12 @@
        </property>
        <layout class="QVBoxLayout" name="verticalLayoutMainView">
         <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_2">
+         <layout class="QHBoxLayout" name="horizontalLayoutSectionActions">
           <property name="sizeConstraint">
            <enum>QLayout::SizeConstraint::SetDefaultConstraint</enum>
           </property>
           <item>
-           <widget class="QLabel" name="currentViewLabel">
-            <property name="text">
-             <string>Current View</string>
-            </property>
-           </widget>
+           <widget class="QComboBox" name="sectionComboBox"/>
           </item>
           <item>
            <widget class="QPushButton" name="deleteButton">
@@ -195,7 +191,7 @@
           </property>
           <column>
            <property name="text">
-            <string>1</string>
+            <string>Sections</string>
            </property>
           </column>
          </widget>

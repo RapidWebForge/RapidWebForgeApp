@@ -60,10 +60,9 @@ void CreateSection::on_createButton_clicked()
         else
             QMessageBox::warning(this, "Warning", "Fill all the fields to create");
     } else {
-        component = Component(ComponentType::Custom);
-        component.setProps({{"name", sectionName}});
+        Section customComponent(sectionName);
 
-        emit componentSaved(component);
+        emit customComponentSaved(customComponent);
 
         if (!sectionName.empty() && !isView)
             accept();

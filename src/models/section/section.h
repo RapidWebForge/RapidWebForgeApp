@@ -1,20 +1,20 @@
-#ifndef VIEW_H
-#define VIEW_H
+#ifndef SECTION_H
+#define SECTION_H
 
 #include "../component/component.h"
 #include <string>
 #include <vector>
 
-class View
+class Section
 {
 private:
     std::string name;
     std::vector<Component> components;
 
 public:
-    View();
-    View(const std::string &name);
-    View(const std::string &name, const std::vector<Component> &components);
+    Section();
+    Section(const std::string &name);
+    Section(const std::string &name, const std::vector<Component> &components);
 
     std::string getName() const;
     const std::vector<Component> &getComponents() const;
@@ -24,4 +24,4 @@ public:
     void setComponents(const std::vector<Component> &components);
 };
 
-#endif // VIEW_H
+#endif // SECTION_H

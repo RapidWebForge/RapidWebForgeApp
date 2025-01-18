@@ -2,8 +2,8 @@
 #define CREATESECTION_H
 
 #include <QDialog>
-#include "../../models/component/component.h"
 #include "../../models/route/route.h"
+#include "../../models/section/section.h"
 
 namespace Ui {
 class CreateSection;
@@ -19,7 +19,7 @@ public:
 
 signals:
     void routeSaved(const Route &route);
-    void componentSaved(const Component &component);
+    void customComponentSaved(const Section &custComponent);
 
 private slots:
     void on_createButton_clicked();
@@ -31,7 +31,7 @@ private slots:
 private:
     Ui::CreateSection *ui;
     Route route;
-    Component component;
+    Section custComponent;
 
     void applyStyles();
 };
