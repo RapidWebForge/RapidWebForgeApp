@@ -149,7 +149,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QGroupBox" name="currentViewGroup">
+      <widget class="QGroupBox" name="currentSectionGroup">
        <property name="styleSheet">
         <string notr="true">border: none;</string>
        </property>
@@ -185,7 +185,7 @@
          </layout>
         </item>
         <item>
-         <widget class="CustomTreeWidget" name="currentViewTree">
+         <widget class="CustomTreeWidget" name="currentSectionTree">
           <property name="headerHidden">
            <bool>true</bool>
           </property>

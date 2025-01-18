@@ -32,7 +32,9 @@ public:
     void setRoutes(const std::vector<Route> &routes);
     void setViews(const std::vector<Section> &views);
     void setCustomComponents(const std::vector<Section> &custComponents);
-    void setCurrentView(Section &view);
+    void setCurrentSection(Section &section);
+    // ComboBox Section
+    void fillAvailableSections();
 
 public slots:
     void onRouteSaved(const Route &route);
@@ -41,13 +43,14 @@ public slots:
 private slots:
     void showCreateSectionDialog();
 
-    void on_saveButton_clicked();
     void onCurrentViewTreeItemSelected(QTreeWidgetItem *item, int column);
     void onItemDropped(QTreeWidgetItem *parentItem, QTreeWidgetItem *droppedItem, int dropIndex);
     void onPropertyValueChanged(int row, int column);
 
+    void on_saveButton_clicked();
     void on_deleteButton_clicked();
     void on_addSectionButton_clicked();
+    void on_sectionComboBox_currentIndexChanged(int index);
 
 private:
     Ui::FrontendDashboard *ui;
@@ -62,7 +65,7 @@ private:
     void setDraggableFlags(QTreeWidgetItem *item, bool isDraggable);
     void setComponentsDraggable();
 
-    void populateCurrentViewTree();
+    void populateCurrentSectionTree();
     void convertTreeToViews();
     void populateNestedItems(QTreeWidgetItem *parentItem,
                              const std::vector<Component> &nestedComponents);
@@ -87,7 +90,7 @@ private:
     std::vector<Route> routes;
     std::vector<Section> custComponents;
     std::vector<Section> views;
-    Section currentView;
+    Section currentSection;
     Component currentComponent;
 };
 
