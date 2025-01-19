@@ -41,9 +41,7 @@ public slots:
     void onCustomComponentSaved(const Section &component);
 
 private slots:
-    void showCreateSectionDialog();
-
-    void onCurrentViewTreeItemSelected(QTreeWidgetItem *item, int column);
+    void onCurrentSectionTreeItemSelected(QTreeWidgetItem *item, int column);
     void onItemDropped(QTreeWidgetItem *parentItem, QTreeWidgetItem *droppedItem, int dropIndex);
     void onPropertyValueChanged(int row, int column);
 
@@ -66,7 +64,6 @@ private:
     void setComponentsDraggable();
 
     void populateCurrentSectionTree();
-    void convertTreeToViews();
     void populateNestedItems(QTreeWidgetItem *parentItem,
                              const std::vector<Component> &nestedComponents);
     void populatePropertiesTable(const Component &component);
@@ -75,7 +72,7 @@ private:
                                         const std::vector<QTreeWidgetItem *> &hierarchy,
                                         int level);
     Component *findComponentInTree(Section &view, QTreeWidgetItem *item);
-    Component *findNestedComponent(Component &parent, QTreeWidgetItem *item);
+    // Component *findNestedComponent(Component &parent, QTreeWidgetItem *item);
 
     // Auxiliar functions to onItemDropped
     QTreeWidgetItem *createTreeItem(const QString &text);
