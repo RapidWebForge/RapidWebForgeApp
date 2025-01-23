@@ -138,6 +138,8 @@ set(PROJECT_SOURCES
         src/models/section/section.cpp
         src/models/configuration/configuration.h
         src/models/configuration/configuration.cpp
+        src/models/base-node/basenode.h
+        src/models/base-node/basenode.cpp
         # Utils
         src/utils/database/database.h
         src/utils/database/database.cpp

@@ -42,7 +42,6 @@ bool FrontendGenerator::loadSchema()
         nlohmann::json frontendJson;
         frontendJson["routes"] = nlohmann::json::array();
         frontendJson["views"] = nlohmann::json::array();
-        // Custom components
         frontendJson["custom"] = nlohmann::json::array();
 
         std::ofstream jsonFile(projectPath + "/frontend.json");
@@ -74,30 +73,43 @@ bool allowsNestedComponents(ComponentType type)
            || type == ComponentType::VerticalLayout || type == ComponentType::ModelLayout;
 }
 
-std::vector<Component> FrontendGenerator::parseNestedComponents(const nlohmann::json &nestedJsonArray)
+std::vector<std::shared_ptr<BaseNode>> FrontendGenerator::parseNestedComponents(
+    const nlohmann::json &nestedJsonArray)
 {
-    std::vector<Component> nestedComponents;
+    std::vector<std::shared_ptr<BaseNode>> nestedComponents;
     for (const auto &nestedJson : nestedJsonArray) {
-        Component nestedComponent = parseComponent(nestedJson);
-
-        nestedComponents.push_back(nestedComponent);
+        auto nestedComponent = parseComponent(nestedJson);
+        if (nestedComponent) {
+            nestedComponents.push_back(nestedComponent);
+        }
     }
     return nestedComponents;
 }
 
-Component FrontendGenerator::parseComponent(const nlohmann::json &componentJson)
+std::shared_ptr<Component> FrontendGenerator::parseComponent(const nlohmann::json &componentJson)
 {
-    Component component;
+    auto component = std::make_shared<Component>();
 
     // Parse type
     if (componentJson.contains("type") && componentJson["type"].is_string()) {
-        component.setType(stringToComponentType(componentJson["type"].get<std::string>()));
+        component->setType(stringToComponentType(componentJson["type"].get<std::string>()));
 
         // Parse nested components if applicable
-        if (allowsNestedComponents(component.getType())
+        if (allowsNestedComponents(component->getType())
             && componentJson.contains("nestedComponents")
             && componentJson["nestedComponents"].is_array()) {
-            component.setNestedComponents(parseNestedComponents(componentJson["nestedComponents"]));
+            auto baseNodes = parseNestedComponents(componentJson["nestedComponents"]);
+
+            // Convertir a std::vector<std::shared_ptr<Component>>
+            std::vector<std::shared_ptr<BaseNode>> nestedComponents;
+            for (const auto &baseNode : baseNodes) {
+                auto nestedComponent = std::dynamic_pointer_cast<Component>(baseNode);
+                if (nestedComponent) {
+                    nestedComponents.push_back(nestedComponent);
+                }
+            }
+
+            component->setNestedComponents(nestedComponents);
         }
     } else {
         fmt::print(stderr, "Error: 'type' in 'components' must be a string.\n");
@@ -116,7 +128,7 @@ Component FrontendGenerator::parseComponent(const nlohmann::json &componentJson)
         }
     }
 
-    component.setProps(props);
+    component->setProps(props);
 
     return component;
 }
@@ -146,40 +158,88 @@ void FrontendGenerator::parseJson(const nlohmann::json &jsonSchema)
     // Parse views
     for (const auto &viewJson : jsonSchema["views"]) {
         for (auto it = viewJson.begin(); it != viewJson.end(); ++it) {
-            Section view;
-            view.setName(it.key());
+            auto section = std::make_shared<Section>(it.key());
 
             // Parse components
-            std::vector<Component> components;
             for (const auto &componentJson : it.value()["components"]) {
-                Component component = parseComponent(componentJson);
-
-                components.push_back(component);
+                auto component = parseComponent(componentJson);
+                if (component) {
+                    section->addComponent(component);
+                }
             }
 
-            view.setComponents(components);
-            views.push_back(view);
+            views.push_back(section);
         }
     }
 
     // Parse custom components
     for (const auto &custComponentJson : jsonSchema["custom"]) {
         for (auto it = custComponentJson.begin(); it != custComponentJson.end(); ++it) {
-            Section customComponent;
-            customComponent.setName(it.key());
+            auto section = std::make_shared<Section>(it.key());
 
             // Parse components
-            std::vector<Component> components;
             for (const auto &componentJson : it.value()["components"]) {
-                Component component = parseComponent(componentJson);
-
-                components.push_back(component);
+                auto component = parseComponent(componentJson);
+                if (component) {
+                    section->addComponent(component);
+                }
             }
 
-            customComponent.setComponents(components);
-            custComponents.push_back(customComponent);
+            custComponents.push_back(section);
         }
     }
+}
+
+nlohmann::json FrontendGenerator::processSectionToJson(const std::shared_ptr<Section> &section)
+{
+    nlohmann::json sectionJson;
+    sectionJson["components"] = nlohmann::json::array();
+
+    for (const auto &child : section->getComponents()) {
+        auto component = std::dynamic_pointer_cast<Component>(child);
+        if (component) {
+            nlohmann::json componentJson;
+            componentJson["type"] = componentTypeToString(component->getType());
+
+            // Agregar props del componente
+            nlohmann::json propsJson;
+            for (const auto &prop : component->getProps()) {
+                propsJson[prop.first] = prop.second;
+            }
+            componentJson["props"] = propsJson;
+
+            // Manejo de nestedComponents
+            if (component->isAllowingItems()) {
+                componentJson["nestedComponents"] = nlohmann::json::array();
+                for (const auto &nestedComponent : component->getNestedComponents()) {
+                    nlohmann::json nestedComponentJson;
+                    auto nestedComponentPtr = std::dynamic_pointer_cast<Component>(nestedComponent);
+                    nestedComponentJson["type"] = componentTypeToString(nestedComponentPtr->getType());
+
+                    // Props de los nestedComponents
+                    nlohmann::json nestedPropsJson;
+                    for (const auto &nestedProp : nestedComponentPtr->getProps()) {
+                        nestedPropsJson[nestedProp.first] = nestedProp.second;
+                    }
+                    nestedComponentJson["props"] = nestedPropsJson;
+
+                    componentJson["nestedComponents"].push_back(nestedComponentJson);
+                }
+            }
+
+            sectionJson["components"].push_back(componentJson);
+
+        } else {
+            auto subSection = std::dynamic_pointer_cast<Section>(child);
+            if (subSection) {
+                nlohmann::json subSectionJson = processSectionToJson(subSection);
+                subSectionJson["name"] = subSection->getName();
+                sectionJson["components"].push_back(subSectionJson);
+            }
+        }
+    }
+
+    return sectionJson;
 }
 
 bool FrontendGenerator::updateSchema()
@@ -198,99 +258,23 @@ bool FrontendGenerator::updateSchema()
     // Create the views
     jsonSchema["views"] = nlohmann::json::array();
     for (const auto &view : this->views) {
-        nlohmann::json viewJson;
-        viewJson[view.getName()]["components"] = nlohmann::json::array();
-
-        for (const auto &component : view.getComponents()) {
-            nlohmann::json componentJson;
-
-            // Convertir ComponentType a cadena antes de asignarlo al JSON
-            std::string typeStr = componentTypeToString(component.getType());
-            componentJson["type"] = typeStr;
-
-            // Agregar las props
-            nlohmann::json propsJson;
-            // std::cout << "  Component Type: " << typeStr << std::endl;
-            for (const auto &prop : component.getProps()) {
-                propsJson[prop.first] = prop.second;
-                // std::cout << "    Prop: " << prop.first << " = " << prop.second << std::endl;
-            }
-            componentJson["props"] = propsJson;
-
-            // Si el componente permite nestedComponents, agregarlo al JSON
-            if (component.isAllowingItems()) {
-                componentJson["nestedComponents"] = nlohmann::json::array();
-                for (const auto &nestedComponent : component.getNestedComponents()) {
-                    nlohmann::json nestedComponentJson;
-
-                    // Convertir el tipo de componente anidado
-                    std::string nestedTypeStr = componentTypeToString(nestedComponent.getType());
-                    nestedComponentJson["type"] = nestedTypeStr;
-
-                    // Agregar las props del componente anidado
-                    nlohmann::json nestedPropsJson;
-                    for (const auto &nestedProp : nestedComponent.getProps()) {
-                        nestedPropsJson[nestedProp.first] = nestedProp.second;
-                    }
-                    nestedComponentJson["props"] = nestedPropsJson;
-
-                    componentJson["nestedComponents"].push_back(nestedComponentJson);
-                }
-            }
-
-            viewJson[view.getName()]["components"].push_back(componentJson);
+        auto section = std::dynamic_pointer_cast<Section>(view);
+        if (section) {
+            nlohmann::json viewJson;
+            viewJson[section->getName()] = processSectionToJson(section);
+            jsonSchema["views"].push_back(viewJson);
         }
-
-        jsonSchema["views"].push_back(viewJson);
     }
 
     // Create the custom components
     jsonSchema["custom"] = nlohmann::json::array();
     for (const auto &customComponent : this->custComponents) {
-        nlohmann::json customComponentJson;
-        customComponentJson[customComponent.getName()]["components"] = nlohmann::json::array();
-
-        for (const auto &component : customComponent.getComponents()) {
-            nlohmann::json componentJson;
-
-            // Convertir ComponentType a cadena antes de asignarlo al JSON
-            std::string typeStr = componentTypeToString(component.getType());
-            componentJson["type"] = typeStr;
-
-            // Agregar las props
-            nlohmann::json propsJson;
-            // std::cout << "  Component Type: " << typeStr << std::endl;
-            for (const auto &prop : component.getProps()) {
-                propsJson[prop.first] = prop.second;
-                // std::cout << "    Prop: " << prop.first << " = " << prop.second << std::endl;
-            }
-            componentJson["props"] = propsJson;
-
-            // Si el componente permite nestedComponents, agregarlo al JSON
-            if (component.isAllowingItems()) {
-                componentJson["nestedComponents"] = nlohmann::json::array();
-                for (const auto &nestedComponent : component.getNestedComponents()) {
-                    nlohmann::json nestedComponentJson;
-
-                    // Convertir el tipo de componente anidado
-                    std::string nestedTypeStr = componentTypeToString(nestedComponent.getType());
-                    nestedComponentJson["type"] = nestedTypeStr;
-
-                    // Agregar las props del componente anidado
-                    nlohmann::json nestedPropsJson;
-                    for (const auto &nestedProp : nestedComponent.getProps()) {
-                        nestedPropsJson[nestedProp.first] = nestedProp.second;
-                    }
-                    nestedComponentJson["props"] = nestedPropsJson;
-
-                    componentJson["nestedComponents"].push_back(nestedComponentJson);
-                }
-            }
-
-            customComponentJson[customComponent.getName()]["components"].push_back(componentJson);
+        auto section = std::dynamic_pointer_cast<Section>(customComponent);
+        if (section) {
+            nlohmann::json customComponentJson;
+            customComponentJson[section->getName()] = processSectionToJson(section);
+            jsonSchema["custom"].push_back(customComponentJson);
         }
-
-        jsonSchema["custom"].push_back(customComponentJson);
     }
 
     // Save the frontend.json file
@@ -309,43 +293,33 @@ bool FrontendGenerator::updateSchema()
     return true;
 }
 
-bool FrontendGenerator::generateView(const std::string &viewName)
+void FrontendGenerator::processSection(const std::shared_ptr<Section> &section,
+                                       nlohmann::json &jsonArray)
 {
-    nlohmann::json data;
-
-    // Inserta el nombre del componente en el contexto de Inja
-    data["component"] = viewName;
-
-    // Buscar la vista en views
-    auto it = std::find_if(views.begin(), views.end(), [&viewName](const Section &view) {
-        return view.getName() == viewName;
-    });
-
-    data["components"] = nlohmann::json::array(); // Asegúrate de inicializar el array
-
-    // Si la vista ya existe, agrega sus componentes al contexto
-    if (it != views.end()) {
-        for (const Component &component : it->getComponents()) {
+    for (const auto &child : section->getComponents()) {
+        auto component = std::dynamic_pointer_cast<Component>(child);
+        if (component) {
             nlohmann::json componentJson;
-            componentJson["type"] = componentTypeToString(component.getType());
+            componentJson["type"] = componentTypeToString(component->getType());
 
             // Agrega las props si existen
             nlohmann::json propsJson;
-            for (const auto &prop : component.getProps()) {
+            for (const auto &prop : component->getProps()) {
                 propsJson[prop.first] = prop.second;
             }
             componentJson["props"] = propsJson;
 
             // Manejo de nestedComponents para tipos permitidos
-            if (component.isAllowingItems()) {
+            if (component->isAllowingItems()) {
                 componentJson["nestedComponents"] = nlohmann::json::array();
-                for (const auto &nestedComponent : component.getNestedComponents()) {
+                for (const auto &nestedChild : component->getNestedComponents()) {
                     nlohmann::json nestedComponentJson;
-                    nestedComponentJson["type"] = componentTypeToString(nestedComponent.getType());
+                    auto nestedChildPtr = std::dynamic_pointer_cast<Component>(nestedChild);
+                    nestedComponentJson["type"] = componentTypeToString(nestedChildPtr->getType());
 
                     // Agregar las props del nestedComponent
                     nlohmann::json nestedPropsJson;
-                    for (const auto &nestedProp : nestedComponent.getProps()) {
+                    for (const auto &nestedProp : nestedChildPtr->getProps()) {
                         nestedPropsJson[nestedProp.first] = nestedProp.second;
                     }
                     nestedComponentJson["props"] = nestedPropsJson;
@@ -354,7 +328,46 @@ bool FrontendGenerator::generateView(const std::string &viewName)
                 }
             }
 
-            data["components"].push_back(componentJson);
+            jsonArray.push_back(componentJson);
+
+        } else {
+            auto subSection = std::dynamic_pointer_cast<Section>(child);
+            if (subSection) {
+                nlohmann::json sectionJson;
+                sectionJson["name"] = subSection->getName();
+                sectionJson["components"] = nlohmann::json::array();
+
+                // Procesar subsección recursivamente
+                processSection(subSection, sectionJson["components"]);
+
+                jsonArray.push_back(sectionJson);
+            }
+        }
+    }
+}
+
+bool FrontendGenerator::generateView(const std::string &viewName)
+{
+    nlohmann::json data;
+
+    // Inserta el nombre del componente en el contexto de Inja
+    data["component"] = viewName;
+
+    // Buscar la vista en views
+    auto it = std::find_if(views.begin(),
+                           views.end(),
+                           [&viewName](const std::shared_ptr<Section> &view) {
+                               return view->getName() == viewName;
+                           });
+
+    data["components"] = nlohmann::json::array(); // Asegúrate de inicializar el array
+
+    // Si la vista existe
+    if (it != views.end()) {
+        auto section = std::dynamic_pointer_cast<Section>(*it); // Convertir BaseNode a Section
+        if (section) {
+            // Renderizar al json
+            processSection(section, data["components"]);
         }
     }
 
@@ -401,26 +414,10 @@ bool FrontendGenerator::generateApp()
         routeJson["path"] = route.getPath();
         data["routes"].push_back(routeJson);
 
-        // bool viewExists = false;
-
-        // std::string viewFilePath = projectPath + "frontend/src/views/" + route.getComponent()
-        //                            + ".tsx";
-
-        // Verificar si el archivo ya existe
-        // std::ifstream fileCheck(viewFilePath);
-        // if (fileCheck.is_open()) {
-        //     // El archivo ya existe, no es necesario generarlo de nuevo
-        //     fileCheck.close();
-        // } else {
-        //     viewExists = true;
-        // }
-
-        // if (!viewExists) {
         if (!generateView(route.getComponent())) {
             fmt::print(stderr, "Failed to generate component base for {}\n", route.getComponent());
             return false;
         }
-        // }
     }
 
     std::string templatePath = ":/inja/frontend/app";
@@ -466,27 +463,12 @@ const std::vector<Route> &FrontendGenerator::getRoutes() const
     return routes;
 }
 
-std::vector<Route> &FrontendGenerator::getRoutes()
-{
-    return routes;
-}
-
-const std::vector<Section> &FrontendGenerator::getViews() const
+const std::vector<std::shared_ptr<Section>> &FrontendGenerator::getViews() const
 {
     return views;
 }
 
-std::vector<Section> &FrontendGenerator::getViews()
-{
-    return views;
-}
-
-const std::vector<Section> &FrontendGenerator::getCustomComponents() const
-{
-    return custComponents;
-}
-
-std::vector<Section> &FrontendGenerator::getCustomComponents()
+const std::vector<std::shared_ptr<Section>> &FrontendGenerator::getCustomComponents() const
 {
     return custComponents;
 }
@@ -497,12 +479,13 @@ void FrontendGenerator::setRoutes(const std::vector<Route> &routes)
     this->routes = routes;
 }
 
-void FrontendGenerator::setViews(const std::vector<Section> &views)
+void FrontendGenerator::setViews(const std::vector<std::shared_ptr<Section>> &views)
 {
     this->views = views;
 }
 
-void FrontendGenerator::setCustomComponents(const std::vector<Section> &custComponents)
+void FrontendGenerator::setCustomComponents(
+    const std::vector<std::shared_ptr<Section>> &custComponents)
 {
     this->custComponents = custComponents;
 }

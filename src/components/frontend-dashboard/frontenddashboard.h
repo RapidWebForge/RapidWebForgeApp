@@ -3,6 +3,7 @@
 
 #include <QDialog>
 #include <QTreeWidget>
+#include "../../models/component/component.h"
 #include "../../models/route/route.h"
 #include "../../models/section/section.h"
 #include "../create-section/createsection.h"
@@ -23,22 +24,19 @@ public:
 
     // Getters
     const std::vector<Route> &getRoutes() const;
-    std::vector<Route> &getRoutes();
-    const std::vector<Section> &getViews() const;
-    std::vector<Section> &getViews();
-    const std::vector<Section> &getCustomComponents() const;
-    std::vector<Section> &getCustomComponents();
+    const std::vector<std::shared_ptr<Section>> &getViews() const;
+    const std::vector<std::shared_ptr<Section>> &getCustomComponents() const;
     // Setters
     void setRoutes(const std::vector<Route> &routes);
-    void setViews(const std::vector<Section> &views);
-    void setCustomComponents(const std::vector<Section> &custComponents);
-    void setCurrentSection(Section &section);
+    void setViews(const std::vector<std::shared_ptr<Section>> &views);
+    void setCustomComponents(const std::vector<std::shared_ptr<Section>> &custComponents);
+    void setCurrentSection(const std::shared_ptr<Section> &section);
     // ComboBox Section
     void fillAvailableSections();
 
 public slots:
     void onRouteSaved(const Route &route);
-    void onCustomComponentSaved(const Section &component);
+    void onCustomComponentSaved(const std::shared_ptr<Section> &component);
 
 private slots:
     void onCurrentSectionTreeItemSelected(QTreeWidgetItem *item, int column);
@@ -54,41 +52,55 @@ private:
     Ui::FrontendDashboard *ui;
 
     void applyStylesFront();
-
     void configureTreeWidget(CustomTreeWidget *treeWidget,
                              bool acceptDrops,
                              QAbstractItemView::DragDropMode mode);
     void setUpTreeWidgets();
 
+    // Auxiliar functions
+    QTreeWidgetItem *createTreeItem(const QString &text, QObject *parentItem = nullptr);
+
     void setDraggableFlags(QTreeWidgetItem *item, bool isDraggable);
     void setComponentsDraggable();
 
+    // Populate
     void populateCurrentSectionTree();
     void populateNestedItems(QTreeWidgetItem *parentItem,
-                             const std::vector<Component> &nestedComponents);
-    void populatePropertiesTable(const Component &component);
-    Component convertItemToComponent(QTreeWidgetItem *item);
-    Component *findComponentByHierarchy(std::vector<Component> &components,
-                                        const std::vector<QTreeWidgetItem *> &hierarchy,
-                                        int level);
-    Component *findComponentInTree(Section &view, QTreeWidgetItem *item);
+                             const std::vector<std::shared_ptr<BaseNode>> &nestedComponents);
+    void populateSubSectionItems(QTreeWidgetItem *parentItem,
+                                 const std::shared_ptr<Section> &subSection);
+    void populatePropertiesTable(const std::shared_ptr<Component> &component);
+
+    std::shared_ptr<BaseNode> convertItemToBaseNode(QTreeWidgetItem *item);
+
+    std::shared_ptr<Component> findComponentInTree(const std::shared_ptr<BaseNode> &view,
+                                                   QTreeWidgetItem *item);
+    std::shared_ptr<Component> findComponentByHierarchy(
+        const std::vector<std::shared_ptr<BaseNode>> &components,
+        const std::vector<QTreeWidgetItem *> &hierarchy,
+        int level);
     // Component *findNestedComponent(Component &parent, QTreeWidgetItem *item);
 
     // Auxiliar functions to onItemDropped
-    QTreeWidgetItem *createTreeItem(const QString &text);
-    void insertComponentInView(Component &newComponent, QTreeWidgetItem *parentItem, int dropIndex);
-    void insertNestedComponent(Component *parentComponent,
-                               Component &newComponent,
+    void insertComponentInSection(std::shared_ptr<BaseNode> &newComponent,
+                                  QTreeWidgetItem *parentItem,
+                                  int dropIndex);
+    void insertNestedComponent(std::shared_ptr<Component> &parentComponent,
+                               std::shared_ptr<BaseNode> &newComponent,
                                QTreeWidgetItem *parentItem,
                                int dropIndex);
-    bool isParentView(QTreeWidgetItem *item) const;
+    bool isView(QTreeWidgetItem *item) const;
+    bool isCustomComponent(QTreeWidgetItem *item) const;
+
+    bool deleteComponentByHierarchy(const std::shared_ptr<Section> &section,
+                                    const std::vector<QTreeWidgetItem *> &hierarchy);
 
     CreateSection *createSectionDialog;
     std::vector<Route> routes;
-    std::vector<Section> custComponents;
-    std::vector<Section> views;
-    Section currentSection;
-    Component currentComponent;
+    std::vector<std::shared_ptr<Section>> custComponents;
+    std::vector<std::shared_ptr<Section>> views;
+    std::shared_ptr<Section> currentSection;
+    std::shared_ptr<Component> currentComponent;
 };
 
 #endif // FRONTENDDASHBOARD_H

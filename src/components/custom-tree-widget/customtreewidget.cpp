@@ -20,11 +20,6 @@ CustomTreeWidget::CustomTreeWidget(QWidget *parent)
     // setDragDropMode(QAbstractItemView::InternalMove);
     setDragDropMode(QAbstractItemView::DragDrop);
     setDropIndicatorShown(true);
-
-    setStyleSheet("QTreeView::dropIndicator {"
-                  "    border: 2px dashed red;"
-                  "    background-color: rgba(255, 0, 0, 50);"
-                  "}");
 }
 
 void CustomTreeWidget::dragEnterEvent(QDragEnterEvent *event)
@@ -124,8 +119,8 @@ void CustomTreeWidget::paintEvent(QPaintEvent *event)
     // Dibuja el indicador solo si está habilitado
     if (showDropIndicator) {
         QPainter painter(viewport());
-        painter.setPen(QPen(Qt::red, 2, Qt::DashLine));
-        painter.setBrush(Qt::NoBrush);
+        painter.setPen(QPen(Qt::blue, 2, Qt::SolidLine));
+        // painter.setBrush(Qt::NoBrush);
         painter.drawRect(dropIndicatorRect); // Dibuja el rectángulo del indicador
     }
 }

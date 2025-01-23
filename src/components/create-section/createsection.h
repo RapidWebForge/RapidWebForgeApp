@@ -19,7 +19,7 @@ public:
 
 signals:
     void routeSaved(const Route &route);
-    void customComponentSaved(const Section &custComponent);
+    void customComponentSaved(const std::shared_ptr<Section> &custComponent);
 
 private slots:
     void on_createButton_clicked();

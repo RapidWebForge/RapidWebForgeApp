@@ -12,6 +12,7 @@
 #include "../../core/version-manager/versionmanager.h"
 #include "ui_stepperdashboard.h"
 #include <fmt/core.h>
+#include <memory>
 
 StepperDashboard::StepperDashboard(QDialog *parent, const Project &project)
     : QDialog(parent)
@@ -104,8 +105,9 @@ void StepperDashboard::onBackendSchemaLoaded()
 
 void StepperDashboard::onFrontendSchemaLoaded()
 {
-    std::vector<Section> views = codeGenerator->frontendGenerator.getViews();
-    std::vector<Section> custComponents = codeGenerator->frontendGenerator.getCustomComponents();
+    auto views = codeGenerator->frontendGenerator.getViews();
+    auto custComponents = codeGenerator->frontendGenerator
+                                                                .getCustomComponents();
     std::vector<Route> routes = codeGenerator->frontendGenerator.getRoutes();
 
     frontendDashboard->setViews(views);
@@ -358,6 +360,8 @@ void StepperDashboard::onSaveChanges()
     codeGenerator->frontendGenerator.setRoutes(frontendDashboard->getRoutes());
 
     codeGenerator->frontendGenerator.setViews(frontendDashboard->getViews());
+
+    codeGenerator->frontendGenerator.setCustomComponents(frontendDashboard->getCustomComponents());
 
     if (codeGenerator->frontendGenerator.updateFrontendCode()) {
         QMessageBox::information(this, "Save Changes", "Changes have been saved successfully.");

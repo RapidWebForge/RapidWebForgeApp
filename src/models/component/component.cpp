@@ -45,7 +45,7 @@ void Component::initializeDefaultProps()
     }
 }
 
-void Component::addNestedComponent(const Component &component)
+void Component::addNestedComponent(const std::shared_ptr<BaseNode> &component)
 {
     nestedComponents.push_back(component);
 }
@@ -62,19 +62,9 @@ const std::map<std::string, std::string> &Component::getProps() const
     return props;
 }
 
-std::map<std::string, std::string> &Component::getProps()
+const std::vector<std::shared_ptr<BaseNode>> &Component::getNestedComponents() const
 {
-    return props;
-}
-
-const std::vector<Component> &Component::getNestedComponents() const
-{
-    return this->nestedComponents;
-}
-
-std::vector<Component> &Component::getNestedComponents()
-{
-    return this->nestedComponents;
+    return nestedComponents;
 }
 
 bool Component::isAllowingItems() const
@@ -101,7 +91,7 @@ void Component::setAllowItems(bool allow)
     this->allowItems = allow;
 }
 
-void Component::setNestedComponents(const std::vector<Component> &components)
+void Component::setNestedComponents(const std::vector<std::shared_ptr<BaseNode>> &components)
 {
-    this->nestedComponents = components;
+    nestedComponents = components;
 }

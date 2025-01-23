@@ -60,7 +60,7 @@ void CreateSection::on_createButton_clicked()
         else
             QMessageBox::warning(this, "Warning", "Fill all the fields to create");
     } else {
-        Section customComponent(sectionName);
+        const std::shared_ptr<Section> customComponent = std::make_shared<Section>(sectionName);
 
         emit customComponentSaved(customComponent);
 

@@ -1,27 +1,33 @@
 #ifndef SECTION_H
 #define SECTION_H
 
-#include "../component/component.h"
+#include "../base-node/basenode.h"
+#include <memory>
 #include <string>
 #include <vector>
 
-class Section
+class Section : public BaseNode
 {
 private:
     std::string name;
-    std::vector<Component> components;
+    std::vector<std::shared_ptr<BaseNode>> components; // Nodos hijos (Section o Component)
 
 public:
     Section();
-    Section(const std::string &name);
-    Section(const std::string &name, const std::vector<Component> &components);
+    explicit Section(const std::string &name);
+    Section(const std::string &name, const std::vector<std::shared_ptr<BaseNode>> &components);
 
     std::string getName() const;
-    const std::vector<Component> &getComponents() const;
-    std::vector<Component> &getComponents();
+    const std::vector<std::shared_ptr<BaseNode>> &getComponents() const;
 
     void setName(const std::string &name);
-    void setComponents(const std::vector<Component> &components);
+    void setComponents(const std::vector<std::shared_ptr<BaseNode>> &components);
+
+    // Métodos útiles
+    void addComponent(const std::shared_ptr<BaseNode> &component);
+    void insertComponent(int index, const std::shared_ptr<BaseNode> &component);
+    bool removeComponentByName(const std::string &name);
+    void clearComponents();
 };
 
 #endif // SECTION_H

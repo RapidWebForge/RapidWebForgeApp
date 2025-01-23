@@ -1,6 +1,7 @@
 #ifndef FRONTENDGENERATOR_H
 #define FRONTENDGENERATOR_H
 
+#include "../../models/component/component.h"
 #include "../../models/route/route.h"
 #include "../../models/section/section.h"
 #include <inja/inja.hpp>
@@ -18,26 +19,29 @@ public:
     bool updateFrontendCode();
     // Getters
     const std::vector<Route> &getRoutes() const;
-    std::vector<Route> &getRoutes();
-    const std::vector<Section> &getViews() const;
-    std::vector<Section> &getViews();
-    const std::vector<Section> &getCustomComponents() const;
-    std::vector<Section> &getCustomComponents();
+    const std::vector<std::shared_ptr<Section>> &getViews() const;
+    const std::vector<std::shared_ptr<Section>> &getCustomComponents() const;
     // Setters
     void setRoutes(const std::vector<Route> &routes);
-    void setViews(const std::vector<Section> &views);
-    void setCustomComponents(const std::vector<Section> &custComponents);
+    void setViews(const std::vector<std::shared_ptr<Section>> &views);
+    void setCustomComponents(const std::vector<std::shared_ptr<Section>> &custComponents);
+
+    // Process functions
+    void processSection(const std::shared_ptr<Section> &section, nlohmann::json &jsonArray);
+    nlohmann::json processSectionToJson(const std::shared_ptr<Section> &section);
 
 private:
     std::string projectPath;
     std::vector<Route> routes;
-    std::vector<Section> views;
-    std::vector<Section> custComponents;
+    std::vector<std::shared_ptr<Section>> views;
+    std::vector<std::shared_ptr<Section>> custComponents;
     inja::Environment env;
 
-    Component parseComponent(const nlohmann::json &componentJson);
-    std::vector<Component> parseNestedComponents(const nlohmann::json &nestedJsonArray);
+    std::shared_ptr<Component> parseComponent(const nlohmann::json &componentJson);
+    std::vector<std::shared_ptr<BaseNode>> parseNestedComponents(
+        const nlohmann::json &nestedJsonArray);
     void parseJson(const nlohmann::json &jsonSchema);
+
     bool generateView(const std::string &viewName);
     bool generateApp();
 };
