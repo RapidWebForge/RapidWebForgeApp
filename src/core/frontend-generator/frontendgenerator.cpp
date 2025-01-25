@@ -227,8 +227,6 @@ nlohmann::json FrontendGenerator::processSectionToJson(const std::shared_ptr<Sec
             componentJson["createdOn"] = timePointToString(component->getCreatedOn());
             componentJson["updatedOn"] = timePointToString(component->getUpdatedOn());
 
-            qDebug() << componentJson.dump(4) << "\n";
-
             // Agregar props del componente
             nlohmann::json propsJson;
             for (const auto &prop : component->getProps()) {
@@ -248,7 +246,6 @@ nlohmann::json FrontendGenerator::processSectionToJson(const std::shared_ptr<Sec
                         nestedComponentPtr->getCreatedOn());
                     nestedComponentJson["updatedOn"] = timePointToString(
                         nestedComponentPtr->getUpdatedOn());
-                    qDebug() << nestedComponentJson.dump(4) << "\n";
 
                     // Props de los nestedComponents
                     nlohmann::json nestedPropsJson;
@@ -339,8 +336,6 @@ void FrontendGenerator::processSection(const std::shared_ptr<Section> &section,
             componentJson["createdOn"] = timePointToString(component->getCreatedOn());
             componentJson["updatedOn"] = timePointToString(component->getUpdatedOn());
 
-            qDebug() << componentJson.dump(4) << '\n';
-
             // Agrega las props si existen
             nlohmann::json propsJson;
             for (const auto &prop : component->getProps()) {
@@ -360,8 +355,6 @@ void FrontendGenerator::processSection(const std::shared_ptr<Section> &section,
                         nestedChildPtr->getCreatedOn());
                     nestedComponentJson["updatedOn"] = timePointToString(
                         nestedChildPtr->getUpdatedOn());
-
-                    qDebug() << nestedComponentJson.dump(4) << '\n';
 
                     // Agregar las props del nestedComponent
                     nlohmann::json nestedPropsJson;

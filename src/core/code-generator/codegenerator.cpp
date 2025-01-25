@@ -114,8 +114,7 @@ bool CodeGenerator::createBaseFrontendProject()
     nlohmann::json frontendJson;
     frontendJson["routes"] = nlohmann::json::array();
     frontendJson["views"] = nlohmann::json::array();
-    // Your own components
-    frontendJson["components"] = nlohmann::json::array();
+    frontendJson["custom"] = nlohmann::json::array();
 
     // Rutas iniciales
     nlohmann::json homeRouteJson;
