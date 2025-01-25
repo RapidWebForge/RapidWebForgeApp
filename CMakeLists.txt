@@ -27,8 +27,10 @@ if(NOT TARGET Qt6::Widgets)
 endif()
 
 # Vcpkg
-find_package(boost_algorithm CONFIG REQUIRED)
+find_package(boost_algorithm REQUIRED CONFIG)
 find_package(boost_process REQUIRED CONFIG)
+find_package(boost_uuid REQUIRED CONFIG)
+find_package(OpenSSL REQUIRED)
 find_package(fmt CONFIG REQUIRED)
 find_package(inja CONFIG REQUIRED)
 find_package(unofficial-mysql-connector-cpp CONFIG REQUIRED)
@@ -171,6 +173,8 @@ target_link_libraries(RapidWebForgeApp PRIVATE
     Qt${QT_VERSION_MAJOR}::Widgets
     Boost::algorithm
     Boost::process
+    Boost::uuid
+    OpenSSL::SSL
     fmt::fmt
     pantor::inja
     unofficial::mysql-connector-cpp::connector

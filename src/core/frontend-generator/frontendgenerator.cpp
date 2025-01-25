@@ -3,8 +3,12 @@
 #include <QFile>
 #include <QTextStream>
 #include "../../models/component-type/componenttype.h"
+#include "../../models/time-chrono/timechrono.h"
 #include "../../utils/file/fileutiils.h"
 #include "../../utils/render_callback/rendercallback.h"
+#include <boost/uuid/string_generator.hpp>
+#include <boost/uuid/uuid_generators.hpp>
+#include <boost/uuid/uuid_io.hpp>
 #include <fmt/core.h>
 #include <fstream>
 
@@ -88,7 +92,26 @@ std::vector<std::shared_ptr<BaseNode>> FrontendGenerator::parseNestedComponents(
 
 std::shared_ptr<Component> FrontendGenerator::parseComponent(const nlohmann::json &componentJson)
 {
-    auto component = std::make_shared<Component>();
+    boost::uuids::uuid id;
+
+    if (componentJson.contains("id") && componentJson["id"].is_string()) {
+        boost::uuids::string_generator gen;
+        id = gen(componentJson["id"].get<std::string>());
+    }
+
+    std::chrono::system_clock::time_point createdOn, updatedOn;
+
+    if (componentJson.contains("createdOn") && componentJson["createdOn"].is_number()) {
+        createdOn = std::chrono::system_clock::from_time_t(
+            componentJson["createdOn"].get<std::time_t>());
+    }
+
+    if (componentJson.contains("updatedOn") && componentJson["updatedOn"].is_number()) {
+        updatedOn = std::chrono::system_clock::from_time_t(
+            componentJson["updatedOn"].get<std::time_t>());
+    }
+
+    auto component = std::make_shared<Component>(id, createdOn, updatedOn);
 
     // Parse type
     if (componentJson.contains("type") && componentJson["type"].is_string()) {
@@ -200,6 +223,11 @@ nlohmann::json FrontendGenerator::processSectionToJson(const std::shared_ptr<Sec
         if (component) {
             nlohmann::json componentJson;
             componentJson["type"] = componentTypeToString(component->getType());
+            componentJson["id"] = boost::uuids::to_string(component->getId());
+            componentJson["createdOn"] = timePointToString(component->getCreatedOn());
+            componentJson["updatedOn"] = timePointToString(component->getUpdatedOn());
+
+            qDebug() << componentJson.dump(4) << "\n";
 
             // Agregar props del componente
             nlohmann::json propsJson;
@@ -215,6 +243,12 @@ nlohmann::json FrontendGenerator::processSectionToJson(const std::shared_ptr<Sec
                     nlohmann::json nestedComponentJson;
                     auto nestedComponentPtr = std::dynamic_pointer_cast<Component>(nestedComponent);
                     nestedComponentJson["type"] = componentTypeToString(nestedComponentPtr->getType());
+                    nestedComponentJson["id"] = boost::uuids::to_string(nestedComponentPtr->getId());
+                    nestedComponentJson["createdOn"] = timePointToString(
+                        nestedComponentPtr->getCreatedOn());
+                    nestedComponentJson["updatedOn"] = timePointToString(
+                        nestedComponentPtr->getUpdatedOn());
+                    qDebug() << nestedComponentJson.dump(4) << "\n";
 
                     // Props de los nestedComponents
                     nlohmann::json nestedPropsJson;
@@ -301,6 +335,11 @@ void FrontendGenerator::processSection(const std::shared_ptr<Section> &section,
         if (component) {
             nlohmann::json componentJson;
             componentJson["type"] = componentTypeToString(component->getType());
+            componentJson["id"] = boost::uuids::to_string(component->getId());
+            componentJson["createdOn"] = timePointToString(component->getCreatedOn());
+            componentJson["updatedOn"] = timePointToString(component->getUpdatedOn());
+
+            qDebug() << componentJson.dump(4) << '\n';
 
             // Agrega las props si existen
             nlohmann::json propsJson;
@@ -316,6 +355,13 @@ void FrontendGenerator::processSection(const std::shared_ptr<Section> &section,
                     nlohmann::json nestedComponentJson;
                     auto nestedChildPtr = std::dynamic_pointer_cast<Component>(nestedChild);
                     nestedComponentJson["type"] = componentTypeToString(nestedChildPtr->getType());
+                    nestedComponentJson["id"] = boost::uuids::to_string(nestedChildPtr->getId());
+                    nestedComponentJson["createdOn"] = timePointToString(
+                        nestedChildPtr->getCreatedOn());
+                    nestedComponentJson["updatedOn"] = timePointToString(
+                        nestedChildPtr->getUpdatedOn());
+
+                    qDebug() << nestedComponentJson.dump(4) << '\n';
 
                     // Agregar las props del nestedComponent
                     nlohmann::json nestedPropsJson;

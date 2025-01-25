@@ -1,6 +1,9 @@
 #include "codegenerator.h"
+#include <QDebug>
 #include <QFile>
+#include "../../models/time-chrono/timechrono.h"
 #include "../../utils/ziphelper/ziphelper.h"
+#include <boost/uuid/uuid_io.hpp>
 #include <filesystem>
 #include <fmt/core.h>
 #include <fstream>
@@ -126,7 +129,13 @@ bool CodeGenerator::createBaseFrontendProject()
     nlohmann::json homeH1Json;
     nlohmann::json homePropsJson;
     homeComponentsJson["components"] = nlohmann::json::array();
-    homeH1Json["type"] = "Header H1";
+
+    Component newHeaderH1(ComponentType::HeaderH1);
+
+    homeH1Json["type"] = componentTypeToString(newHeaderH1.getType());
+    homeH1Json["id"] = boost::uuids::to_string(newHeaderH1.getId());
+    homeH1Json["createdOn"] = timePointToString(newHeaderH1.getCreatedOn());
+    homeH1Json["updatedOn"] = timePointToString(newHeaderH1.getUpdatedOn());
     homePropsJson["text"] = "Home View";
     homeH1Json["props"] = homePropsJson;
     homeComponentsJson["components"].push_back(homeH1Json);

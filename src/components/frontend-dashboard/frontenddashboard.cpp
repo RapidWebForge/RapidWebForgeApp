@@ -402,14 +402,12 @@ void FrontendDashboard::onCurrentSectionTreeItemSelected(QTreeWidgetItem *item, 
                                });
 
     if (viewIt != views.end()) {
-        // Update currentSection if it is a viewx
+        // Update currentSection if it is a view
         setCurrentSection(*viewIt);
         auto viewPtr = std::dynamic_pointer_cast<Section>(*viewIt);
 
         qDebug() << "Current section updated to the view:"
                  << QString::fromStdString(viewPtr->getName());
-
-        return;
     } else {
         // If not check in custom components
         auto custComponentIt = std::find_if(custComponents.begin(),
@@ -425,8 +423,6 @@ void FrontendDashboard::onCurrentSectionTreeItemSelected(QTreeWidgetItem *item, 
 
             qDebug() << "Current section updated to the custom component:"
                      << QString::fromStdString(custComponentPtr->getName());
-
-            return;
         } else {
             // If is not a view or a custom component, check in the current section
 
