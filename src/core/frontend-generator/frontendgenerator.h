@@ -42,7 +42,10 @@ private:
         const nlohmann::json &nestedJsonArray);
     void parseJson(const nlohmann::json &jsonSchema);
 
+    void initializeCustomComponentsCache();
+
     bool generateView(const std::string &viewName);
+    bool generateCustomComponent(const std::string &viewName);
     bool generateApp();
 };
 

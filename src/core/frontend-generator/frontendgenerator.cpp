@@ -19,8 +19,8 @@ FrontendGenerator::FrontendGenerator(const std::string &projectPath)
         env.add_callback("render_component", [this](inja::Arguments &args) -> std::string {
             return RenderCallback::renderComponentCallback(this->env, args);
         });
-        env.add_callback("render_services_imports", 1, [this](inja::Arguments &args) -> std::string {
-            return RenderCallback::renderServiceImportsCallback(this->env, args);
+        env.add_callback("render_imports", 1, [this](inja::Arguments &args) -> std::string {
+            return RenderCallback::renderImportsCallback(this->env, args);
         });
         env.add_callback("render_states", 1, [this](inja::Arguments &args) -> std::string {
             return RenderCallback::renderStatesCallback(this->env, args);
@@ -34,6 +34,20 @@ FrontendGenerator::FrontendGenerator(const std::string &projectPath)
     } catch (const std::exception &e) {
         fmt::print(stderr, "Error adding callback: {}\n", e.what());
     }
+}
+
+void FrontendGenerator::initializeCustomComponentsCache()
+{
+    RenderCallback::customComponentsCache.clear();
+
+    for (const auto &customComponent : this->custComponents) {
+        std::string name = customComponent->getName();
+        nlohmann::json jsonRepresentation = processSectionToJson(customComponent);
+        RenderCallback::customComponentsCache[name] = jsonRepresentation;
+    }
+
+    fmt::print("Custom components cache initialized with {} items.\n",
+               RenderCallback::customComponentsCache.size());
 }
 
 bool FrontendGenerator::loadSchema()
@@ -67,7 +81,8 @@ bool FrontendGenerator::loadSchema()
         return false;
     }
 
-    parseJson(jsonSchema); // Convertir el JSON a rutas y vistas
+    parseJson(jsonSchema); // JSON to routes, views and custom components
+    // initializeCustomComponentsCache();
     return true;
 }
 
@@ -439,6 +454,60 @@ bool FrontendGenerator::generateView(const std::string &viewName)
     return true;
 }
 
+bool FrontendGenerator::generateCustomComponent(const std::string &custComponentName)
+{
+    nlohmann::json data;
+
+    // Inserta el nombre del componente en el contexto de Inja
+    data["component"] = custComponentName;
+
+    // Buscar la vista en custComponents
+    auto it = std::find_if(custComponents.begin(),
+                           custComponents.end(),
+                           [&custComponentName](const std::shared_ptr<Section> &cc) {
+                               return cc->getName() == custComponentName;
+                           });
+
+    data["components"] = nlohmann::json::array(); // Asegúrate de inicializar el array
+
+    // Si la vista existe
+    if (it != custComponents.end()) {
+        auto section = std::dynamic_pointer_cast<Section>(*it); // Convertir BaseNode a Section
+        if (section) {
+            // Renderizar al json
+            processSection(section, data["components"]);
+        }
+    }
+
+    std::string templatePath = ":/inja/frontend/view";
+
+    // Cargar el template
+    QFile file(QString::fromStdString(templatePath));
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        fmt::print(stderr, "Unable to open template file from resource: {}\n", templatePath);
+        return false;
+    }
+
+    QTextStream in(&file);
+    QString templateContent = in.readAll();
+    file.close();
+
+    std::string templateString = templateContent.toStdString();
+    std::string outputPath = projectPath + "/frontend/src/components/" + custComponentName + ".tsx";
+
+    try {
+        // Renderizar con Inja usando el contenido del archivo como una cadena
+        std::string result = env.render(templateString, data);
+        FileUtils::writeFile(outputPath, result);
+    } catch (const std::exception &e) {
+        fmt::print(stderr, "Error custom component {}: {}\n", custComponentName, e.what());
+        return false;
+    }
+
+    fmt::print("Custom component generated successfully for {}\n", custComponentName);
+    return true;
+}
+
 bool FrontendGenerator::generateApp()
 {
     nlohmann::json data;
@@ -455,6 +524,13 @@ bool FrontendGenerator::generateApp()
 
         if (!generateView(route.getComponent())) {
             fmt::print(stderr, "Failed to generate component base for {}\n", route.getComponent());
+            return false;
+        }
+    }
+
+    for (const auto &custComponent : this->custComponents) {
+        if (!generateCustomComponent(custComponent->getName())) {
+            fmt::print(stderr, "Failed to custom component {}\n", custComponent->getName());
             return false;
         }
     }
@@ -488,6 +564,7 @@ bool FrontendGenerator::generateApp()
 
 bool FrontendGenerator::generateFrontendCode()
 {
+    initializeCustomComponentsCache();
     return generateApp();
 }
 

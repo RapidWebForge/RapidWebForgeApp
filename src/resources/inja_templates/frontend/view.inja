@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 
-{{ render_services_imports(components) }}
+{{ render_imports(components) }}
 
 export default function {{ component }}() {
 

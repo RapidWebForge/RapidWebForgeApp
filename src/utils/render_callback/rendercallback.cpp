@@ -14,36 +14,38 @@ std::string toLower(const std::string &str)
 }
 
 namespace RenderCallback {
-std::string renderComponentCallback(inja::Environment &env, inja::Arguments &args)
+
+std::unordered_map<std::string, nlohmann::json> customComponentsCache;
+
+std::string renderCustomComponent(const nlohmann::json componentJson)
 {
-    if (args.empty() || !args[0]->is_object()) {
-        fmt::print(stderr, "Invalid argument passed to render_component.\n");
-        return "<!-- Invalid argument -->";
-    }
+    std::string output = "";
 
-    const nlohmann::json &componentJson = *args[0];
-    std::string type;
-    std::string parentType = args.at(1)->get<std::string>();
-
-    if (componentJson.contains("type") && componentJson["type"].is_string()) {
-        type = componentJson["type"];
+    std::string componentName = componentJson["name"];
+    if (customComponentsCache.find(componentName) != customComponentsCache.end()) {
+        output = "<" + componentName + "/>";
     } else {
-        fmt::print(stderr,
-                   "Unsupported component type format or missing: {}\n",
-                   componentJson.dump());
-        return "<!-- Unsupported component type -->";
+        fmt::print(stderr, "Unsupported custom component: {}\n", componentName);
+        output = "<!-- Unsupported custom component: " + componentName + " -->";
+    }
+    return output;
+}
+
+std::string renderComponent(inja::Environment &env,
+                            const nlohmann::json componentJson,
+                            std::string type,
+                            std::string parentType)
+{
+    std::string output = "";
+
+    if (!parentType.empty()) {
+        output = "\n";
     }
 
     const auto &props = componentJson["props"];
     if (!props.is_object()) {
         fmt::print(stderr, "Invalid props format: must be an object.\n");
         return "<!-- Invalid props format -->";
-    }
-
-    std::string output = "";
-
-    if (!parentType.empty()) {
-        output = "\n";
     }
 
     if (type == "Header H1") {
@@ -183,36 +185,82 @@ std::string renderComponentCallback(inja::Environment &env, inja::Arguments &arg
     return output;
 }
 
-std::string renderServiceImportsCallback(inja::Environment &env, inja::Arguments &args)
+std::string renderComponentCallback(inja::Environment &env, inja::Arguments &args)
+{
+    if (args.empty() || !args[0]->is_object()) {
+        fmt::print(stderr, "Invalid argument passed to render_component.\n");
+        return "<!-- Invalid argument -->";
+    }
+
+    const nlohmann::json &componentJson = *args[0];
+
+    if (componentJson.contains("type") && componentJson["type"].is_string()) {
+        std::string type = componentJson["type"];
+        std::string parentType = args.at(1)->get<std::string>();
+
+        return renderComponent(env, componentJson, type, parentType);
+    } else {
+        return renderCustomComponent(componentJson);
+    }
+}
+
+std::string renderServiceImportsCallback(const nlohmann::json componentJson)
+{
+    std::string output;
+
+    // Verificar si el componente es de tipo "Model Layout"
+    if (componentJson.contains("type")
+        && (componentJson["type"] == "Model Layout" || componentJson["type"] == "Form")) {
+        // Obtener las propiedades del componente
+        const auto &props = componentJson["props"];
+
+        // Verificar si el modelo no es "Model" y no es un string vacío
+        if (props.contains("model") && props["model"].is_string()
+            && !props["model"].get<std::string>().empty() && props["model"] != "Model") {
+            std::string modelName = props["model"];
+
+            // Generar el código de importación
+            output += "import " + modelName + "Service from \"../services/" + modelName
+                      + "Service\";\n";
+            output += "import " + modelName + " from \"../models/" + modelName + "\";\n";
+        }
+    }
+
+    return output;
+}
+
+std::string renderCustomComponentsImportsCallback(const nlohmann::json componentJson)
+{
+    std::string output;
+
+    if (!componentJson.contains("component"))
+        return output;
+
+    std::string customComponentName = componentJson["component"];
+
+    output += "import " + customComponentName + " from \"../components/" + customComponentName
+              + "\";\n";
+
+    return output;
+}
+
+std::string renderImportsCallback(inja::Environment &env, inja::Arguments &args)
 {
     // Validar que el argumento sea un array de componentes
     if (args.empty() || !args[0]->is_array()) {
-        fmt::print(stderr, "Invalid argument passed to renderServiceImportsCallback.\n");
+        fmt::print(stderr, "Invalid argument passed to renderCustomComponentsImportsCallback.\n");
         return "<!-- Invalid argument -->";
     }
 
     const nlohmann::json &components = *args[0];
     std::string output;
 
-    // Recorrer cada componente en el array
     for (const auto &componentJson : components) {
         // Verificar si el componente es de tipo "Model Layout"
-        if (componentJson.contains("type")
-            && (componentJson["type"] == "Model Layout" || componentJson["type"] == "Form")) {
-            // Obtener las propiedades del componente
-            const auto &props = componentJson["props"];
-
-            // Verificar si el modelo no es "Model" y no es un string vacío
-            if (props.contains("model") && props["model"].is_string()
-                && !props["model"].get<std::string>().empty() && props["model"] != "Model") {
-                std::string modelName = props["model"];
-
-                // Generar el código de importación
-                output += "import " + modelName + "Service from \"../services/" + modelName
-                          + "Service\";\n";
-                output += "import " + modelName + " from \"../models/" + modelName + "\";\n";
-            }
-        }
+        if (componentJson.contains("type"))
+            output += renderServiceImportsCallback(componentJson);
+        else
+            output += renderCustomComponentsImportsCallback(componentJson);
     }
 
     return output;
