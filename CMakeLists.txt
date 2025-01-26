@@ -165,6 +165,7 @@ if(QT_VERSION_MAJOR GREATER_EQUAL 6)
 else()
     add_executable(RapidWebForgeApp ${PROJECT_SOURCES}
         src/core/logging/actionloggerjson.h src/core/logging/actionloggerjson.cpp
+        src/core/logging/stepvalidator.h src/core/logging/stepvalidator.cpp
     )
 endif()
 
