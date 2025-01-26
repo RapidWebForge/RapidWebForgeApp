@@ -2,6 +2,7 @@
 #define CREATESECTION_H
 
 #include <QDialog>
+#include "../../core/logging/actionloggerjson.h" // Para manejar logs en formato .json
 #include "../../models/route/route.h"
 #include "../../models/section/section.h"
 
@@ -32,6 +33,7 @@ private:
     Ui::CreateSection *ui;
     Route route;
     Section custComponent;
+    ActionLoggerJson loggerJson; // Logs en formato .json
 
     void applyStyles();
 };

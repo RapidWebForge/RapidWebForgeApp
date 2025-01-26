@@ -1,6 +1,7 @@
 #include "createsection.h"
 #include <QFile>
 #include <QMessageBox>
+#include "../../core/logging/actionloggerjson.h"
 #include "../../models/component-type/componenttype.h"
 #include "ui_createsection.h"
 #include <boost/algorithm/string.hpp>
@@ -8,6 +9,7 @@
 CreateSection::CreateSection(QWidget *parent)
     : QDialog(parent)
     , ui(new Ui::CreateSection)
+    , loggerJson("resources/logs/user_actions.json") // Cambiar la ruta al archivo JSON
 {
     ui->setupUi(this);
     applyStyles();
@@ -55,18 +57,23 @@ void CreateSection::on_createButton_clicked()
 
         emit routeSaved(route);
 
-        if (!sectionName.empty() && !path.empty() && isView)
+        if (!sectionName.empty() && !path.empty() && isView) {
+            // Log para crear una nueva vista React
+            loggerJson.logAction("create-react-view",
+                                 "sectionName=" + sectionName + ", path=" + path);
             accept();
-        else
+        } else
             QMessageBox::warning(this, "Warning", "Fill all the fields to create");
     } else {
         const std::shared_ptr<Section> customComponent = std::make_shared<Section>(sectionName);
 
         emit customComponentSaved(customComponent);
 
-        if (!sectionName.empty() && !isView)
+        if (!sectionName.empty() && !isView) {
+            // Log para crear un nuevo componente React
+            loggerJson.logAction("create-react-component", "sectionName=" + sectionName);
             accept();
-        else
+        } else
             QMessageBox::warning(this, "Warning", "Fill all the fields to create");
     }
 }

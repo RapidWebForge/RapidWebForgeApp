@@ -3,6 +3,7 @@
 #include <QDropEvent>
 #include <QFile>
 #include <QMessageBox>
+#include "../../core/logging/actionloggerjson.h"
 #include "../../models/component-type/componenttype.h"
 #include "ui_frontenddashboard.h"
 #include <boost/uuid/uuid_io.hpp>
@@ -13,6 +14,8 @@ FrontendDashboard::FrontendDashboard(QWidget *parent)
     : QDialog(parent)
     , ui(new Ui::FrontendDashboard)
     , createSectionDialog(nullptr)
+    , loggerJson("resources/logs/user_actions.json") // Cambiar la ruta al archivo JSON
+
 {
     ui->setupUi(this);
 
@@ -548,6 +551,10 @@ void FrontendDashboard::onPropertyValueChanged(int row, int column)
         std::map<std::string, std::string> currentProps = componentPtr->getProps();
         currentProps[propertyName.toStdString()] = newValue.toStdString();
         componentPtr->setProps(currentProps);
+        // Registrar log de la acción
+        std::string logMessage = "Property '" + propertyName.toStdString() + "' updated to '"
+                                 + newValue.toStdString() + "'";
+        loggerJson.logAction("edit-tag-attributes", logMessage);
 
         // Actualizar el componente en `currentSection` usando el método `findComponentInTree`
         std::shared_ptr<Component> componentInSection = findComponentInTree(currentSection,

@@ -1,12 +1,15 @@
 #include "addfielddialog.h"
 #include <QFile>
 #include <QMessageBox>
+#include "../../core/logging/actionloggerjson.h"
 #include "ui_addfielddialog.h"
 
 AddFieldDialog::AddFieldDialog(QWidget *parent)
     : QDialog(parent)
     , ui(new Ui::AddFieldDialog)
     , currentTransaction(nullptr)
+    , loggerJson("resources/logs/user_actions.json") // Cambiar la ruta al archivo JSON
+
 {
     ui->setupUi(this);
 
@@ -126,11 +129,28 @@ void AddFieldDialog::on_addButton_clicked()
     field.setHasCheck(hasCheck);
     field.setHasDefault(hasDefault);
 
+    std::string logMessage = "fieldName=" + fieldName + ", fieldType=" + fieldType
+                             + ", isPrimaryKey=" + (field.isPrimaryKey() ? "true" : "false")
+                             + ", isNull=" + (isNull ? "true" : "false")
+                             + ", isUnique=" + (isUnique ? "true" : "false");
     if (ui->foreignKeyCheckBox->isChecked()) {
         std::string foreignKeyTable = ui->foreignKeyTableComboBox->currentText().toStdString();
         field.setIsForeignKey(true);
         field.setForeignKeyTable(foreignKeyTable); // Establecer la tabla relacionada
+
+        // Log de creación de relación entre modelos
+        std::string relationshipLog = "sourceModel=" + currentTransaction->getName()
+                                      + ", targetModel=" + foreignKeyTable
+                                      + ", fieldName=" + fieldName;
+
+        loggerJson.logAction("create-relationship-between-models", relationshipLog);
+
+        logMessage += ", foreignKeyTable=" + foreignKeyTable;
     }
+
+    // Log de la creación del nuevo field
+    loggerJson.logAction("add-field-to-model", logMessage);
+
     emit fieldSaved(field);
 
     // Limpiar el formulario

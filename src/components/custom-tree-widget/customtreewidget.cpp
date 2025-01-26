@@ -12,8 +12,12 @@
 #include "../../models/component-type/componenttype.h"
 #include "../../models/component/component.h"
 
+ActionLoggerJson loggerJson("resources/logs/user_actions.json");
+
 CustomTreeWidget::CustomTreeWidget(QWidget *parent)
     : QTreeWidget(parent)
+    , loggerJson("resources/logs/user_actions.json") // Cambiar la ruta al archivo JSON
+
 {
     setDragEnabled(true);
     setAcceptDrops(true);
@@ -88,6 +92,14 @@ void CustomTreeWidget::dropEvent(QDropEvent *event)
         // Caso 3: Insertar como hijo
         parentItem = targetItem;
         dropIndex = 0; // Insertar como el primer hijo
+
+        // Log para "nest-tag"
+        QString sourceTagName = sourceItem->text(0); // Nombre del componente arrastrado
+        QString targetTagName = targetItem->text(0); // Nombre del componente destino
+        loggerJson.logAction("nest-tag",
+                             "Etiqueta " + sourceTagName.toStdString() + " anidada dentro de "
+                                 + targetTagName.toStdString());
+
     } else if (pos.y() < itemRect.top() + itemRect.height() / 3) {
         // Caso 1: Insertar encima
         parentItem = targetItem->parent() ? targetItem->parent() : invisibleRootItem();
@@ -105,6 +117,14 @@ void CustomTreeWidget::dropEvent(QDropEvent *event)
     if (parentItem && sourceItem) {
         event->acceptProposedAction();
         emit itemDropped(parentItem, sourceItem, dropIndex);
+
+        // Log para "add-new-tag" (cuando no es un nido)
+        if (parentItem != targetItem) {
+            QString tagName = sourceItem->text(0); // Nombre del tag
+            loggerJson.logAction("add-new-tag",
+                                 "Etiqueta añadida al árbol de componentes: "
+                                     + tagName.toStdString());
+        }
     }
 
     // Oculta el indicador después del drop

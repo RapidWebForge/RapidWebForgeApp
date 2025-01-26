@@ -3,6 +3,7 @@
 
 #include <QDialog>
 #include <QTreeWidget>
+#include "../../core/logging/actionloggerjson.h" // Para manejar logs en formato .json
 #include "../../models/component/component.h"
 #include "../../models/route/route.h"
 #include "../../models/section/section.h"
@@ -105,6 +106,7 @@ private:
     std::vector<std::shared_ptr<Section>> views;
     std::shared_ptr<Section> currentSection;
     std::shared_ptr<Component> currentComponent;
+    ActionLoggerJson loggerJson; // Logs en formato .json
 };
 
 #endif // FRONTENDDASHBOARD_H

@@ -7,6 +7,8 @@ CreateTableDialog::CreateTableDialog(QWidget *parent)
     : QDialog(parent)
     , ui(new Ui::CreateTableDialog)
     , addFieldDialog(nullptr)
+    , loggerJson("resources/logs/user_actions.json") // Cambiar la ruta al archivo JSON
+
 {
     ui->setupUi(this);
 
@@ -64,7 +66,8 @@ void CreateTableDialog::on_createButton_clicked()
     transaction.setNameConst(boost::to_lower_copy(transactionName));
 
     emit transactionSaved(transaction);
-
+    // Log de la creación del modelo (concatenación directa)
+    loggerJson.logAction("create-new-model", "Modelo creado con nombre " + transactionName);
     // Limpiar el campo de texto después de crear la transacción
     ui->tableNameLineEdit->clear(); // Esto limpia el input de la tabla
 }
