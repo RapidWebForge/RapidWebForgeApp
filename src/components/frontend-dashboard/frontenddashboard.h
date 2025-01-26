@@ -62,6 +62,7 @@ private:
                                     CustomTreeWidget *treeWidget = nullptr,
                                     QTreeWidgetItem *parentItem = nullptr);
     std::string getComponentIdFromTree(QTreeWidgetItem *item) const;
+    void cleanPropertiesTable();
 
     void setDraggableFlags(QTreeWidgetItem *item, bool isDraggable);
     void setComponentsDraggable();
@@ -81,7 +82,7 @@ private:
     std::shared_ptr<Component> findComponentByHierarchy(
         const std::vector<std::shared_ptr<BaseNode>> &components,
         const std::vector<QTreeWidgetItem *> &hierarchy,
-        std::string id,
+        const std::string &id,
         int level);
     // Component *findNestedComponent(Component &parent, QTreeWidgetItem *item);
 

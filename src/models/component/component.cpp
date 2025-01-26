@@ -152,6 +152,11 @@ void Component::addNestedComponent(const std::shared_ptr<BaseNode> &component)
     nestedComponents.push_back(component);
 }
 
+void Component::insertNestedComponent(int index, const std::shared_ptr<BaseNode> &component)
+{
+    nestedComponents.insert(nestedComponents.begin() + index, component);
+}
+
 void Component::update()
 {
     updatedOn = std::chrono::system_clock::now();

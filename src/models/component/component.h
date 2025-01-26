@@ -46,6 +46,7 @@ public:
 
     void update();
     void addNestedComponent(const std::shared_ptr<BaseNode> &component);
+    void insertNestedComponent(int index, const std::shared_ptr<BaseNode> &component);
 
     void setType(ComponentType type);
     void setProps(const std::map<std::string, std::string> &props);
