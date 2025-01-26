@@ -488,12 +488,12 @@ bool FrontendGenerator::generateApp()
 
 bool FrontendGenerator::generateFrontendCode()
 {
-    return !generateApp();
+    return generateApp();
 }
 
 bool FrontendGenerator::updateFrontendCode()
 {
-    return updateSchema() ? generateFrontendCode() : false;
+    return (updateSchema() ? generateFrontendCode() : false);
 }
 
 // Getters
