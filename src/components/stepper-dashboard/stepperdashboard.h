@@ -2,7 +2,12 @@
 #define STEPPERDASHBOARD_H
 
 #include <QAction>
+#include <QDialog>
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonObject>
 #include <QMenu>
+#include <QString>
 #include <QWidget>
 #include "../../core/code-generator/codegenerator.h"
 #include "../../core/configuration-manager/configurationmanager.h"
@@ -10,6 +15,7 @@
 #include "../../models/project/project.h"
 #include "../backend-dashboard/backenddashboard.h"
 #include "../frontend-dashboard/frontenddashboard.h"
+#include <nlohmann/json.hpp>
 
 namespace Ui {
 class StepperDashboard;
@@ -46,11 +52,19 @@ private slots:
     void onDeployProject();
     void onProjectChange();
     void onCreateProject();
+    // Slots relacionados con los tutoriales
+    void showTutorialComment();  // Muestra el comentario del tutorial
+    void showTutorialHelp();     // Muestra la ayuda del tutorial
+    void goToNextTutorialStep(); // Avanza al siguiente paso del tutorial
 
 private:
     Ui::StepperDashboard *ui;
     BackendDashboard *backendDashboard;
     FrontendDashboard *frontendDashboard;
+
+    // Tutorial bar methods
+    void initializeTutorialBar(bool showTutorials); // Método para inicializar la barra de tutoriales
+    void setupTutorialConnections(); // Conecta los botones de tutorial a sus funciones
     // Definición de menús
     QMenu *projectMenu;
     QMenu *versionsMenu;
@@ -66,6 +80,14 @@ private:
     QAction *versionHistoryAction;
     QAction *deleteVersionAction;
 
+    // Variables para manejar el tutorial
+    nlohmann::json tutorialData;  // Almacena los datos del JSON
+    int currentTutorialIndex = 0; // Índice del tutorial actual
+
+    // Métodos privados
+    void loadTutorialData();                                 // Cargar el archivo JSON
+    void showTutorialStep(int tutorialIndex, int stepIndex); // Mostrar el paso actual
+
     // Code Generator definition
     CodeGenerator *codeGenerator;
 
@@ -74,6 +96,11 @@ private:
 
     // Project
     Project project;
+    int currentStepIndex = 0; // Inicializa el índice en 0
+
+    QJsonArray tutorialSteps; // Array para almacenar los pasos del tutorial
+
+    void showStep(int index); // Función para mostrar un paso
 };
 
 #endif // STEPPERDASHBOARD_H

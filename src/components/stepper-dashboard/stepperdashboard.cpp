@@ -12,7 +12,17 @@
 #include "../../core/version-manager/versionmanager.h"
 #include "ui_stepperdashboard.h"
 #include <fmt/core.h>
+#include <fstream>
 #include <memory>
+#include <nlohmann/json.hpp>
+
+#include <QDebug>
+#include <QFile>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QMessageBox>
+
+nlohmann::json tutorialData;
 
 StepperDashboard::StepperDashboard(QDialog *parent, const Project &project)
     : QDialog(parent)
@@ -42,7 +52,9 @@ StepperDashboard::StepperDashboard(QDialog *parent, const Project &project)
     ui->stackedWidget->addWidget(backendDashboard);
     ui->stackedWidget->addWidget(frontendDashboard);
     ui->stackedWidget->setCurrentWidget(backendDashboard);
-
+    ui->goalLabel->setWordWrap(true); // Habilitar ajuste de línea
+    ui->goalLabel->setSizePolicy(QSizePolicy::Expanding,
+                                 QSizePolicy::Preferred); // Expansión horizontal
     // Conectar la señal de BackendDashboard para que se guarden los cambios
     connect(backendDashboard,
             &BackendDashboard::transactionNameChanged,
@@ -52,6 +64,8 @@ StepperDashboard::StepperDashboard(QDialog *parent, const Project &project)
     // Conectar los botones a los slots
     connect(ui->backendButton, &QPushButton::clicked, this, &StepperDashboard::showBackendPage);
     connect(ui->frontendButton, &QPushButton::clicked, this, &StepperDashboard::showFrontendPage);
+    ui->commentButton->setToolTip("Este es el comentario del paso actual.");
+    ui->helpButton->setToolTip("Esta es la ayuda del paso actual.");
 
     // Asignar los menús a los botones
     ui->projectButton->setMenu(projectMenu);
@@ -65,6 +79,18 @@ StepperDashboard::StepperDashboard(QDialog *parent, const Project &project)
             &StepperDashboard::frontendSchemaLoaded,
             this,
             &StepperDashboard::onFrontendSchemaLoaded);
+
+    // Cargar los datos del tutorial desde el archivo JSON
+    loadTutorialData();
+
+    // Mostrar el primer paso del primer tutorial
+    showStep(0);
+
+    // Conectar botones de la barra de tutoriales
+    setupTutorialConnections();
+    // Muestra la barra de tutoriales solo si la opción de tutoriales está activa
+    initializeTutorialBar(project.isTutorialEnabled());
+    setupTutorialConnections();
 }
 
 void StepperDashboard::showEvent(QShowEvent *event)
@@ -318,6 +344,73 @@ void StepperDashboard::applyMenuStyles()
         "   background: #e5e5e5;"
         "   margin: 5px 0;"
         "}");
+
+    // Estilo para el label de "GOAL"
+    ui->goalLabel->setStyleSheet("QLabel {"
+                                 "   color: #333;"        // Texto oscuro
+                                 "   font-size: 14px;"    // Tamaño de fuente
+                                 "   font-weight: bold;"  // Texto en negrita
+                                 "   margin-right: 20px;" // Separación con los botones
+                                 "}");
+
+    // Estilo para los botones (comentarios, ayuda, siguiente)
+    ui->commentButton->setStyleSheet("QPushButton {"
+                                     "   background-color: #ffffff;" // Fondo blanco
+                                     "   color: #1e90ff;"            // Texto azul
+                                     "   border: 0px solid #1e90ff;" // Borde azul
+                                     "   border-radius: 20px;"       // Forma circular
+                                     "   width: 40px;"               // Ancho fijo
+                                     "   height: 40px;"              // Alto fijo
+                                     "   font-size: 16px;"           // Tamaño de fuente
+                                     "   font-weight: bold;"         // Texto en negrita
+                                     "} "
+                                     "QPushButton:hover {"
+                                     "   background-color: #e9e9e9;" // Azul claro al pasar el cursor
+                                     "} "
+                                     "QPushButton:pressed {"
+                                     "   background-color: #d4ebff;" // Azul más oscuro al presionar
+                                     "}");
+
+    ui->helpButton->setStyleSheet("QPushButton {"
+                                  "   background-color: #ffffff;" // Fondo blanco
+                                  "   color: #ff0000;"            // Texto azul
+                                  "   border: 0px solid #1e90ff;" // Borde azul
+                                  "   border-radius: 20px;"       // Forma circular
+                                  "   width: 40px;"               // Ancho fijo
+                                  "   height: 40px;"              // Alto fijo
+                                  "   font-size: 16px;"           // Tamaño de fuente
+                                  "   font-weight: bold;"         // Texto en negrita
+                                  "} "
+                                  "QPushButton:hover {"
+                                  "   background-color: #e9e9e9;" // Azul claro al pasar el cursor
+                                  "} "
+                                  "QPushButton:pressed {"
+                                  "   background-color: #d4ebff;" // Azul más oscuro al presionar
+                                  "}");
+
+    ui->nextStepButton->setStyleSheet(
+        "QPushButton {"
+        "   background-color: #28a745;" // Fondo verde
+        "   color: white;"              // Texto blanco
+        "   border: none;"              // Sin bordes
+        "   border-radius: 8px;"        // Bordes redondeados
+        "   padding: 8px 20px;"         // Espaciado interno
+        "   font-size: 16px;"           // Tamaño de fuente
+        "   font-weight: bold;"         // Texto en negrita
+        "} "
+        "QPushButton:hover {"
+        "   background-color: #218838;" // Verde más oscuro al pasar el cursor
+        "} "
+        "QPushButton:pressed {"
+        "   background-color: #1e7e34;" // Verde aún más oscuro al presionar
+        "}");
+
+    ui->goalLabel->setStyleSheet(
+        "QLabel {"
+        "   font-size: 14px;"
+        "   color: #333333;"      // Color del texto
+        "   padding-right: 10px;" // Espacio interno para separarlo de los botones
+        "}");
 }
 
 void StepperDashboard::setupMenus()
@@ -530,4 +623,94 @@ void StepperDashboard::onCreateProject()
     Stepper *createProjects = new Stepper();
     createProjects->setAttribute(Qt::WA_DeleteOnClose); // Liberar memoria automáticamente al cerrar
     createProjects->show();
+}
+void StepperDashboard::initializeTutorialBar(bool showTutorials)
+{
+    // Muestra u oculta la barra de tutoriales según el condicional
+    //foreach (QWidget *widget, tutorialBar->findChildren<QWidget *>()) {
+    //    widget->setVisible(false); // Cambia a true para mostrarlo.
+    //}
+}
+
+void StepperDashboard::setupTutorialConnections()
+{
+    connect(ui->nextStepButton,
+            &QPushButton::clicked,
+            this,
+            &StepperDashboard::goToNextTutorialStep);
+}
+
+void StepperDashboard::showTutorialComment()
+{
+    // Mostrar el tooltip del comentario directamente
+    auto step = tutorialData[currentTutorialIndex]["steps"][currentStepIndex];
+    QString comment = QString::fromStdString(step["comment"]);
+    ui->commentButton->setToolTip(comment);
+}
+
+void StepperDashboard::showTutorialHelp()
+{
+    // Mostrar el tooltip de ayuda directamente
+    auto step = tutorialData[currentTutorialIndex]["steps"][currentStepIndex];
+    QString help = QString::fromStdString(step["help"]);
+    ui->helpButton->setToolTip(help);
+}
+
+void StepperDashboard::goToNextTutorialStep()
+{
+    if (currentStepIndex + 1 < tutorialSteps.size()) {
+        currentStepIndex++;
+        showStep(currentStepIndex); // Pasa el índice actual a la función
+    } else {
+        QMessageBox::information(this, "Tutorial", "You have completed all steps.");
+    }
+}
+
+void StepperDashboard::loadTutorialData()
+{
+    QFile tutorialFile(":/resources/log_tutorials/begginer.json");
+    if (!tutorialFile.open(QIODevice::ReadOnly)) {
+        QMessageBox::critical(this, "Error", "Could not open the tutorial JSON file.");
+        return;
+    }
+
+    QByteArray data = tutorialFile.readAll();
+    QJsonDocument jsonDoc = QJsonDocument::fromJson(data);
+
+    if (jsonDoc.isNull()) {
+        QMessageBox::critical(this, "Error", "Invalid JSON format.");
+        tutorialFile.close();
+        return;
+    }
+
+    tutorialFile.close();
+
+    // Obtén el array de pasos del primer tutorial
+    QJsonArray tutorials = jsonDoc.array();
+    if (!tutorials.isEmpty()) {
+        QJsonObject firstTutorial = tutorials.at(0).toObject(); // Primer tutorial
+        tutorialSteps = firstTutorial["steps"].toArray();
+    }
+
+    // Muestra el primer paso
+    if (!tutorialSteps.isEmpty()) {
+        showStep(0);
+    }
+}
+
+void StepperDashboard::showStep(int index)
+{
+    if (index < 0 || index >= tutorialSteps.size()) {
+        return; // Verifica que el índice esté dentro de los límites
+    }
+
+    QJsonObject step = tutorialSteps[index].toObject();
+    QString goal = step["goal"].toString();
+    QString comment = step["comment"].toString();
+    QString help = step["help"].toString();
+
+    // Muestra los datos del paso en los widgets correspondientes
+    ui->goalLabel->setText(goal);
+    ui->commentButton->setToolTip(comment);
+    ui->helpButton->setToolTip(help);
 }

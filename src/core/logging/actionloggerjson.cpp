@@ -28,6 +28,11 @@ void ActionLoggerJson::logAction(const std::string &action, const std::string &c
     // Agregar el nuevo registro al JSON
     logData.push_back(logEntry);
 
+    // Si hay más de 10 logs, eliminar el más antiguo
+    if (logData.size() > 10) {
+        logData.erase(logData.begin());
+    }
+
     // Escribir el JSON actualizado de vuelta al archivo
     writeLogFile(logData);
 }

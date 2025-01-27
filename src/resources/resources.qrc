@@ -50,4 +50,8 @@
     <qresource prefix="/gifs">
         <file>loading.gif</file>
     </qresource>
+    <qresource prefix="/resources">
+        <file>log_tutorials/begginer.json</file>
+        <file>log_tutorials/intermedium.json</file>
+    </qresource>
 </RCC>
