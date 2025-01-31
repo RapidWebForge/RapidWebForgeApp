@@ -87,32 +87,23 @@ void CustomTreeWidget::dropEvent(QDropEvent *event)
     bool isSection = (componentTypeToString(type) == "Undefined");
     bool isTopLevel = (targetItem->parent() == nullptr);
 
-    if (tempComponent.isAllowingItems() || (isSection && isTopLevel)) {
-        if (pos.y() > itemRect.top() + itemRect.height() / 3
-            && pos.y() < itemRect.bottom() - itemRect.height() / 3) {
-            // Caso 3: Insertar como hijo
-            parentItem = targetItem;
-            dropIndex = 0; // Insertar como el primer hijo
-        } else if (pos.y() < itemRect.top() + itemRect.height() / 3) {
-            // Caso 1: Insertar encima
-            parentItem = targetItem->parent() ? targetItem->parent() : invisibleRootItem();
-            dropIndex = parentItem->indexOfChild(targetItem);
-        } else if (pos.y() > itemRect.bottom() - itemRect.height() / 3) {
-            // Caso 2: Insertar debajo
-            // parentItem = targetItem->parent() ? targetItem->parent() : invisibleRootItem();
-            // dropIndex = parentItem->indexOfChild(targetItem) + 1;
-            // ⚠️ Ajuste Importante: Si targetItem tiene un padre, obtenemos su `parentItem`
-            parentItem = targetItem->parent() ? targetItem->parent() : invisibleRootItem();
+    qDebug() << "isSection" << isSection;
+    qDebug() << "isTopLevel" << isTopLevel;
 
-            if (parentItem) {
-                dropIndex = parentItem->indexOfChild(targetItem) + 1;
-            } else {
-                dropIndex = invisibleRootItem()->indexOfChild(targetItem) + 1;
-            }
-        } else {
-            event->ignore();
-            return;
-        }
+    if ((tempComponent.isAllowingItems() || (isSection && isTopLevel))
+        && pos.y() > itemRect.top() + itemRect.height() / 3
+        && pos.y() < itemRect.bottom() - itemRect.height() / 3) {
+        // Caso 3: Insertar como hijo
+        parentItem = targetItem;
+        dropIndex = 0; // Insertar como el primer hijo
+    } else if (pos.y() < itemRect.top() + itemRect.height() / 3) {
+        // Caso 1: Insertar encima
+        parentItem = targetItem->parent() ? targetItem->parent() : invisibleRootItem();
+        dropIndex = parentItem->indexOfChild(targetItem);
+    } else if (pos.y() > itemRect.bottom() - itemRect.height() / 3) {
+        // Caso 2: Insertar debajo
+        parentItem = targetItem->parent() ? targetItem->parent() : invisibleRootItem();
+        dropIndex = parentItem->indexOfChild(targetItem) + 1;
     } else {
         event->ignore();
         return;
