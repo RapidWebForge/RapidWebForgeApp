@@ -156,7 +156,7 @@ void FrontendDashboard::addCustomComponentsOnComponentsTree()
     for (const auto &custComponent : custComponents) {
         auto sectionPtr = std::dynamic_pointer_cast<Section>(custComponent);
         QString ccName = QString::fromStdString(sectionPtr->getName());
-        QTreeWidgetItem *item = createTreeItem(ccName, nullptr, customItem);
+        createTreeItem(ccName, nullptr, customItem);
     }
 }
 
