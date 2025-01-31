@@ -280,7 +280,7 @@ nlohmann::json FrontendGenerator::processSectionToJson(const std::shared_ptr<Sec
             if (subSection) {
                 nlohmann::json subSectionJson = processSectionToJson(subSection);
                 subSectionJson["name"] = subSection->getName();
-                sectionJson["components"].push_back(subSectionJson);
+                // sectionJson["components"].push_back(subSectionJson);
             }
         }
     }

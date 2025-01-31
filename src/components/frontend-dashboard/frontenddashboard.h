@@ -33,6 +33,8 @@ public:
     void setCurrentSection(const std::shared_ptr<Section> &section);
     // ComboBox Section
     void fillAvailableSections();
+    // Custom Components on Components Tree
+    void addCustomComponentsOnComponentsTree();
 
 public slots:
     void onRouteSaved(const Route &route);

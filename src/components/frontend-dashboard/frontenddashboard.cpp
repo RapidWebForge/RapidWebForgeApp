@@ -139,6 +139,27 @@ void FrontendDashboard::setComponentsDraggable()
     }
 }
 
+void FrontendDashboard::addCustomComponentsOnComponentsTree()
+{
+    QList<QTreeWidgetItem *> items = ui->componentsTree->findItems("Custom",
+                                                                   Qt::MatchExactly
+                                                                       | Qt::MatchRecursive,
+                                                                   0);
+
+    if (items.isEmpty()) {
+        qDebug() << "No se encontró el nodo 'Custom'.";
+        return;
+    }
+
+    QTreeWidgetItem *customItem = items.first();
+
+    for (const auto &custComponent : custComponents) {
+        auto sectionPtr = std::dynamic_pointer_cast<Section>(custComponent);
+        QString ccName = QString::fromStdString(sectionPtr->getName());
+        QTreeWidgetItem *item = createTreeItem(ccName, nullptr, customItem);
+    }
+}
+
 // ComboBox Sections
 
 void FrontendDashboard::fillAvailableSections()

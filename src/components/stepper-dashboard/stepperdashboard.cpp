@@ -114,7 +114,9 @@ void StepperDashboard::onFrontendSchemaLoaded()
     frontendDashboard->setRoutes(routes);
     frontendDashboard->setCustomComponents(custComponents);
 
+    // Called here once the custom components vector is fill
     frontendDashboard->fillAvailableSections();
+    frontendDashboard->addCustomComponentsOnComponentsTree();
 
     if (!views.empty()) {
         frontendDashboard->setCurrentSection(views.at(0));
