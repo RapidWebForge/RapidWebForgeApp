@@ -64,8 +64,8 @@ StepperDashboard::StepperDashboard(QDialog *parent, const Project &project)
     // Conectar los botones a los slots
     connect(ui->backendButton, &QPushButton::clicked, this, &StepperDashboard::showBackendPage);
     connect(ui->frontendButton, &QPushButton::clicked, this, &StepperDashboard::showFrontendPage);
-    ui->commentButton->setToolTip("Este es el comentario del paso actual.");
-    ui->helpButton->setToolTip("Esta es la ayuda del paso actual.");
+    connect(ui->commentButton, &QPushButton::clicked, this, &StepperDashboard::showTutorialComment);
+    connect(ui->helpButton, &QPushButton::clicked, this, &StepperDashboard::showTutorialHelp);
 
     // Asignar los menús a los botones
     ui->projectButton->setMenu(projectMenu);
@@ -149,7 +149,9 @@ void StepperDashboard::onFrontendSchemaLoaded()
 
 StepperDashboard::~StepperDashboard()
 {
-    delete ui;
+    if (ui) {
+        delete ui;
+    }
 }
 
 // Slot para mostrar la vista de Backend
@@ -642,18 +644,24 @@ void StepperDashboard::setupTutorialConnections()
 
 void StepperDashboard::showTutorialComment()
 {
-    // Mostrar el tooltip del comentario directamente
-    auto step = tutorialData[currentTutorialIndex]["steps"][currentStepIndex];
-    QString comment = QString::fromStdString(step["comment"]);
-    ui->commentButton->setToolTip(comment);
+    QString comment = ui->commentButton->toolTip(); // Obtener el tooltip asignado en showStep()
+
+    if (!comment.isEmpty()) {
+        QMessageBox::information(this, "Comment", comment);
+    } else {
+        QMessageBox::warning(this, "Comment", "No comment available.");
+    }
 }
 
 void StepperDashboard::showTutorialHelp()
 {
-    // Mostrar el tooltip de ayuda directamente
-    auto step = tutorialData[currentTutorialIndex]["steps"][currentStepIndex];
-    QString help = QString::fromStdString(step["help"]);
-    ui->helpButton->setToolTip(help);
+    QString help = ui->helpButton->toolTip(); // Obtener el tooltip asignado en showStep()
+
+    if (!help.isEmpty()) {
+        QMessageBox::information(this, "Help", help);
+    } else {
+        QMessageBox::warning(this, "Help", "No help available.");
+    }
 }
 
 void StepperDashboard::goToNextTutorialStep()

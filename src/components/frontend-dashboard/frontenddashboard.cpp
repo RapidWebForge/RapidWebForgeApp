@@ -556,6 +556,32 @@ void FrontendDashboard::onPropertyValueChanged(int row, int column)
                                  + newValue.toStdString() + "'";
         loggerJson.logAction("edit-tag-attributes", logMessage);
 
+        // --- Nueva lógica para detectar estilos de Tailwind ---
+        if (propertyName == "class") {
+            std::string classValue = newValue.toStdString();
+
+            // Lista de logs y patrones de Tailwind a detectar
+            std::vector<std::pair<std::string, std::string>> tailwindLogs = {
+                {"apply-text-styling", "text-"}, // Texto rojo, tamaño, cursiva, etc.
+                {"use-flexbox-grid", "flex"},    // Flexbox
+                {"use-flexbox-grid", "grid"},    // Grid Layout
+                {"responsive-design", "sm:"},    // Diseño responsive
+                {"responsive-design", "md:"},
+                {"responsive-design", "lg:"},
+                {"responsive-design", "xl:"},
+                {"responsive-design", "2xl:"},
+                {"responsive-design", "bg-"} // Cambio de color de fondo
+            };
+
+            for (const auto &[logType, pattern] : tailwindLogs) {
+                if (classValue.find(pattern) != std::string::npos) {
+                    loggerJson.logAction(logType,
+                                         "User applied '" + pattern + "' in class property.");
+                    break; // Para evitar múltiples registros del mismo cambio
+                }
+            }
+        }
+
         // Actualizar el componente en `currentSection` usando el método `findComponentInTree`
         std::shared_ptr<Component> componentInSection = findComponentInTree(currentSection,
                                                             ui->currentSectionTree->currentItem());

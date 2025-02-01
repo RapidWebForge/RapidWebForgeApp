@@ -2,6 +2,7 @@
 #define FRONTENDDASHBOARD_H
 
 #include <QDialog>
+#include <QTableWidget>
 #include <QTreeWidget>
 #include "../../core/logging/actionloggerjson.h" // Para manejar logs en formato .json
 #include "../../models/component/component.h"
