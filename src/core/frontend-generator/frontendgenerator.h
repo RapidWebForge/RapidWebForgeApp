@@ -37,7 +37,7 @@ private:
     std::vector<std::shared_ptr<Section>> custComponents;
     inja::Environment env;
 
-    std::shared_ptr<Component> parseComponent(const nlohmann::json &componentJson);
+    std::shared_ptr<BaseNode> parseComponent(const nlohmann::json &componentJson);
     std::vector<std::shared_ptr<BaseNode>> parseNestedComponents(
         const nlohmann::json &nestedJsonArray);
     void parseJson(const nlohmann::json &jsonSchema);

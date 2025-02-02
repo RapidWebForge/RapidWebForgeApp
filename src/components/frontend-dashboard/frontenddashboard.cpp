@@ -231,7 +231,8 @@ void FrontendDashboard::populateCurrentSectionTree()
     }
 
     // Agrega currentSection como un elemento de primer nivel
-    QTreeWidgetItem *viewItem = createTreeItem(QString::fromStdString(sectionPtr->getName()), ui->currentSectionTree);
+    QTreeWidgetItem *sectionItem = createTreeItem(QString::fromStdString(sectionPtr->getName()),
+                                                  ui->currentSectionTree);
 
     // Agrega los componentes del Section
     for (const auto &child : sectionPtr->getComponents()) {
@@ -242,7 +243,7 @@ void FrontendDashboard::populateCurrentSectionTree()
                                                                 componentTypeToString(
                                                                     componentPtr->getType())),
                                                             nullptr,
-                                                            viewItem);
+                                                            sectionItem);
             componentItem->setData(0,
                                    Qt::UserRole,
                                    QString::fromStdString(
@@ -255,8 +256,9 @@ void FrontendDashboard::populateCurrentSectionTree()
         } else {
             auto subSectionPtr = std::dynamic_pointer_cast<Section>(child);
             if (subSectionPtr) {
-                // Si es un Section, llama recursivamente para agregar sus componentes
-                populateSubSectionItems(viewItem, subSectionPtr);
+                createTreeItem(QString::fromStdString(subSectionPtr->getName()),
+                               nullptr,
+                               sectionItem);
             }
         }
     }
@@ -288,18 +290,12 @@ void FrontendDashboard::populateNestedItems(
         } else {
             auto subSectionPtr = std::dynamic_pointer_cast<Section>(nestedComponent);
             if (subSectionPtr) {
-                // Si es un Section, llama recursivamente para agregar sus componentes
-                populateSubSectionItems(parentItem, subSectionPtr);
+                createTreeItem(QString::fromStdString(subSectionPtr->getName()),
+                               nullptr,
+                               parentItem);
             }
         }
     }
-}
-
-void FrontendDashboard::populateSubSectionItems(QTreeWidgetItem *parentItem,
-                                                const std::shared_ptr<Section> &subSection)
-{
-    QTreeWidgetItem *subSectionItem = new QTreeWidgetItem(parentItem);
-    subSectionItem->setText(0, QString::fromStdString(subSection->getName()));
 }
 
 // End of populate current section tree

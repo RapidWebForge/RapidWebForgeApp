@@ -73,8 +73,6 @@ private:
     void populateCurrentSectionTree();
     void populateNestedItems(QTreeWidgetItem *parentItem,
                              const std::vector<std::shared_ptr<BaseNode>> &nestedComponents);
-    void populateSubSectionItems(QTreeWidgetItem *parentItem,
-                                 const std::shared_ptr<Section> &subSection);
     void populatePropertiesTable(const std::shared_ptr<Component> &component);
 
     std::shared_ptr<BaseNode> convertItemToBaseNode(QTreeWidgetItem *item);

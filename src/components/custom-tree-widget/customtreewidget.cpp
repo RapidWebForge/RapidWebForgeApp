@@ -87,8 +87,8 @@ void CustomTreeWidget::dropEvent(QDropEvent *event)
     bool isSection = (componentTypeToString(type) == "Undefined");
     bool isTopLevel = (targetItem->parent() == nullptr);
 
-    qDebug() << "isSection" << isSection;
-    qDebug() << "isTopLevel" << isTopLevel;
+    // qDebug() << "isSection" << isSection;
+    // qDebug() << "isTopLevel" << isTopLevel;
 
     if ((tempComponent.isAllowingItems() || (isSection && isTopLevel))
         && pos.y() > itemRect.top() + itemRect.height() / 3

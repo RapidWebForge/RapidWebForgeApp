@@ -56,7 +56,7 @@ bool FrontendGenerator::loadSchema()
     if (!file.is_open()) {
         fmt::print(stderr, "Unable to open JSON file: {}/frontend.json\n", projectPath);
 
-        // Crear frontend.json base si no existe
+        // Create frontend.json if not exists
         nlohmann::json frontendJson;
         frontendJson["routes"] = nlohmann::json::array();
         frontendJson["views"] = nlohmann::json::array();
@@ -105,70 +105,78 @@ std::vector<std::shared_ptr<BaseNode>> FrontendGenerator::parseNestedComponents(
     return nestedComponents;
 }
 
-std::shared_ptr<Component> FrontendGenerator::parseComponent(const nlohmann::json &componentJson)
+std::shared_ptr<BaseNode> FrontendGenerator::parseComponent(const nlohmann::json &componentJson)
 {
-    boost::uuids::uuid id;
+    // If it's a component
+    if (componentJson.contains("type")) {
+        boost::uuids::uuid id;
 
-    if (componentJson.contains("id") && componentJson["id"].is_string()) {
-        boost::uuids::string_generator gen;
-        id = gen(componentJson["id"].get<std::string>());
-    }
+        if (componentJson.contains("id") && componentJson["id"].is_string()) {
+            boost::uuids::string_generator gen;
+            id = gen(componentJson["id"].get<std::string>());
+        }
 
-    std::chrono::system_clock::time_point createdOn, updatedOn;
+        std::chrono::system_clock::time_point createdOn, updatedOn;
 
-    if (componentJson.contains("createdOn") && componentJson["createdOn"].is_number()) {
-        createdOn = std::chrono::system_clock::from_time_t(
-            componentJson["createdOn"].get<std::time_t>());
-    }
+        if (componentJson.contains("createdOn") && componentJson["createdOn"].is_number()) {
+            createdOn = std::chrono::system_clock::from_time_t(
+                componentJson["createdOn"].get<std::time_t>());
+        }
 
-    if (componentJson.contains("updatedOn") && componentJson["updatedOn"].is_number()) {
-        updatedOn = std::chrono::system_clock::from_time_t(
-            componentJson["updatedOn"].get<std::time_t>());
-    }
+        if (componentJson.contains("updatedOn") && componentJson["updatedOn"].is_number()) {
+            updatedOn = std::chrono::system_clock::from_time_t(
+                componentJson["updatedOn"].get<std::time_t>());
+        }
 
-    auto component = std::make_shared<Component>(id, createdOn, updatedOn);
+        auto component = std::make_shared<Component>(id, createdOn, updatedOn);
 
-    // Parse type
-    if (componentJson.contains("type") && componentJson["type"].is_string()) {
-        component->setType(stringToComponentType(componentJson["type"].get<std::string>()));
+        // Parse type
+        if (componentJson.contains("type") && componentJson["type"].is_string()) {
+            component->setType(stringToComponentType(componentJson["type"].get<std::string>()));
 
-        // Parse nested components if applicable
-        if (allowsNestedComponents(component->getType())
-            && componentJson.contains("nestedComponents")
-            && componentJson["nestedComponents"].is_array()) {
-            auto baseNodes = parseNestedComponents(componentJson["nestedComponents"]);
+            // Parse nested components if applicable
+            if (allowsNestedComponents(component->getType())
+                && componentJson.contains("nestedComponents")
+                && componentJson["nestedComponents"].is_array()) {
+                auto baseNodes = parseNestedComponents(componentJson["nestedComponents"]);
 
-            // Convertir a std::vector<std::shared_ptr<Component>>
-            std::vector<std::shared_ptr<BaseNode>> nestedComponents;
-            for (const auto &baseNode : baseNodes) {
-                auto nestedComponent = std::dynamic_pointer_cast<Component>(baseNode);
-                if (nestedComponent) {
-                    nestedComponents.push_back(nestedComponent);
+                // Convertir a std::vector<std::shared_ptr<Component>>
+                std::vector<std::shared_ptr<BaseNode>> nestedComponents;
+                for (const auto &baseNode : baseNodes) {
+                    auto nestedComponent = std::dynamic_pointer_cast<Component>(baseNode);
+                    if (nestedComponent) {
+                        nestedComponents.push_back(nestedComponent);
+                    }
+                }
+
+                component->setNestedComponents(nestedComponents);
+            }
+        }
+
+        // Parse props
+        std::map<std::string, std::string> props;
+
+        if (componentJson.contains("props") && componentJson["props"].is_object()) {
+            for (auto it = componentJson["props"].begin(); it != componentJson["props"].end();
+                 ++it) {
+                if (it.value().is_string()) {
+                    props[it.key()] = it.value().get<std::string>();
+                } else {
+                    fmt::print(stderr,
+                               "Error: 'props' value for '{}' must be a string.\n",
+                               it.key());
                 }
             }
-
-            component->setNestedComponents(nestedComponents);
         }
+
+        component->setProps(props);
+
+        return component;
     } else {
-        fmt::print(stderr, "Error: 'type' in 'components' must be a string.\n");
+        std::string name = componentJson["name"].get<std::string>();
+        auto section = std::make_shared<Section>(name);
+        return section;
     }
-
-    // Parse props
-    std::map<std::string, std::string> props;
-
-    if (componentJson.contains("props") && componentJson["props"].is_object()) {
-        for (auto it = componentJson["props"].begin(); it != componentJson["props"].end(); ++it) {
-            if (it.value().is_string()) {
-                props[it.key()] = it.value().get<std::string>();
-            } else {
-                fmt::print(stderr, "Error: 'props' value for '{}' must be a string.\n", it.key());
-            }
-        }
-    }
-
-    component->setProps(props);
-
-    return component;
 }
 
 void FrontendGenerator::parseJson(const nlohmann::json &jsonSchema)
@@ -193,23 +201,6 @@ void FrontendGenerator::parseJson(const nlohmann::json &jsonSchema)
         routes.push_back(route);
     }
 
-    // Parse views
-    for (const auto &viewJson : jsonSchema["views"]) {
-        for (auto it = viewJson.begin(); it != viewJson.end(); ++it) {
-            auto section = std::make_shared<Section>(it.key());
-
-            // Parse components
-            for (const auto &componentJson : it.value()["components"]) {
-                auto component = parseComponent(componentJson);
-                if (component) {
-                    section->addComponent(component);
-                }
-            }
-
-            views.push_back(section);
-        }
-    }
-
     // Parse custom components
     for (const auto &custComponentJson : jsonSchema["custom"]) {
         for (auto it = custComponentJson.begin(); it != custComponentJson.end(); ++it) {
@@ -224,6 +215,23 @@ void FrontendGenerator::parseJson(const nlohmann::json &jsonSchema)
             }
 
             custComponents.push_back(section);
+        }
+    }
+
+    // Parse views
+    for (const auto &viewJson : jsonSchema["views"]) {
+        for (auto it = viewJson.begin(); it != viewJson.end(); ++it) {
+            auto section = std::make_shared<Section>(it.key());
+
+            // Parse components
+            for (const auto &componentJson : it.value()["components"]) {
+                auto component = parseComponent(componentJson);
+                if (component) {
+                    section->addComponent(component);
+                }
+            }
+
+            views.push_back(section);
         }
     }
 }
@@ -278,9 +286,9 @@ nlohmann::json FrontendGenerator::processSectionToJson(const std::shared_ptr<Sec
         } else {
             auto subSection = std::dynamic_pointer_cast<Section>(child);
             if (subSection) {
-                nlohmann::json subSectionJson = processSectionToJson(subSection);
+                nlohmann::json subSectionJson;
                 subSectionJson["name"] = subSection->getName();
-                // sectionJson["components"].push_back(subSectionJson);
+                sectionJson["components"].push_back(subSectionJson);
             }
         }
     }
@@ -389,10 +397,6 @@ void FrontendGenerator::processSection(const std::shared_ptr<Section> &section,
             if (subSection) {
                 nlohmann::json sectionJson;
                 sectionJson["name"] = subSection->getName();
-                sectionJson["components"] = nlohmann::json::array();
-
-                // Procesar subsección recursivamente
-                processSection(subSection, sectionJson["components"]);
 
                 jsonArray.push_back(sectionJson);
             }
@@ -425,6 +429,8 @@ bool FrontendGenerator::generateView(const std::string &viewName)
         }
     }
 
+    // qDebug().noquote() << data.dump(2);
+
     std::string templatePath = ":/inja/frontend/view";
 
     // Cargar el template
@@ -446,11 +452,11 @@ bool FrontendGenerator::generateView(const std::string &viewName)
         std::string result = env.render(templateString, data);
         FileUtils::writeFile(outputPath, result);
     } catch (const std::exception &e) {
-        fmt::print(stderr, "Error generating component base for {}: {}\n", viewName, e.what());
+        fmt::print(stderr, "Error generating view {}: {}\n", viewName, e.what());
         return false;
     }
 
-    // fmt::print("Component base generated successfully for {}\n", viewName);
+    // fmt::print("View generated successfully for {}\n", viewName);
     return true;
 }
 
@@ -461,7 +467,7 @@ bool FrontendGenerator::generateCustomComponent(const std::string &custComponent
     // Inserta el nombre del componente en el contexto de Inja
     data["component"] = custComponentName;
 
-    // Buscar la vista en custComponents
+    // Buscar el cc en custComponents
     auto it = std::find_if(custComponents.begin(),
                            custComponents.end(),
                            [&custComponentName](const std::shared_ptr<Section> &cc) {
@@ -500,7 +506,10 @@ bool FrontendGenerator::generateCustomComponent(const std::string &custComponent
         std::string result = env.render(templateString, data);
         FileUtils::writeFile(outputPath, result);
     } catch (const std::exception &e) {
-        fmt::print(stderr, "Error custom component {}: {}\n", custComponentName, e.what());
+        fmt::print(stderr,
+                   "Error generating custom component {}: {}\n",
+                   custComponentName,
+                   e.what());
         return false;
     }
 

@@ -19,7 +19,10 @@ std::unordered_map<std::string, nlohmann::json> customComponentsCache;
 
 std::string renderCustomComponent(const nlohmann::json componentJson)
 {
-    std::string output = "";
+    std::string output;
+
+    if (!componentJson.contains("name"))
+        return output;
 
     std::string componentName = componentJson["name"];
     if (customComponentsCache.find(componentName) != customComponentsCache.end()) {
@@ -188,7 +191,7 @@ std::string renderComponent(inja::Environment &env,
 std::string renderComponentCallback(inja::Environment &env, inja::Arguments &args)
 {
     if (args.empty() || !args[0]->is_object()) {
-        fmt::print(stderr, "Invalid argument passed to render_component.\n");
+        fmt::print(stderr, "Invalid argument passed to renderComponentCallback.\n");
         return "<!-- Invalid argument -->";
     }
 
@@ -233,10 +236,10 @@ std::string renderCustomComponentsImportsCallback(const nlohmann::json component
 {
     std::string output;
 
-    if (!componentJson.contains("component"))
+    if (!componentJson.contains("name"))
         return output;
 
-    std::string customComponentName = componentJson["component"];
+    std::string customComponentName = componentJson["name"];
 
     output += "import " + customComponentName + " from \"../components/" + customComponentName
               + "\";\n";
@@ -248,7 +251,7 @@ std::string renderImportsCallback(inja::Environment &env, inja::Arguments &args)
 {
     // Validar que el argumento sea un array de componentes
     if (args.empty() || !args[0]->is_array()) {
-        fmt::print(stderr, "Invalid argument passed to renderCustomComponentsImportsCallback.\n");
+        fmt::print(stderr, "Invalid argument passed to renderImportsCallback.\n");
         return "<!-- Invalid argument -->";
     }
 
@@ -256,7 +259,6 @@ std::string renderImportsCallback(inja::Environment &env, inja::Arguments &args)
     std::string output;
 
     for (const auto &componentJson : components) {
-        // Verificar si el componente es de tipo "Model Layout"
         if (componentJson.contains("type"))
             output += renderServiceImportsCallback(componentJson);
         else
@@ -281,10 +283,10 @@ std::string renderStatesCallback(inja::Environment &env, inja::Arguments &args)
     for (const auto &componentJson : components) {
         // Verificar si el componente es de tipo "Model Layout" o "Form"
 
-        std::string componentType = componentJson["type"];
-
         if (componentJson.contains("type")
-            && (componentType == "Model Layout" || componentType == "Form")) {
+            && (componentJson["type"] == "Model Layout" || componentJson["type"] == "Form")) {
+            std::string componentType = componentJson["type"];
+
             // Obtener las propiedades del componente
             const auto &props = componentJson["props"];
 
