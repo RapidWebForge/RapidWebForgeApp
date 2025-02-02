@@ -1,0 +1,14 @@
+{
+  "title": "3. ORM: Entendiendo el ORM",
+  "description": "Los ORMs son herramientas que permiten emplear objetos y modelos para manejar Bases de Datos Relacionales en lugar de manejar consultas SQL directamente. RapidWebForge emplea un ORM en el backend generado, si bien como usuario no manejarás directamente la herramienta, es importante que conozcas como es que tu proyecto lo emplea.",
+  "steps": [
+    {
+      "goal": "Modelos generados para el ORM",
+      "comment": "Crea tus modelos y define sus campos y relaciones según gustes. Posteriormente despliega la aplicación y observa los cambios que se han realizado en el código. Los principales serán los modelos generados para generar las tablas SQL.",
+      "help": "Los tipos de datos empleados por el ORM pueden ser un poco distintos a los que se usan realmente en las consultas SQL. Por ello, es importante repasar para entender a cuales hacen referencia al momento de crear nuestra aplicación web.",
+      "reference": "https://sequelize.org/docs/v6/",
+      "log": "",
+      "completed": "false"
+    }
+  ]
+}

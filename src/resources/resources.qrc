@@ -53,5 +53,14 @@
     <qresource prefix="/resources">
         <file>log_tutorials/begginer.json</file>
         <file>log_tutorials/intermedium.json</file>
+        <file>log_tutorials/begginer/begginer-tutorial-1.json</file>
+        <file>log_tutorials/begginer/begginer-tutorial-2.json</file>
+        <file>log_tutorials/begginer/begginer-tutorial-3.json</file>
+        <file>log_tutorials/begginer/begginer-tutorial-4.json</file>
+        <file>log_tutorials/begginer/begginer-tutorial-5.json</file>
+        <file>log_tutorials/begginer/begginer-tutorial-6.json</file>
+        <file>log_tutorials/intermedium/intermediate-tutorial-1.json</file>
+        <file>log_tutorials/intermedium/intermediate-tutorial-2.json</file>
+        <file>log_tutorials/intermedium/intermediate-tutorial-3.json</file>
     </qresource>
 </RCC>

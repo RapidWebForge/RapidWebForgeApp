@@ -1,0 +1,14 @@
+{
+  "title": "2. Base de Datos: Relaciones SQL",
+  "description": "En el tutorial anterior vimos como crear modelos. Sin embargo, en las aplicaciones web reales normalmento hay al menos dos modelos que se relacionan de algún modo y hoy vamos a reflejar ese comportamiento en nuestra aplicación.",
+  "steps": [
+    {
+      "goal": "Crear modelos que se relacionen",
+      "comment": "Para crear una relación entre nuestros modelos solo tenemos que agregar un campo que tenga como constraint ser una llave foránea e indicar a que modelo referencia. Por ejemplo, si tengo un modelo llamado Alumnos, podemos crear un campo llamado aulaId el cual haga referencia al ID del modelo llamado Aula y tendríamos la siguiente relación: 'Cada Alumno tiene un Aula y un Aula tiene muchos Alumnos'",
+      "help": "Las relaciones pueden ser un poco complicadas de entender, así que tomate tu tiempo definiendolas antes de implementarlas en la aplicación.",
+      "reference": "https://code.tutsplus.com/es/sql-for-beginners-part-3-database-relationships--net-8561a",
+      "log": "",
+      "completed": "false"
+    }
+  ]
+}

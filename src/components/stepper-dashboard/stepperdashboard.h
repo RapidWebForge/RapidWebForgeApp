@@ -56,6 +56,7 @@ private slots:
     void showTutorialComment();  // Muestra el comentario del tutorial
     void showTutorialHelp();     // Muestra la ayuda del tutorial
     void goToNextTutorialStep(); // Avanza al siguiente paso del tutorial
+    void showTutorialIntro();
 
 private:
     Ui::StepperDashboard *ui;
@@ -101,6 +102,10 @@ private:
     QJsonArray tutorialSteps; // Array para almacenar los pasos del tutorial
 
     void showStep(int index); // Función para mostrar un paso
+
+    QString tutorialTitle;
+    QString tutorialDescription;
+    QString currentReference;
 };
 
 #endif // STEPPERDASHBOARD_H

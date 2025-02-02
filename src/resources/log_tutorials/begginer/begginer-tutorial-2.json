@@ -1,0 +1,14 @@
+{
+  "title": "2. HTML: Atributos de las etiquetas",
+  "description": "En este tutorial seguiremos viendo las etiquetas de HTML, pero ahora conocerás los atributos que cada una presenta y como estás pueden ser modificadas para poder ajustarlas a nuestra conveniencia.",
+  "steps": [
+    {
+      "goal": "Conocer los atributos de una etiqueta de entrada",
+      "comment": "Las etiquetas HTML tienen atributos que permiten configurar algunos aspectos de las mismas. En el caso de las etiquetas de entrada como <input> o <textarea> se puede modificar aspectos como el placeholder. Cabe resaltar que RapidWebForge agrega algunos atributos extra para manejar la información de las mismas. Por ejemplo: 'Text' no es una propiedad usada en el código HTML, pero si añades contenido en el código se verá reflejado como se ingresa la información dentro de la etiqueta para mostrar el contenido.",
+      "help": "Modifica los atributos básicos como placeholder, width y height en la etiqueta <textarea>",
+      "reference": "https://www.w3schools.com/tags/ref_attributes.asp",
+      "log": "",
+      "completed": "false"
+    }
+  ]
+}

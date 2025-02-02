@@ -644,13 +644,39 @@ void StepperDashboard::setupTutorialConnections()
 
 void StepperDashboard::showTutorialComment()
 {
-    QString comment = ui->commentButton->toolTip(); // Obtener el tooltip asignado en showStep()
+    QString comment = ui->commentButton->toolTip(); // Obtener el comentario actual
 
-    if (!comment.isEmpty()) {
-        QMessageBox::information(this, "Comment", comment);
-    } else {
+    if (comment.isEmpty()) {
         QMessageBox::warning(this, "Comment", "No comment available.");
+        return;
     }
+
+    // Crear cuadro de diálogo personalizado
+    QDialog dialog(this);
+    dialog.setWindowTitle("Comment");
+    dialog.setMinimumSize(400, 200);
+
+    QVBoxLayout *layout = new QVBoxLayout(&dialog);
+
+    // Crear etiqueta para el comentario
+    QLabel *commentLabel = new QLabel(comment, &dialog);
+    commentLabel->setWordWrap(true);
+    layout->addWidget(commentLabel);
+
+    // Agregar el enlace si hay una referencia
+    if (!currentReference.isEmpty()) {
+        QLabel *linkLabel = new QLabel("<a href=\"" + currentReference + "\">More Info</a>",
+                                       &dialog);
+        linkLabel->setOpenExternalLinks(true); // Permite abrir el enlace en el navegador
+        layout->addWidget(linkLabel);
+    }
+
+    // Botón de cierre
+    QPushButton *closeButton = new QPushButton("Close", &dialog);
+    connect(closeButton, &QPushButton::clicked, &dialog, &QDialog::accept);
+    layout->addWidget(closeButton);
+
+    dialog.exec(); // Mostrar diálogo
 }
 
 void StepperDashboard::showTutorialHelp()
@@ -666,17 +692,36 @@ void StepperDashboard::showTutorialHelp()
 
 void StepperDashboard::goToNextTutorialStep()
 {
-    if (currentStepIndex + 1 < tutorialSteps.size()) {
+    // Si aún hay más pasos disponibles, avanzamos
+    if (currentStepIndex < tutorialSteps.size() - 1) {
         currentStepIndex++;
-        showStep(currentStepIndex); // Pasa el índice actual a la función
-    } else {
+        showStep(currentStepIndex);
+    }
+    // Si estamos en el último paso, mostramos un mensaje, pero NO cerramos aún
+    else if (currentStepIndex == tutorialSteps.size() - 1) {
+        QMessageBox::information(this,
+                                 "Tutorial",
+                                 "You are now on the last step. Click 'Next' again to finish.");
+        currentStepIndex++; // Marcamos que ya está en el último paso para la siguiente vez
+    }
+    // Solo cerramos si ya se dio *Next* una vez estando en el último paso
+    else {
         QMessageBox::information(this, "Tutorial", "You have completed all steps.");
+
+        // Cerrar el StepperDashboard y abrir el ProjectsPanel
+        this->close();
+
+        // Crear y mostrar el ProjectsPanel
+        ProjectsPanel *projectsPanel = new ProjectsPanel();
+        projectsPanel->setAttribute(
+            Qt::WA_DeleteOnClose); // Liberar memoria automáticamente al cerrar
+        projectsPanel->show();
     }
 }
 
 void StepperDashboard::loadTutorialData()
 {
-    QFile tutorialFile(":/resources/log_tutorials/begginer.json");
+    QFile tutorialFile(":/resources/log_tutorials/begginer/begginer-tutorial-1.json");
     if (!tutorialFile.open(QIODevice::ReadOnly)) {
         QMessageBox::critical(this, "Error", "Could not open the tutorial JSON file.");
         return;
@@ -685,7 +730,7 @@ void StepperDashboard::loadTutorialData()
     QByteArray data = tutorialFile.readAll();
     QJsonDocument jsonDoc = QJsonDocument::fromJson(data);
 
-    if (jsonDoc.isNull()) {
+    if (jsonDoc.isNull() || !jsonDoc.isObject()) {
         QMessageBox::critical(this, "Error", "Invalid JSON format.");
         tutorialFile.close();
         return;
@@ -693,19 +738,35 @@ void StepperDashboard::loadTutorialData()
 
     tutorialFile.close();
 
-    // Obtén el array de pasos del primer tutorial
-    QJsonArray tutorials = jsonDoc.array();
-    if (!tutorials.isEmpty()) {
-        QJsonObject firstTutorial = tutorials.at(0).toObject(); // Primer tutorial
-        tutorialSteps = firstTutorial["steps"].toArray();
+    // Obtener el objeto raíz del JSON
+    QJsonObject rootObj = jsonDoc.object();
+
+    // Guardar título y descripción del tutorial
+    tutorialTitle = rootObj["title"].toString();
+    tutorialDescription = rootObj["description"].toString();
+
+    // Obtener la lista de pasos
+    if (rootObj.contains("steps") && rootObj["steps"].isArray()) {
+        tutorialSteps = rootObj["steps"].toArray();
+    } else {
+        QMessageBox::critical(this, "Error", "Invalid JSON: 'steps' is missing or not an array.");
+        return;
     }
 
-    // Muestra el primer paso
+    // Mostrar la introducción del tutorial antes de los pasos
+    showTutorialIntro();
+}
+void StepperDashboard::showTutorialIntro()
+{
+    QString message = QString("<b>%1</b><br><br>%2").arg(tutorialTitle, tutorialDescription);
+
+    QMessageBox::information(this, "Tutorial Introduction", message);
+
+    // Luego de mostrar la introducción, mostrar el primer paso
     if (!tutorialSteps.isEmpty()) {
         showStep(0);
     }
 }
-
 void StepperDashboard::showStep(int index)
 {
     if (index < 0 || index >= tutorialSteps.size()) {
@@ -716,6 +777,7 @@ void StepperDashboard::showStep(int index)
     QString goal = step["goal"].toString();
     QString comment = step["comment"].toString();
     QString help = step["help"].toString();
+    currentReference = step["reference"].toString(); // Guardar la referencia del paso actual
 
     // Muestra los datos del paso en los widgets correspondientes
     ui->goalLabel->setText(goal);
