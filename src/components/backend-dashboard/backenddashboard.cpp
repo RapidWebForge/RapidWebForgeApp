@@ -8,7 +8,7 @@
 #include <cctype>
 
 BackendDashboard::BackendDashboard(QWidget *parent)
-    : QDialog(parent)
+    : QWidget(parent)
     , ui(new Ui::BackendDashboard)
     , createTableDialog(nullptr) // Inicialización del puntero a nullptr
     , addFieldDialog(nullptr)

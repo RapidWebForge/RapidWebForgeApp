@@ -2,8 +2,8 @@
 #define BACKENDDASHBOARD_H
 
 #include <QCheckBox>
-#include <QDialog>
 #include <QTreeWidgetItem>
+#include <QWidget>
 #include "../../models/transaction/transaction.h"
 #include "../addfield-dashboard/addfielddialog.h"
 #include "../create-table-dashboard/createtabledialog.h"
@@ -14,7 +14,7 @@ namespace Ui {
 class BackendDashboard;
 }
 
-class BackendDashboard : public QDialog
+class BackendDashboard : public QWidget
 {
     Q_OBJECT
 

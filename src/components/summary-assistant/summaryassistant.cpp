@@ -2,7 +2,7 @@
 #include "src/components/summary-assistant/ui_summaryassistant.h"
 
 SummaryAssistant::SummaryAssistant(QWidget *parent)
-    : QDialog(parent)
+    : QWidget(parent)
     , ui(new Ui::SummaryAssistant)
 {
     ui->setupUi(this);

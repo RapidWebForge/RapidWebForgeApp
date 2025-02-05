@@ -1,10 +1,10 @@
 #include "databaseassistant.h"
 #include <QMessageBox>
-#include "src/components/database-assistant/ui_databaseassistant.h"
+#include "ui_databaseassistant.h"
 #include <mysqlx/xdevapi.h>
 
 DatabaseAssistant::DatabaseAssistant(QWidget *parent)
-    : QDialog(parent)
+    : QWidget(parent)
     , ui(new Ui::DatabaseAssistant)
     , testCompleted(false)
 {
@@ -83,7 +83,6 @@ void DatabaseAssistant::applyStylesDatabase()
 
     // Estilo para la entrada de contraseña (Password)
     ui->passwordLineEdit->setEchoMode(QLineEdit::Password);
-
 
     // Estilo para el group box que contiene los elementos (QGroupBox)
     ui->formGroupBox->setStyleSheet(" border-radius: 10px;  ");

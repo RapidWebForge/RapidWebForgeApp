@@ -10,7 +10,7 @@
 #include <fmt/core.h>
 
 FrontendDashboard::FrontendDashboard(QWidget *parent)
-    : QDialog(parent)
+    : QWidget(parent)
     , ui(new Ui::FrontendDashboard)
     , createSectionDialog(nullptr)
 {

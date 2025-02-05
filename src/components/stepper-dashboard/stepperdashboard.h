@@ -15,12 +15,12 @@ namespace Ui {
 class StepperDashboard;
 }
 
-class StepperDashboard : public QDialog
+class StepperDashboard : public QWidget
 {
     Q_OBJECT
 
 public:
-    explicit StepperDashboard(QDialog *parent = nullptr, const Project &project = Project());
+    explicit StepperDashboard(QWidget *parent = nullptr, const Project &project = Project());
     ~StepperDashboard();
 
 protected:

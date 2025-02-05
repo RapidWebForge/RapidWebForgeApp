@@ -14,8 +14,8 @@
 #include <fmt/core.h>
 #include <memory>
 
-StepperDashboard::StepperDashboard(QDialog *parent, const Project &project)
-    : QDialog(parent)
+StepperDashboard::StepperDashboard(QWidget *parent, const Project &project)
+    : QWidget(parent)
     , ui(new Ui::StepperDashboard)
     , frontendDashboard(new FrontendDashboard())
     , backendDashboard(new BackendDashboard())
@@ -69,25 +69,36 @@ StepperDashboard::StepperDashboard(QDialog *parent, const Project &project)
 
 void StepperDashboard::showEvent(QShowEvent *event)
 {
-    QDialog::showEvent(event);
+    QWidget::showEvent(event);
 
     QTimer::singleShot(0, this, [this]() {
+        bool frontendOk = false, backendOk = false;
+
         // Backend
         if (codeGenerator->backendGenerator.loadSchema()) {
-            QMessageBox::information(this, "Successful", "Information loaded");
+            // QMessageBox::information(this, "Successful", "Information loaded");
+            backendOk = true;
 
             emit backendSchemaLoaded();
         } else {
-            QMessageBox::warning(this, "Warning", "There is no information, add data");
+            qDebug() << "There is no backend content";
+            // QMessageBox::warning(this, "Warning", "There is no information, add data");
         }
         // Frontend
         if (codeGenerator->frontendGenerator.loadSchema()) {
-            QMessageBox::information(this, "Successful", "Views loaded");
+            // QMessageBox::information(this, "Successful", "Views loaded");
+            frontendOk = true;
 
             emit frontendSchemaLoaded();
         } else {
-            QMessageBox::warning(this, "Warning", "There is no views, add visual content");
+            qDebug() << "There is no frontend content";
+            // QMessageBox::warning(this, "Warning", "There is no views, add visual content");
         }
+
+        QMessageBox::information(this,
+                                 "Successful",
+                                 frontendOk && backendOk ? "Contend loaded"
+                                                         : "There was not content to load");
     });
 }
 

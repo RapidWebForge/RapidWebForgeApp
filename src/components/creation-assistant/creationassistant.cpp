@@ -3,7 +3,7 @@
 #include "ui_creationassistant.h"
 
 CreationAssistant::CreationAssistant(QWidget *parent)
-    : QDialog(parent)
+    : QWidget(parent)
     , ui(new Ui::CreationAssistant)
 {
     ui->setupUi(this);
@@ -93,12 +93,12 @@ void CreationAssistant::applyStylesCA()
     ui->verticalLayout->setSpacing(10);                   // Ajusta el espaciado entre widgets
 }
 
-void CreationAssistant::keyPressEvent(QKeyEvent *event)
-{
-    if (event->key() == Qt::Key_Escape) {
-        // Ignorar la tecla "Escape" globalmente o asignarle otra función
-        event->ignore();
-    } else {
-        QWidget::keyPressEvent(event); // Ajusta esto si Stepper no hereda de QMainWindow
-    }
-}
+// void CreationAssistant::keyPressEvent(QKeyEvent *event)
+// {
+//     if (event->key() == Qt::Key_Escape) {
+//         // Ignorar la tecla "Escape" globalmente o asignarle otra función
+//         event->ignore();
+//     } else {
+//         QWidget::keyPressEvent(event); // Ajusta esto si Stepper no hereda de QMainWindow
+//     }
+// }

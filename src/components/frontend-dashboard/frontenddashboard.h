@@ -1,8 +1,8 @@
 #ifndef FRONTENDDASHBOARD_H
 #define FRONTENDDASHBOARD_H
 
-#include <QDialog>
 #include <QTreeWidget>
+#include <QWidget>
 #include "../../models/component/component.h"
 #include "../../models/route/route.h"
 #include "../../models/section/section.h"
@@ -14,7 +14,7 @@ namespace Ui {
 class FrontendDashboard;
 }
 
-class FrontendDashboard : public QDialog
+class FrontendDashboard : public QWidget
 {
     Q_OBJECT
 

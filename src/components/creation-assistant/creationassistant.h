@@ -1,15 +1,15 @@
 #ifndef CREATIONASSISTANT_H
 #define CREATIONASSISTANT_H
 
-#include <QDialog>
-#include <QKeyEvent>
+// #include <QKeyEvent>
+#include <QWidget>
 #include "../../models/project/project.h"
 
 namespace Ui {
 class CreationAssistant;
 }
 
-class CreationAssistant : public QDialog
+class CreationAssistant : public QWidget
 {
     Q_OBJECT
 
@@ -26,8 +26,8 @@ private:
     void applyStylesCA(); // Declaración de la función applyStyles
     bool shouldCreateGitRepo(); // Método para verificar si se debe crear un repositorio Git
 
-protected:
-    void keyPressEvent(QKeyEvent *event) override;
+    // protected:
+    //     void keyPressEvent(QKeyEvent *event) override;
 };
 
 #endif // CREATIONASSISTANT_H
