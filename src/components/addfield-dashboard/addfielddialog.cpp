@@ -119,7 +119,8 @@ void AddFieldDialog::on_addButton_clicked()
     bool hasCheck = ui->checkCheckBox->isChecked();
     bool hasDefault = ui->defaultCheckBox->isChecked();
 
-    field.setIsPrimaryKey(ui->primaryKeyCheckBox->isChecked());
+    // field.setIsPrimaryKey(ui->primaryKeyCheckBox->isChecked());
+    field.setIsPrimaryKey(false);
     field.setIsNull(isNull);
     field.setIsUnique(isUnique);
     field.setHasCheck(hasCheck);
@@ -129,6 +130,11 @@ void AddFieldDialog::on_addButton_clicked()
         std::string foreignKeyTable = ui->foreignKeyTableComboBox->currentText().toStdString();
         field.setIsForeignKey(true);
         field.setForeignKeyTable(foreignKeyTable); // Establecer la tabla relacionada
+    }
+
+    if (fieldName.empty()) {
+        QMessageBox::warning(this, "Warning", "Field name cannot be empty.");
+        return;
     }
     emit fieldSaved(field);
 
@@ -141,6 +147,7 @@ void AddFieldDialog::on_addButton_clicked()
     ui->uniqueCheckBox->setChecked(false);
     ui->checkCheckBox->setChecked(false);
     ui->defaultCheckBox->setChecked(false);
+
     accept();
 }
 
