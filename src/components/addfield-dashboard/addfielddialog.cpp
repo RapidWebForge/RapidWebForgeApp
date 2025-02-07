@@ -20,7 +20,6 @@ AddFieldDialog::AddFieldDialog(QWidget *parent)
 
     connect(ui->cancelButton, &QPushButton::clicked, this, &QDialog::close);
 
-    //Ocultar defaul language
     ui->primaryKeyLabel->hide();
     ui->primaryKeyCheckBox->hide();
 
