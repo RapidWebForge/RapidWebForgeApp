@@ -166,6 +166,10 @@ else()
     add_executable(RapidWebForgeApp ${PROJECT_SOURCES}
         src/core/logging/actionloggerjson.h src/core/logging/actionloggerjson.cpp
         src/core/logging/stepvalidator.h src/core/logging/stepvalidator.cpp
+        src/components/overview-panel/overviewpanel.h src/components/overview-panel/overviewpanel.cpp src/components/overview-panel/overviewpanel.ui
+        src/components/tutorials-panel/tutorialspanel.h src/components/tutorials-panel/tutorialspanel.cpp src/components/tutorials-panel/tutorialspanel.ui
+        src/components/pro-panel/propanel.h src/components/pro-panel/propanel.cpp src/components/pro-panel/propanel.ui
+        src/components/overview-panel/overviewpanel.h src/components/overview-panel/overviewpanel.cpp src/components/overview-panel/overviewpanel.ui
     )
 endif()
 

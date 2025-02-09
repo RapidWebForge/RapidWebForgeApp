@@ -16,6 +16,7 @@
 #include "../backend-dashboard/backenddashboard.h"
 #include "../frontend-dashboard/frontenddashboard.h"
 #include <nlohmann/json.hpp>
+#include <variant> // 📌 Incluir std::variant
 
 namespace Ui {
 class StepperDashboard;
@@ -26,8 +27,13 @@ class StepperDashboard : public QDialog
     Q_OBJECT
 
 public:
-    explicit StepperDashboard(QDialog *parent = nullptr, const Project &project = Project());
+    // 📌 Constructor para proyectos normales
+    explicit StepperDashboard(QDialog *parent = nullptr,
+                              const Project &project = Project(),
+                              const QString &tutorialPath = "");
     ~StepperDashboard();
+
+    void loadTutorialData(); // 📌 Ahora `loadData()` maneja proyectos y tutoriales en un solo método
 
 protected:
     void showEvent(QShowEvent *event) override;
@@ -64,11 +70,15 @@ private:
     FrontendDashboard *frontendDashboard;
 
     // Tutorial bar methods
-    void initializeTutorialBar(bool showTutorials); // Método para inicializar la barra de tutoriales
+    void initializeTutorialBar();    // Método para inicializar la barra de tutoriales
     void setupTutorialConnections(); // Conecta los botones de tutorial a sus funciones
     // Definición de menús
     QMenu *projectMenu;
     QMenu *versionsMenu;
+
+    // 📌 Variable unificada para manejar tutoriales o proyectos
+    std::variant<Project, QString> dataVariant;
+    bool isTutorialMode = false;
 
     // Definición de acciones para los menús
     QAction *projectChangeAction;
@@ -86,7 +96,6 @@ private:
     int currentTutorialIndex = 0; // Índice del tutorial actual
 
     // Métodos privados
-    void loadTutorialData();                                 // Cargar el archivo JSON
     void showTutorialStep(int tutorialIndex, int stepIndex); // Mostrar el paso actual
 
     // Code Generator definition
@@ -98,6 +107,10 @@ private:
     // Project
     Project project;
     int currentStepIndex = 0; // Inicializa el índice en 0
+
+    // 📌 Nuevo parámetro para almacenar la ruta del tutorial JSON
+    QString tutorialPath;
+    QString tutorialFilePath; // Ruta del tutorial JSON
 
     QJsonArray tutorialSteps; // Array para almacenar los pasos del tutorial
 

@@ -24,7 +24,9 @@
 
 nlohmann::json tutorialData;
 
-StepperDashboard::StepperDashboard(QDialog *parent, const Project &project)
+StepperDashboard::StepperDashboard(QDialog *parent,
+                                   const Project &project,
+                                   const QString &tutorialPath)
     : QDialog(parent)
     , ui(new Ui::StepperDashboard)
     , frontendDashboard(new FrontendDashboard())
@@ -42,6 +44,7 @@ StepperDashboard::StepperDashboard(QDialog *parent, const Project &project)
     , project(project)
     , codeGenerator(new CodeGenerator(project))
     , versionManager(new VersionManager(project.getPath()))
+    , tutorialFilePath(tutorialPath)
 {
     ui->setupUi(this);
 
@@ -80,17 +83,35 @@ StepperDashboard::StepperDashboard(QDialog *parent, const Project &project)
             this,
             &StepperDashboard::onFrontendSchemaLoaded);
 
-    // Cargar los datos del tutorial desde el archivo JSON
-    loadTutorialData();
+    // Determinar si estamos en modo tutorial
+    isTutorialMode = !tutorialPath.isEmpty();
 
+    // 📌 Detectar si es un tutorial o un proyecto
+    if (std::holds_alternative<QString>(dataVariant)) {
+        isTutorialMode = true;
+        qDebug() << "Loading tutorial mode";
+    } else {
+        isTutorialMode = false;
+        qDebug() << "Loading project mode";
+    }
     // Mostrar el primer paso del primer tutorial
     showStep(0);
+    // Configurar el entorno según el tipo de apertura
 
-    // Conectar botones de la barra de tutoriales
-    setupTutorialConnections();
     // Muestra la barra de tutoriales solo si la opción de tutoriales está activa
-    initializeTutorialBar(project.isTutorialEnabled());
+    // Configurar la barra de tutoriales solo si el modo tutorial está activo
     setupTutorialConnections();
+    if (isTutorialMode) {
+        qDebug() << "Tutorial Mode Activated: Loading tutorial from " << tutorialFilePath;
+        loadTutorialData();
+        initializeTutorialBar();
+    } else {
+        qDebug() << "Project Mode Activated";
+    }
+    OverviewPanel *overviewPanel = new OverviewPanel();
+
+    // Conectar la señal `openTutorial` con el método `loadTutorialData`
+    connect(overviewPanel, &OverviewPanel::openTutorial, this, &StepperDashboard::loadTutorialData);
 }
 
 void StepperDashboard::showEvent(QShowEvent *event)
@@ -626,12 +647,30 @@ void StepperDashboard::onCreateProject()
     createProjects->setAttribute(Qt::WA_DeleteOnClose); // Liberar memoria automáticamente al cerrar
     createProjects->show();
 }
-void StepperDashboard::initializeTutorialBar(bool showTutorials)
+void StepperDashboard::initializeTutorialBar()
 {
-    // Muestra u oculta la barra de tutoriales según el condicional
-    //foreach (QWidget *widget, tutorialBar->findChildren<QWidget *>()) {
-    //    widget->setVisible(false); // Cambia a true para mostrarlo.
-    //}
+    // Verifica si estamos en modo tutorial o no
+    if (!isTutorialMode) {
+        // Ocultar todos los widgets dentro del tutorialBar
+        for (int i = 0; i < ui->tutorialBar->count(); ++i) {
+            QLayoutItem *item = ui->tutorialBar->itemAt(i);
+            if (item && item->widget()) {
+                item->widget()->setVisible(false);
+            }
+        }
+        return;
+    }
+
+    // Si es modo tutorial, mostrar los widgets de la barra
+    for (int i = 0; i < ui->tutorialBar->count(); ++i) {
+        QLayoutItem *item = ui->tutorialBar->itemAt(i);
+        if (item && item->widget()) {
+            item->widget()->setVisible(true);
+        }
+    }
+
+    // Conectar botones de la barra de tutoriales
+    setupTutorialConnections();
 }
 
 void StepperDashboard::setupTutorialConnections()
@@ -721,7 +760,11 @@ void StepperDashboard::goToNextTutorialStep()
 
 void StepperDashboard::loadTutorialData()
 {
-    QFile tutorialFile(":/resources/log_tutorials/begginer/begginer-tutorial-1.json");
+    if (tutorialFilePath.isEmpty()) {
+        QMessageBox::critical(this, "Error", "No tutorial file path provided.");
+        return;
+    }
+    QFile tutorialFile(tutorialFilePath);
     if (!tutorialFile.open(QIODevice::ReadOnly)) {
         QMessageBox::critical(this, "Error", "Could not open the tutorial JSON file.");
         return;
@@ -729,23 +772,17 @@ void StepperDashboard::loadTutorialData()
 
     QByteArray data = tutorialFile.readAll();
     QJsonDocument jsonDoc = QJsonDocument::fromJson(data);
+    tutorialFile.close();
 
     if (jsonDoc.isNull() || !jsonDoc.isObject()) {
-        QMessageBox::critical(this, "Error", "Invalid JSON format.");
-        tutorialFile.close();
+        QMessageBox::critical(this, "Error", "Invalid tutorial JSON format.");
         return;
     }
 
-    tutorialFile.close();
-
-    // Obtener el objeto raíz del JSON
     QJsonObject rootObj = jsonDoc.object();
-
-    // Guardar título y descripción del tutorial
     tutorialTitle = rootObj["title"].toString();
     tutorialDescription = rootObj["description"].toString();
 
-    // Obtener la lista de pasos
     if (rootObj.contains("steps") && rootObj["steps"].isArray()) {
         tutorialSteps = rootObj["steps"].toArray();
     } else {
@@ -753,7 +790,6 @@ void StepperDashboard::loadTutorialData()
         return;
     }
 
-    // Mostrar la introducción del tutorial antes de los pasos
     showTutorialIntro();
 }
 void StepperDashboard::showTutorialIntro()

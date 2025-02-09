@@ -1,52 +1,20 @@
-#include "projectspanel.h"
+#include "propanel.h"
 #include <QFile>
 #include <QMessageBox>
-#include "../../core/project-manager/projectmanager.h"
+#include <QVBoxLayout>
 #include "../project-preview/projectpreview.h"
 #include "../stepper-dashboard/stepperdashboard.h"
-#include "../stepper/stepper.h"
-#include "ui_projectspanel.h"
+#include "ui_propanel.h"
 #include <boost/process.hpp>
 #include <string>
 
-ProjectsPanel::ProjectsPanel(QWidget *parent)
-    : QWidget(parent)
-    , ui(new Ui::ProjectsPanel)
-    , confManager()
-    , overviewPanel(new OverviewPanel())
-    , tutorialsPanel(new TutorialsPanel())
-    , proPanel(new ProPanel())
+ProPanel::ProPanel(QWidget *parent)
+    : QDialog(parent)
+    , ui(new Ui::ProPanel)
 {
     ui->setupUi(this);
-
-    // Verificar el estado inicial
-    bool pathStatus = confManager->getConfiguration().getStatus();
-    if (!pathStatus) {
-        QMessageBox::warning(this, "Warning", "You need to set the tech paths in 'Configuration'");
-    }
-    ui->stackedWidget->addWidget(overviewPanel);
-    ui->stackedWidget->addWidget(tutorialsPanel);
-    ui->stackedWidget->addWidget(proPanel);
-    ui->stackedWidget->setCurrentWidget(proPanel);
-
-    // 📌 Cargar la pantalla inicial
-    showRecents(); // Cambia a la pestaña "Overview"
-
-    // 📌 FORZAR la actualización del stackedWidget para que se renderice
-    ui->stackedWidget->update();
-    ui->stackedWidget->repaint();
-
-    // Conectar botones con las funciones para cambiar de vista
-    connect(ui->recentsButton, &QPushButton::clicked, this, &ProjectsPanel::showRecents);
-    connect(ui->tutorialButton, &QPushButton::clicked, this, &ProjectsPanel::showTutorials);
-    connect(ui->projectButton, &QPushButton::clicked, this, &ProjectsPanel::showProjects);
-
-    ProjectManager projectManager;
-    setupProjects(projectManager.getAllProjects());    
-    applyStylesProj();
 }
-
-void ProjectsPanel::setupProjects(const std::vector<Project> &projects)
+void ProPanel::setupProjects(const std::vector<Project> &projects)
 {
     this->projects = projects;
     QGridLayout *gridLayout = ui->gridLayout;
@@ -74,7 +42,7 @@ void ProjectsPanel::setupProjects(const std::vector<Project> &projects)
                                     "QPushButton:hover {"
                                     "   background-color: #e0e0e0;"
                                     "}");
-    connect(addProjectButton, &QPushButton::clicked, this, &ProjectsPanel::onAddProjectClicked);
+    connect(addProjectButton, &QPushButton::clicked, this, &ProPanel::onAddProjectClicked);
 
     // Crear el contenedor para el botón y el texto
     QWidget *newProjectWidget = new QWidget(this);
@@ -83,7 +51,7 @@ void ProjectsPanel::setupProjects(const std::vector<Project> &projects)
     // Ajustar márgenes y espaciado para que el texto esté más cerca del botón
     newProjectLayout->setAlignment(Qt::AlignTop);
     newProjectLayout->setSpacing(5); // Ajusta el espaciado entre el botón y el texto
-    newProjectLayout->setContentsMargins(0, 0, 0, 0); // Quita márgenes adicionales
+    newProjectLayout->setContentsMargins(0, 0, 0, 0);     // Quita márgenes adicionales
     newProjectLayout->setContentsMargins(10, 10, 10, 10); // Márgenes del contenedor
     newProjectWidget->setFixedSize(215, 180);             // Tamaño fijo para el contenedor
 
@@ -113,11 +81,11 @@ void ProjectsPanel::setupProjects(const std::vector<Project> &projects)
         connect(projectPreview,
                 &ProjectPreview::projectClicked,
                 this,
-                &ProjectsPanel::onProjectPreviewClicked);
+                &ProPanel::onProjectPreviewClicked);
         connect(projectPreview,
                 &ProjectPreview::deleteRequested,
                 this,
-                &ProjectsPanel::onDeleteProjectRequested);
+                &ProPanel::onDeleteProjectRequested);
 
         gridLayout->addWidget(projectPreview, row, column);
 
@@ -137,27 +105,7 @@ void ProjectsPanel::setupProjects(const std::vector<Project> &projects)
     gridLayout->setSizeConstraint(QLayout::SetMinAndMaxSize);
 }
 
-bool ProjectsPanel::checkCommand(const std::string &command, bool dobleQuote)
-{
-    namespace bp = boost::process;
-    try {
-        std::string version = dobleQuote ? " --version" : " -version";
-        bp::ipstream is; // Stream para capturar la salida
-
-        // Ejecutar el comando en segundo plano y redirigir la salida a null
-        bp::child c(command + version, bp::std_out > is, bp::std_err > bp::null);
-        std::string line;
-        while (std::getline(is, line) && !line.empty()) {
-            std::cout << line << std::endl; // Opcional: para registro interno
-        }
-        c.wait();
-        return c.exit_code() == 0;
-    } catch (...) {
-        return false;
-    }
-}
-
-void ProjectsPanel::onAddProjectClicked()
+void ProPanel::onAddProjectClicked()
 {
     bool pathStatus = confManager->getConfiguration().getStatus();
 
@@ -173,53 +121,14 @@ void ProjectsPanel::onAddProjectClicked()
     stepper->show();
 
     // Show when create assistant is closed
-    connect(stepper, &Stepper::destroyed, this, &ProjectsPanel::show);
+    connect(stepper, &Stepper::destroyed, this, &ProPanel::show);
 
     connect(stepper, &Stepper::backToProjectsPanel, this, [this, stepper]() {
         stepper->close();
         this->show();
     });
 }
-
-void ProjectsPanel::onProjectPreviewClicked(const Project &project)
-{
-    this->hide();
-
-    // When a project is clicked, open the StepperDashboard for that project
-    StepperDashboard *stprDashboard = new StepperDashboard(nullptr, project);
-    stprDashboard->showMaximized();
-
-    // Show when dashboard is closed
-    connect(stprDashboard, &StepperDashboard::destroyed, this, &ProjectsPanel::show);
-}
-
-ProjectsPanel::~ProjectsPanel()
-{
-    delete ui;
-}
-
-void ProjectsPanel::applyStylesProj()
-{
-    QFile styleFile(":/styles/projectspanel");
-    if (styleFile.open(QFile::ReadOnly)) {
-        QString styleSheet = QLatin1String(styleFile.readAll());
-        this->setStyleSheet(styleSheet);
-    }
-}
-
-void ProjectsPanel::on_configurationButton_clicked()
-{
-    if (!configView) {
-        configView = new ConfigurationView();
-        configView->show();
-
-        connect(configView, &ConfigurationView::finished, this, [this]() { configView = nullptr; });
-    } else {
-        configView->raise();
-        configView->activateWindow();
-    }
-}
-void ProjectsPanel::onDeleteProjectRequested(int projectId)
+void ProPanel::onDeleteProjectRequested(int projectId)
 {
     qDebug() << "Intentando eliminar el proyecto con ID:" << projectId;
 
@@ -244,33 +153,29 @@ void ProjectsPanel::onDeleteProjectRequested(int projectId)
         qDebug() << "Eliminación cancelada para el proyecto con ID:" << projectId;
     }
 }
-// 📌 Mostrar la página Overview (Recents)
-void ProjectsPanel::showRecents()
+
+void ProPanel::onProjectPreviewClicked(const Project &project)
 {
-    ui->stackedWidget->setCurrentWidget(overviewPanel);
-    ui->label->setText("Overview");
-    // 📌 Actualizar la lista de proyectos cada vez que abrimos la pestaña
-    ProjectManager projectManager;
-    overviewPanel->setupProjects(projectManager.getAllProjects());
+    // 📌 Buscar la ventana principal (ProjectsPanel) a partir de `OverviewPanel`
+    QWidget *projectsPanel = this;
+    while (projectsPanel->parentWidget() != nullptr) {
+        projectsPanel = projectsPanel->parentWidget();
+    }
+
+    // 📌 OCULTAR `ProjectsPanel` completamente
+    projectsPanel->hide();
+
+    // 📌 Abrir el `StepperDashboard` para el proyecto seleccionado
+    StepperDashboard *stprDashboard = new StepperDashboard(nullptr, project);
+    stprDashboard->showMaximized();
+
+    // 📌 Restaurar `ProjectsPanel` cuando `StepperDashboard` se cierre
+    connect(stprDashboard, &StepperDashboard::destroyed, projectsPanel, [projectsPanel]() {
+        projectsPanel->show();
+    });
 }
 
-// 📌 Mostrar la página Tutorials
-void ProjectsPanel::showTutorials()
+ProPanel::~ProPanel()
 {
-    ui->stackedWidget->setCurrentWidget(tutorialsPanel);
-    ui->label->setText("Tutorials");
-    // 📌 Actualizar la lista de proyectos cada vez que abrimos la pestaña
-    ProjectManager projectManager;
-    overviewPanel->setupProjects(projectManager.getAllProjects());
+    delete ui;
 }
-
-// 📌 Mostrar la página Projects
-void ProjectsPanel::showProjects()
-{
-    ui->stackedWidget->setCurrentWidget(proPanel);
-    ui->label->setText("Projects");
-    // 📌 Actualizar la lista de proyectos cada vez que abrimos la pestaña
-    ProjectManager projectManager;
-    proPanel->setupProjects(projectManager.getAllProjects());
-}
-

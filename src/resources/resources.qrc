@@ -18,6 +18,8 @@
         <file>resources.qrc</file>
         <file>table.png</file>
         <file>Recent.png</file>
+        <file>project.png</file>
+        <file>tutorial.png</file>
     </qresource>
     <qresource prefix="/inja/backend">
         <file alias="controllers">inja_templates/backend/controllers.inja</file>
