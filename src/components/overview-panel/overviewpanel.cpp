@@ -71,6 +71,7 @@ void OverviewPanel::setupProjects(const std::vector<Project> &projects)
            {"Intermediate: ORM - Entendiendo el ORM",
             ":/resources/log_tutorials/intermedium/intermediate-tutorial-3.json"}};
 
+    int row1 = 0;
     for (auto it = tutorials.begin(); it != tutorials.end(); ++it) {
         QPushButton *tutorialButton = new QPushButton(this);
         tutorialButton->setFixedSize(202, 122);
@@ -99,13 +100,16 @@ void OverviewPanel::setupProjects(const std::vector<Project> &projects)
         layout->setAlignment(Qt::AlignCenter);
 
         QString tutorialPath = it.value();
+        int projectId
+            = 1; // 📌 Aquí puedes definir un ID de proyecto por defecto o seleccionar uno dinámicamente
 
         // Conectar el botón con la señal `openTutorial()`
-        connect(tutorialButton, &QPushButton::clicked, this, [this, it]() {
-            emit openTutorial(it.value()); // Emitimos la señal con la ruta del JSON
+        connect(tutorialButton, &QPushButton::clicked, this, [this, tutorialPath, projectId]() {
+            onTutorialClicked(tutorialPath, projectId);
         });
 
         tutorialLayout->addWidget(tutorialButton);
+        row1++;
     }
     QGridLayout *gridLayout = ui->gridLayout;
     gridLayout->setSpacing(10);
@@ -271,7 +275,38 @@ void OverviewPanel::onProjectPreviewClicked(const Project &project)
         projectsPanel->show();
     });
 }
+void OverviewPanel::onTutorialClicked(const QString &tutorialPath, int projectId)
+{
+    // 📌 Buscar la ventana principal (ProjectsPanel) desde `TutorialsPanel`
+    QWidget *projectsPanel = this;
+    while (projectsPanel->parentWidget() != nullptr) {
+        projectsPanel = projectsPanel->parentWidget();
+    }
 
+    // 📌 OCULTAR `ProjectsPanel` completamente
+    projectsPanel->hide();
+
+    // 📌 Verificar si `projectId` es válido antes de proceder
+    ProjectManager projectManager;
+    std::optional<Project> projectOpt = projectManager.getProjectById(projectId);
+
+    if (!projectOpt.has_value()) {
+        QMessageBox::critical(this, "Error", "Invalid project ID.");
+        projectsPanel->show();
+        return;
+    }
+    // 📌 Extraer el valor del `std::optional<Project>`
+    Project project = projectOpt.value();
+
+    // 📌 Crear instancia de `StepperDashboard`, pasando el `tutorialPath` como parámetro
+    StepperDashboard *stprDashboard = new StepperDashboard(nullptr, project, tutorialPath);
+    stprDashboard->showMaximized();
+
+    // 📌 Restaurar `ProjectsPanel` cuando `StepperDashboard` se cierre
+    connect(stprDashboard, &StepperDashboard::destroyed, projectsPanel, [projectsPanel]() {
+        projectsPanel->show();
+    });
+}
 OverviewPanel::~OverviewPanel()
 {
     delete ui;

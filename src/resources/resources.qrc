@@ -20,6 +20,10 @@
         <file>Recent.png</file>
         <file>project.png</file>
         <file>tutorial.png</file>
+        <file>capas.png</file>
+        <file>hogar.png</file>
+        <file>sombrero-de-graduacion.png</file>
+        <file>gorro-de-graduacion.png</file>
     </qresource>
     <qresource prefix="/inja/backend">
         <file alias="controllers">inja_templates/backend/controllers.inja</file>

@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1665</width>
+    <width>955</width>
     <height>550</height>
    </rect>
   </property>
@@ -98,7 +98,7 @@
     </property>
     <property name="icon">
      <iconset resource="../../resources/resources.qrc">
-      <normaloff>:/icons/Recent.png</normaloff>:/icons/Recent.png</iconset>
+      <normaloff>:/icons/hogar.png</normaloff>:/icons/hogar.png</iconset>
     </property>
    </widget>
    <widget class="QPushButton" name="configurationButton">
@@ -156,7 +156,7 @@
     </property>
     <property name="icon">
      <iconset resource="../../resources/resources.qrc">
-      <normaloff>:/icons/tutorial.png</normaloff>:/icons/tutorial.png</iconset>
+      <normaloff>:/icons/gorro-de-graduacion.png</normaloff>:/icons/gorro-de-graduacion.png</iconset>
     </property>
    </widget>
    <widget class="QPushButton" name="projectButton">
@@ -185,14 +185,7 @@
     </property>
     <property name="icon">
      <iconset resource="../../resources/resources.qrc">
-      <normaloff>:/icons/project.png</normaloff>
-      <normalon>../../resources/project.png</normalon>
-      <disabledoff>:/icons/project.png</disabledoff>
-      <disabledon>:/icons/project.png</disabledon>
-      <activeoff>:/icons/project.png</activeoff>
-      <activeon>:/icons/project.png</activeon>
-      <selectedoff>:/icons/project.png</selectedoff>
-      <selectedon>:/icons/project.png</selectedon>:/icons/project.png</iconset>
+      <normaloff>:/icons/capas.png</normaloff>:/icons/capas.png</iconset>
     </property>
    </widget>
   </widget>
