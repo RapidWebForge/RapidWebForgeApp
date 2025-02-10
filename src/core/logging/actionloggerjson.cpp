@@ -10,6 +10,8 @@ ActionLoggerJson::ActionLoggerJson(const std::string &logFilePath)
     : logFilePath(logFilePath)
 {
     ensureLogFileExists();
+    // Reiniciar el archivo JSON al iniciar la aplicación
+    resetLogFile();
 }
 
 void ActionLoggerJson::logAction(const std::string &action, const std::string &componentID)
@@ -81,5 +83,15 @@ void ActionLoggerJson::ensureLogFileExists()
         } else {
             std::cerr << "Error: No se pudo crear el archivo de log JSON." << std::endl;
         }
+    }
+}
+void ActionLoggerJson::resetLogFile()
+{
+    std::ofstream logFile(logFilePath, std::ios::trunc); // Sobrescribe el archivo
+    if (logFile.is_open()) {
+        logFile << "[]"; // Escribir un JSON vacío
+        logFile.close();
+    } else {
+        std::cerr << "Error: No se pudo resetear el archivo de log JSON." << std::endl;
     }
 }

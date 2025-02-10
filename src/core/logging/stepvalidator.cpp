@@ -14,14 +14,13 @@ bool StepValidator::isStepCompleted(const std::string &action, const std::string
     json steps = readStepsFile();
     json logs = readLogFile();
 
-    if (logs.empty() || steps.empty()) {
-        return false; // No hay pasos o acciones registrados
+    if (logs.empty()) {
+        return false; // No hay acciones registradas
     }
 
-    // Buscar el último paso completado en los logs
-    for (auto it = logs.rbegin(); it != logs.rend(); ++it) {
-        if ((*it)["action"] == action && (*it)["component"] == component) {
-            return true; // El paso ha sido completado
+    for (const auto &log : logs) {
+        if (log["action"] == action) {
+            return true; // Se encontró la acción en los logs
         }
     }
 

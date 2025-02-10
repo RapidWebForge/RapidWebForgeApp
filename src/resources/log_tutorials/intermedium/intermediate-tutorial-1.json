@@ -1,5 +1,5 @@
 {
-  "title": "1. Base de datos: Creando nuestros modelos",
+  "title": "Base de datos: Creando nuestros modelos",
   "description": "La gran mayoría de aplicación web utiliza información en su contenido y para poder gestionar ese contenido eficientemente es necesario definir los modelos que se emplearán. Estos modelos estarán compuestos por un nombre que los definirá y sus campos correspondientes. Además, de las relaciones que tendrán con otros modelos.",
   "steps": [
     {
@@ -7,7 +7,7 @@
       "comment": "Para poder crear tus modelos utiliza el botón 'New model' y define el nombre que llevará. Es común que los nombres de las tablas sean en plural ya que definirán el conjunto de tus elementos.",
       "help": "En caso hayas cometido algún error podrás modificar o eliminar dicha tabla.",
       "reference": "https://database.guide/what-is-a-table/",
-      "log": "",
+      "log": "create-new-model",
       "completed": "false"
     },
     {
@@ -15,7 +15,7 @@
       "comment": "Para poder añadir campos a tus modelos, en primer lugar, selecciona algún modelo. Luego, utiliza el botón 'Add field' y completa los datos necesarios, el tipo de dato, si posee algún constraint y si es alguna llave foránea. En primera instancia, tus campos no deberían llevar llaves foráneas, eso lo veremos en el siguiente tutorial!",
       "help": "Recuerda que cada tipo de dato es adecuado según el contexto de tu campo a crear. Ten en cuenta como se usarán o a que hacen referencia tus campos para designarles tipos de datos adecuados.",
       "reference": "https://www.geeksforgeeks.org/components-of-table-in-database/",
-      "log": "",
+      "log": "add-field-to-model",
       "completed": "false"
     }
   ]

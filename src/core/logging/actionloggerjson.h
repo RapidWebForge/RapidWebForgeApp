@@ -15,5 +15,6 @@ private:
     nlohmann::json readLogFile();                     // Leer archivo JSON existente
     void writeLogFile(const nlohmann::json &logData); // Escribir archivo JSON
     void ensureLogFileExists();
+    void resetLogFile();
 };
 #endif // ACTIONLOGGERJSON_H

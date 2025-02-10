@@ -1,5 +1,5 @@
 {
-  "title": "1. HTML: Introducción a las etiquetas",
+  "title": "HTML: Introducción a las etiquetas",
   "description": "En este tutorial aprenderás sobre las diversas etiquetas que existen en HTML, cual es su utilidad, los tipos que hay y como estas se verán reflejadas en tu código y en la aplicación web que estas desarrollando.",
   "steps": [
     {
@@ -7,7 +7,7 @@
       "comment": "Para agregar una nueva etiqueta en tu vista actual solo arrastra uno de los elementos del 'Árbol de componentes' al árbol de tu vista actual. El cambio se verá reflejado al guardar el proyecto y desplegar la aplicación.",
       "help": "Puedes pasar el puntero por encima de algún componente para obtener una breve descripción del mismo.",
       "reference": "https://developer.mozilla.org/en-US/docs/Web/HTML/Element",
-      "log": "",
+      "log": "add-new-tag",
       "completed": "false"
     },
     {
@@ -15,7 +15,7 @@
       "comment": "Todas las etiquetas pueden anidar a otras, pero para mantener buenas prácticas solo algunas tienen permitidas está función en RapidWebForge. Para poder anidar una etiqueta en otra escoge una nueva etiqueta del 'Árbol de componentes' y arrastrala al árbol de tu vista actual dentro de una etiqueta existente.",
       "help": "Pasar el puntero por un componente también revelará si este componente permite la anidación de otras etiquetas.",
       "reference": "https://certidevs.com/tutorial-html-etiquetas-anidadas",
-      "log": "",
+      "log": "nest-tag",
       "completed": "false"
     }
   ]

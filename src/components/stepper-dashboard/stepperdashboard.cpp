@@ -48,6 +48,15 @@ StepperDashboard::StepperDashboard(QDialog *parent,
 {
     ui->setupUi(this);
 
+    stepValidator = new StepValidator(tutorialFilePath.toStdString(),
+                                      "resources/logs/user_actions.json");
+
+    // Crear un temporizador para verificar el estado de los pasos cada 2 segundos
+    QTimer *stepCheckTimer = new QTimer(this);
+    connect(stepCheckTimer, &QTimer::timeout, this, [this]() {
+        showStep(currentStepIndex); // Revisar el estado del paso actual
+    });
+    stepCheckTimer->start(2000);
     // Configurar los menús y acciones
     setupMenus();
     applyMenuStyles();
@@ -83,16 +92,32 @@ StepperDashboard::StepperDashboard(QDialog *parent,
             this,
             &StepperDashboard::onFrontendSchemaLoaded);
 
-    // Determinar si estamos en modo tutorial
-    isTutorialMode = !tutorialPath.isEmpty();
+    qDebug() << "StepperDashboard constructor called.";
+    qDebug() << "tutorialFilePath received: " << tutorialPath;
 
-    // 📌 Detectar si es un tutorial o un proyecto
-    if (std::holds_alternative<QString>(dataVariant)) {
-        isTutorialMode = true;
-        qDebug() << "Loading tutorial mode";
-    } else {
+    if (tutorialPath.isEmpty()) {
+        qDebug() << "❌ tutorialPath is EMPTY! Project mode activated.";
         isTutorialMode = false;
-        qDebug() << "Loading project mode";
+    } else {
+        qDebug() << "✅ tutorialPath is NOT empty! Tutorial mode activated.";
+        isTutorialMode = true;
+    }
+    if (!isTutorialMode) {
+        qDebug() << "❌ Hiding tutorial bar for project mode.";
+        for (int i = 0; i < ui->tutorialBar->count(); ++i) {
+            QLayoutItem *item = ui->tutorialBar->itemAt(i);
+            if (item && item->widget()) {
+                item->widget()->setVisible(false);
+            }
+        }
+    } else {
+        qDebug() << "✅ Showing tutorial bar for tutorial mode.";
+        for (int i = 0; i < ui->tutorialBar->count(); ++i) {
+            QLayoutItem *item = ui->tutorialBar->itemAt(i);
+            if (item && item->widget()) {
+                item->widget()->setVisible(true);
+            }
+        }
     }
     // Mostrar el primer paso del primer tutorial
     showStep(0);
@@ -109,6 +134,8 @@ StepperDashboard::StepperDashboard(QDialog *parent,
         qDebug() << "Project Mode Activated";
     }
     OverviewPanel *overviewPanel = new OverviewPanel();
+    qDebug() << "StepperDashboard constructor called.";
+    qDebug() << "tutorialFilePath received: " << tutorialFilePath;
 
     // Conectar la señal `openTutorial` con el método `loadTutorialData`
     connect(overviewPanel, &OverviewPanel::openTutorial, this, &StepperDashboard::loadTutorialData);
@@ -756,38 +783,99 @@ void StepperDashboard::goToNextTutorialStep()
             Qt::WA_DeleteOnClose); // Liberar memoria automáticamente al cerrar
         projectsPanel->show();
     }
+    if (currentStepIndex < tutorialSteps.size()) {
+        QJsonObject step = tutorialSteps[currentStepIndex].toObject();
+        QString logAction = step["log"].toString();
+
+        if (!stepValidator->isStepCompleted(logAction.toStdString(), "")) {
+            QMessageBox::warning(this,
+                                 "Paso no completado",
+                                 "Debes completar este paso antes de continuar.");
+            return;
+        }
+
+        currentStepIndex++;
+        showStep(currentStepIndex);
+    }
 }
 
 void StepperDashboard::loadTutorialData()
 {
+    qDebug() << "Loading tutorial data...";
     if (tutorialFilePath.isEmpty()) {
         QMessageBox::critical(this, "Error", "No tutorial file path provided.");
         return;
     }
+
+    qDebug() << "Opening tutorial file from path: " << tutorialFilePath;
+
     QFile tutorialFile(tutorialFilePath);
     if (!tutorialFile.open(QIODevice::ReadOnly)) {
+        qDebug() << "❌ Could not open tutorial file at path:" << tutorialFilePath;
         QMessageBox::critical(this, "Error", "Could not open the tutorial JSON file.");
         return;
+    } else {
+        qDebug() << "✅ Tutorial file opened successfully.";
     }
 
     QByteArray data = tutorialFile.readAll();
     QJsonDocument jsonDoc = QJsonDocument::fromJson(data);
     tutorialFile.close();
-
+    if (jsonDoc.isNull() || !jsonDoc.isObject()) {
+        qDebug() << "❌ Invalid tutorial JSON format!";
+        QMessageBox::critical(this, "Error", "Invalid tutorial JSON format.");
+        return;
+    } else {
+        qDebug() << "✅ Tutorial JSON loaded correctly.";
+    }
     if (jsonDoc.isNull() || !jsonDoc.isObject()) {
         QMessageBox::critical(this, "Error", "Invalid tutorial JSON format.");
         return;
     }
 
     QJsonObject rootObj = jsonDoc.object();
+    qDebug() << "JSON Object Keys: " << rootObj.keys();
+    if (!rootObj.contains("steps")) {
+        qDebug() << "Error: JSON does not contain 'steps'";
+    } else if (!rootObj["steps"].isArray()) {
+        qDebug() << "Error: 'steps' is not an array";
+    } else {
+        tutorialSteps = rootObj["steps"].toArray();
+        qDebug() << "Total Steps Loaded: " << tutorialSteps.size();
+    }
+
+    qDebug() << "Tutorial Title: " << rootObj["title"].toString();
+    qDebug() << "Tutorial Description: " << rootObj["description"].toString();
+    qDebug() << "Steps present: " << rootObj["steps"].isArray();
+
+    if (!rootObj.contains("steps") || !rootObj["steps"].isArray()) {
+        QMessageBox::critical(this, "Error", "Invalid JSON: 'steps' is missing or not an array.");
+        return;
+    }
     tutorialTitle = rootObj["title"].toString();
     tutorialDescription = rootObj["description"].toString();
 
     if (rootObj.contains("steps") && rootObj["steps"].isArray()) {
         tutorialSteps = rootObj["steps"].toArray();
+        qDebug() << "✅ Loaded tutorial steps. Steps count:" << tutorialSteps.size();
     } else {
+        qDebug() << "❌ 'steps' is missing or not an array.";
         QMessageBox::critical(this, "Error", "Invalid JSON: 'steps' is missing or not an array.");
         return;
+    }
+    if (!tutorialSteps.isEmpty()) {
+        qDebug() << "Showing first step...";
+        showStep(0);
+    } else {
+        QMessageBox::critical(this, "Error", "No tutorial steps found.");
+    }
+    qDebug() << "Total Steps Loaded: " << tutorialSteps.size();
+
+    for (int i = 0; i < tutorialSteps.size(); ++i) {
+        QJsonObject step = tutorialSteps[i].toObject();
+        qDebug() << "Step " << i << " Goal: " << step["goal"].toString();
+        qDebug() << "Step " << i << " Comment: " << step["comment"].toString();
+        qDebug() << "Step " << i << " Help: " << step["help"].toString();
     }
 
     showTutorialIntro();
@@ -806,17 +894,75 @@ void StepperDashboard::showTutorialIntro()
 void StepperDashboard::showStep(int index)
 {
     if (index < 0 || index >= tutorialSteps.size()) {
-        return; // Verifica que el índice esté dentro de los límites
+        qDebug() << "Invalid step index: " << index;
+        return;
     }
 
     QJsonObject step = tutorialSteps[index].toObject();
     QString goal = step["goal"].toString();
     QString comment = step["comment"].toString();
     QString help = step["help"].toString();
+    QString logAction = step["log"].toString();      // Acción esperada en los logs
     currentReference = step["reference"].toString(); // Guardar la referencia del paso actual
+    ui->goalLabel->setText(step["goal"].toString());
+    ui->commentButton->setToolTip(step["comment"].toString());
+    ui->helpButton->setToolTip(step["help"].toString());
+
+    qDebug() << "Total Steps Available: " << tutorialSteps.size();
+    qDebug() << "Trying to show step: " << index;
 
     // Muestra los datos del paso en los widgets correspondientes
     ui->goalLabel->setText(goal);
     ui->commentButton->setToolTip(comment);
     ui->helpButton->setToolTip(help);
+
+    // Validar si el paso ha sido completado
+    bool isCompleted = stepValidator->isStepCompleted(logAction.toStdString(), "");
+    // Habilitar o deshabilitar el botón "Next"
+    ui->nextStepButton->setEnabled(isCompleted);
+    if (isCompleted) {
+        ui->nextStepButton->setEnabled(true);
+
+        ui->nextStepButton->setStyleSheet(
+            "QPushButton {"
+            "   background-color: #28a745;" // Fondo verde
+            "   color: white;"              // Texto blanco
+            "   border: none;"              // Sin bordes
+            "   border-radius: 8px;"        // Bordes redondeados
+            "   padding: 8px 20px;"         // Espaciado interno
+            "   font-size: 16px;"           // Tamaño de fuente
+            "   font-weight: bold;"         // Texto en negrita
+            "} "
+            "QPushButton:hover {"
+            "   background-color: #218838;" // Verde más oscuro al pasar el cursor
+            "} "
+            "QPushButton:pressed {"
+            "   background-color: #1e7e34;" // Verde aún más oscuro al presionar
+            "}");
+    } else {
+        // 🚀 Deshabilita el botón hasta que el usuario complete el paso
+        ui->nextStepButton->setEnabled(false);
+        ui->nextStepButton->setStyleSheet(
+            "QPushButton { background-color: #ccc; color: #666; "
+            "   border: none;"       // Sin bordes
+            "   border-radius: 8px;" // Bordes redondeados
+            "   padding: 8px 20px;"  // Espaciado interno
+            "   font-size: 16px;"    // Tamaño de fuente
+            "   font-weight: bold;"
+            "} "
+            "QPushButton:hover {"
+            "   background-color: #1e7e34;" // Verde aún más oscuro al presionar
+            "}");
+    }
+}
+void StepperDashboard::onUserActionPerformed(const std::string &action,
+                                             const std::string &componentID)
+{
+    // Verificar si el paso actual se ha completado
+    QJsonObject step = tutorialSteps[currentStepIndex].toObject();
+    QString logAction = step["log"].toString();
+
+    if (stepValidator->isStepCompleted(logAction.toStdString(), componentID)) {
+        ui->nextStepButton->setEnabled(true);
+    }
 }

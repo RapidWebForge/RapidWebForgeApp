@@ -8,9 +8,11 @@
 #include <QJsonObject>
 #include <QMenu>
 #include <QString>
+#include <QTimer>
 #include <QWidget>
 #include "../../core/code-generator/codegenerator.h"
 #include "../../core/configuration-manager/configurationmanager.h"
+#include "../../core/logging/stepvalidator.h"
 #include "../../core/version-manager/versionmanager.h"
 #include "../../models/project/project.h"
 #include "../backend-dashboard/backenddashboard.h"
@@ -63,11 +65,13 @@ private slots:
     void showTutorialHelp();     // Muestra la ayuda del tutorial
     void goToNextTutorialStep(); // Avanza al siguiente paso del tutorial
     void showTutorialIntro();
+    void onUserActionPerformed(const std::string &action, const std::string &componentID);
 
 private:
     Ui::StepperDashboard *ui;
     BackendDashboard *backendDashboard;
     FrontendDashboard *frontendDashboard;
+    StepValidator *stepValidator;
 
     // Tutorial bar methods
     void initializeTutorialBar();    // Método para inicializar la barra de tutoriales
@@ -115,7 +119,7 @@ private:
     QJsonArray tutorialSteps; // Array para almacenar los pasos del tutorial
 
     void showStep(int index); // Función para mostrar un paso
-
+    QTimer *stepCheckTimer;
     QString tutorialTitle;
     QString tutorialDescription;
     QString currentReference;

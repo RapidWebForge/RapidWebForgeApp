@@ -1,5 +1,5 @@
 {
-  "title": "4. CSS: Diseño responsive",
+  "title": "CSS: Diseño responsive",
   "description": "Uno de los motivos principales para usar un framework CSS como TailwindCSS es porque permite emplear utilidades para el diseño responsive. Esto se logra anteponiendo el prefijo adecuado según la medida requerida junto a un ':'. Por ejemplo: md:bg-red-500",
   "steps": [
     {
@@ -7,7 +7,7 @@
       "comment": "Para empezar debes añadir las clases que aprendiste anteriormente y definir cual será el comportamiento al momento de visualizar la aplicación web desde un dispositivo móvil o desde una PC. Por ejemplo, un contenedor puede tener un fondo de color azul con 'sm:bg-blue-500', pero al ser móvil, este pasará a ser de color rojo con 'bg-red-500'.",
       "help": "TailwindCSS enfoca sus utilidades responsive en los dispositivos móviles. ¿Qué quiere decir esto? Qué las utilidades sin el prefijo afectarán en la vista responsive mientras que las utilidades que posean el prefijo afectarán a la vista normal.",
       "reference": "https://tailwindcss.com/docs/responsive-design#targeting-mobile-screens",
-      "log": "",
+      "log": "responsive-design",
       "completed": "false"
     }
   ]

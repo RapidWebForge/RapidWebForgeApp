@@ -1,5 +1,5 @@
 {
-  "title": "5. React: Creando componentes",
+  "title": "React: Creando componentes",
   "description": "Los componentes son algo fundamental en React, nos permite reutilizar porciones de código en distintos lados de nuestra aplicación web. Asimismo, son grupos de código que podemos personalizar tanto estética como funcionalmente.",
   "steps": [
     {
@@ -7,7 +7,7 @@
       "comment": "En primer lugar, da click en el botón 'New Section', se abrirá un Dialog donde podrás designarle un nombre a tu componente. Cuando lo crees podrás seleccionarlo en la parte superior del 'Árbol de la sección actual' y verás como puedes añadirle etiquetas de HTML y agregar funcionamiento. Para emplearlo en alguna vista u otro componente solo tienes que seleccionar donde quieres emplearlo y arrastrar el componente desde el 'Árbol de componentes' a tu vista actual.",
       "help": "Los componentes ofrecen múltiples ventajas, ya que aportan a las buenas prácticas, trata de usarlo siempre que puedas. Sin embargo, no siempre es necesario usarlos, recuerda que es bueno dividir tu código, pero tampoco de manera excesiva.",
       "reference": "https://react.dev/learn/your-first-component",
-      "log": "",
+      "log": "create-react-component",
       "completed": "false"
     }
   ]

@@ -168,6 +168,8 @@ void TutorialsPanel::onDeleteProjectRequested(int projectId)
 
 void TutorialsPanel::onProjectPreviewClicked(const QString &tutorialPath, int projectId)
 {
+    qDebug() << "Opening tutorial with path: " << tutorialPath << " for project ID: " << projectId;
+
     // 📌 Buscar la ventana principal (ProjectsPanel) desde `TutorialsPanel`
     QWidget *projectsPanel = this;
     while (projectsPanel->parentWidget() != nullptr) {
@@ -231,6 +233,7 @@ void TutorialsPanel::onTutorialClicked(const QString &tutorialPath, int projectI
     connect(stprDashboard, &StepperDashboard::destroyed, projectsPanel, [projectsPanel]() {
         projectsPanel->show();
     });
+    qDebug() << "Opening tutorial with path: " << tutorialPath << " for project: " << projectId;
 }
 TutorialsPanel::~TutorialsPanel()
 {
