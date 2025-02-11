@@ -11,6 +11,7 @@
 #include "../../core/code-generator/codegenerator.h"
 #include "../customprogress-dialog/customprogressdialog.h"
 #include "../stepper-dashboard/stepperdashboard.h"
+#include "../../core/project-worker/projectworker.h"
 #include "ui_stepper.h"
 #include <cstdlib>
 #include <iostream>
@@ -24,7 +25,6 @@ Stepper::Stepper(QWidget *parent)
     , backendAssistant(new BackendAssistant())
     , summaryAssistant(new SummaryAssistant())
     , newProject()
-    , projectManager()
 {
     ui->setupUi(this);
 
@@ -87,32 +87,34 @@ void Stepper::on_nextButton_clicked()
     // Create Project before Summary
     if (currentIndex == ui->stepsWidget->count() - 2) {
         // Crear y mostrar el diálogo personalizado
-        CustomProgressDialog progressDialog(this);
-        progressDialog.setWindowModality(Qt::WindowModal);
-        progressDialog.show();
+        CustomProgressDialog* progressDialog = new CustomProgressDialog(this);
+        progressDialog->show();
 
-        // Procesar eventos para mostrar el diálogo
-        QCoreApplication::processEvents();
+        // New thread to execute the project creation
+        QThread *workerThread = new QThread;
+        ProjectWorker *worker = new ProjectWorker(this->newProject);
 
-        // Ejecutar tareas de creación de proyecto en segundo plano
-        projectManager.createProject(this->newProject);
+        worker->moveToThread(workerThread);
 
-        // Copy folder template to choose path
-        CodeGenerator codeGenerator(this->newProject);
-        codeGenerator.createBaseBackendProject();
-        codeGenerator.createBaseFrontendProject();
+        ui->nextButton->setEnabled(false);
 
-        // Cerrar el diálogo al finalizar las tareas
-        progressDialog.close();
+        // Connect `started()` signal from thread with `process()` signal from worker
+        connect(workerThread, &QThread::started, worker, &ProjectWorker::process);
 
-        QString message = "Your project has been created successfully!";
-        QMessageBox::information(this, "Successful", message);
+        // Connect `finished()` worker's signal to close the dialog
+        connect(worker, &ProjectWorker::finished, progressDialog, &CustomProgressDialog::close);
 
-        // Inicializar repositorio Git si versions está habilitado
-        if (this->newProject.getVersions()) {
-            VersionManager versionManager(this->newProject.getPath());
-            versionManager.initializeRepository();
-        }
+        // Connect `finished()` worker's signal to show a message and clean
+        connect(worker, &ProjectWorker::finished, this, [=]() {
+            QMessageBox::information(this, "Successful", "Your project has been created successfully!");
+            ui->nextButton->setEnabled(true);
+            workerThread->quit(); // Stop thread
+            workerThread->deleteLater(); // Clean memory
+            worker->deleteLater(); // Clean memory
+        });
+
+        // Iniciar el hilo
+        workerThread->start();
     }
 
     // Show dashboard

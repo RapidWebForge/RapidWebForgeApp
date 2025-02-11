@@ -24,13 +24,13 @@ namespace Ui {
 class StepperDashboard;
 }
 
-class StepperDashboard : public QDialog
+class StepperDashboard : public QWidget
 {
     Q_OBJECT
 
 public:
     // 📌 Constructor para proyectos normales
-    explicit StepperDashboard(QDialog *parent = nullptr,
+    explicit StepperDashboard(QWidget *parent = nullptr,
                               const Project &project = Project(),
                               const QString &tutorialPath = "");
     ~StepperDashboard();

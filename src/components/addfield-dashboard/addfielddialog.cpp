@@ -23,7 +23,6 @@ AddFieldDialog::AddFieldDialog(QWidget *parent)
 
     connect(ui->cancelButton, &QPushButton::clicked, this, &QDialog::close);
 
-    //Ocultar defaul language
     ui->primaryKeyLabel->hide();
     ui->primaryKeyCheckBox->hide();
 
@@ -123,7 +122,8 @@ void AddFieldDialog::on_addButton_clicked()
     bool hasCheck = ui->checkCheckBox->isChecked();
     bool hasDefault = ui->defaultCheckBox->isChecked();
 
-    field.setIsPrimaryKey(ui->primaryKeyCheckBox->isChecked());
+    // field.setIsPrimaryKey(ui->primaryKeyCheckBox->isChecked());
+    field.setIsPrimaryKey(false);
     field.setIsNull(isNull);
     field.setIsUnique(isUnique);
     field.setHasCheck(hasCheck);
@@ -148,9 +148,13 @@ void AddFieldDialog::on_addButton_clicked()
         logMessage += ", foreignKeyTable=" + foreignKeyTable;
     }
 
+    if (fieldName.empty()) {
+        QMessageBox::warning(this, "Warning", "Field name cannot be empty.");
+        return;
+    }
+
     // Log de la creación del nuevo field
     loggerJson.logAction("add-field-to-model", logMessage);
-
     emit fieldSaved(field);
 
     // Limpiar el formulario
@@ -162,6 +166,7 @@ void AddFieldDialog::on_addButton_clicked()
     ui->uniqueCheckBox->setChecked(false);
     ui->checkCheckBox->setChecked(false);
     ui->defaultCheckBox->setChecked(false);
+
     accept();
 }
 

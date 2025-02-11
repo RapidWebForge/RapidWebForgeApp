@@ -1,4 +1,8 @@
 #include "stepperdashboard.h"
+#include <QDebug>
+#include <QFile>
+#include <QJsonDocument>
+#include <QJsonObject>
 #include <QMessageBox>
 #include <QTimer>
 #include "../../components/create-version/createversion.h"
@@ -16,18 +20,10 @@
 #include <memory>
 #include <nlohmann/json.hpp>
 
-#include <QDebug>
-#include <QFile>
-#include <QJsonDocument>
-#include <QJsonObject>
-#include <QMessageBox>
-
 nlohmann::json tutorialData;
 
-StepperDashboard::StepperDashboard(QDialog *parent,
-                                   const Project &project,
-                                   const QString &tutorialPath)
-    : QDialog(parent)
+StepperDashboard::StepperDashboard(QWidget *parent, const Project &project, const QString &tutorialPath)
+    : QWidget(parent)
     , ui(new Ui::StepperDashboard)
     , frontendDashboard(new FrontendDashboard())
     , backendDashboard(new BackendDashboard())
@@ -143,25 +139,36 @@ StepperDashboard::StepperDashboard(QDialog *parent,
 
 void StepperDashboard::showEvent(QShowEvent *event)
 {
-    QDialog::showEvent(event);
+    QWidget::showEvent(event);
 
     QTimer::singleShot(0, this, [this]() {
+        bool frontendOk = false, backendOk = false;
+
         // Backend
         if (codeGenerator->backendGenerator.loadSchema()) {
-            QMessageBox::information(this, "Successful", "Information loaded");
+            // QMessageBox::information(this, "Successful", "Information loaded");
+            backendOk = true;
 
             emit backendSchemaLoaded();
         } else {
-            QMessageBox::warning(this, "Warning", "There is no information, add data");
+            qDebug() << "There is no backend content";
+            // QMessageBox::warning(this, "Warning", "There is no information, add data");
         }
         // Frontend
         if (codeGenerator->frontendGenerator.loadSchema()) {
-            QMessageBox::information(this, "Successful", "Views loaded");
+            // QMessageBox::information(this, "Successful", "Views loaded");
+            frontendOk = true;
 
             emit frontendSchemaLoaded();
         } else {
-            QMessageBox::warning(this, "Warning", "There is no views, add visual content");
+            qDebug() << "There is no frontend content";
+            // QMessageBox::warning(this, "Warning", "There is no views, add visual content");
         }
+
+        QMessageBox::information(this,
+                                 "Successful",
+                                 frontendOk && backendOk ? "Contend loaded"
+                                                         : "There was not content to load");
     });
 }
 
@@ -180,15 +187,16 @@ void StepperDashboard::onBackendSchemaLoaded()
 void StepperDashboard::onFrontendSchemaLoaded()
 {
     auto views = codeGenerator->frontendGenerator.getViews();
-    auto custComponents = codeGenerator->frontendGenerator
-                                                                .getCustomComponents();
+    auto custComponents = codeGenerator->frontendGenerator.getCustomComponents();
     std::vector<Route> routes = codeGenerator->frontendGenerator.getRoutes();
 
     frontendDashboard->setViews(views);
     frontendDashboard->setRoutes(routes);
     frontendDashboard->setCustomComponents(custComponents);
 
+    // Called here once the custom components vector is fill
     frontendDashboard->fillAvailableSections();
+    frontendDashboard->addCustomComponentsOnComponentsTree();
 
     if (!views.empty()) {
         frontendDashboard->setCurrentSection(views.at(0));

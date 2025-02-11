@@ -2,8 +2,8 @@
 #define BACKENDDASHBOARD_H
 
 #include <QCheckBox>
-#include <QDialog>
 #include <QTreeWidgetItem>
+#include <QWidget>
 #include "../../models/transaction/transaction.h"
 #include "../addfield-dashboard/addfielddialog.h"
 #include "../create-table-dashboard/createtabledialog.h"
@@ -14,7 +14,7 @@ namespace Ui {
 class BackendDashboard;
 }
 
-class BackendDashboard : public QDialog
+class BackendDashboard : public QWidget
 {
     Q_OBJECT
 
@@ -37,27 +37,27 @@ public slots:
     void onFieldUpdated(const Field &updatedField);
 
 private slots:
-    void showAddFieldDialog();
+    void on_deleteField_clicked();
+    void on_addField_clicked();
+    void on_editField_clicked();
 
-    void on_editButton_clicked();
-    void on_deleteButton_clicked();
-    void on_editDB_clicked();
-    void on_deleteFieldButton_clicked();
-    void on_createTableButton_clicked();
+    void on_deleteTable_clicked();
+    void on_createTable_clicked();
+    void on_editTable_clicked();
 
 private:
     Ui::BackendDashboard *ui;
     void applyStylesBack();
-    void setupTasksTable();
-    void setupTasksMethodsList();
-    void updateTasksTable(const Transaction &transaction);
+    void setupFieldsTable();
+    void setupMethodsList();
+    void updateFieldsTable(const Transaction &transaction);
 
     CreateTableDialog *createTableDialog;
     AddFieldDialog *addFieldDialog;
     QTreeWidgetItem *rootItem;
     std::vector<Transaction> transactions;
     Transaction currentTransaction;
-    EditFieldDialog *editFieldDialog; // Añadir el puntero a la clase de diálogo de edición
+    EditFieldDialog *editFieldDialog;
 
 signals:
     void transactionNameChanged(); // Señal emitida cuando se cambie el nombre de una transacción

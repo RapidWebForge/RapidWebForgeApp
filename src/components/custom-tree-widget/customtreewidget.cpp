@@ -87,7 +87,15 @@ void CustomTreeWidget::dropEvent(QDropEvent *event)
     ComponentType type = stringToComponentType(componentTypeStr);
     Component tempComponent(type);
 
-    if (tempComponent.isAllowingItems() && pos.y() > itemRect.top() + itemRect.height() / 3
+    // Check for sections
+    bool isSection = (componentTypeToString(type) == "Undefined");
+    bool isTopLevel = (targetItem->parent() == nullptr);
+
+    // qDebug() << "isSection" << isSection;
+    // qDebug() << "isTopLevel" << isTopLevel;
+
+    if ((tempComponent.isAllowingItems() || (isSection && isTopLevel))
+        && pos.y() > itemRect.top() + itemRect.height() / 3
         && pos.y() < itemRect.bottom() - itemRect.height() / 3) {
         // Caso 3: Insertar como hijo
         parentItem = targetItem;

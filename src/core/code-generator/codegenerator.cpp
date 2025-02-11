@@ -136,6 +136,7 @@ bool CodeGenerator::createBaseFrontendProject()
     homeH1Json["createdOn"] = timePointToString(newHeaderH1.getCreatedOn());
     homeH1Json["updatedOn"] = timePointToString(newHeaderH1.getUpdatedOn());
     homePropsJson["text"] = "Home View";
+    homePropsJson["class"] = "";
     homeH1Json["props"] = homePropsJson;
     homeComponentsJson["components"].push_back(homeH1Json);
     homeViewJson["Home"] = homeComponentsJson;

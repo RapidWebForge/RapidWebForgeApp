@@ -1,14 +1,14 @@
 #ifndef FRONTENDASSISTANT_H
 #define FRONTENDASSISTANT_H
 
-#include <QDialog>
+#include <QWidget>
 #include "../../models/project/project.h"
 
 namespace Ui {
 class FrontendAssistant;
 }
 
-class FrontendAssistant : public QDialog
+class FrontendAssistant : public QWidget
 {
     Q_OBJECT
 

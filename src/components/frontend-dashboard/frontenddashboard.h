@@ -1,7 +1,7 @@
 #ifndef FRONTENDDASHBOARD_H
 #define FRONTENDDASHBOARD_H
 
-#include <QDialog>
+#include <QWidget>
 #include <QTableWidget>
 #include <QTreeWidget>
 #include "../../core/logging/actionloggerjson.h" // Para manejar logs en formato .json
@@ -16,7 +16,7 @@ namespace Ui {
 class FrontendDashboard;
 }
 
-class FrontendDashboard : public QDialog
+class FrontendDashboard : public QWidget
 {
     Q_OBJECT
 
@@ -35,6 +35,8 @@ public:
     void setCurrentSection(const std::shared_ptr<Section> &section);
     // ComboBox Section
     void fillAvailableSections();
+    // Custom Components on Components Tree
+    void addCustomComponentsOnComponentsTree();
 
 public slots:
     void onRouteSaved(const Route &route);
@@ -64,6 +66,7 @@ private:
                                     CustomTreeWidget *treeWidget = nullptr,
                                     QTreeWidgetItem *parentItem = nullptr);
     std::string getComponentIdFromTree(QTreeWidgetItem *item) const;
+    void cleanPropertiesTable();
 
     void setDraggableFlags(QTreeWidgetItem *item, bool isDraggable);
     void setComponentsDraggable();
@@ -72,8 +75,6 @@ private:
     void populateCurrentSectionTree();
     void populateNestedItems(QTreeWidgetItem *parentItem,
                              const std::vector<std::shared_ptr<BaseNode>> &nestedComponents);
-    void populateSubSectionItems(QTreeWidgetItem *parentItem,
-                                 const std::shared_ptr<Section> &subSection);
     void populatePropertiesTable(const std::shared_ptr<Component> &component);
 
     std::shared_ptr<BaseNode> convertItemToBaseNode(QTreeWidgetItem *item);
@@ -83,7 +84,7 @@ private:
     std::shared_ptr<Component> findComponentByHierarchy(
         const std::vector<std::shared_ptr<BaseNode>> &components,
         const std::vector<QTreeWidgetItem *> &hierarchy,
-        std::string id,
+        const std::string &id,
         int level);
     // Component *findNestedComponent(Component &parent, QTreeWidgetItem *item);
 

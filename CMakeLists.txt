@@ -123,6 +123,8 @@ set(PROJECT_SOURCES
         src/core/configuration-manager/configurationmanager.cpp
         src/core/deploy-manager/deploymanager.h
         src/core/deploy-manager/deploymanager.cpp
+        src/core/project-worker/projectworker.h
+        src/core/project-worker/projectworker.cpp
         # Models
         src/models/project/project.h
         src/models/project/project.cpp
