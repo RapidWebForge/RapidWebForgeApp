@@ -16,6 +16,22 @@ Section::Section(const std::string &name, const std::vector<std::shared_ptr<Base
     , components(components)
 {}
 
+void Section::generateCode(inja::Environment &env) const
+{
+    // nlohmann::json data = {{"type", "Component"},
+    //                        {"componentType", componentTypeToString(type)},
+    //                        {"props", props}};
+    // std::string result = env.render("Componente: {{ type }} {{ componentType }}", data);
+    // Usar el resultado como necesites
+}
+
+void Section::updateFromJson(const nlohmann::json &json)
+{
+    if (json.contains("name")) {
+        setName(json["name"]);
+    }
+}
+
 // Getters
 
 std::string Section::getName() const

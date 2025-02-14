@@ -29,12 +29,16 @@ public:
     Component(boost::uuids::uuid id,
               std::chrono::system_clock::time_point createdOn,
               std::chrono::system_clock::time_point updatedOn);
-    Component(ComponentType type);
+    explicit Component(ComponentType type);
     Component(ComponentType type,
               boost::uuids::uuid id,
               std::chrono::system_clock::time_point createdOn,
               std::chrono::system_clock::time_point updatedOn);
     Component(ComponentType type, const std::map<std::string, std::string> &props, bool allowItems);
+
+    // From BaseNode
+    void generateCode(inja::Environment &env) const override;
+    void updateFromJson(const nlohmann::json &json) override;
 
     ComponentType getType() const;
     const std::map<std::string, std::string> &getProps() const;

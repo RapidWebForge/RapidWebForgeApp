@@ -64,6 +64,27 @@ Component::Component(ComponentType type,
     generateUniqueId();
 }
 
+// Methods from BaseNode
+
+void Component::generateCode(inja::Environment &env) const
+{
+    // nlohmann::json data = {{"type", "Component"},
+    //                        {"componentType", componentTypeToString(type)},
+    //                        {"props", props}};
+    // std::string result = env.render("Componente: {{ type }} {{ componentType }}", data);
+    // Usar el resultado como necesites
+}
+
+void Component::updateFromJson(const nlohmann::json &json)
+{
+    if (json.contains("type")) {
+        setType(stringToComponentType(json["type"]));
+    }
+    if (json.contains("props")) {
+        setProps(json["props"].get<std::map<std::string, std::string>>());
+    }
+}
+
 // Función para generar un hash SHA-256
 std::string generateSHA256(const std::string &input)
 {

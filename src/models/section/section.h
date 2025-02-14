@@ -17,6 +17,10 @@ public:
     explicit Section(const std::string &name);
     Section(const std::string &name, const std::vector<std::shared_ptr<BaseNode>> &components);
 
+    // From BaseNode
+    void generateCode(inja::Environment &env) const override;
+    void updateFromJson(const nlohmann::json &json) override;
+
     std::string getName() const;
     const std::vector<std::shared_ptr<BaseNode>> &getComponents() const;
 
