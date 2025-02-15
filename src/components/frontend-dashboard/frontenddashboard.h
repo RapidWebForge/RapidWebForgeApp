@@ -1,12 +1,11 @@
 #ifndef FRONTENDDASHBOARD_H
 #define FRONTENDDASHBOARD_H
 
-#include <QWidget>
 #include <QTableWidget>
 #include <QTreeWidget>
+#include <QWidget>
 #include "../../core/logging/actionloggerjson.h" // Para manejar logs en formato .json
 #include "../../models/component/component.h"
-#include "../../models/route/route.h"
 #include "../../models/section/section.h"
 #include "../create-section/createsection.h"
 #include "../custom-tree-widget/customtreewidget.h"
@@ -25,13 +24,9 @@ public:
     ~FrontendDashboard();
 
     // Getters
-    const std::vector<Route> &getRoutes() const;
-    const std::vector<std::shared_ptr<Section>> &getViews() const;
-    const std::vector<std::shared_ptr<Section>> &getCustomComponents() const;
+    const std::shared_ptr<BaseNode> &getFrontendRoot() const;
     // Setters
-    void setRoutes(const std::vector<Route> &routes);
-    void setViews(const std::vector<std::shared_ptr<Section>> &views);
-    void setCustomComponents(const std::vector<std::shared_ptr<Section>> &custComponents);
+    void setFrontendRoot(const std::shared_ptr<BaseNode> &frontendRoot);
     void setCurrentSection(const std::shared_ptr<Section> &section);
     // ComboBox Section
     void fillAvailableSections();
@@ -39,7 +34,7 @@ public:
     void addCustomComponentsOnComponentsTree();
 
 public slots:
-    void onRouteSaved(const Route &route);
+    void onRouteSaved(const std::shared_ptr<Section> &route);
     void onCustomComponentSaved(const std::shared_ptr<Section> &component);
 
 private slots:
@@ -70,6 +65,8 @@ private:
 
     void setDraggableFlags(QTreeWidgetItem *item, bool isDraggable);
     void setComponentsDraggable();
+
+    const std::shared_ptr<BaseNode> getMainNode(const std::string &nodeName);
 
     // Populate
     void populateCurrentSectionTree();
@@ -103,9 +100,7 @@ private:
                                     const std::vector<QTreeWidgetItem *> &hierarchy);
 
     CreateSection *createSectionDialog;
-    std::vector<Route> routes;
-    std::vector<std::shared_ptr<Section>> custComponents;
-    std::vector<std::shared_ptr<Section>> views;
+    std::shared_ptr<BaseNode> frontendRoot;
     std::shared_ptr<Section> currentSection;
     std::shared_ptr<Component> currentComponent;
     ActionLoggerJson loggerJson; // Logs en formato .json

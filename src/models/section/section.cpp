@@ -2,18 +2,19 @@
 #include "../component/component.h"
 
 Section::Section()
-    : name("")
-    , components()
+    : BaseNode("Section")
+    , name("")
 {}
 
 Section::Section(const std::string &name)
-    : name(name)
-    , components()
+    : BaseNode("Section")
+    , name(name)
 {}
 
-Section::Section(const std::string &name, const std::vector<std::shared_ptr<BaseNode>> &components)
-    : name(name)
-    , components(components)
+Section::Section(const std::string &name, const std::string &path)
+    : BaseNode("Section")
+    , name(name)
+    , path(path)
 {}
 
 void Section::generateCode(inja::Environment &env) const
@@ -32,6 +33,22 @@ void Section::updateFromJson(const nlohmann::json &json)
     }
 }
 
+std::shared_ptr<BaseNode> Section::clone() const
+{
+    // Crear una nueva instancia de Section con el mismo nombre
+    auto clonedSection = std::make_shared<Section>(this->name);
+
+    if (!this->path.empty())
+        clonedSection->setPath(this->path);
+
+    // Clonar recursivamente los hijos
+    for (const auto &child : this->children) {
+        clonedSection->addChild(child->clone());
+    }
+
+    return clonedSection;
+}
+
 // Getters
 
 std::string Section::getName() const
@@ -39,9 +56,9 @@ std::string Section::getName() const
     return name;
 }
 
-const std::vector<std::shared_ptr<BaseNode>> &Section::getComponents() const
+std::string Section::getPath() const
 {
-    return components;
+    return path;
 }
 
 // Setters
@@ -51,39 +68,7 @@ void Section::setName(const std::string &name)
     this->name = name;
 }
 
-void Section::setComponents(const std::vector<std::shared_ptr<BaseNode>> &components)
+void Section::setPath(const std::string &path)
 {
-    this->components = components;
-}
-
-void Section::addComponent(const std::shared_ptr<BaseNode> &component)
-{
-    components.push_back(component);
-}
-
-void Section::insertComponent(int index, const std::shared_ptr<BaseNode> &component)
-{
-    components.insert(components.begin() + index, component);
-}
-
-bool Section::removeComponentByName(const std::string &name)
-{
-    auto it = std::find_if(components.begin(),
-                           components.end(),
-                           [&name](const std::shared_ptr<BaseNode> &node) {
-                               auto component = std::dynamic_pointer_cast<Component>(node);
-                               return component
-                                      && componentTypeToString(component->getType()) == name;
-                           });
-
-    if (it != components.end()) {
-        components.erase(it);
-        return true;
-    }
-    return false;
-}
-
-void Section::clearComponents()
-{
-    components.clear();
+    this->path = path;
 }

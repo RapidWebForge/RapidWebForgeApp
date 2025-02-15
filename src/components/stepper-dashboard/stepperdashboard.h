@@ -18,7 +18,7 @@
 #include "../backend-dashboard/backenddashboard.h"
 #include "../frontend-dashboard/frontenddashboard.h"
 #include <nlohmann/json.hpp>
-#include <variant> // 📌 Incluir std::variant
+#include <variant>
 
 namespace Ui {
 class StepperDashboard;
@@ -29,13 +29,12 @@ class StepperDashboard : public QWidget
     Q_OBJECT
 
 public:
-    // 📌 Constructor para proyectos normales
     explicit StepperDashboard(QWidget *parent = nullptr,
                               const Project &project = Project(),
                               const QString &tutorialPath = "");
     ~StepperDashboard();
 
-    void loadTutorialData(); // 📌 Ahora `loadData()` maneja proyectos y tutoriales en un solo método
+    void loadTutorialData();
 
 protected:
     void showEvent(QShowEvent *event) override;
@@ -61,9 +60,9 @@ private slots:
     void onProjectChange();
     void onCreateProject();
     // Slots relacionados con los tutoriales
-    void showTutorialComment();  // Muestra el comentario del tutorial
-    void showTutorialHelp();     // Muestra la ayuda del tutorial
-    void goToNextTutorialStep(); // Avanza al siguiente paso del tutorial
+    void showTutorialComment();
+    void showTutorialHelp();
+    void goToNextTutorialStep();
     void showTutorialIntro();
     void onUserActionPerformed(const std::string &action, const std::string &componentID);
 
@@ -74,13 +73,12 @@ private:
     StepValidator *stepValidator;
 
     // Tutorial bar methods
-    void initializeTutorialBar();    // Método para inicializar la barra de tutoriales
-    void setupTutorialConnections(); // Conecta los botones de tutorial a sus funciones
+    void initializeTutorialBar();
+    void setupTutorialConnections();
     // Definición de menús
     QMenu *projectMenu;
     QMenu *versionsMenu;
 
-    // 📌 Variable unificada para manejar tutoriales o proyectos
     std::variant<Project, QString> dataVariant;
     bool isTutorialMode = false;
 
@@ -112,13 +110,12 @@ private:
     Project project;
     int currentStepIndex = 0; // Inicializa el índice en 0
 
-    // 📌 Nuevo parámetro para almacenar la ruta del tutorial JSON
     QString tutorialPath;
-    QString tutorialFilePath; // Ruta del tutorial JSON
+    QString tutorialFilePath;
 
-    QJsonArray tutorialSteps; // Array para almacenar los pasos del tutorial
+    QJsonArray tutorialSteps;
 
-    void showStep(int index); // Función para mostrar un paso
+    void showStep(int index);
     QTimer *stepCheckTimer;
     QString tutorialTitle;
     QString tutorialDescription;

@@ -134,8 +134,6 @@ set(PROJECT_SOURCES
         src/models/transaction/transaction.cpp
         src/models/field/field.h
         src/models/field/field.cpp
-        src/models/route/route.h
-        src/models/route/route.cpp
         src/models/component/component.h
         src/models/component/component.cpp
         src/models/section/section.h

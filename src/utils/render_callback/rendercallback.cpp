@@ -15,7 +15,7 @@ std::string toLower(const std::string &str)
 
 namespace RenderCallback {
 
-std::unordered_map<std::string, nlohmann::json> customComponentsCache;
+std::unordered_set<std::string> customComponentsCache;
 
 std::string renderCustomComponent(const nlohmann::json componentJson)
 {

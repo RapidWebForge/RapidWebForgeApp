@@ -10,28 +10,23 @@ class Section : public BaseNode
 {
 private:
     std::string name;
-    std::vector<std::shared_ptr<BaseNode>> components; // Nodos hijos (Section o Component)
+    std::string path;
 
 public:
     Section();
     explicit Section(const std::string &name);
-    Section(const std::string &name, const std::vector<std::shared_ptr<BaseNode>> &components);
+    explicit Section(const std::string &name, const std::string &path);
 
     // From BaseNode
     void generateCode(inja::Environment &env) const override;
     void updateFromJson(const nlohmann::json &json) override;
-
+    std::shared_ptr<BaseNode> clone() const override;
+    // Getters
     std::string getName() const;
-    const std::vector<std::shared_ptr<BaseNode>> &getComponents() const;
-
+    std::string getPath() const;
+    // Setters
     void setName(const std::string &name);
-    void setComponents(const std::vector<std::shared_ptr<BaseNode>> &components);
-
-    // Métodos útiles
-    void addComponent(const std::shared_ptr<BaseNode> &component);
-    void insertComponent(int index, const std::shared_ptr<BaseNode> &component);
-    bool removeComponentByName(const std::string &name);
-    void clearComponents();
+    void setPath(const std::string &path);
 };
 
 #endif // SECTION_H

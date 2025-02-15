@@ -40,72 +40,37 @@ void FrontendGenerator::initializeCustomComponentsCache()
 {
     RenderCallback::customComponentsCache.clear();
 
-    for (const auto &customComponent : this->custComponents) {
-        std::string name = customComponent->getName();
-        nlohmann::json jsonRepresentation = processSectionToJson(customComponent);
-        RenderCallback::customComponentsCache[name] = jsonRepresentation;
+    // Encontrar el nodo 'CustomComponents' en el AST
+    auto customComponentsNode = getMainNode("CustomComponents");
+
+    if (!customComponentsNode) {
+        fmt::print(stderr, "Error: No 'CustomComponents' node found in the AST.\n");
+        return;
     }
 
+    // Recorrer los hijos del nodo 'CustomComponents'
+    for (const auto &customComponent : customComponentsNode->getChildren()) {
+        // Obtener el nombre de la sección
+        std::string name = static_cast<Section *>(customComponent.get())->getName();
+
+        // Guardar en la caché
+        RenderCallback::customComponentsCache.insert(name);
+    }
+
+    // Mostrar mensaje de éxito
     fmt::print("Custom components cache initialized with {} items.\n",
                RenderCallback::customComponentsCache.size());
 }
 
-bool FrontendGenerator::loadSchema()
+std::chrono::system_clock::time_point parseDateTime(const std::string &dateTimeStr)
 {
-    std::ifstream file(projectPath + "/frontend.json");
-    if (!file.is_open()) {
-        fmt::print(stderr, "Unable to open JSON file: {}/frontend.json\n", projectPath);
-
-        // Create frontend.json if not exists
-        nlohmann::json frontendJson;
-        frontendJson["routes"] = nlohmann::json::array();
-        frontendJson["views"] = nlohmann::json::array();
-        frontendJson["custom"] = nlohmann::json::array();
-
-        std::ofstream jsonFile(projectPath + "/frontend.json");
-        if (!jsonFile.is_open()) {
-            fmt::print(stderr, "Failed to create frontend.json\n");
-            return false;
-        }
-
-        jsonFile << frontendJson.dump(2);
-        jsonFile.close();
-        return false;
-    }
-
-    nlohmann::json jsonSchema;
-    try {
-        file >> jsonSchema;
-    } catch (const nlohmann::json::parse_error &e) {
-        fmt::print(stderr, "Error parsing JSON: {}\n", e.what());
-        return false;
-    }
-
-    parseJson(jsonSchema); // JSON to routes, views and custom components
-    // initializeCustomComponentsCache();
-    return true;
+    std::tm tm = {};
+    std::istringstream ss(dateTimeStr);
+    ss >> std::get_time(&tm, "%Y-%m-%dT%H:%M:%S");
+    return std::chrono::system_clock::from_time_t(std::mktime(&tm));
 }
 
-bool allowsNestedComponents(ComponentType type)
-{
-    return type == ComponentType::Form || type == ComponentType::HorizontalLayout
-           || type == ComponentType::VerticalLayout || type == ComponentType::ModelLayout;
-}
-
-std::vector<std::shared_ptr<BaseNode>> FrontendGenerator::parseNestedComponents(
-    const nlohmann::json &nestedJsonArray)
-{
-    std::vector<std::shared_ptr<BaseNode>> nestedComponents;
-    for (const auto &nestedJson : nestedJsonArray) {
-        auto nestedComponent = parseComponent(nestedJson);
-        if (nestedComponent) {
-            nestedComponents.push_back(nestedComponent);
-        }
-    }
-    return nestedComponents;
-}
-
-std::shared_ptr<BaseNode> FrontendGenerator::parseComponent(const nlohmann::json &componentJson)
+std::shared_ptr<BaseNode> parseComponent(const nlohmann::json &componentJson)
 {
     // If it's a component
     if (componentJson.contains("type")) {
@@ -118,14 +83,12 @@ std::shared_ptr<BaseNode> FrontendGenerator::parseComponent(const nlohmann::json
 
         std::chrono::system_clock::time_point createdOn, updatedOn;
 
-        if (componentJson.contains("createdOn") && componentJson["createdOn"].is_number()) {
-            createdOn = std::chrono::system_clock::from_time_t(
-                componentJson["createdOn"].get<std::time_t>());
+        if (componentJson.contains("createdOn") && componentJson["createdOn"].is_string()) {
+            createdOn = parseDateTime(componentJson["createdOn"].get<std::string>());
         }
 
-        if (componentJson.contains("updatedOn") && componentJson["updatedOn"].is_number()) {
-            updatedOn = std::chrono::system_clock::from_time_t(
-                componentJson["updatedOn"].get<std::time_t>());
+        if (componentJson.contains("updatedOn") && componentJson["updatedOn"].is_string()) {
+            createdOn = parseDateTime(componentJson["createdOn"].get<std::string>());
         }
 
         auto component = std::make_shared<Component>(id, createdOn, updatedOn);
@@ -133,24 +96,6 @@ std::shared_ptr<BaseNode> FrontendGenerator::parseComponent(const nlohmann::json
         // Parse type
         if (componentJson.contains("type") && componentJson["type"].is_string()) {
             component->setType(stringToComponentType(componentJson["type"].get<std::string>()));
-
-            // Parse nested components if applicable
-            if (allowsNestedComponents(component->getType())
-                && componentJson.contains("nestedComponents")
-                && componentJson["nestedComponents"].is_array()) {
-                auto baseNodes = parseNestedComponents(componentJson["nestedComponents"]);
-
-                // Convertir a std::vector<std::shared_ptr<Component>>
-                std::vector<std::shared_ptr<BaseNode>> nestedComponents;
-                for (const auto &baseNode : baseNodes) {
-                    auto nestedComponent = std::dynamic_pointer_cast<Component>(baseNode);
-                    if (nestedComponent) {
-                        nestedComponents.push_back(nestedComponent);
-                    }
-                }
-
-                component->setNestedComponents(nestedComponents);
-            }
         }
 
         // Parse props
@@ -179,69 +124,132 @@ std::shared_ptr<BaseNode> FrontendGenerator::parseComponent(const nlohmann::json
     }
 }
 
+std::vector<std::shared_ptr<BaseNode>> parseNestedComponents(const nlohmann::json &nestedJsonArray)
+{
+    std::vector<std::shared_ptr<BaseNode>> nestedComponents;
+
+    for (const auto &nestedJson : nestedJsonArray) {
+        auto nestedComponent = parseComponent(nestedJson);
+        if (nestedComponent) {
+            nestedComponents.push_back(nestedComponent);
+        }
+    }
+    return nestedComponents;
+}
+
+std::shared_ptr<BaseNode> cloneNode(const std::shared_ptr<BaseNode> &node)
+{
+    if (!node) {
+        return nullptr;
+    }
+
+    return node->clone();
+}
+
 void FrontendGenerator::parseJson(const nlohmann::json &jsonSchema)
 {
-    // Parse routes
-    for (const auto &routeJson : jsonSchema["routes"]) {
-        Route route;
-        if (routeJson.contains("component") && routeJson["component"].is_string()) {
-            route.setComponent(routeJson["component"].get<std::string>());
-        } else {
-            fmt::print(stderr, "Error: 'component' in 'routes' must be a string.\n");
-            continue;
-        }
+    // Main nodes by categories
+    auto customComponentsNode = std::make_shared<Section>("CustomComponents");
+    auto viewsNode = std::make_shared<Section>("Views");
 
-        if (routeJson.contains("path") && routeJson["path"].is_string()) {
-            route.setPath(routeJson["path"].get<std::string>());
-        } else {
-            fmt::print(stderr, "Error: 'path' in 'routes' must be a string.\n");
-            continue;
-        }
-
-        routes.push_back(route);
-    }
+    // Categories on frontendRoot
+    frontendRoot->addChild(customComponentsNode);
+    frontendRoot->addChild(viewsNode);
 
     // Parse custom components
     for (const auto &custComponentJson : jsonSchema["custom"]) {
-        for (auto it = custComponentJson.begin(); it != custComponentJson.end(); ++it) {
-            auto section = std::make_shared<Section>(it.key());
+        auto customSection = std::make_shared<Section>(custComponentJson["name"].get<std::string>());
 
-            // Parse components
-            for (const auto &componentJson : it.value()["components"]) {
-                auto component = parseComponent(componentJson);
-                if (component) {
-                    section->addComponent(component);
-                }
+        // Parse components inside the section
+        for (const auto &componentJson : custComponentJson["components"]) {
+            auto componentNode = parseComponent(componentJson);
+            if (componentNode) {
+                customSection->addChild(componentNode);
             }
-
-            custComponents.push_back(section);
         }
+
+        // Agregar la sección al nodo principal de custom components
+        customComponentsNode->addChild(customSection);
     }
 
     // Parse views
     for (const auto &viewJson : jsonSchema["views"]) {
-        for (auto it = viewJson.begin(); it != viewJson.end(); ++it) {
-            auto section = std::make_shared<Section>(it.key());
+        // Crear una sección para cada vista
+        auto viewSection = std::make_shared<Section>(viewJson["name"].get<std::string>(),
+                                                     viewJson["path"].get<std::string>());
 
-            // Parse components
-            for (const auto &componentJson : it.value()["components"]) {
-                auto component = parseComponent(componentJson);
-                if (component) {
-                    section->addComponent(component);
+        // Parsear los componentes dentro de la vista
+        for (const auto &componentJson : viewJson["components"]) {
+            auto componentNode = parseComponent(componentJson);
+
+            // Verificar si hay componentes anidados
+            if (componentJson.contains("nestedComponents")) {
+                auto nestedComponents = parseNestedComponents(componentJson["nestedComponents"]);
+                for (const auto &nestedComponent : nestedComponents) {
+                    componentNode->addChild(nestedComponent);
                 }
             }
 
-            views.push_back(section);
+            if (componentNode) {
+                viewSection->addChild(componentNode);
+            }
         }
+
+        // Agregar la vista al nodo principal de views
+        viewsNode->addChild(viewSection);
     }
+
+    // Generate clone
+    oldRoot = cloneNode(frontendRoot);
 }
 
-nlohmann::json FrontendGenerator::processSectionToJson(const std::shared_ptr<Section> &section)
+bool FrontendGenerator::loadSchema()
+{
+    std::ifstream file(projectPath + "/frontend.json");
+    if (!file.is_open()) {
+        fmt::print(stderr, "Unable to open JSON file: {}/frontend.json\n", projectPath);
+
+        // Create frontend.json if not exists
+        nlohmann::json frontendJson;
+        frontendJson["views"] = nlohmann::json::array();
+        frontendJson["custom"] = nlohmann::json::array();
+
+        std::ofstream jsonFile(projectPath + "/frontend.json");
+        if (!jsonFile.is_open()) {
+            fmt::print(stderr, "Failed to create frontend.json\n");
+            return false;
+        }
+
+        jsonFile << frontendJson.dump(2);
+        jsonFile.close();
+        return false;
+    }
+
+    nlohmann::json jsonSchema;
+    try {
+        file >> jsonSchema;
+    } catch (const nlohmann::json::parse_error &e) {
+        fmt::print(stderr, "Error parsing JSON: {}\n", e.what());
+        return false;
+    }
+
+    parseJson(jsonSchema); // JSON to AST
+    return true;
+}
+
+bool allowsNestedComponents(ComponentType type)
+{
+    return type == ComponentType::Form || type == ComponentType::HorizontalLayout
+           || type == ComponentType::VerticalLayout || type == ComponentType::ModelLayout;
+}
+
+nlohmann::json processSectionToJson(const std::shared_ptr<Section> &section)
 {
     nlohmann::json sectionJson;
+    sectionJson["name"] = section->getName();
     sectionJson["components"] = nlohmann::json::array();
 
-    for (const auto &child : section->getComponents()) {
+    for (const auto &child : section->getChildren()) {
         auto component = std::dynamic_pointer_cast<Component>(child);
         if (component) {
             nlohmann::json componentJson;
@@ -260,7 +268,7 @@ nlohmann::json FrontendGenerator::processSectionToJson(const std::shared_ptr<Sec
             // Manejo de nestedComponents
             if (component->isAllowingItems()) {
                 componentJson["nestedComponents"] = nlohmann::json::array();
-                for (const auto &nestedComponent : component->getNestedComponents()) {
+                for (const auto &nestedComponent : component->getChildren()) {
                     nlohmann::json nestedComponentJson;
                     auto nestedComponentPtr = std::dynamic_pointer_cast<Component>(nestedComponent);
                     nestedComponentJson["type"] = componentTypeToString(nestedComponentPtr->getType());
@@ -296,39 +304,75 @@ nlohmann::json FrontendGenerator::processSectionToJson(const std::shared_ptr<Sec
     return sectionJson;
 }
 
+// AST
+const std::shared_ptr<BaseNode> FrontendGenerator::getMainNode(const std::string &nodeName)
+{
+    auto it = std::find_if(frontendRoot->getChildren().begin(),
+                           frontendRoot->getChildren().end(),
+                           [&nodeName](const std::shared_ptr<BaseNode> &node) {
+                               return node->getNodeType() == nodeName;
+                           });
+
+    if (it != frontendRoot->getChildren().end()) {
+        return *it; // Devuelve el nodo encontrado
+    }
+
+    return nullptr; // No se encontró el nodo
+}
+
 bool FrontendGenerator::updateSchema()
 {
     nlohmann::json jsonSchema;
 
-    // Create the routes
-    jsonSchema["routes"] = nlohmann::json::array();
-    for (const auto &route : this->routes) {
-        nlohmann::json routeJson;
-        routeJson["component"] = route.getComponent();
-        routeJson["path"] = route.getPath();
-        jsonSchema["routes"].push_back(routeJson);
-    }
+    auto viewsNode = getMainNode("Views");
 
     // Create the views
-    jsonSchema["views"] = nlohmann::json::array();
-    for (const auto &view : this->views) {
-        auto section = std::dynamic_pointer_cast<Section>(view);
-        if (section) {
-            nlohmann::json viewJson;
-            viewJson[section->getName()] = processSectionToJson(section);
-            jsonSchema["views"].push_back(viewJson);
+    if (viewsNode) {
+        // Convert to section to use getChildren()
+        auto sectionNode = std::dynamic_pointer_cast<Section>(viewsNode);
+        if (sectionNode) {
+            // Create views json
+            jsonSchema["views"] = nlohmann::json::array();
+
+            for (const auto &view : sectionNode->getChildren()) {
+                auto section = std::dynamic_pointer_cast<Section>(view);
+                if (section) {
+                    nlohmann::json viewJson;
+                    viewJson[section->getName()] = processSectionToJson(section);
+
+                    jsonSchema["views"].push_back(viewJson);
+                }
+            }
+        } else {
+            fmt::print(stderr, "Error: 'Views' node is not a Section.\n");
         }
+    } else {
+        fmt::print(stderr, "Error: 'Views' node not found in the AST.\n");
     }
 
-    // Create the custom components
-    jsonSchema["custom"] = nlohmann::json::array();
-    for (const auto &customComponent : this->custComponents) {
-        auto section = std::dynamic_pointer_cast<Section>(customComponent);
-        if (section) {
-            nlohmann::json customComponentJson;
-            customComponentJson[section->getName()] = processSectionToJson(section);
-            jsonSchema["custom"].push_back(customComponentJson);
+    auto customComponentsNode = getMainNode("CustomComponents");
+
+    if (customComponentsNode) {
+        // Convert to section to use getChildren()
+        auto sectionNode = std::dynamic_pointer_cast<Section>(customComponentsNode);
+        if (sectionNode) {
+            // Create views json
+            jsonSchema["custom"] = nlohmann::json::array();
+
+            for (const auto &view : sectionNode->getChildren()) {
+                auto section = std::dynamic_pointer_cast<Section>(view);
+                if (section) {
+                    nlohmann::json viewJson;
+                    viewJson[section->getName()] = processSectionToJson(section);
+
+                    jsonSchema["custom"].push_back(viewJson);
+                }
+            }
+        } else {
+            fmt::print(stderr, "Error: 'Views' node is not a Section.\n");
         }
+    } else {
+        fmt::print(stderr, "Error: 'Views' node not found in the AST.\n");
     }
 
     // Save the frontend.json file
@@ -347,10 +391,9 @@ bool FrontendGenerator::updateSchema()
     return true;
 }
 
-void FrontendGenerator::processSection(const std::shared_ptr<Section> &section,
-                                       nlohmann::json &jsonArray)
+void processSection(const std::shared_ptr<Section> &section, nlohmann::json &jsonArray)
 {
-    for (const auto &child : section->getComponents()) {
+    for (const auto &child : section->getChildren()) {
         auto component = std::dynamic_pointer_cast<Component>(child);
         if (component) {
             nlohmann::json componentJson;
@@ -369,7 +412,7 @@ void FrontendGenerator::processSection(const std::shared_ptr<Section> &section,
             // Manejo de nestedComponents para tipos permitidos
             if (component->isAllowingItems()) {
                 componentJson["nestedComponents"] = nlohmann::json::array();
-                for (const auto &nestedChild : component->getNestedComponents()) {
+                for (const auto &nestedChild : component->getChildren()) {
                     nlohmann::json nestedComponentJson;
                     auto nestedChildPtr = std::dynamic_pointer_cast<Component>(nestedChild);
                     nestedComponentJson["type"] = componentTypeToString(nestedChildPtr->getType());
@@ -404,30 +447,61 @@ void FrontendGenerator::processSection(const std::shared_ptr<Section> &section,
     }
 }
 
+std::shared_ptr<Section> FrontendGenerator::findViewByName(const std::string &viewName)
+{
+    // Encontrar el nodo "Views" en el AST
+    auto viewsNode = getMainNode("Views");
+    if (!viewsNode) {
+        fmt::print(stderr, "Error: 'Views' node not found in the AST.\n");
+        return nullptr;
+    }
+
+    // Convertir el nodo "Views" a Section
+    auto sectionNode = std::dynamic_pointer_cast<Section>(viewsNode);
+    if (!sectionNode) {
+        fmt::print(stderr, "Error: 'Views' node is not a Section.\n");
+        return nullptr;
+    }
+
+    // Usar std::find_if para buscar la vista por nombre
+    auto it = std::find_if(sectionNode->getChildren().begin(),
+                           sectionNode->getChildren().end(),
+                           [&viewName](const std::shared_ptr<BaseNode> &node) {
+                               auto section = std::dynamic_pointer_cast<Section>(node);
+                               return section && section->getName() == viewName;
+                           });
+
+    // Verificar si se encontró la vista
+    if (it != sectionNode->getChildren().end()) {
+        return std::dynamic_pointer_cast<Section>(*it);
+    }
+
+    return nullptr; // No se encontró la vista
+}
+
 bool FrontendGenerator::generateView(const std::string &viewName)
 {
     nlohmann::json data;
 
     // Inserta el nombre del componente en el contexto de Inja
     data["component"] = viewName;
-
-    // Buscar la vista en views
-    auto it = std::find_if(views.begin(),
-                           views.end(),
-                           [&viewName](const std::shared_ptr<Section> &view) {
-                               return view->getName() == viewName;
-                           });
-
     data["components"] = nlohmann::json::array(); // Asegúrate de inicializar el array
 
-    // Si la vista existe
-    if (it != views.end()) {
-        auto section = std::dynamic_pointer_cast<Section>(*it); // Convertir BaseNode a Section
-        if (section) {
-            // Renderizar al json
-            processSection(section, data["components"]);
-        }
+    auto view = findViewByName(viewName);
+
+    if (!view) {
+        qDebug() << "View " << viewName << " wasn't found\n";
+        return false;
     }
+
+    auto section = std::dynamic_pointer_cast<Section>(view);
+
+    if (!section) {
+        qDebug() << "View " << viewName << " couldn't be casted\n";
+        return false;
+    }
+
+    processSection(section, data["components"]);
 
     // qDebug().noquote() << data.dump(2);
 
@@ -456,7 +530,7 @@ bool FrontendGenerator::generateView(const std::string &viewName)
         return false;
     }
 
-    // fmt::print("View generated successfully for {}\n", viewName);
+    fmt::print("View generated successfully for {}\n", viewName);
     return true;
 }
 
@@ -466,24 +540,23 @@ bool FrontendGenerator::generateCustomComponent(const std::string &custComponent
 
     // Inserta el nombre del componente en el contexto de Inja
     data["component"] = custComponentName;
-
-    // Buscar el cc en custComponents
-    auto it = std::find_if(custComponents.begin(),
-                           custComponents.end(),
-                           [&custComponentName](const std::shared_ptr<Section> &cc) {
-                               return cc->getName() == custComponentName;
-                           });
-
     data["components"] = nlohmann::json::array(); // Asegúrate de inicializar el array
 
-    // Si la vista existe
-    if (it != custComponents.end()) {
-        auto section = std::dynamic_pointer_cast<Section>(*it); // Convertir BaseNode a Section
-        if (section) {
-            // Renderizar al json
-            processSection(section, data["components"]);
-        }
+    auto custComp = findViewByName(custComponentName);
+
+    if (!custComp) {
+        qDebug() << "Custom Component " << custComponentName << " wasn't found\n";
+        return false;
     }
+
+    auto section = std::dynamic_pointer_cast<Section>(custComp);
+
+    if (!custComp) {
+        qDebug() << "Custom Component " << custComponentName << " couldn't be casted\n";
+        return false;
+    }
+
+    processSection(section, data["components"]);
 
     std::string templatePath = ":/inja/frontend/view";
 
@@ -517,30 +590,36 @@ bool FrontendGenerator::generateCustomComponent(const std::string &custComponent
     return true;
 }
 
-bool FrontendGenerator::generateApp()
+bool FrontendGenerator::generateFrontendCode()
 {
+    initializeCustomComponentsCache();
     nlohmann::json data;
 
-    // Insert the routes into the JSON context for Inja
-    data["routes"] = nlohmann::json::array();
+    auto viewsNode = getMainNode("Views");
 
-    // Create views in base of the routes json
-    for (const auto &route : this->routes) {
-        nlohmann::json routeJson;
-        routeJson["component"] = route.getComponent();
-        routeJson["path"] = route.getPath();
-        data["routes"].push_back(routeJson);
+    auto sectionNode = std::dynamic_pointer_cast<Section>(viewsNode);
 
-        if (!generateView(route.getComponent())) {
-            fmt::print(stderr, "Failed to generate component base for {}\n", route.getComponent());
-            return false;
+    for (const auto &view : sectionNode->getChildren()) {
+        auto section = std::dynamic_pointer_cast<Section>(view);
+        if (section) {
+            if (!generateView(section->getName())) {
+                fmt::print(stderr, "Failed to generate component base for {}\n", section->getName());
+                return false;
+            }
         }
     }
 
-    for (const auto &custComponent : this->custComponents) {
-        if (!generateCustomComponent(custComponent->getName())) {
-            fmt::print(stderr, "Failed to custom component {}\n", custComponent->getName());
-            return false;
+    auto customComponentsNode = getMainNode("CustomComponents");
+
+    sectionNode = std::dynamic_pointer_cast<Section>(customComponentsNode);
+
+    for (const auto &custComp : sectionNode->getChildren()) {
+        auto section = std::dynamic_pointer_cast<Section>(custComp);
+        if (section) {
+            if (!generateView(section->getName())) {
+                fmt::print(stderr, "Failed to generate component base for {}\n", section->getName());
+                return false;
+            }
         }
     }
 
@@ -571,46 +650,13 @@ bool FrontendGenerator::generateApp()
     return true;
 }
 
-bool FrontendGenerator::generateFrontendCode()
-{
-    initializeCustomComponentsCache();
-    return generateApp();
-}
-
 bool FrontendGenerator::updateFrontendCode()
 {
     return (updateSchema() ? generateFrontendCode() : false);
 }
 
 // Getters
-const std::vector<Route> &FrontendGenerator::getRoutes() const
+const std::shared_ptr<BaseNode> &FrontendGenerator::getFrontendRoot() const
 {
-    return routes;
-}
-
-const std::vector<std::shared_ptr<Section>> &FrontendGenerator::getViews() const
-{
-    return views;
-}
-
-const std::vector<std::shared_ptr<Section>> &FrontendGenerator::getCustomComponents() const
-{
-    return custComponents;
-}
-
-// Setters
-void FrontendGenerator::setRoutes(const std::vector<Route> &routes)
-{
-    this->routes = routes;
-}
-
-void FrontendGenerator::setViews(const std::vector<std::shared_ptr<Section>> &views)
-{
-    this->views = views;
-}
-
-void FrontendGenerator::setCustomComponents(
-    const std::vector<std::shared_ptr<Section>> &custComponents)
-{
-    this->custComponents = custComponents;
+    return frontendRoot;
 }

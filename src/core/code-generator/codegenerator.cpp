@@ -112,22 +112,16 @@ bool CodeGenerator::createBaseFrontendProject()
 
     // Crear el frontend.json
     nlohmann::json frontendJson;
-    frontendJson["routes"] = nlohmann::json::array();
     frontendJson["views"] = nlohmann::json::array();
     frontendJson["custom"] = nlohmann::json::array();
 
     // Rutas iniciales
-    nlohmann::json homeRouteJson;
-    homeRouteJson["path"] = "/";
-    homeRouteJson["component"] = "Home";
-    frontendJson["routes"].push_back(homeRouteJson);
 
     // Vista inicial
     nlohmann::json homeViewJson;
-    nlohmann::json homeComponentsJson;
     nlohmann::json homeH1Json;
-    nlohmann::json homePropsJson;
-    homeComponentsJson["components"] = nlohmann::json::array();
+    nlohmann::json homeH1PropsJson;
+    homeViewJson["components"] = nlohmann::json::array();
 
     Component newHeaderH1(ComponentType::HeaderH1);
 
@@ -135,11 +129,14 @@ bool CodeGenerator::createBaseFrontendProject()
     homeH1Json["id"] = boost::uuids::to_string(newHeaderH1.getId());
     homeH1Json["createdOn"] = timePointToString(newHeaderH1.getCreatedOn());
     homeH1Json["updatedOn"] = timePointToString(newHeaderH1.getUpdatedOn());
-    homePropsJson["text"] = "Home View";
-    homePropsJson["class"] = "";
-    homeH1Json["props"] = homePropsJson;
-    homeComponentsJson["components"].push_back(homeH1Json);
-    homeViewJson["Home"] = homeComponentsJson;
+    homeH1PropsJson["text"] = "Home View";
+    homeH1PropsJson["class"] = "";
+    homeH1Json["props"] = homeH1PropsJson;
+
+    homeViewJson["components"].push_back(homeH1Json);
+    homeViewJson["path"] = "/";
+    homeViewJson["name"] = "Home";
+
     frontendJson["views"].push_back(homeViewJson);
 
     if (!createJsonFile(this->project.getPath() + "/frontend.json", frontendJson)) {

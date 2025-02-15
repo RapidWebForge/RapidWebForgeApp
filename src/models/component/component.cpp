@@ -7,8 +7,8 @@
 #include <sstream>
 
 Component::Component()
-    : type(ComponentType::Undefined)
-    , nestedComponents()
+    : BaseNode("Component")
+    , type(ComponentType::Undefined)
     , createdOn(std::chrono::system_clock::now())
     , updatedOn(createdOn)
 {
@@ -18,8 +18,8 @@ Component::Component()
 Component::Component(boost::uuids::uuid id,
                      std::chrono::system_clock::time_point createdOn,
                      std::chrono::system_clock::time_point updatedOn)
-    : type(ComponentType::Undefined)
-    , nestedComponents()
+    : BaseNode("Section")
+    , type(ComponentType::Undefined)
     , createdOn(createdOn)
     , updatedOn(updatedOn)
     , id(id)
@@ -28,8 +28,8 @@ Component::Component(boost::uuids::uuid id,
 }
 
 Component::Component(ComponentType type)
-    : type(type)
-    , nestedComponents()
+    : BaseNode("Section")
+    , type(type)
     , createdOn(std::chrono::system_clock::now())
     , updatedOn(createdOn)
 {
@@ -41,8 +41,8 @@ Component::Component(ComponentType type,
                      boost::uuids::uuid id,
                      std::chrono::system_clock::time_point createdOn,
                      std::chrono::system_clock::time_point updatedOn)
-    : type(type)
-    , nestedComponents()
+    : BaseNode("Section")
+    , type(type)
     , createdOn(createdOn)
     , updatedOn(updatedOn)
     , id(id)
@@ -53,9 +53,9 @@ Component::Component(ComponentType type,
 Component::Component(ComponentType type,
                      const std::map<std::string, std::string> &props,
                      bool allowItems)
-    : type(type)
+    : BaseNode("Section")
+    , type(type)
     , props(props)
-    , nestedComponents()
     , allowItems(allowItems)
     , createdOn(std::chrono::system_clock::now())
     , updatedOn(createdOn)
@@ -83,6 +83,16 @@ void Component::updateFromJson(const nlohmann::json &json)
     if (json.contains("props")) {
         setProps(json["props"].get<std::map<std::string, std::string>>());
     }
+}
+
+std::shared_ptr<BaseNode> Component::clone() const
+{
+    auto clonedComponent = std::make_shared<Component>(this->type,
+                                                       this->id,
+                                                       this->createdOn,
+                                                       this->updatedOn);
+    clonedComponent->props = this->props;
+    return clonedComponent;
 }
 
 // Función para generar un hash SHA-256
@@ -168,16 +178,6 @@ void Component::initializeDefaultProps()
     }
 }
 
-void Component::addNestedComponent(const std::shared_ptr<BaseNode> &component)
-{
-    nestedComponents.push_back(component);
-}
-
-void Component::insertNestedComponent(int index, const std::shared_ptr<BaseNode> &component)
-{
-    nestedComponents.insert(nestedComponents.begin() + index, component);
-}
-
 void Component::update()
 {
     updatedOn = std::chrono::system_clock::now();
@@ -193,11 +193,6 @@ ComponentType Component::getType() const
 const std::map<std::string, std::string> &Component::getProps() const
 {
     return props;
-}
-
-const std::vector<std::shared_ptr<BaseNode>> &Component::getNestedComponents() const
-{
-    return nestedComponents;
 }
 
 bool Component::isAllowingItems() const
@@ -244,8 +239,4 @@ void Component::setAllowItems(bool allow)
     update();
 }
 
-void Component::setNestedComponents(const std::vector<std::shared_ptr<BaseNode>> &components)
-{
-    this->nestedComponents = components;
-    update();
-}
+// TODO: update on add components

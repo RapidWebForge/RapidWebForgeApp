@@ -51,9 +51,8 @@ void CreateSection::on_createButton_clicked()
     if (isView) {
         std::string path = ui->viewRouteLineEdit->text().toStdString();
 
-        // TODO: Ensure capitalize
-        route.setComponent(sectionName);
-        route.setPath(boost::to_lower_copy(path));
+        const std::shared_ptr<Section> route = std::make_shared<Section>(sectionName,
+                                                                         boost::to_lower_copy(path));
 
         emit routeSaved(route);
 

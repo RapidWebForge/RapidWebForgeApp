@@ -3,11 +3,11 @@
 
 #include <inja/inja.hpp>
 #include <string>
-#include <unordered_map>
+#include <unordered_set>
 
 namespace RenderCallback {
 
-extern std::unordered_map<std::string, nlohmann::json> customComponentsCache;
+extern std::unordered_set<std::string> customComponentsCache;
 
 std::string renderCustomComponent(const nlohmann::json componentJson);
 std::string renderComponent(inja::Environment &env,

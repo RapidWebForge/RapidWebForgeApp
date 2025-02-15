@@ -186,20 +186,26 @@ void StepperDashboard::onBackendSchemaLoaded()
 
 void StepperDashboard::onFrontendSchemaLoaded()
 {
-    auto views = codeGenerator->frontendGenerator.getViews();
-    auto custComponents = codeGenerator->frontendGenerator.getCustomComponents();
-    std::vector<Route> routes = codeGenerator->frontendGenerator.getRoutes();
+    auto frontendRoot = codeGenerator->frontendGenerator.getFrontendRoot();
 
-    frontendDashboard->setViews(views);
-    frontendDashboard->setRoutes(routes);
-    frontendDashboard->setCustomComponents(custComponents);
+    frontendDashboard->setFrontendRoot(frontendRoot);
 
     // Called here once the custom components vector is fill
     frontendDashboard->fillAvailableSections();
     frontendDashboard->addCustomComponentsOnComponentsTree();
 
-    if (!views.empty()) {
-        frontendDashboard->setCurrentSection(views.at(0));
+    auto viewsNode = codeGenerator->frontendGenerator.getMainNode("Views");
+
+    if (viewsNode) {
+        // Verificar si tiene vistas disponibles
+        auto views = viewsNode->getChildren();
+        if (!views.empty()) {
+            // Seleccionar la primera vista y configurarla como la sección actual
+            auto firstView = std::dynamic_pointer_cast<Section>(views.at(0));
+            if (firstView) {
+                frontendDashboard->setCurrentSection(firstView);
+            }
+        }
     }
 }
 
@@ -508,11 +514,7 @@ void StepperDashboard::onSaveChanges()
 
     codeGenerator->backendGenerator.updateBackendCode();
 
-    codeGenerator->frontendGenerator.setRoutes(frontendDashboard->getRoutes());
-
-    codeGenerator->frontendGenerator.setViews(frontendDashboard->getViews());
-
-    codeGenerator->frontendGenerator.setCustomComponents(frontendDashboard->getCustomComponents());
+    // TODO: PASS AST UPDATE
 
     if (codeGenerator->frontendGenerator.updateFrontendCode()) {
         QMessageBox::information(this, "Save Changes", "Changes have been saved successfully.");
@@ -682,6 +684,7 @@ void StepperDashboard::onCreateProject()
     createProjects->setAttribute(Qt::WA_DeleteOnClose); // Liberar memoria automáticamente al cerrar
     createProjects->show();
 }
+
 void StepperDashboard::initializeTutorialBar()
 {
     // Verifica si estamos en modo tutorial o no
@@ -888,6 +891,7 @@ void StepperDashboard::loadTutorialData()
 
     showTutorialIntro();
 }
+
 void StepperDashboard::showTutorialIntro()
 {
     QString message = QString("<b>%1</b><br><br>%2").arg(tutorialTitle, tutorialDescription);
@@ -899,6 +903,7 @@ void StepperDashboard::showTutorialIntro()
         showStep(0);
     }
 }
+
 void StepperDashboard::showStep(int index)
 {
     if (index < 0 || index >= tutorialSteps.size()) {
@@ -948,7 +953,6 @@ void StepperDashboard::showStep(int index)
             "   background-color: #1e7e34;" // Verde aún más oscuro al presionar
             "}");
     } else {
-        // 🚀 Deshabilita el botón hasta que el usuario complete el paso
         ui->nextStepButton->setEnabled(false);
         ui->nextStepButton->setStyleSheet(
             "QPushButton { background-color: #ccc; color: #666; "
@@ -963,6 +967,7 @@ void StepperDashboard::showStep(int index)
             "}");
     }
 }
+
 void StepperDashboard::onUserActionPerformed(const std::string &action,
                                              const std::string &componentID)
 {
