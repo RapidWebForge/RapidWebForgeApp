@@ -16,6 +16,7 @@
 #include "../../core/version-manager/versionmanager.h"
 #include "../../models/project/project.h"
 #include "../backend-dashboard/backenddashboard.h"
+#include "../custom-tree-widget/customtreewidget.h"
 #include "../frontend-dashboard/frontenddashboard.h"
 #include <nlohmann/json.hpp>
 #include <variant> // 📌 Incluir std::variant
@@ -36,6 +37,8 @@ public:
     ~StepperDashboard();
 
     void loadTutorialData(); // 📌 Ahora `loadData()` maneja proyectos y tutoriales en un solo método
+public slots:
+    void validateCurrentStep(const QString &logAction);
 
 protected:
     void showEvent(QShowEvent *event) override;
@@ -44,6 +47,7 @@ signals:
     void backendSchemaLoaded();
     void frontendSchemaLoaded();
     void projectDeleteRequested(const Project &project);
+    void stepUpdated(const QString &logAction);
 
 private slots:
     void showBackendPage();
@@ -72,6 +76,7 @@ private:
     BackendDashboard *backendDashboard;
     FrontendDashboard *frontendDashboard;
     StepValidator *stepValidator;
+    CustomTreeWidget *customTreeWidget; // 🆕 Se declara un puntero a CustomTreeWidget
 
     // Tutorial bar methods
     void initializeTutorialBar();    // Método para inicializar la barra de tutoriales

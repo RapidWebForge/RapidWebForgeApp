@@ -93,6 +93,7 @@ void CustomTreeWidget::dropEvent(QDropEvent *event)
 
     // qDebug() << "isSection" << isSection;
     // qDebug() << "isTopLevel" << isTopLevel;
+    QString logAction;
 
     if ((tempComponent.isAllowingItems() || (isSection && isTopLevel))
         && pos.y() > itemRect.top() + itemRect.height() / 3
@@ -107,6 +108,8 @@ void CustomTreeWidget::dropEvent(QDropEvent *event)
         loggerJson.logAction("nest-tag",
                              "Etiqueta " + sourceTagName.toStdString() + " anidada dentro de "
                                  + targetTagName.toStdString());
+        emit stepUpdated("nest-tag");
+        logAction = "nest-tag";
 
     } else if (pos.y() < itemRect.top() + itemRect.height() / 3) {
         // Caso 1: Insertar encima
@@ -132,9 +135,17 @@ void CustomTreeWidget::dropEvent(QDropEvent *event)
             loggerJson.logAction("add-new-tag",
                                  "Etiqueta añadida al árbol de componentes: "
                                      + tagName.toStdString());
+            emit stepUpdated("add-new-tag"); // 📢 Aquí se emite la señal después del log
+            logAction = "add-new-tag";
         }
     }
+    if (!logAction.isEmpty()) {
+        loggerJson.logAction(logAction.toStdString(), "Componente movido");
 
+        // 🔍 Verificar si la señal realmente se emite
+        qDebug() << "🚀 Emitting stepUpdated with action:" << logAction;
+        emit stepUpdated(logAction);
+    }
     // Oculta el indicador después del drop
     showDropIndicator = false;
     viewport()->update();

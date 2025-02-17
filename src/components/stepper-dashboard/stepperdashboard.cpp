@@ -22,7 +22,9 @@
 
 nlohmann::json tutorialData;
 
-StepperDashboard::StepperDashboard(QWidget *parent, const Project &project, const QString &tutorialPath)
+StepperDashboard::StepperDashboard(QWidget *parent,
+                                   const Project &project,
+                                   const QString &tutorialPath)
     : QWidget(parent)
     , ui(new Ui::StepperDashboard)
     , frontendDashboard(new FrontendDashboard())
@@ -40,6 +42,7 @@ StepperDashboard::StepperDashboard(QWidget *parent, const Project &project, cons
     , project(project)
     , codeGenerator(new CodeGenerator(project))
     , versionManager(new VersionManager(project.getPath()))
+    , customTreeWidget(new CustomTreeWidget(nullptr)) // Se crea sin añadirse a la UI
     , tutorialFilePath(tutorialPath)
 {
     ui->setupUi(this);
@@ -74,6 +77,13 @@ StepperDashboard::StepperDashboard(QWidget *parent, const Project &project, cons
     connect(ui->frontendButton, &QPushButton::clicked, this, &StepperDashboard::showFrontendPage);
     connect(ui->commentButton, &QPushButton::clicked, this, &StepperDashboard::showTutorialComment);
     connect(ui->helpButton, &QPushButton::clicked, this, &StepperDashboard::showTutorialHelp);
+
+
+    connect(customTreeWidget,
+            &CustomTreeWidget::stepUpdated,
+            this,
+            &StepperDashboard::validateCurrentStep,
+            Qt::QueuedConnection);
 
     // Asignar los menús a los botones
     ui->projectButton->setMenu(projectMenu);
@@ -710,6 +720,10 @@ void StepperDashboard::initializeTutorialBar()
 
 void StepperDashboard::setupTutorialConnections()
 {
+    // 🔹 Desconectar cualquier conexión previa para evitar ejecuciones múltiples
+    disconnect(ui->nextStepButton, nullptr, this, nullptr);
+
+    // 🔹 Conectar el botón Next correctamente a goToNextTutorialStep()
     connect(ui->nextStepButton,
             &QPushButton::clicked,
             this,
@@ -766,44 +780,40 @@ void StepperDashboard::showTutorialHelp()
 
 void StepperDashboard::goToNextTutorialStep()
 {
-    // Si aún hay más pasos disponibles, avanzamos
+    static bool tutorialCompleted = false; // 🔹 Variable de control para evitar ejecución doble
+
+    if (tutorialCompleted) {
+        return; // Si ya se ejecutó una vez, no hacer nada
+    }
+    // Validar si el usuario ha completado el paso actual antes de permitir avanzar
+    QJsonObject step = tutorialSteps[currentStepIndex].toObject();
+    QString logAction = step["log"].toString();
+    bool isCompleted = stepValidator->isStepCompleted(logAction.toStdString(), "");
+
+    if (!isCompleted) {
+        qDebug() << "❌ Step " << currentStepIndex
+                 << " not completed. Next button remains disabled.";
+        return; // No avanza hasta que el paso se complete
+    }
+
+    // Si hay más pasos, avanzar al siguiente
     if (currentStepIndex < tutorialSteps.size() - 1) {
         currentStepIndex++;
         showStep(currentStepIndex);
     }
-    // Si estamos en el último paso, mostramos un mensaje, pero NO cerramos aún
+    // Si ya estamos en el último paso y el usuario lo ha completado, mostrar el mensaje de finalización
     else if (currentStepIndex == tutorialSteps.size() - 1) {
-        QMessageBox::information(this,
-                                 "Tutorial",
-                                 "You are now on the last step. Click 'Next' again to finish.");
-        currentStepIndex++; // Marcamos que ya está en el último paso para la siguiente vez
-    }
-    // Solo cerramos si ya se dio *Next* una vez estando en el último paso
-    else {
+        tutorialCompleted = true; // 🔹 Marcar como completado para evitar ejecución doble
+
         QMessageBox::information(this, "Tutorial", "You have completed all steps.");
 
-        // Cerrar el StepperDashboard y abrir el ProjectsPanel
+        // Cerrar el tutorial
         this->close();
-
-        // Crear y mostrar el ProjectsPanel
+        // 🚀 Abrir el ProjectsPanel después de cerrar el StepperDashboard
         ProjectsPanel *projectsPanel = new ProjectsPanel();
         projectsPanel->setAttribute(
             Qt::WA_DeleteOnClose); // Liberar memoria automáticamente al cerrar
         projectsPanel->show();
-    }
-    if (currentStepIndex < tutorialSteps.size()) {
-        QJsonObject step = tutorialSteps[currentStepIndex].toObject();
-        QString logAction = step["log"].toString();
-
-        if (!stepValidator->isStepCompleted(logAction.toStdString(), "")) {
-            QMessageBox::warning(this,
-                                 "Paso no completado",
-                                 "Debes completar este paso antes de continuar.");
-            return;
-        }
-
-        currentStepIndex++;
-        showStep(currentStepIndex);
     }
 }
 
@@ -916,8 +926,11 @@ void StepperDashboard::showStep(int index)
     ui->commentButton->setToolTip(step["comment"].toString());
     ui->helpButton->setToolTip(step["help"].toString());
 
-    qDebug() << "Total Steps Available: " << tutorialSteps.size();
-    qDebug() << "Trying to show step: " << index;
+    qDebug() << "Step " << index << " Goal: " << goal;
+    qDebug() << "Step " << index << " Log Action: " << logAction;
+
+    // Validar el estado actual del paso
+    validateCurrentStep(logAction);
 
     // Muestra los datos del paso en los widgets correspondientes
     ui->goalLabel->setText(goal);
@@ -928,9 +941,25 @@ void StepperDashboard::showStep(int index)
     bool isCompleted = stepValidator->isStepCompleted(logAction.toStdString(), "");
     // Habilitar o deshabilitar el botón "Next"
     ui->nextStepButton->setEnabled(isCompleted);
+
+    //if (index == tutorialSteps.size() - 1) {
+    //    ui->nextStepButton->setEnabled(true);
+    //    ui->nextStepButton->setText("Finish"); // Cambiar el texto del botón
+    //    //connect(ui->nextStepButton, &QPushButton::clicked, this, &StepperDashboard::close);
+    //} else {
+    //    ui->nextStepButton->setEnabled(isCompleted);
+    //    ui->nextStepButton->setText("Next"); // Restaurar el texto del botón
+    //}
+    // 🚀 Si estamos en el último paso, el botón cambia a "Finish"
+    if (index == tutorialSteps.size() - 1) {
+        ui->nextStepButton->setText("Finish");
+    } else {
+        ui->nextStepButton->setText("Next");
+    }
+
     if (isCompleted) {
         ui->nextStepButton->setEnabled(true);
-
+        qDebug() << "✅ Step " << index << " is completed. Enabling next button.";
         ui->nextStepButton->setStyleSheet(
             "QPushButton {"
             "   background-color: #28a745;" // Fondo verde
@@ -950,6 +979,8 @@ void StepperDashboard::showStep(int index)
     } else {
         // 🚀 Deshabilita el botón hasta que el usuario complete el paso
         ui->nextStepButton->setEnabled(false);
+        qDebug() << "❌ Step " << index << " NOT completed. Disabling next button.";
+
         ui->nextStepButton->setStyleSheet(
             "QPushButton { background-color: #ccc; color: #666; "
             "   border: none;"       // Sin bordes
@@ -972,5 +1003,58 @@ void StepperDashboard::onUserActionPerformed(const std::string &action,
 
     if (stepValidator->isStepCompleted(logAction.toStdString(), componentID)) {
         ui->nextStepButton->setEnabled(true);
+    }
+}
+void StepperDashboard::validateCurrentStep(const QString &logAction)
+{
+    qDebug() << "✅ Validating step with action:" << logAction;
+    if (currentStepIndex < 0 || currentStepIndex >= tutorialSteps.size()) {
+        return;
+    }
+    QJsonObject step = tutorialSteps[currentStepIndex].toObject();
+    QString expectedLog = step["log"].toString();
+
+    bool completed = stepValidator->isStepCompleted(expectedLog.toStdString(), "");
+
+    qDebug() << "🔍 Validating step " << currentStepIndex;
+    qDebug() << "Expected log: " << expectedLog << " - Received: " << logAction;
+    qDebug() << "Step completed? " << completed;
+    // Habilitar o deshabilitar el botón "Next"
+    if (completed) {
+        ui->nextStepButton->setEnabled(true);
+        qDebug() << "✅ Paso validado: botón habilitado.";
+
+        ui->nextStepButton->setStyleSheet(
+            "QPushButton {"
+            "   background-color: #28a745;" // Fondo verde
+            "   color: white;"              // Texto blanco
+            "   border: none;"              // Sin bordes
+            "   border-radius: 8px;"        // Bordes redondeados
+            "   padding: 8px 20px;"         // Espaciado interno
+            "   font-size: 16px;"           // Tamaño de fuente
+            "   font-weight: bold;"         // Texto en negrita
+            "} "
+            "QPushButton:hover {"
+            "   background-color: #218838;" // Verde más oscuro al pasar el cursor
+            "} "
+            "QPushButton:pressed {"
+            "   background-color: #1e7e34;" // Verde aún más oscuro al presionar
+            "}");
+    } else {
+        // 🚀 Deshabilita el botón hasta que el usuario complete el paso
+        ui->nextStepButton->setEnabled(false);
+        qDebug() << "❌ Paso no validado: botón deshabilitado.";
+
+        ui->nextStepButton->setStyleSheet(
+            "QPushButton { background-color: #ccc; color: #666; "
+            "   border: none;"       // Sin bordes
+            "   border-radius: 8px;" // Bordes redondeados
+            "   padding: 8px 20px;"  // Espaciado interno
+            "   font-size: 16px;"    // Tamaño de fuente
+            "   font-weight: bold;"
+            "} "
+            "QPushButton:hover {"
+            "   background-color: #1e7e34;" // Verde aún más oscuro al presionar
+            "}");
     }
 }

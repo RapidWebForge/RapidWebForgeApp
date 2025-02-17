@@ -3,6 +3,7 @@
 #include <QMessageBox>
 #include <QScroller>
 #include <QVBoxLayout>
+#include "../../core/project-manager/projectmanager.h"
 #include "../project-preview/projectpreview.h"
 #include "../stepper-dashboard/stepperdashboard.h"
 #include "ui_tutorialspanel.h"
