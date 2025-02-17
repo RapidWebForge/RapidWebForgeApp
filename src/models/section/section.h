@@ -21,6 +21,8 @@ public:
     void generateCode(inja::Environment &env) const override;
     void updateFromJson(const nlohmann::json &json) override;
     std::shared_ptr<BaseNode> clone() const override;
+    // Extras
+    bool removeChildForById(std::string id);
     // Getters
     std::string getName() const;
     std::string getPath() const;

@@ -51,12 +51,13 @@ void CreateSection::on_createButton_clicked()
     if (isView) {
         std::string path = ui->viewRouteLineEdit->text().toStdString();
 
-        const std::shared_ptr<Section> route = std::make_shared<Section>(sectionName,
-                                                                         boost::to_lower_copy(path));
-
-        emit routeSaved(route);
-
         if (!sectionName.empty() && !path.empty() && isView) {
+            const std::shared_ptr<Section> view = std::make_shared<Section>(sectionName,
+                                                                            boost::to_lower_copy(
+                                                                                path));
+
+            emit onSectionSaved(view);
+
             // Log para crear una nueva vista React
             loggerJson.logAction("create-react-view",
                                  "sectionName=" + sectionName + ", path=" + path);
@@ -64,11 +65,11 @@ void CreateSection::on_createButton_clicked()
         } else
             QMessageBox::warning(this, "Warning", "Fill all the fields to create");
     } else {
-        const std::shared_ptr<Section> customComponent = std::make_shared<Section>(sectionName);
-
-        emit customComponentSaved(customComponent);
-
         if (!sectionName.empty() && !isView) {
+            const std::shared_ptr<Section> customComponent = std::make_shared<Section>(sectionName);
+
+            emit onSectionSaved(customComponent);
+
             // Log para crear un nuevo componente React
             loggerJson.logAction("create-react-component", "sectionName=" + sectionName);
             accept();

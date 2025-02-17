@@ -27,22 +27,21 @@ public:
     const std::shared_ptr<BaseNode> &getFrontendRoot() const;
     // Setters
     void setFrontendRoot(const std::shared_ptr<BaseNode> &frontendRoot);
-    void setCurrentSection(const std::shared_ptr<Section> &section);
+    void setCurrentSection(const std::shared_ptr<BaseNode> &section);
     // ComboBox Section
     void fillAvailableSections();
     // Custom Components on Components Tree
     void addCustomComponentsOnComponentsTree();
 
 public slots:
-    void onRouteSaved(const std::shared_ptr<Section> &route);
-    void onCustomComponentSaved(const std::shared_ptr<Section> &component);
+    void onSectionSaved(const std::shared_ptr<Section> &section);
 
 private slots:
     void onCurrentSectionTreeItemSelected(QTreeWidgetItem *item, int column);
     void onItemDropped(QTreeWidgetItem *parentItem, QTreeWidgetItem *droppedItem, int dropIndex);
     void onPropertyValueChanged(int row, int column);
 
-    void on_saveButton_clicked();
+    // void on_saveButton_clicked();
     void on_deleteButton_clicked();
     void on_addSectionButton_clicked();
     void on_sectionComboBox_currentIndexChanged(int index);
@@ -66,7 +65,7 @@ private:
     void setDraggableFlags(QTreeWidgetItem *item, bool isDraggable);
     void setComponentsDraggable();
 
-    const std::shared_ptr<BaseNode> getMainNode(const std::string &nodeName);
+    const std::shared_ptr<BaseNode> getMainNode(const std::string &nodeName) const;
 
     // Populate
     void populateCurrentSectionTree();

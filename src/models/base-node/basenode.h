@@ -29,8 +29,9 @@ public:
     void addChild(const std::shared_ptr<BaseNode> &child);
     void insertChild(int index, const std::shared_ptr<BaseNode> &child);
     void removeChild(int index);
+    void removeChild(std::vector<std::shared_ptr<BaseNode>>::iterator it);
     void clearChildren();
-    const std::vector<std::shared_ptr<BaseNode>> &getChildren() const;
+    std::vector<std::shared_ptr<BaseNode>> &getChildren();
     // Gestión del nodo padre
     void setParent(const std::shared_ptr<BaseNode> &parentNode);
     std::shared_ptr<BaseNode> getParent() const;

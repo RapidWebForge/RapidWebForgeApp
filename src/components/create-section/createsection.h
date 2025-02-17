@@ -18,8 +18,7 @@ public:
     ~CreateSection();
 
 signals:
-    void routeSaved(const std::shared_ptr<Section> &route);
-    void customComponentSaved(const std::shared_ptr<Section> &custComponent);
+    void onSectionSaved(const std::shared_ptr<Section> &newSection);
 
 private slots:
     void on_createButton_clicked();

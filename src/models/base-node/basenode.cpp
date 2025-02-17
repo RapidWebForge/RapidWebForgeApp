@@ -39,6 +39,16 @@ void BaseNode::removeChild(int index)
     children.erase(children.begin() + index);
 }
 
+void BaseNode::removeChild(std::vector<std::shared_ptr<BaseNode>>::iterator it)
+{
+    if (it == children.end()) {
+        throw std::out_of_range("Iterator points to end of children vector");
+    }
+
+    (*it)->setParent(nullptr); // Desvincula el padre del hijo a eliminar
+    children.erase(it);        // Borra el hijo del vector
+}
+
 void BaseNode::clearChildren()
 {
     for (auto &child : children) {
@@ -47,7 +57,7 @@ void BaseNode::clearChildren()
     children.clear();
 }
 
-const std::vector<std::shared_ptr<BaseNode>> &BaseNode::getChildren() const
+std::vector<std::shared_ptr<BaseNode>> &BaseNode::getChildren()
 {
     return children;
 }
