@@ -108,6 +108,18 @@ set(PROJECT_SOURCES
         src/components/delete-version/deleteversion.h
         src/components/delete-version/deleteversion.cpp
         src/components/delete-version/deleteversion.ui
+        src/components/overview-panel/overviewpanel.h
+        src/components/overview-panel/overviewpanel.cpp
+        src/components/overview-panel/overviewpanel.ui
+        src/components/tutorials-panel/tutorialspanel.h
+        src/components/tutorials-panel/tutorialspanel.cpp
+        src/components/tutorials-panel/tutorialspanel.ui
+        src/components/pro-panel/propanel.h
+        src/components/pro-panel/propanel.cpp
+        src/components/pro-panel/propanel.ui
+        src/components/overview-panel/overviewpanel.h
+        src/components/overview-panel/overviewpanel.cpp
+        src/components/overview-panel/overviewpanel.ui
         # Core
         src/core/project-manager/projectmanager.h
         src/core/project-manager/projectmanager.cpp
@@ -125,6 +137,10 @@ set(PROJECT_SOURCES
         src/core/deploy-manager/deploymanager.cpp
         src/core/project-worker/projectworker.h
         src/core/project-worker/projectworker.cpp
+        src/core/logging/actionloggerjson.h
+        src/core/logging/actionloggerjson.cpp
+        src/core/logging/stepvalidator.h
+        src/core/logging/stepvalidator.cpp
         # Models
         src/models/project/project.h
         src/models/project/project.cpp
@@ -142,6 +158,8 @@ set(PROJECT_SOURCES
         src/models/configuration/configuration.cpp
         src/models/base-node/basenode.h
         src/models/base-node/basenode.cpp
+        src/models/generic-node/genericnode.h
+        src/models/generic-node/genericnode.cpp
         # Utils
         src/utils/database/database.h
         src/utils/database/database.cpp
@@ -164,12 +182,6 @@ if(QT_VERSION_MAJOR GREATER_EQUAL 6)
     )
 else()
     add_executable(RapidWebForgeApp ${PROJECT_SOURCES}
-        src/core/logging/actionloggerjson.h src/core/logging/actionloggerjson.cpp
-        src/core/logging/stepvalidator.h src/core/logging/stepvalidator.cpp
-        src/components/overview-panel/overviewpanel.h src/components/overview-panel/overviewpanel.cpp src/components/overview-panel/overviewpanel.ui
-        src/components/tutorials-panel/tutorialspanel.h src/components/tutorials-panel/tutorialspanel.cpp src/components/tutorials-panel/tutorialspanel.ui
-        src/components/pro-panel/propanel.h src/components/pro-panel/propanel.cpp src/components/pro-panel/propanel.ui
-        src/components/overview-panel/overviewpanel.h src/components/overview-panel/overviewpanel.cpp src/components/overview-panel/overviewpanel.ui
     )
 endif()
 

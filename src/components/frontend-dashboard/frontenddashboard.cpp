@@ -5,6 +5,7 @@
 #include <QMessageBox>
 #include "../../core/logging/actionloggerjson.h"
 #include "../../models/component-type/componenttype.h"
+#include "../../models/generic-node/genericnode.h"
 #include "ui_frontenddashboard.h"
 #include <boost/uuid/uuid_io.hpp>
 #include <cassert>
@@ -171,16 +172,48 @@ void FrontendDashboard::addCustomComponentsOnComponentsTree()
 
 // ComboBox Sections
 
+// For testing
+void printNodeTree(const std::shared_ptr<BaseNode> &node, int depth = 0)
+{
+    if (!node)
+        return;
+
+    QString indent = QString(" ").repeated(depth * 2);
+
+    if (auto component = std::dynamic_pointer_cast<Component>(node)) {
+        qDebug().noquote() << indent + "  (ID: "
+                                  + QString::fromStdString(
+                                      boost::uuids::to_string(component->getId()))
+                                  + ")";
+        qDebug().noquote() << indent + "  (Type: "
+                                  + QString::fromStdString(
+                                      componentTypeToString(component->getType()))
+                                  + ")";
+
+    } else if (auto section = std::dynamic_pointer_cast<Section>(node)) {
+        qDebug().noquote() << indent + "- " + QString::fromStdString(section->getName());
+    } else {
+        qDebug().noquote() << indent + "- " + QString::fromStdString(node->getNodeType());
+    }
+
+    // Recursively print children
+    for (const auto &child : node->getChildren()) {
+        printNodeTree(child, depth + 1);
+    }
+}
+
 void FrontendDashboard::fillAvailableSections()
 {
     // Limpia el combo box antes de rellenarlo
     ui->sectionComboBox->clear();
 
+    printNodeTree(frontendRoot);
+
     // Itera sobre las vistas
     auto viewsNode = getMainNode("Views");
 
     if (viewsNode) {
-        auto sectionNode = std::dynamic_pointer_cast<Section>(viewsNode);
+        auto sectionNode = std::dynamic_pointer_cast<GenericNode>(viewsNode);
 
         for (const auto &view : sectionNode->getChildren()) {
             auto sectionPtr = std::dynamic_pointer_cast<Section>(view);
@@ -194,7 +227,7 @@ void FrontendDashboard::fillAvailableSections()
     auto customComponentsNode = getMainNode("CustomComponents");
 
     if (customComponentsNode) {
-        auto sectionNode = std::dynamic_pointer_cast<Section>(customComponentsNode);
+        auto sectionNode = std::dynamic_pointer_cast<GenericNode>(customComponentsNode);
 
         for (const auto &cc : sectionNode->getChildren()) {
             auto sectionPtr = std::dynamic_pointer_cast<Section>(cc);

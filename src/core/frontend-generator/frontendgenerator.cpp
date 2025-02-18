@@ -3,6 +3,7 @@
 #include <QFile>
 #include <QTextStream>
 #include "../../models/component-type/componenttype.h"
+#include "../../models/generic-node/genericnode.h"
 #include "../../models/time-chrono/timechrono.h"
 #include "../../utils/file/fileutiils.h"
 #include "../../utils/render_callback/rendercallback.h"
@@ -14,6 +15,7 @@
 
 FrontendGenerator::FrontendGenerator(const std::string &projectPath)
     : projectPath(projectPath)
+    , frontendRoot(std::make_shared<GenericNode>("FrontendRoot"))
 {
     try {
         env.add_callback("render_component", [this](inja::Arguments &args) -> std::string {
@@ -146,6 +148,35 @@ std::shared_ptr<BaseNode> cloneNode(const std::shared_ptr<BaseNode> &node)
     return node->clone();
 }
 
+// void printNodeTree(const std::shared_ptr<BaseNode> &node, int depth = 0)
+// {
+//     if (!node)
+//         return;
+
+//     QString indent = QString(" ").repeated(depth * 2);
+
+//     if (auto component = std::dynamic_pointer_cast<Component>(node)) {
+//         qDebug().noquote() << indent + "  (ID: "
+//                                   + QString::fromStdString(
+//                                       boost::uuids::to_string(component->getId()))
+//                                   + ")";
+//         qDebug().noquote() << indent + "  (Type: "
+//                                   + QString::fromStdString(
+//                                       componentTypeToString(component->getType()))
+//                                   + ")";
+
+//     } else if (auto section = std::dynamic_pointer_cast<Section>(node)) {
+//         qDebug().noquote() << indent + "- " + QString::fromStdString(section->getName());
+//     } else {
+//         qDebug().noquote() << indent + "- " + QString::fromStdString(node->getNodeType());
+//     }
+
+//     // Recursively print children
+//     for (const auto &child : node->getChildren()) {
+//         printNodeTree(child, depth + 1);
+//     }
+// }
+
 void FrontendGenerator::parseJson(const nlohmann::json &jsonSchema)
 {
     // Main nodes by categories
@@ -153,8 +184,8 @@ void FrontendGenerator::parseJson(const nlohmann::json &jsonSchema)
     auto viewsNode = std::make_shared<Section>("Views");
 
     // Categories on frontendRoot
-    frontendRoot->addChild(customComponentsNode);
-    frontendRoot->addChild(viewsNode);
+    this->frontendRoot->addChild(customComponentsNode);
+    this->frontendRoot->addChild(viewsNode);
 
     // Parse custom components
     for (const auto &custComponentJson : jsonSchema["custom"]) {
@@ -198,6 +229,8 @@ void FrontendGenerator::parseJson(const nlohmann::json &jsonSchema)
         // Agregar la vista al nodo principal de views
         viewsNode->addChild(viewSection);
     }
+
+    // printNodeTree(frontendRoot);
 
     // Generate clone
     oldRoot = cloneNode(frontendRoot);
