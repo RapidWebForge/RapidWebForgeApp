@@ -180,8 +180,8 @@ std::shared_ptr<BaseNode> cloneNode(const std::shared_ptr<BaseNode> &node)
 void FrontendGenerator::parseJson(const nlohmann::json &jsonSchema)
 {
     // Main nodes by categories
-    auto customComponentsNode = std::make_shared<Section>("CustomComponents");
-    auto viewsNode = std::make_shared<Section>("Views");
+    auto customComponentsNode = std::make_shared<GenericNode>("CustomComponents");
+    auto viewsNode = std::make_shared<GenericNode>("Views");
 
     // Categories on frontendRoot
     this->frontendRoot->addChild(customComponentsNode);

@@ -7,7 +7,7 @@ class GenericNode : public BaseNode
 {
 public:
     GenericNode();
-    GenericNode(const std::string &nodeType); // ✅ New constructor
+    GenericNode(const std::string &nodeType);
 
     // From BaseNode
     void generateCode(inja::Environment &env) const override;

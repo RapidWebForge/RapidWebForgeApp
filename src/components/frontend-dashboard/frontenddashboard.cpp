@@ -160,7 +160,7 @@ void FrontendDashboard::addCustomComponentsOnComponentsTree()
     auto customComponentsNode = getMainNode("CustomComponents");
 
     if (customComponentsNode) {
-        auto sectionNode = std::dynamic_pointer_cast<Section>(customComponentsNode);
+        auto sectionNode = std::dynamic_pointer_cast<GenericNode>(customComponentsNode);
 
         for (const auto &custComponent : sectionNode->getChildren()) {
             auto sectionPtr = std::dynamic_pointer_cast<Section>(custComponent);
@@ -181,6 +181,7 @@ void printNodeTree(const std::shared_ptr<BaseNode> &node, int depth = 0)
     QString indent = QString(" ").repeated(depth * 2);
 
     if (auto component = std::dynamic_pointer_cast<Component>(node)) {
+        qDebug() << indent + "Component:";
         qDebug().noquote() << indent + "  (ID: "
                                   + QString::fromStdString(
                                       boost::uuids::to_string(component->getId()))
@@ -191,8 +192,10 @@ void printNodeTree(const std::shared_ptr<BaseNode> &node, int depth = 0)
                                   + ")";
 
     } else if (auto section = std::dynamic_pointer_cast<Section>(node)) {
+        qDebug() << indent + "Section:";
         qDebug().noquote() << indent + "- " + QString::fromStdString(section->getName());
     } else {
+        qDebug() << indent + "GenericNode or BaseNode:";
         qDebug().noquote() << indent + "- " + QString::fromStdString(node->getNodeType());
     }
 
@@ -206,8 +209,6 @@ void FrontendDashboard::fillAvailableSections()
 {
     // Limpia el combo box antes de rellenarlo
     ui->sectionComboBox->clear();
-
-    printNodeTree(frontendRoot);
 
     // Itera sobre las vistas
     auto viewsNode = getMainNode("Views");
@@ -251,7 +252,7 @@ void FrontendDashboard::on_sectionComboBox_currentIndexChanged(int index)
         return;
     }
 
-    auto sectionNode = std::dynamic_pointer_cast<Section>(viewsNode);
+    auto sectionNode = std::dynamic_pointer_cast<GenericNode>(viewsNode);
 
     if (sectionNode) {
         auto it = std::find_if(sectionNode->getChildren().begin(),
@@ -276,7 +277,7 @@ void FrontendDashboard::on_sectionComboBox_currentIndexChanged(int index)
         return;
     }
 
-    sectionNode = std::dynamic_pointer_cast<Section>(customComponentsNode);
+    sectionNode = std::dynamic_pointer_cast<GenericNode>(customComponentsNode);
 
     if (sectionNode) {
         auto it = std::find_if(sectionNode->getChildren().begin(),
@@ -454,7 +455,7 @@ bool FrontendDashboard::isView(QTreeWidgetItem *item) const
         return false;
     }
 
-    auto sectionNode = std::dynamic_pointer_cast<Section>(viewsNode);
+    auto sectionNode = std::dynamic_pointer_cast<GenericNode>(viewsNode);
 
     return std::any_of(sectionNode->getChildren().begin(),
                        sectionNode->getChildren().end(),
@@ -475,7 +476,7 @@ bool FrontendDashboard::isCustomComponent(QTreeWidgetItem *item) const
         return false;
     }
 
-    auto sectionNode = std::dynamic_pointer_cast<Section>(customComponentsNode);
+    auto sectionNode = std::dynamic_pointer_cast<GenericNode>(customComponentsNode);
 
     return std::any_of(sectionNode->getChildren().begin(),
                        sectionNode->getChildren().end(),
@@ -775,7 +776,7 @@ void FrontendDashboard::onSectionSaved(const std::shared_ptr<Section> &section)
         auto customComponentsNode = getMainNode("CustomComponents");
 
         if (customComponentsNode) {
-            auto sectionNode = std::dynamic_pointer_cast<Section>(customComponentsNode);
+            auto sectionNode = std::dynamic_pointer_cast<GenericNode>(customComponentsNode);
 
             sectionNode->addChild(section);
 
@@ -809,7 +810,7 @@ void FrontendDashboard::onSectionSaved(const std::shared_ptr<Section> &section)
         auto viewsNode = getMainNode("Views");
 
         if (viewsNode) {
-            auto sectionNode = std::dynamic_pointer_cast<Section>(viewsNode);
+            auto sectionNode = std::dynamic_pointer_cast<GenericNode>(viewsNode);
 
             sectionNode->addChild(section);
 
@@ -833,56 +834,6 @@ void FrontendDashboard::onSectionSaved(const std::shared_ptr<Section> &section)
     }
 }
 
-// Slots
-
-// void FrontendDashboard::on_saveButton_clicked()
-// {
-//     if (!currentSection) {
-//         QMessageBox::warning(this, "Error on save", "No current section selected");
-//         return;
-//     }
-
-//     // Convertir tree a Section y obtener el nombre
-//     auto sectionPtr = std::dynamic_pointer_cast<Section>(currentSection);
-//     if (!sectionPtr) {
-//         QMessageBox::warning(this, "Error on save", "Current section is not valid");
-//         return;
-//     }
-//     std::string sectionName = sectionPtr->getName();
-
-//     auto viewsNode = getMainNode("Views");
-
-//     auto viewPtr = std::shared_ptr<Section>(viewsNode);
-
-//     // Buscar en views
-//     auto viewIt = std::find_if(viewPtr->getChildren().begin(),
-//                                viewPtr->getChildren().end(),
-//                                [&sectionName](const std::shared_ptr<Section> &node) {
-//                                    return node->getName() == sectionName;
-//                                });
-
-//     if (viewIt != views.end()) {
-//         *viewIt = sectionPtr;
-//         QMessageBox::information(this, "Successful", "View updated");
-//         return;
-//     }
-
-//     // Buscar en custom components
-//     auto custComponentIt = std::find_if(custComponents.begin(),
-//                                         custComponents.end(),
-//                                         [&sectionName](const std::shared_ptr<Section> &node) {
-//                                             return node->getName() == sectionName;
-//                                         });
-
-//     if (custComponentIt != custComponents.end()) {
-//         *custComponentIt = sectionPtr;
-//         QMessageBox::information(this, "Successful", "Custom Component updated");
-//         return;
-//     }
-
-//     QMessageBox::warning(this, "Error on save", "View or Custom Component wasn't found");
-// }
-
 void FrontendDashboard::on_deleteButton_clicked()
 {
     // Obtiene el elemento seleccionado en el árbol
@@ -898,7 +849,7 @@ void FrontendDashboard::on_deleteButton_clicked()
     // Busca en views
     auto viewsNode = getMainNode("Views");
 
-    auto viewsPtr = std::shared_ptr<BaseNode>(viewsNode);
+    auto viewsPtr = std::dynamic_pointer_cast<GenericNode>(viewsNode);
 
     auto viewIt = std::find_if(viewsPtr->getChildren().begin(),
                                viewsPtr->getChildren().end(),
@@ -919,7 +870,7 @@ void FrontendDashboard::on_deleteButton_clicked()
     // Busca en custom components
     auto customComponentsNode = getMainNode("CustomComponents");
 
-    auto customComponentsPtr = std::shared_ptr<BaseNode>(customComponentsNode);
+    auto customComponentsPtr = std::dynamic_pointer_cast<GenericNode>(customComponentsNode);
 
     auto custComponentIt = std::find_if(customComponentsPtr->getChildren().begin(),
                                         customComponentsPtr->getChildren().end(),
@@ -1006,7 +957,7 @@ const std::shared_ptr<BaseNode> FrontendDashboard::getMainNode(const std::string
 {
     auto it = std::find_if(frontendRoot->getChildren().begin(),
                            frontendRoot->getChildren().end(),
-                           [&nodeName](const std::shared_ptr<BaseNode> &node) {
+                           [&nodeName](const auto &node) {
                                return node->getNodeType() == nodeName;
                            });
 
@@ -1014,6 +965,7 @@ const std::shared_ptr<BaseNode> FrontendDashboard::getMainNode(const std::string
         return *it; // Devuelve el nodo encontrado
     }
 
+    qDebug() << "The node" << nodeName << " wasn't found";
     return nullptr; // No se encontró el nodo
 }
 

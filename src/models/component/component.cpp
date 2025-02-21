@@ -18,7 +18,7 @@ Component::Component()
 Component::Component(boost::uuids::uuid id,
                      std::chrono::system_clock::time_point createdOn,
                      std::chrono::system_clock::time_point updatedOn)
-    : BaseNode("Section")
+    : BaseNode("Component")
     , type(ComponentType::Undefined)
     , createdOn(createdOn)
     , updatedOn(updatedOn)
@@ -28,7 +28,7 @@ Component::Component(boost::uuids::uuid id,
 }
 
 Component::Component(ComponentType type)
-    : BaseNode("Section")
+    : BaseNode("Component")
     , type(type)
     , createdOn(std::chrono::system_clock::now())
     , updatedOn(createdOn)
@@ -41,7 +41,7 @@ Component::Component(ComponentType type,
                      boost::uuids::uuid id,
                      std::chrono::system_clock::time_point createdOn,
                      std::chrono::system_clock::time_point updatedOn)
-    : BaseNode("Section")
+    : BaseNode("Component")
     , type(type)
     , createdOn(createdOn)
     , updatedOn(updatedOn)
@@ -53,7 +53,7 @@ Component::Component(ComponentType type,
 Component::Component(ComponentType type,
                      const std::map<std::string, std::string> &props,
                      bool allowItems)
-    : BaseNode("Section")
+    : BaseNode("Component")
     , type(type)
     , props(props)
     , allowItems(allowItems)
