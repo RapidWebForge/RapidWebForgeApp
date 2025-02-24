@@ -281,6 +281,8 @@ nlohmann::json processSectionToJson(const std::shared_ptr<Section> &section)
     nlohmann::json sectionJson;
     sectionJson["name"] = section->getName();
     sectionJson["components"] = nlohmann::json::array();
+    if (!section->getPath().empty())
+        sectionJson["path"] = section->getPath();
 
     for (const auto &child : section->getChildren()) {
         auto component = std::dynamic_pointer_cast<Component>(child);
@@ -362,7 +364,7 @@ bool FrontendGenerator::updateSchema()
     // Create the views
     if (viewsNode) {
         // Convert to section to use getChildren()
-        auto sectionNode = std::dynamic_pointer_cast<Section>(viewsNode);
+        auto sectionNode = std::dynamic_pointer_cast<GenericNode>(viewsNode);
         if (sectionNode) {
             // Create views json
             jsonSchema["views"] = nlohmann::json::array();
@@ -370,14 +372,13 @@ bool FrontendGenerator::updateSchema()
             for (const auto &view : sectionNode->getChildren()) {
                 auto section = std::dynamic_pointer_cast<Section>(view);
                 if (section) {
-                    nlohmann::json viewJson;
-                    viewJson[section->getName()] = processSectionToJson(section);
+                    nlohmann::json viewJson = processSectionToJson(section);
 
                     jsonSchema["views"].push_back(viewJson);
                 }
             }
         } else {
-            fmt::print(stderr, "Error: 'Views' node is not a Section.\n");
+            fmt::print(stderr, "Error: 'Views' node is not a GenericNode.\n");
         }
     } else {
         fmt::print(stderr, "Error: 'Views' node not found in the AST.\n");
@@ -387,7 +388,7 @@ bool FrontendGenerator::updateSchema()
 
     if (customComponentsNode) {
         // Convert to section to use getChildren()
-        auto sectionNode = std::dynamic_pointer_cast<Section>(customComponentsNode);
+        auto sectionNode = std::dynamic_pointer_cast<GenericNode>(customComponentsNode);
         if (sectionNode) {
             // Create views json
             jsonSchema["custom"] = nlohmann::json::array();
@@ -395,14 +396,13 @@ bool FrontendGenerator::updateSchema()
             for (const auto &view : sectionNode->getChildren()) {
                 auto section = std::dynamic_pointer_cast<Section>(view);
                 if (section) {
-                    nlohmann::json viewJson;
-                    viewJson[section->getName()] = processSectionToJson(section);
+                    nlohmann::json viewJson = processSectionToJson(section);
 
                     jsonSchema["custom"].push_back(viewJson);
                 }
             }
         } else {
-            fmt::print(stderr, "Error: 'Views' node is not a Section.\n");
+            fmt::print(stderr, "Error: 'Views' node is not a GenericNode.\n");
         }
     } else {
         fmt::print(stderr, "Error: 'Views' node not found in the AST.\n");
@@ -489,10 +489,10 @@ std::shared_ptr<Section> FrontendGenerator::findViewByName(const std::string &vi
         return nullptr;
     }
 
-    // Convertir el nodo "Views" a Section
-    auto sectionNode = std::dynamic_pointer_cast<Section>(viewsNode);
+    // Convertir el nodo "Views" a GenericNode
+    auto sectionNode = std::dynamic_pointer_cast<GenericNode>(viewsNode);
     if (!sectionNode) {
-        fmt::print(stderr, "Error: 'Views' node is not a Section.\n");
+        fmt::print(stderr, "Error: 'Views' node is not a GenericNode.\n");
         return nullptr;
     }
 
@@ -627,26 +627,32 @@ bool FrontendGenerator::generateFrontendCode()
 {
     initializeCustomComponentsCache();
     nlohmann::json data;
+    data["routes"] = nlohmann::json::array();
 
     auto viewsNode = getMainNode("Views");
 
-    auto sectionNode = std::dynamic_pointer_cast<Section>(viewsNode);
+    auto viewsPtr = std::dynamic_pointer_cast<GenericNode>(viewsNode);
 
-    for (const auto &view : sectionNode->getChildren()) {
+    for (const auto &view : viewsPtr->getChildren()) {
         auto section = std::dynamic_pointer_cast<Section>(view);
         if (section) {
             if (!generateView(section->getName())) {
                 fmt::print(stderr, "Failed to generate component base for {}\n", section->getName());
                 return false;
+            } else {
+                nlohmann::json routeJson;
+                routeJson["component"] = section->getName();
+                routeJson["path"] = section->getPath();
+                data["routes"].push_back(routeJson);
             }
         }
     }
 
     auto customComponentsNode = getMainNode("CustomComponents");
 
-    sectionNode = std::dynamic_pointer_cast<Section>(customComponentsNode);
+    auto customComponentPtr = std::dynamic_pointer_cast<GenericNode>(customComponentsNode);
 
-    for (const auto &custComp : sectionNode->getChildren()) {
+    for (const auto &custComp : customComponentPtr->getChildren()) {
         auto section = std::dynamic_pointer_cast<Section>(custComp);
         if (section) {
             if (!generateView(section->getName())) {
@@ -685,7 +691,16 @@ bool FrontendGenerator::generateFrontendCode()
 
 bool FrontendGenerator::updateFrontendCode()
 {
-    return (updateSchema() ? generateFrontendCode() : false);
+    if (updateSchema()) {
+        if (generateFrontendCode())
+            return true;
+        else
+            qDebug() << "Failing in GENERATING FRONTEND CODE";
+    } else {
+        qDebug() << "Failing in UPDATING SCHEMA";
+        return false;
+    }
+    // return (updateSchema() ? generateFrontendCode() : false);
 }
 
 // Getters
