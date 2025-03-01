@@ -453,6 +453,38 @@ std::shared_ptr<Section> FrontendGenerator::findViewByName(const std::string &vi
     return nullptr; // No se encontró la vista
 }
 
+std::shared_ptr<Section> FrontendGenerator::findCustomComponentByName(const std::string &viewName)
+{
+    // Encontrar el nodo "CustomComponents" en el AST
+    auto custCompNode = getMainNode("CustomComponents");
+    if (!custCompNode) {
+        fmt::print(stderr, "Error: 'CustomComponents' node not found in the AST.\n");
+        return nullptr;
+    }
+
+    // Convertir el nodo "CustomComponents" a GenericNode
+    auto sectionNode = std::dynamic_pointer_cast<GenericNode>(custCompNode);
+    if (!sectionNode) {
+        fmt::print(stderr, "Error: 'CustomComponents' node is not a GenericNode.\n");
+        return nullptr;
+    }
+
+    // Usar std::find_if para buscar la vista por nombre
+    auto it = std::find_if(sectionNode->getChildren().begin(),
+                           sectionNode->getChildren().end(),
+                           [&viewName](const std::shared_ptr<BaseNode> &node) {
+                               auto section = std::dynamic_pointer_cast<Section>(node);
+                               return section && section->getName() == viewName;
+                           });
+
+    // Verificar si se encontró la vista
+    if (it != sectionNode->getChildren().end()) {
+        return std::dynamic_pointer_cast<Section>(*it);
+    }
+
+    return nullptr; // No se encontró la vista
+}
+
 bool FrontendGenerator::generateView(const std::string &viewName)
 {
     nlohmann::json data;
@@ -510,7 +542,7 @@ bool FrontendGenerator::generateCustomComponent(const std::string &custComponent
 {
     nlohmann::json data;
 
-    auto custComp = findViewByName(custComponentName);
+    auto custComp = findCustomComponentByName(custComponentName);
 
     if (!custComp) {
         qDebug() << "Custom Component " << custComponentName << " wasn't found\n";

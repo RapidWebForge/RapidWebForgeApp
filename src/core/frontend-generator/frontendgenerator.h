@@ -26,6 +26,7 @@ private:
     void parseJson(const nlohmann::json &jsonSchema);
     // Auxiliar
     std::shared_ptr<Section> findViewByName(const std::string &viewName);
+    std::shared_ptr<Section> findCustomComponentByName(const std::string &viewName);
     bool generateView(const std::string &viewName);
     bool generateCustomComponent(const std::string &custComponentName);
 
