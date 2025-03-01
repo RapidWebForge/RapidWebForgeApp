@@ -20,6 +20,14 @@
 #include "../frontend-dashboard/frontenddashboard.h"
 #include <nlohmann/json.hpp>
 #include <variant> // 📌 Incluir std::variant
+#include <QResizeEvent>
+#include <QPushButton> // 📌 Importar QPushButton
+#include <QEnterEvent>  // 📌 Importar QEnterEvent
+#include <QPropertyAnimation>  // ✅ Para animaciones
+
+#include <QPushButton>  // Agregar botón
+#include "../../utils/file/FileWatcher.h"  // Detectar archivos modificados
+#include "../../utils/vscode/FileOpener.h" // Abrir VS Code
 
 namespace Ui {
 class StepperDashboard;
@@ -42,6 +50,8 @@ public slots:
 
 protected:
     void showEvent(QShowEvent *event) override;
+    void resizeEvent(QResizeEvent *event) override; // 📌 Sobreescribir resizeEvent
+    void contextMenuEvent(QContextMenuEvent *event) override;  // 📌 Detectar clic derecho
 
 signals:
     void backendSchemaLoaded();
@@ -71,16 +81,34 @@ private slots:
     void showTutorialIntro();
     void onUserActionPerformed(const std::string &action, const std::string &componentID);
 
+
 private:
     Ui::StepperDashboard *ui;
     BackendDashboard *backendDashboard;
     FrontendDashboard *frontendDashboard;
     StepValidator *stepValidator;
     CustomTreeWidget *customTreeWidget; // 🆕 Se declara un puntero a CustomTreeWidget
+    QPushButton *floatingButton;  // 📌 Declarar el botón flotante
+    QPushButton *backendButton;   // 📌 Botón para abrir backend
+    QPushButton *frontendButton;  // 📌 Botón para abrir frontend
+    QPushButton *lastFileButton;  // 📌 Botón para abrir el último archivo modificado
+
+    QPropertyAnimation *backendAnimation;   // ✅ Animación para backend
+    QPropertyAnimation *frontendAnimation;  // ✅ Animación para frontend
+    QPropertyAnimation *lastFileAnimation;  // ✅ Animación para último archivo
 
     // Tutorial bar methods
     void initializeTutorialBar();    // Método para inicializar la barra de tutoriales
     void setupTutorialConnections(); // Conecta los botones de tutorial a sus funciones
+    // 📌 Nueva función para el botón flotante
+    void setupFloatingButton();
+    void toggleExtraButtons();    // 📌 Mostrar/Ocultar botones desplegables
+    void createAnimations();
+
+    void openBackendInVSCode();
+    void openFrontendInVSCode();
+    void openLastModifiedFile();
+
     // Definición de menús
     QMenu *projectMenu;
     QMenu *versionsMenu;
@@ -128,6 +156,9 @@ private:
     QString tutorialTitle;
     QString tutorialDescription;
     QString currentReference;
+
+    QPushButton *btnOpenVSCode;  // 📌 Botón para abrir VS Code
+    FileWatcher *fileWatcher;    // 📌 Instancia para monitorear archivos
 };
 
 #endif // STEPPERDASHBOARD_H

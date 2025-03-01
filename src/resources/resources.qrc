@@ -24,6 +24,11 @@
         <file>hogar.png</file>
         <file>sombrero-de-graduacion.png</file>
         <file>gorro-de-graduacion.png</file>
+        <file>VS.png</file>
+        <file>vs2.png</file>
+        <file>recent2.png</file>
+        <file>exp.png</file>
+        <file>Icono React.webp</file>
     </qresource>
     <qresource prefix="/inja/backend">
         <file alias="controllers">inja_templates/backend/controllers.inja</file>

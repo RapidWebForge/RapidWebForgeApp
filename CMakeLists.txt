@@ -172,6 +172,9 @@ else()
         src/components/tutorials-panel/tutorialspanel.h src/components/tutorials-panel/tutorialspanel.cpp src/components/tutorials-panel/tutorialspanel.ui
         src/components/pro-panel/propanel.h src/components/pro-panel/propanel.cpp src/components/pro-panel/propanel.ui
         src/components/overview-panel/overviewpanel.h src/components/overview-panel/overviewpanel.cpp src/components/overview-panel/overviewpanel.ui
+        src/utils/file/filewatcher.h src/utils/file/filewatcher.cpp
+        src/utils/vscode/fileopener.h src/utils/vscode/fileopener.cpp
+        src/utils/ui/codeviewer.h src/utils/ui/codeviewer.cpp
     )
 endif()
 

@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1089</width>
+    <width>1958</width>
     <height>670</height>
    </rect>
   </property>
@@ -41,7 +41,7 @@
        <property name="font">
         <font>
          <family>Segoe UI Semibold</family>
-         <pointsize>9</pointsize>
+         <pointsize>15</pointsize>
         </font>
        </property>
        <property name="styleSheet">
@@ -63,7 +63,7 @@
        <property name="font">
         <font>
          <family>Segoe UI Semibold</family>
-         <pointsize>9</pointsize>
+         <pointsize>15</pointsize>
         </font>
        </property>
        <property name="styleSheet">
@@ -79,7 +79,8 @@
        <property name="font">
         <font>
          <family>Segoe UI</family>
-         <pointsize>12</pointsize>
+         <pointsize>15</pointsize>
+         <bold>false</bold>
         </font>
        </property>
        <property name="layoutDirection">
@@ -104,7 +105,7 @@
        <property name="font">
         <font>
          <family>Segoe UI Semibold</family>
-         <pointsize>9</pointsize>
+         <pointsize>15</pointsize>
         </font>
        </property>
        <property name="layoutDirection">
@@ -126,7 +127,7 @@
        <property name="font">
         <font>
          <family>Segoe UI Semibold</family>
-         <pointsize>9</pointsize>
+         <pointsize>15</pointsize>
         </font>
        </property>
        <property name="layoutDirection">
@@ -155,8 +156,20 @@
          <verstretch>0</verstretch>
         </sizepolicy>
        </property>
+       <property name="font">
+        <font>
+         <pointsize>25</pointsize>
+         <fontweight>DemiBold</fontweight>
+        </font>
+       </property>
        <property name="text">
         <string>Para agregar una nueva etiqueta en tu vista actual solo arrastra uno de los elementos del 'Árbol de componentes' al árbol de tu vista actual. El cambio se verá reflejado al guardar el proyecto y desplegar la aplicación.</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignmentFlag::AlignCenter</set>
+       </property>
+       <property name="margin">
+        <number>0</number>
        </property>
       </widget>
      </item>
@@ -196,7 +209,7 @@
     <widget class="QStackedWidget" name="stackedWidget">
      <property name="font">
       <font>
-       <pointsize>14</pointsize>
+       <pointsize>20</pointsize>
       </font>
      </property>
     </widget>
