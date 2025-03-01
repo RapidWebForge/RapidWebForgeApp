@@ -20,6 +20,9 @@ private:
 
     void generateCodeForNode(const std::shared_ptr<BaseNode> &node);
     // Schema
+    std::shared_ptr<BaseNode> parseComponent(const nlohmann::json &componentJson);
+    std::vector<std::shared_ptr<BaseNode>> parseNestedComponents(
+        const nlohmann::json &nestedJsonArray);
     void parseJson(const nlohmann::json &jsonSchema);
     // Auxiliar
     std::shared_ptr<Section> findViewByName(const std::string &viewName);

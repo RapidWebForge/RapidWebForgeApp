@@ -173,37 +173,37 @@ void FrontendDashboard::addCustomComponentsOnComponentsTree()
 // ComboBox Sections
 
 // For testing
-void printNodeTree(const std::shared_ptr<BaseNode> &node, int depth = 0)
-{
-    if (!node)
-        return;
+// void printNodeTree(const std::shared_ptr<BaseNode> &node, int depth = 0)
+// {
+//     if (!node)
+//         return;
 
-    QString indent = QString(" ").repeated(depth * 2);
+//     QString indent = QString(" ").repeated(depth * 2);
 
-    if (auto component = std::dynamic_pointer_cast<Component>(node)) {
-        qDebug() << indent + "Component:";
-        qDebug().noquote() << indent + "  (ID: "
-                                  + QString::fromStdString(
-                                      boost::uuids::to_string(component->getId()))
-                                  + ")";
-        qDebug().noquote() << indent + "  (Type: "
-                                  + QString::fromStdString(
-                                      componentTypeToString(component->getType()))
-                                  + ")";
+//     if (auto component = std::dynamic_pointer_cast<Component>(node)) {
+//         qDebug() << indent + "Component:";
+//         qDebug().noquote() << indent + "  (ID: "
+//                                   + QString::fromStdString(
+//                                       boost::uuids::to_string(component->getId()))
+//                                   + ")";
+//         qDebug().noquote() << indent + "  (Type: "
+//                                   + QString::fromStdString(
+//                                       componentTypeToString(component->getType()))
+//                                   + ")";
 
-    } else if (auto section = std::dynamic_pointer_cast<Section>(node)) {
-        qDebug() << indent + "Section:";
-        qDebug().noquote() << indent + "- " + QString::fromStdString(section->getName());
-    } else {
-        qDebug() << indent + "GenericNode or BaseNode:";
-        qDebug().noquote() << indent + "- " + QString::fromStdString(node->getNodeType());
-    }
+//     } else if (auto section = std::dynamic_pointer_cast<Section>(node)) {
+//         qDebug() << indent + "Section:";
+//         qDebug().noquote() << indent + "- " + QString::fromStdString(section->getName());
+//     } else {
+//         qDebug() << indent + "GenericNode or BaseNode:";
+//         qDebug().noquote() << indent + "- " + QString::fromStdString(node->getNodeType());
+//     }
 
-    // Recursively print children
-    for (const auto &child : node->getChildren()) {
-        printNodeTree(child, depth + 1);
-    }
-}
+//     // Recursively print children
+//     for (const auto &child : node->getChildren()) {
+//         printNodeTree(child, depth + 1);
+//     }
+// }
 
 void FrontendDashboard::fillAvailableSections()
 {
@@ -303,6 +303,8 @@ void FrontendDashboard::on_sectionComboBox_currentIndexChanged(int index)
 void FrontendDashboard::populateCurrentSectionTree()
 {
     ui->currentSectionTree->clear();
+
+    // printNodeTree(frontendRoot);
 
     // Verifica si currentSection es un Section
     auto sectionPtr = std::dynamic_pointer_cast<Section>(currentSection);

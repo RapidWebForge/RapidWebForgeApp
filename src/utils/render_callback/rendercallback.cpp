@@ -138,9 +138,9 @@ std::string renderComponent(inja::Environment &env,
                     output += "<!-- Error rendering nested component -->";
                 }
             }
-        } else {
+        } /* else {
             fmt::print(stderr, "Invalid or missing nestedComponents array.\n");
-        }
+        }*/
 
         if (type == "Model Layout") {
             std::string model = props.value("model", "Model");
