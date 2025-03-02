@@ -215,6 +215,25 @@ boost::uuids::uuid Component::getId() const
     return id;
 }
 
+// Extras
+
+bool Component::removeChildForById(std::string id)
+{
+    auto it = std::find_if(children.begin(),
+                           children.end(),
+                           [&id](const std::shared_ptr<BaseNode> &node) {
+                               auto component = std::dynamic_pointer_cast<Component>(node);
+                               return component
+                                      && boost::uuids::to_string(component->getId()) == id;
+                           });
+
+    if (it != children.end()) {
+        children.erase(it);
+        return true;
+    }
+    return false;
+}
+
 // Setters
 
 void Component::setType(ComponentType type)

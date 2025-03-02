@@ -47,6 +47,9 @@ public:
     std::chrono::system_clock::time_point getUpdatedOn() const;
     boost::uuids::uuid getId() const;
 
+    // Extras
+    bool removeChildForById(std::string id);
+
     void update();
 
     void setType(ComponentType type);

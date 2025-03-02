@@ -914,7 +914,7 @@ void FrontendDashboard::on_deleteButton_clicked()
     }
 }
 
-bool FrontendDashboard::deleteComponentByHierarchy(const std::shared_ptr<Section> &section,
+bool FrontendDashboard::deleteComponentByHierarchy(const std::shared_ptr<BaseNode> &parent,
                                                    const std::vector<QTreeWidgetItem *> &hierarchy)
 {
     if (hierarchy.empty()) {
@@ -923,16 +923,20 @@ bool FrontendDashboard::deleteComponentByHierarchy(const std::shared_ptr<Section
 
     const std::string &targetId = getComponentIdFromTree(hierarchy.back());
 
-    // Usamos el método encapsulado en Section para eliminar el componente
-    if (section->removeChildForById(targetId)) {
+    // Usamos el método encapsulado en para eliminar el componente
+    auto parentSection = std::dynamic_pointer_cast<Section>(parent);
+    if (parentSection && parentSection->removeChildForById(targetId))
         return true;
-    }
 
-    // Si no está en los componentes directos, buscar en subsecciones
-    auto &components = section->getChildren();
+    auto parentComponent = std::dynamic_pointer_cast<Component>(parent);
+    if (parentComponent && parentComponent->removeChildForById(targetId))
+        return true;
+
+    // Si no está en los componentes directos, buscar en subcomponentes
+    auto &components = parent->getChildren();
     for (const auto &child : components) {
-        auto subSection = std::dynamic_pointer_cast<Section>(child);
-        if (subSection && deleteComponentByHierarchy(subSection, hierarchy)) {
+        auto subComponent = std::dynamic_pointer_cast<Component>(child);
+        if (subComponent && deleteComponentByHierarchy(subComponent, hierarchy)) {
             return true;
         }
     }
