@@ -74,25 +74,25 @@ std::chrono::system_clock::time_point parseDateTime(const std::string &dateTimeS
 
 std::shared_ptr<BaseNode> FrontendGenerator::parseComponent(const nlohmann::json &componentJson)
 {
+    boost::uuids::uuid id;
+
+    if (componentJson.contains("id") && componentJson["id"].is_string()) {
+        boost::uuids::string_generator gen;
+        id = gen(componentJson["id"].get<std::string>());
+    }
+
+    std::chrono::system_clock::time_point createdOn, updatedOn;
+
+    if (componentJson.contains("createdOn") && componentJson["createdOn"].is_string()) {
+        createdOn = parseDateTime(componentJson["createdOn"].get<std::string>());
+    }
+
+    if (componentJson.contains("updatedOn") && componentJson["updatedOn"].is_string()) {
+        createdOn = parseDateTime(componentJson["createdOn"].get<std::string>());
+    }
+
     // If it's a component
     if (componentJson.contains("type")) {
-        boost::uuids::uuid id;
-
-        if (componentJson.contains("id") && componentJson["id"].is_string()) {
-            boost::uuids::string_generator gen;
-            id = gen(componentJson["id"].get<std::string>());
-        }
-
-        std::chrono::system_clock::time_point createdOn, updatedOn;
-
-        if (componentJson.contains("createdOn") && componentJson["createdOn"].is_string()) {
-            createdOn = parseDateTime(componentJson["createdOn"].get<std::string>());
-        }
-
-        if (componentJson.contains("updatedOn") && componentJson["updatedOn"].is_string()) {
-            createdOn = parseDateTime(componentJson["createdOn"].get<std::string>());
-        }
-
         auto component = std::make_shared<Component>(id, createdOn, updatedOn);
 
         // Parse type
@@ -129,7 +129,7 @@ std::shared_ptr<BaseNode> FrontendGenerator::parseComponent(const nlohmann::json
         return component;
     } else {
         std::string name = componentJson["name"].get<std::string>();
-        auto section = std::make_shared<Section>(name);
+        auto section = std::make_shared<Section>(name, id, createdOn, updatedOn);
         return section;
     }
 }
@@ -314,6 +314,9 @@ nlohmann::json processSectionToJson(const std::shared_ptr<Section> &section)
 {
     nlohmann::json sectionJson;
     sectionJson["name"] = section->getName();
+    sectionJson["id"] = boost::uuids::to_string(section->getId());
+    sectionJson["createdOn"] = timePointToString(section->getCreatedOn());
+    sectionJson["updatedOn"] = timePointToString(section->getUpdatedOn());
     sectionJson["components"] = nlohmann::json::array();
     if (!section->getPath().empty())
         sectionJson["path"] = section->getPath();

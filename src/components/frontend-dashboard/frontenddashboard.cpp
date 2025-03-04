@@ -881,7 +881,9 @@ void FrontendDashboard::on_deleteButton_clicked()
                                             return nodePtr->getName() == selectedItemName;
                                         });
 
-    if (custComponentIt != customComponentsPtr->getChildren().end()) {
+    // If the custom component is high level so remove, if not continue to search it as
+    // a subcomponent or subsection
+    if (custComponentIt != customComponentsPtr->getChildren().end() && !selectedItem->parent()) {
         customComponentsPtr->removeChild(custComponentIt);
         delete selectedItem;
         qDebug() << "Custom component deleted:" << QString::fromStdString(selectedItemName);
@@ -908,9 +910,9 @@ void FrontendDashboard::on_deleteButton_clicked()
     // Llama a una función para eliminar un componente basado en la jerarquía
     if (deleteComponentByHierarchy(currentSectionPtr, hierarchy)) {
         delete selectedItem;
-        qDebug() << "Component deleted from section:" << QString::fromStdString(selectedItemName);
+        qDebug() << "Item deleted from section:" << QString::fromStdString(selectedItemName);
     } else {
-        qDebug() << "Failed to delete component: Not found in hierarchy.";
+        qDebug() << "Failed to delete item: Not found in hierarchy.";
     }
 }
 
@@ -923,7 +925,7 @@ bool FrontendDashboard::deleteComponentByHierarchy(const std::shared_ptr<BaseNod
 
     const std::string &targetId = getComponentIdFromTree(hierarchy.back());
 
-    // Usamos el método encapsulado en para eliminar el componente
+    // Usamos el método encapsulado para eliminar el componente
     auto parentSection = std::dynamic_pointer_cast<Section>(parent);
     if (parentSection && parentSection->removeChildForById(targetId))
         return true;
@@ -935,8 +937,8 @@ bool FrontendDashboard::deleteComponentByHierarchy(const std::shared_ptr<BaseNod
     // Si no está en los componentes directos, buscar en subcomponentes
     auto &components = parent->getChildren();
     for (const auto &child : components) {
-        auto subComponent = std::dynamic_pointer_cast<Component>(child);
-        if (subComponent && deleteComponentByHierarchy(subComponent, hierarchy)) {
+        // auto  = std::dynamic_pointer_cast<BaseNode>(child);
+        if (child && deleteComponentByHierarchy(child, hierarchy)) {
             return true;
         }
     }

@@ -1,16 +1,8 @@
 #include "component.h"
-#include <boost/uuid/uuid_generators.hpp>
-#include <boost/uuid/uuid_io.hpp>
-#include <iomanip>
-#include <openssl/evp.h> // Para la API de EVP
-#include <openssl/sha.h> // Para SHA256_DIGEST_LENGTH
-#include <sstream>
 
 Component::Component()
-    : BaseNode("Component")
+    : BaseNode("Component", std::chrono::system_clock::now(), std::chrono::system_clock::now())
     , type(ComponentType::Undefined)
-    , createdOn(std::chrono::system_clock::now())
-    , updatedOn(createdOn)
 {
     initializeDefaultProps();
 }
@@ -18,34 +10,26 @@ Component::Component()
 Component::Component(boost::uuids::uuid id,
                      std::chrono::system_clock::time_point createdOn,
                      std::chrono::system_clock::time_point updatedOn)
-    : BaseNode("Component")
+    : BaseNode("Component", id, createdOn, updatedOn)
     , type(ComponentType::Undefined)
-    , createdOn(createdOn)
-    , updatedOn(updatedOn)
-    , id(id)
 {
     initializeDefaultProps();
 }
 
 Component::Component(ComponentType type)
-    : BaseNode("Component")
+    : BaseNode("Component", std::chrono::system_clock::now(), std::chrono::system_clock::now())
     , type(type)
-    , createdOn(std::chrono::system_clock::now())
-    , updatedOn(createdOn)
 {
     initializeDefaultProps();
-    generateUniqueId();
+    generateUniqueId(componentTypeToString(type), allowItems, props);
 }
 
 Component::Component(ComponentType type,
                      boost::uuids::uuid id,
                      std::chrono::system_clock::time_point createdOn,
                      std::chrono::system_clock::time_point updatedOn)
-    : BaseNode("Component")
+    : BaseNode("Component", id, createdOn, updatedOn)
     , type(type)
-    , createdOn(createdOn)
-    , updatedOn(updatedOn)
-    , id(id)
 {
     initializeDefaultProps();
 }
@@ -53,15 +37,13 @@ Component::Component(ComponentType type,
 Component::Component(ComponentType type,
                      const std::map<std::string, std::string> &props,
                      bool allowItems)
-    : BaseNode("Component")
+    : BaseNode("Component", std::chrono::system_clock::now(), std::chrono::system_clock::now())
     , type(type)
     , props(props)
     , allowItems(allowItems)
-    , createdOn(std::chrono::system_clock::now())
-    , updatedOn(createdOn)
 {
     initializeDefaultProps();
-    generateUniqueId();
+    generateUniqueId(componentTypeToString(type), allowItems, props);
 }
 
 // Methods from BaseNode
@@ -95,69 +77,6 @@ std::shared_ptr<BaseNode> Component::clone() const
     return clonedComponent;
 }
 
-// Función para generar un hash SHA-256
-std::string generateSHA256(const std::string &input)
-{
-    EVP_MD_CTX *context = EVP_MD_CTX_new(); // Crear un contexto para el hash
-    if (!context) {
-        throw std::runtime_error("Failed to create EVP_MD_CTX");
-    }
-
-    // Inicializar el contexto para usar SHA-256
-    if (EVP_DigestInit_ex(context, EVP_sha256(), nullptr) != 1) {
-        EVP_MD_CTX_free(context);
-        throw std::runtime_error("Failed to initialize SHA-256");
-    }
-
-    // Procesar los datos de entrada
-    if (EVP_DigestUpdate(context, input.c_str(), input.size()) != 1) {
-        EVP_MD_CTX_free(context);
-        throw std::runtime_error("Failed to update SHA-256");
-    }
-
-    // Obtener el hash resultante
-    unsigned char hash[SHA256_DIGEST_LENGTH];
-    unsigned int lengthOfHash = 0;
-    if (EVP_DigestFinal_ex(context, hash, &lengthOfHash) != 1) {
-        EVP_MD_CTX_free(context);
-        throw std::runtime_error("Failed to finalize SHA-256");
-    }
-
-    // Liberar el contexto
-    EVP_MD_CTX_free(context);
-
-    // Convertir el hash a una cadena hexadecimal
-    std::stringstream ss;
-    for (int i = 0; i < SHA256_DIGEST_LENGTH; i++) {
-        ss << std::hex << std::setw(2) << std::setfill('0') << (int) hash[i];
-    }
-    return ss.str();
-}
-
-// Función para convertir un hash en un UUID
-boost::uuids::uuid hashToUUID(const std::string &hash)
-{
-    boost::uuids::uuid uuid;
-    std::memcpy(&uuid, hash.data(), 16); // Copia los primeros 16 bytes del hash
-    return uuid;
-}
-
-void Component::generateUniqueId()
-{
-    std::stringstream dataStream;
-    dataStream << componentTypeToString(type) << allowItems
-               << std::chrono::system_clock::to_time_t(createdOn)
-               << std::chrono::system_clock::to_time_t(updatedOn);
-
-    for (const auto &[key, value] : props) {
-        dataStream << key << value;
-    }
-
-    std::string data = dataStream.str();
-    std::string hash = generateSHA256(data);
-    id = hashToUUID(hash);
-}
-
 void Component::initializeDefaultProps()
 {
     auto it = componentPropertiesMap.find(type);
@@ -178,11 +97,6 @@ void Component::initializeDefaultProps()
     }
 }
 
-void Component::update()
-{
-    updatedOn = std::chrono::system_clock::now();
-}
-
 // Getters
 
 ComponentType Component::getType() const
@@ -200,40 +114,6 @@ bool Component::isAllowingItems() const
     return this->allowItems;
 }
 
-std::chrono::system_clock::time_point Component::getCreatedOn() const
-{
-    return createdOn;
-}
-
-std::chrono::system_clock::time_point Component::getUpdatedOn() const
-{
-    return updatedOn;
-}
-
-boost::uuids::uuid Component::getId() const
-{
-    return id;
-}
-
-// Extras
-
-bool Component::removeChildForById(std::string id)
-{
-    auto it = std::find_if(children.begin(),
-                           children.end(),
-                           [&id](const std::shared_ptr<BaseNode> &node) {
-                               auto component = std::dynamic_pointer_cast<Component>(node);
-                               return component
-                                      && boost::uuids::to_string(component->getId()) == id;
-                           });
-
-    if (it != children.end()) {
-        children.erase(it);
-        return true;
-    }
-    return false;
-}
-
 // Setters
 
 void Component::setType(ComponentType type)
@@ -243,7 +123,7 @@ void Component::setType(ComponentType type)
 
     initializeDefaultProps();
     if (id.is_nil())
-        generateUniqueId();
+        generateUniqueId(componentTypeToString(type), allowItems, props);
 }
 
 void Component::setProps(const std::map<std::string, std::string> &props)
@@ -257,5 +137,3 @@ void Component::setAllowItems(bool allow)
     this->allowItems = allow;
     update();
 }
-
-// TODO: update on add components

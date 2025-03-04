@@ -1,12 +1,14 @@
 #include "genericnode.h"
 
 GenericNode::GenericNode()
-    : BaseNode("GenericNode")
+    : BaseNode("GenericNode", std::chrono::system_clock::now(), std::chrono::system_clock::now())
 {}
 
 GenericNode::GenericNode(const std::string &nodeType)
-    : BaseNode(nodeType)
-{}
+    : BaseNode(nodeType, std::chrono::system_clock::now(), std::chrono::system_clock::now())
+{
+    generateUniqueId();
+}
 
 void GenericNode::generateCode(inja::Environment &env) const
 {

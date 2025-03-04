@@ -16,12 +16,8 @@ private:
     ComponentType type;
     std::map<std::string, std::string> props;
     bool allowItems;
-    std::chrono::system_clock::time_point createdOn;
-    std::chrono::system_clock::time_point updatedOn;
-    boost::uuids::uuid id;
 
     void initializeDefaultProps();
-    void generateUniqueId();
 
 public:
     Component();
@@ -43,14 +39,6 @@ public:
     ComponentType getType() const;
     const std::map<std::string, std::string> &getProps() const;
     bool isAllowingItems() const;
-    std::chrono::system_clock::time_point getCreatedOn() const;
-    std::chrono::system_clock::time_point getUpdatedOn() const;
-    boost::uuids::uuid getId() const;
-
-    // Extras
-    bool removeChildForById(std::string id);
-
-    void update();
 
     void setType(ComponentType type);
     void setProps(const std::map<std::string, std::string> &props);

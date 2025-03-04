@@ -16,13 +16,20 @@ public:
     Section();
     explicit Section(const std::string &name);
     explicit Section(const std::string &name, const std::string &path);
+    explicit Section(const std::string &name,
+                     boost::uuids::uuid id,
+                     std::chrono::system_clock::time_point createdOn,
+                     std::chrono::system_clock::time_point updatedOn);
+    explicit Section(const std::string &name,
+                     const std::string &path,
+                     boost::uuids::uuid id,
+                     std::chrono::system_clock::time_point createdOn,
+                     std::chrono::system_clock::time_point updatedOn);
 
     // From BaseNode
     void generateCode(inja::Environment &env) const override;
     void updateFromJson(const nlohmann::json &json) override;
     std::shared_ptr<BaseNode> clone() const override;
-    // Extras
-    bool removeChildForById(std::string id);
     // Getters
     std::string getName() const;
     std::string getPath() const;

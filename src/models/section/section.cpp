@@ -3,17 +3,35 @@
 #include <boost/uuid/uuid_io.hpp>
 
 Section::Section()
-    : BaseNode("Section")
+    : BaseNode("Section", std::chrono::system_clock::now(), std::chrono::system_clock::now())
     , name("")
 {}
 
 Section::Section(const std::string &name)
-    : BaseNode("Section")
+    : BaseNode("Section", std::chrono::system_clock::now(), std::chrono::system_clock::now())
     , name(name)
 {}
 
 Section::Section(const std::string &name, const std::string &path)
-    : BaseNode("Section")
+    : BaseNode("Section", std::chrono::system_clock::now(), std::chrono::system_clock::now())
+    , name(name)
+    , path(path)
+{}
+
+Section::Section(const std::string &name,
+                 boost::uuids::uuid id,
+                 std::chrono::system_clock::time_point createdOn,
+                 std::chrono::system_clock::time_point updatedOn)
+    : BaseNode("Section", id, createdOn, updatedOn)
+    , name(name)
+{}
+
+Section::Section(const std::string &name,
+                 const std::string &path,
+                 boost::uuids::uuid id,
+                 std::chrono::system_clock::time_point createdOn,
+                 std::chrono::system_clock::time_point updatedOn)
+    : BaseNode("Section", id, createdOn, updatedOn)
     , name(name)
     , path(path)
 {}
@@ -48,25 +66,6 @@ std::shared_ptr<BaseNode> Section::clone() const
     }
 
     return clonedSection;
-}
-
-// Extras
-
-bool Section::removeChildForById(std::string id)
-{
-    auto it = std::find_if(children.begin(),
-                           children.end(),
-                           [&id](const std::shared_ptr<BaseNode> &node) {
-                               auto component = std::dynamic_pointer_cast<Component>(node);
-                               return component
-                                      && boost::uuids::to_string(component->getId()) == id;
-                           });
-
-    if (it != children.end()) {
-        children.erase(it);
-        return true;
-    }
-    return false;
 }
 
 // Getters
