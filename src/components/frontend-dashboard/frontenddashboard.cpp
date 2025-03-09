@@ -194,6 +194,9 @@ void FrontendDashboard::addCustomComponentsOnComponentsTree()
 //     } else if (auto section = std::dynamic_pointer_cast<Section>(node)) {
 //         qDebug() << indent + "Section:";
 //         qDebug().noquote() << indent + "- " + QString::fromStdString(section->getName());
+//         qDebug().noquote() << indent + "  (ID: "
+//                                   + QString::fromStdString(boost::uuids::to_string(section->getId()))
+//                                   + ")";
 //     } else {
 //         qDebug() << indent + "GenericNode or BaseNode:";
 //         qDebug().noquote() << indent + "- " + QString::fromStdString(node->getNodeType());
@@ -214,12 +217,13 @@ void FrontendDashboard::fillAvailableSections()
     auto viewsNode = getMainNode("Views");
 
     if (viewsNode) {
-        auto sectionNode = std::dynamic_pointer_cast<GenericNode>(viewsNode);
+        auto genericNode = std::dynamic_pointer_cast<GenericNode>(viewsNode);
 
-        for (const auto &view : sectionNode->getChildren()) {
+        for (const auto &view : genericNode->getChildren()) {
             auto sectionPtr = std::dynamic_pointer_cast<Section>(view);
             if (sectionPtr) {
                 ui->sectionComboBox->addItem(QString::fromStdString(sectionPtr->getName()));
+                qDebug() << "added " << QString::fromStdString(sectionPtr->getName());
             }
         }
     }
@@ -228,9 +232,9 @@ void FrontendDashboard::fillAvailableSections()
     auto customComponentsNode = getMainNode("CustomComponents");
 
     if (customComponentsNode) {
-        auto sectionNode = std::dynamic_pointer_cast<GenericNode>(customComponentsNode);
+        auto genericNode = std::dynamic_pointer_cast<GenericNode>(customComponentsNode);
 
-        for (const auto &cc : sectionNode->getChildren()) {
+        for (const auto &cc : genericNode->getChildren()) {
             auto sectionPtr = std::dynamic_pointer_cast<Section>(cc);
             if (sectionPtr) {
                 ui->sectionComboBox->addItem(QString::fromStdString(sectionPtr->getName()));
@@ -339,9 +343,14 @@ void FrontendDashboard::populateCurrentSectionTree()
         } else {
             auto subSectionPtr = std::dynamic_pointer_cast<Section>(child);
             if (subSectionPtr) {
-                createTreeItem(QString::fromStdString(subSectionPtr->getName()),
-                               nullptr,
-                               sectionItem);
+                QTreeWidgetItem *sectionItem = createTreeItem(QString::fromStdString(
+                                                                  subSectionPtr->getName()),
+                                                              nullptr,
+                                                              sectionItem);
+                sectionItem->setData(0,
+                                     Qt::UserRole,
+                                     QString::fromStdString(
+                                         boost::uuids::to_string(subSectionPtr->getId())));
             }
         }
     }
@@ -373,9 +382,14 @@ void FrontendDashboard::populateNestedItems(
         } else {
             auto subSectionPtr = std::dynamic_pointer_cast<Section>(nestedComponent);
             if (subSectionPtr) {
-                createTreeItem(QString::fromStdString(subSectionPtr->getName()),
-                               nullptr,
-                               parentItem);
+                QTreeWidgetItem *nestedItem = createTreeItem(QString::fromStdString(
+                                                                 subSectionPtr->getName()),
+                                                             nullptr,
+                                                             parentItem);
+                nestedItem->setData(0,
+                                    Qt::UserRole,
+                                    QString::fromStdString(
+                                        boost::uuids::to_string(subSectionPtr->getId())));
             }
         }
     }
@@ -412,6 +426,9 @@ void FrontendDashboard::insertComponentInSection(std::shared_ptr<BaseNode> &newC
     } else {
         auto newSectionPtr = std::dynamic_pointer_cast<Section>(newComponent);
         QTreeWidgetItem *newItem = createTreeItem(QString::fromStdString(newSectionPtr->getName()));
+        newItem->setData(0,
+                         Qt::UserRole,
+                         QString::fromStdString(boost::uuids::to_string(newSectionPtr->getId())));
         parentItem->insertChild(dropIndex, newItem);
     }
 }
@@ -442,6 +459,9 @@ void FrontendDashboard::insertNestedComponent(std::shared_ptr<Component> &parent
     } else {
         auto newSectionPtr = std::dynamic_pointer_cast<Section>(newComponent);
         QTreeWidgetItem *newItem = createTreeItem(QString::fromStdString(newSectionPtr->getName()));
+        newItem->setData(0,
+                         Qt::UserRole,
+                         QString::fromStdString(boost::uuids::to_string(newSectionPtr->getId())));
         parentItem->insertChild(dropIndex, newItem);
     }
 }

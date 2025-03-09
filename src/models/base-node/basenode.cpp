@@ -90,9 +90,6 @@ void BaseNode::generateUniqueId(std::string type,
                << std::chrono::system_clock::to_time_t(updatedOn);
 
     if (!type.empty())
-        dataStream << type;
-
-    if (allowItems)
         dataStream << type << allowItems;
 
     if (!props.empty()) {

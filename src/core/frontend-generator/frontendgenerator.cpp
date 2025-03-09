@@ -88,7 +88,7 @@ std::shared_ptr<BaseNode> FrontendGenerator::parseComponent(const nlohmann::json
     }
 
     if (componentJson.contains("updatedOn") && componentJson["updatedOn"].is_string()) {
-        createdOn = parseDateTime(componentJson["createdOn"].get<std::string>());
+        updatedOn = parseDateTime(componentJson["updatedOn"].get<std::string>());
     }
 
     // If it's a component
@@ -127,7 +127,7 @@ std::shared_ptr<BaseNode> FrontendGenerator::parseComponent(const nlohmann::json
         }
 
         return component;
-    } else {
+    } else if (componentJson.contains("name") && componentJson["name"].is_string()) {
         std::string name = componentJson["name"].get<std::string>();
         auto section = std::make_shared<Section>(name, id, createdOn, updatedOn);
         return section;
@@ -198,15 +198,35 @@ void FrontendGenerator::parseJson(const nlohmann::json &jsonSchema)
 
     // Parse custom components
     for (const auto &custComponentJson : jsonSchema["custom"]) {
-        auto customSection = std::make_shared<Section>(custComponentJson["name"].get<std::string>());
+        boost::uuids::uuid id;
+
+        if (custComponentJson.contains("id") && custComponentJson["id"].is_string()) {
+            boost::uuids::string_generator gen;
+            id = gen(custComponentJson["id"].get<std::string>());
+        }
+
+        std::chrono::system_clock::time_point createdOn, updatedOn;
+
+        if (custComponentJson.contains("createdOn") && custComponentJson["createdOn"].is_string()) {
+            createdOn = parseDateTime(custComponentJson["createdOn"].get<std::string>());
+        }
+
+        if (custComponentJson.contains("updatedOn") && custComponentJson["updatedOn"].is_string()) {
+            updatedOn = parseDateTime(custComponentJson["updatedOn"].get<std::string>());
+        }
+
+        std::string name = custComponentJson["name"].get<std::string>();
+
+        auto customSection = std::make_shared<Section>(name, id, createdOn, updatedOn);
 
         // Parse components inside the section
-        for (const auto &componentJson : custComponentJson["components"]) {
-            auto componentNode = parseComponent(componentJson);
-            if (componentNode) {
-                customSection->addChild(componentNode);
+        if (custComponentJson.contains("components") && custComponentJson["components"].is_array())
+            for (const auto &componentJson : custComponentJson["components"]) {
+                auto componentNode = parseComponent(componentJson);
+                if (componentNode) {
+                    customSection->addChild(componentNode);
+                }
             }
-        }
 
         // Agregar la sección al nodo principal de custom components
         customComponentsNode->addChild(customSection);
@@ -214,17 +234,36 @@ void FrontendGenerator::parseJson(const nlohmann::json &jsonSchema)
 
     // Parse views
     for (const auto &viewJson : jsonSchema["views"]) {
-        // Crear una sección para cada vista
-        auto viewSection = std::make_shared<Section>(viewJson["name"].get<std::string>(),
-                                                     viewJson["path"].get<std::string>());
+        boost::uuids::uuid id;
 
-        // Parsear los componentes dentro de la vista
-        for (const auto &componentJson : viewJson["components"]) {
-            auto componentNode = parseComponent(componentJson);
-            if (componentNode) {
-                viewSection->addChild(componentNode);
-            }
+        if (viewJson.contains("id") && viewJson["id"].is_string()) {
+            boost::uuids::string_generator gen;
+            id = gen(viewJson["id"].get<std::string>());
         }
+
+        std::chrono::system_clock::time_point createdOn, updatedOn;
+
+        if (viewJson.contains("createdOn") && viewJson["createdOn"].is_string()) {
+            createdOn = parseDateTime(viewJson["createdOn"].get<std::string>());
+        }
+
+        if (viewJson.contains("updatedOn") && viewJson["updatedOn"].is_string()) {
+            updatedOn = parseDateTime(viewJson["updatedOn"].get<std::string>());
+        }
+
+        std::string name = viewJson["name"].get<std::string>();
+        std::string path = viewJson["path"].get<std::string>();
+
+        auto viewSection = std::make_shared<Section>(name, path, id, createdOn, updatedOn);
+
+        // Parse components inside the section
+        if (viewJson.contains("components") && viewJson["components"].is_array())
+            for (const auto &componentJson : viewJson["components"]) {
+                auto componentNode = parseComponent(componentJson);
+                if (componentNode) {
+                    viewSection->addChild(componentNode);
+                }
+            }
 
         // Agregar la vista al nodo principal de views
         viewsNode->addChild(viewSection);
@@ -303,6 +342,10 @@ nlohmann::json processComponentToJson(const std::shared_ptr<Component> &componen
             else if (auto nestedSection = std::dynamic_pointer_cast<Section>(child)) {
                 nlohmann::json subSectionJson;
                 subSectionJson["name"] = nestedSection->getName();
+                subSectionJson["createdOn"] = timePointToString(nestedSection->getCreatedOn());
+                subSectionJson["updatedOn"] = timePointToString(nestedSection->getUpdatedOn());
+                subSectionJson["id"] = boost::uuids::to_string(nestedSection->getId());
+
                 componentJson["nestedComponents"].push_back(subSectionJson);
             }
         }
@@ -329,6 +372,10 @@ nlohmann::json processSectionToJson(const std::shared_ptr<Section> &section)
             if (subSection) {
                 nlohmann::json subSectionJson;
                 subSectionJson["name"] = subSection->getName();
+                subSectionJson["createdOn"] = timePointToString(subSection->getCreatedOn());
+                subSectionJson["updatedOn"] = timePointToString(subSection->getUpdatedOn());
+                subSectionJson["id"] = boost::uuids::to_string(subSection->getId());
+
                 sectionJson["components"].push_back(subSectionJson);
             }
         }

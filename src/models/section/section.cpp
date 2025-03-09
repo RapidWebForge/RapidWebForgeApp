@@ -5,18 +5,24 @@
 Section::Section()
     : BaseNode("Section", std::chrono::system_clock::now(), std::chrono::system_clock::now())
     , name("")
-{}
+{
+    generateUniqueId();
+}
 
 Section::Section(const std::string &name)
     : BaseNode("Section", std::chrono::system_clock::now(), std::chrono::system_clock::now())
     , name(name)
-{}
+{
+    generateUniqueId();
+}
 
 Section::Section(const std::string &name, const std::string &path)
     : BaseNode("Section", std::chrono::system_clock::now(), std::chrono::system_clock::now())
     , name(name)
     , path(path)
-{}
+{
+    generateUniqueId();
+}
 
 Section::Section(const std::string &name,
                  boost::uuids::uuid id,
@@ -55,7 +61,10 @@ void Section::updateFromJson(const nlohmann::json &json)
 std::shared_ptr<BaseNode> Section::clone() const
 {
     // Crear una nueva instancia de Section con el mismo nombre
-    auto clonedSection = std::make_shared<Section>(this->name);
+    auto clonedSection = std::make_shared<Section>(this->name,
+                                                   this->id,
+                                                   this->createdOn,
+                                                   this->updatedOn);
 
     if (!this->path.empty())
         clonedSection->setPath(this->path);
@@ -85,9 +94,11 @@ std::string Section::getPath() const
 void Section::setName(const std::string &name)
 {
     this->name = name;
+    update();
 }
 
 void Section::setPath(const std::string &path)
 {
     this->path = path;
+    update();
 }
