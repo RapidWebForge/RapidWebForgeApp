@@ -220,13 +220,13 @@ void FrontendGenerator::parseJson(const nlohmann::json &jsonSchema)
         auto customSection = std::make_shared<Section>(name, id, createdOn, updatedOn);
 
         // Parse components inside the section
-        if (custComponentJson.contains("components") && custComponentJson["components"].is_array())
-            for (const auto &componentJson : custComponentJson["components"]) {
-                auto componentNode = parseComponent(componentJson);
-                if (componentNode) {
-                    customSection->addChild(componentNode);
-                }
+        // if (custComponentJson.contains("components") && custComponentJson["components"].is_array())
+        for (const auto &componentJson : custComponentJson["components"]) {
+            auto componentNode = parseComponent(componentJson);
+            if (componentNode) {
+                customSection->addChild(componentNode);
             }
+        }
 
         // Agregar la sección al nodo principal de custom components
         customComponentsNode->addChild(customSection);
@@ -257,13 +257,13 @@ void FrontendGenerator::parseJson(const nlohmann::json &jsonSchema)
         auto viewSection = std::make_shared<Section>(name, path, id, createdOn, updatedOn);
 
         // Parse components inside the section
-        if (viewJson.contains("components") && viewJson["components"].is_array())
-            for (const auto &componentJson : viewJson["components"]) {
-                auto componentNode = parseComponent(componentJson);
-                if (componentNode) {
-                    viewSection->addChild(componentNode);
-                }
+        // if (viewJson.contains("components") && viewJson["components"].is_array())
+        for (const auto &componentJson : viewJson["components"]) {
+            auto componentNode = parseComponent(componentJson);
+            if (componentNode) {
+                viewSection->addChild(componentNode);
             }
+        }
 
         // Agregar la vista al nodo principal de views
         viewsNode->addChild(viewSection);
@@ -337,9 +337,8 @@ nlohmann::json processComponentToJson(const std::shared_ptr<Component> &componen
             // Se asume que los hijos también son componentes (o se pueden procesar similarmente)
             if (auto nestedComponent = std::dynamic_pointer_cast<Component>(child)) {
                 componentJson["nestedComponents"].push_back(processComponentToJson(nestedComponent));
-            }
-            // Si en algún caso se manejan sub-secciones, puedes agregarlas de forma recursiva:
-            else if (auto nestedSection = std::dynamic_pointer_cast<Section>(child)) {
+            } else if (auto nestedSection = std::dynamic_pointer_cast<Section>(child)) {
+                // Si en algún caso se manejan sub-secciones
                 nlohmann::json subSectionJson;
                 subSectionJson["name"] = nestedSection->getName();
                 subSectionJson["createdOn"] = timePointToString(nestedSection->getCreatedOn());
@@ -361,23 +360,21 @@ nlohmann::json processSectionToJson(const std::shared_ptr<Section> &section)
     sectionJson["createdOn"] = timePointToString(section->getCreatedOn());
     sectionJson["updatedOn"] = timePointToString(section->getUpdatedOn());
     sectionJson["components"] = nlohmann::json::array();
+
     if (!section->getPath().empty())
         sectionJson["path"] = section->getPath();
 
     for (const auto &child : section->getChildren()) {
         if (auto component = std::dynamic_pointer_cast<Component>(child)) {
             sectionJson["components"].push_back(processComponentToJson(component));
-        } else {
-            auto subSection = std::dynamic_pointer_cast<Section>(child);
-            if (subSection) {
-                nlohmann::json subSectionJson;
-                subSectionJson["name"] = subSection->getName();
-                subSectionJson["createdOn"] = timePointToString(subSection->getCreatedOn());
-                subSectionJson["updatedOn"] = timePointToString(subSection->getUpdatedOn());
-                subSectionJson["id"] = boost::uuids::to_string(subSection->getId());
+        } else if (auto subSection = std::dynamic_pointer_cast<Section>(child)) {
+            nlohmann::json subSectionJson;
+            subSectionJson["name"] = subSection->getName();
+            subSectionJson["createdOn"] = timePointToString(subSection->getCreatedOn());
+            subSectionJson["updatedOn"] = timePointToString(subSection->getUpdatedOn());
+            subSectionJson["id"] = boost::uuids::to_string(subSection->getId());
 
-                sectionJson["components"].push_back(subSectionJson);
-            }
+            sectionJson["components"].push_back(subSectionJson);
         }
     }
 
