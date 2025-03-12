@@ -61,6 +61,14 @@ void CustomTreeWidget::dragMoveEvent(QDragMoveEvent *event)
     event->acceptProposedAction();
 }
 
+QTreeWidgetItem *getRootParent(QTreeWidgetItem *item)
+{
+    while (item && item->parent()) {
+        item = item->parent();
+    }
+    return item;
+}
+
 void CustomTreeWidget::dropEvent(QDropEvent *event)
 {
     QTreeWidgetItem *targetItem = itemAt(event->position().toPoint());
@@ -82,19 +90,31 @@ void CustomTreeWidget::dropEvent(QDropEvent *event)
     QRect itemRect = visualItemRect(targetItem); // Obtén el rectángulo visual del targetItem
     QPoint pos = event->position().toPoint();    // Obtén la posición actual del cursor
 
-    // Verificar si el componente permite hijos
-    std::string componentTypeStr = targetItem->text(0).toStdString();
-    ComponentType type = stringToComponentType(componentTypeStr);
-    Component tempComponent(type);
+    // Verificar si el componente objetivo permite hijos
+    std::string componentTypeStrTarget = targetItem->text(0).toStdString();
+    ComponentType typeTarget = stringToComponentType(componentTypeStrTarget);
+    Component tempComponent(typeTarget);
 
     // Check for sections
-    bool isSection = (componentTypeToString(type) == "Undefined");
+    bool targetIsSection = (componentTypeToString(typeTarget) == "Undefined");
     bool isTopLevel = (targetItem->parent() == nullptr);
 
-    // qDebug() << "isSection" << isSection;
-    // qDebug() << "isTopLevel" << isTopLevel;
+    // Verificar si el componente fuente es un Section (Custom Component)
+    std::string componentTypeStrSource = sourceItem->text(0).toStdString();
+    ComponentType typeSource = stringToComponentType(componentTypeStrSource);
+    bool sourceIsSection = (componentTypeToString(typeSource) == "Undefined");
 
-    if ((tempComponent.isAllowingItems() || (isSection && isTopLevel))
+    // 🚨 Prevent a Custom Component from being added inside itself 🚨
+    if (sourceIsSection) {
+        QTreeWidgetItem *rootParent = getRootParent(targetItem);
+        if (rootParent && rootParent->text(0) == sourceItem->text(0)) {
+            qDebug() << "❌ Error: A Custom Component cannot be nested inside itself!";
+            event->ignore();
+            return;
+        }
+    }
+
+    if ((tempComponent.isAllowingItems() || (targetIsSection && isTopLevel))
         && pos.y() > itemRect.top() + itemRect.height() / 3
         && pos.y() < itemRect.bottom() - itemRect.height() / 3) {
         // Caso 3: Insertar como hijo
