@@ -77,6 +77,35 @@ std::shared_ptr<BaseNode> Section::clone() const
     return clonedSection;
 }
 
+bool Section::isDifferentFrom(const std::shared_ptr<BaseNode> &other) const
+{
+    auto otherSection = std::dynamic_pointer_cast<Section>(other);
+
+    if (!otherSection)
+        return true;
+
+    // Comparar nombre
+    if (this->getName() != otherSection->getName())
+        return true;
+
+    // Comparar path si existe
+    if (!this->getPath().empty())
+        if (this->getPath() != otherSection->getPath())
+            return true;
+
+    // Comparar cantidad de hijos
+    if (this->getChildren().size() != otherSection->getChildren().size())
+        return true;
+
+    // Comparar cada hijo
+    for (size_t i = 0; i < this->getChildren().size(); ++i) {
+        if (this->getChildren()[i]->isDifferentFrom(otherSection->getChildren()[i]))
+            return true;
+    }
+
+    return false;
+}
+
 // Getters
 
 std::string Section::getName() const

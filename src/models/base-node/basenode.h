@@ -38,6 +38,7 @@ public:
     virtual void generateCode(inja::Environment &env) const = 0;
     virtual void updateFromJson(const nlohmann::json &json) = 0;
     virtual std::shared_ptr<BaseNode> clone() const = 0;
+    virtual bool isDifferentFrom(const std::shared_ptr<BaseNode> &other) const = 0;
 
     const std::string &getNodeType() const;
     std::chrono::system_clock::time_point getCreatedOn() const;
@@ -53,6 +54,7 @@ public:
     void removeChild(std::vector<std::shared_ptr<BaseNode>>::iterator it);
     void clearChildren();
     std::vector<std::shared_ptr<BaseNode>> &getChildren();
+    const std::vector<std::shared_ptr<BaseNode>> &getChildren() const; // Versión const
     bool removeChildForById(std::string id);
     // Gestión del nodo padre
     void setParent(const std::shared_ptr<BaseNode> &parentNode);

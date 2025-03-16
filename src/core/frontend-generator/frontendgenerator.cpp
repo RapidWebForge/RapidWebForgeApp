@@ -705,15 +705,22 @@ bool FrontendGenerator::generateFrontendCode()
 
 bool FrontendGenerator::updateFrontendCode()
 {
-    if (updateSchema()) {
-        if (generateFrontendCode())
-            return true;
-        else
-            qDebug() << "Failing in GENERATING FRONTEND CODE";
-    } else {
-        qDebug() << "Failing in UPDATING SCHEMA";
-        return false;
+    if (!oldRoot || frontendRoot->isDifferentFrom(oldRoot)) {
+        if (updateSchema()) {
+            oldRoot = frontendRoot->clone(); // Guardamos la versión actual
+
+            if (generateFrontendCode())
+                return true;
+            else
+                qDebug() << "Failing in GENERATING FRONTEND CODE";
+        } else {
+            qDebug() << "Failing in UPDATING SCHEMA";
+            return false;
+        }
     }
+
+    qDebug() << "No changes detected, skipping frontend generation.";
+    return true;
     // return (updateSchema() ? generateFrontendCode() : false);
 }
 

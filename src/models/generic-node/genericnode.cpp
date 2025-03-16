@@ -24,3 +24,8 @@ std::shared_ptr<BaseNode> GenericNode::clone() const
 {
     return std::make_shared<GenericNode>(*this);
 }
+
+bool GenericNode::isDifferentFrom(const std::shared_ptr<BaseNode> &other) const
+{
+    return true;
+}

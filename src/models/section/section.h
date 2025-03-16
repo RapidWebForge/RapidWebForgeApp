@@ -30,6 +30,7 @@ public:
     void generateCode(inja::Environment &env) const override;
     void updateFromJson(const nlohmann::json &json) override;
     std::shared_ptr<BaseNode> clone() const override;
+    bool isDifferentFrom(const std::shared_ptr<BaseNode> &other) const override;
     // Getters
     std::string getName() const;
     std::string getPath() const;

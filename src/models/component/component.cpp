@@ -77,6 +77,34 @@ std::shared_ptr<BaseNode> Component::clone() const
     return clonedComponent;
 }
 
+bool Component::isDifferentFrom(const std::shared_ptr<BaseNode> &other) const
+{
+    auto otherComponent = std::dynamic_pointer_cast<Component>(other);
+
+    if (!otherComponent)
+        return true;
+
+    // Comparar el tipo del componente
+    if (this->getType() != otherComponent->getType())
+        return true;
+
+    // Comparar propiedades
+    if (this->getProps() != otherComponent->getProps())
+        return true;
+
+    // Comparar cantidad de hijos
+    if (this->getChildren().size() != otherComponent->getChildren().size())
+        return true;
+
+    // Comparar cada hijo
+    for (size_t i = 0; i < this->getChildren().size(); ++i) {
+        if (this->getChildren()[i]->isDifferentFrom(otherComponent->getChildren()[i]))
+            return true;
+    }
+
+    return false;
+}
+
 void Component::initializeDefaultProps()
 {
     auto it = componentPropertiesMap.find(type);
