@@ -32,7 +32,8 @@ private:
     bool generateCustomComponent(const std::string &custComponentName);
     // Auxiliar Updating
     std::vector<NodeOperation> diffTrees(std::shared_ptr<BaseNode> &oldNode,
-                                         std::shared_ptr<BaseNode> &newNode);
+                                         std::shared_ptr<BaseNode> &newNode,
+                                         int depth = 0);
     void applyInsertion(std::shared_ptr<BaseNode> &node);
     void applyModification(std::shared_ptr<BaseNode> &node);
     void applyDeletion(std::shared_ptr<BaseNode> &node);

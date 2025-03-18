@@ -29,6 +29,12 @@ public:
               boost::uuids::uuid id,
               std::chrono::system_clock::time_point createdOn,
               std::chrono::system_clock::time_point updatedOn);
+    Component(ComponentType type,
+              const std::map<std::string, std::string> &props,
+              bool allowItems,
+              boost::uuids::uuid id,
+              std::chrono::system_clock::time_point createdOn,
+              std::chrono::system_clock::time_point updatedOn);
     Component(ComponentType type, const std::map<std::string, std::string> &props, bool allowItems);
 
     // From BaseNode

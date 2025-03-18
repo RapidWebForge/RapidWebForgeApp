@@ -36,13 +36,25 @@ Component::Component(ComponentType type,
 
 Component::Component(ComponentType type,
                      const std::map<std::string, std::string> &props,
+                     bool allowItems,
+                     boost::uuids::uuid id,
+                     std::chrono::system_clock::time_point createdOn,
+                     std::chrono::system_clock::time_point updatedOn)
+    : BaseNode("Component", id, createdOn, updatedOn)
+    , type(type)
+    , props(props)
+    , allowItems(allowItems)
+{}
+
+Component::Component(ComponentType type,
+                     const std::map<std::string, std::string> &props,
                      bool allowItems)
     : BaseNode("Component", std::chrono::system_clock::now(), std::chrono::system_clock::now())
     , type(type)
     , props(props)
     , allowItems(allowItems)
 {
-    initializeDefaultProps();
+    // initializeDefaultProps();
     generateUniqueId(componentTypeToString(type), allowItems, props);
 }
 
@@ -70,10 +82,16 @@ void Component::updateFromJson(const nlohmann::json &json)
 std::shared_ptr<BaseNode> Component::clone() const
 {
     auto clonedComponent = std::make_shared<Component>(this->type,
+                                                       this->props,
+                                                       this->allowItems,
                                                        this->id,
                                                        this->createdOn,
                                                        this->updatedOn);
-    clonedComponent->props = this->props;
+
+    for (const auto &child : this->children) {
+        clonedComponent->addChild(child->clone());
+    }
+
     return clonedComponent;
 }
 

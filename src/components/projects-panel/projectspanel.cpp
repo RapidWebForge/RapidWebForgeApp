@@ -168,6 +168,7 @@ void ProjectsPanel::onAddProjectClicked()
 
     // When the "+" button is clicked, open the Stepper window
     Stepper *stepper = new Stepper();
+    stepper->setAttribute(Qt::WA_DeleteOnClose); // Ensure memory cleanup
     stepper->show();
 
     // Show when create assistant is closed
@@ -242,32 +243,32 @@ void ProjectsPanel::onDeleteProjectRequested(int projectId)
         qDebug() << "Eliminación cancelada para el proyecto con ID:" << projectId;
     }
 }
-// 📌 Mostrar la página Overview (Recents)
+// Mostrar la página Overview (Recents)
 void ProjectsPanel::showRecents()
 {
     ui->stackedWidget->setCurrentWidget(overviewPanel);
     ui->label->setText("Overview");
-    // 📌 Actualizar la lista de proyectos cada vez que abrimos la pestaña
+    // Actualizar la lista de proyectos cada vez que abrimos la pestaña
     ProjectManager projectManager;
     overviewPanel->setupProjects(projectManager.getAllProjects());
 }
 
-// 📌 Mostrar la página Tutorials
+// Mostrar la página Tutorials
 void ProjectsPanel::showTutorials()
 {
     ui->stackedWidget->setCurrentWidget(tutorialsPanel);
     ui->label->setText("Tutorials");
-    // 📌 Actualizar la lista de proyectos cada vez que abrimos la pestaña
+    // Actualizar la lista de proyectos cada vez que abrimos la pestaña
     ProjectManager projectManager;
     overviewPanel->setupProjects(projectManager.getAllProjects());
 }
 
-// 📌 Mostrar la página Projects
+// Mostrar la página Projects
 void ProjectsPanel::showProjects()
 {
     ui->stackedWidget->setCurrentWidget(proPanel);
     ui->label->setText("Projects");
-    // 📌 Actualizar la lista de proyectos cada vez que abrimos la pestaña
+    // Actualizar la lista de proyectos cada vez que abrimos la pestaña
     ProjectManager projectManager;
     proPanel->setupProjects(projectManager.getAllProjects());
 }

@@ -148,6 +148,35 @@ std::vector<std::shared_ptr<BaseNode>> FrontendGenerator::parseNestedComponents(
     return nestedComponents;
 }
 
+void printNodeTree(const std::shared_ptr<BaseNode> &node, int depth = 0)
+{
+    if (!node)
+        return;
+
+    QString indent = QString(" ").repeated(depth * 2);
+
+    if (auto component = std::dynamic_pointer_cast<Component>(node)) {
+        qDebug().noquote() << indent + "  (ID: "
+                                  + QString::fromStdString(
+                                      boost::uuids::to_string(component->getId()))
+                                  + ")";
+        qDebug().noquote() << indent + "  (Type: "
+                                  + QString::fromStdString(
+                                      componentTypeToString(component->getType()))
+                                  + ")";
+
+    } else if (auto section = std::dynamic_pointer_cast<Section>(node)) {
+        qDebug().noquote() << indent + "- " + QString::fromStdString(section->getName());
+    } else {
+        qDebug().noquote() << indent + "- " + QString::fromStdString(node->getNodeType());
+    }
+
+    // Recursively print children
+    for (const auto &child : node->getChildren()) {
+        printNodeTree(child, depth + 1);
+    }
+}
+
 std::shared_ptr<BaseNode> cloneNode(const std::shared_ptr<BaseNode> &node)
 {
     if (!node) {
@@ -156,35 +185,6 @@ std::shared_ptr<BaseNode> cloneNode(const std::shared_ptr<BaseNode> &node)
 
     return node->clone();
 }
-
-// void printNodeTree(const std::shared_ptr<BaseNode> &node, int depth = 0)
-// {
-//     if (!node)
-//         return;
-
-//     QString indent = QString(" ").repeated(depth * 2);
-
-//     if (auto component = std::dynamic_pointer_cast<Component>(node)) {
-//         qDebug().noquote() << indent + "  (ID: "
-//                                   + QString::fromStdString(
-//                                       boost::uuids::to_string(component->getId()))
-//                                   + ")";
-//         qDebug().noquote() << indent + "  (Type: "
-//                                   + QString::fromStdString(
-//                                       componentTypeToString(component->getType()))
-//                                   + ")";
-
-//     } else if (auto section = std::dynamic_pointer_cast<Section>(node)) {
-//         qDebug().noquote() << indent + "- " + QString::fromStdString(section->getName());
-//     } else {
-//         qDebug().noquote() << indent + "- " + QString::fromStdString(node->getNodeType());
-//     }
-
-//     // Recursively print children
-//     for (const auto &child : node->getChildren()) {
-//         printNodeTree(child, depth + 1);
-//     }
-// }
 
 void FrontendGenerator::parseJson(const nlohmann::json &jsonSchema)
 {
@@ -269,10 +269,13 @@ void FrontendGenerator::parseJson(const nlohmann::json &jsonSchema)
         viewsNode->addChild(viewSection);
     }
 
-    // printNodeTree(frontendRoot);
-
     // Generate clone
     oldRoot = cloneNode(frontendRoot);
+
+    // qDebug() << "FrontendRoot";
+    // printNodeTree(frontendRoot);
+    // qDebug() << "OldRoot";
+    // printNodeTree(oldRoot);
 }
 
 bool FrontendGenerator::loadSchema()
@@ -706,51 +709,99 @@ bool FrontendGenerator::generateFrontendCode()
 }
 
 std::vector<NodeOperation> FrontendGenerator::diffTrees(std::shared_ptr<BaseNode> &oldNode,
-                                                        std::shared_ptr<BaseNode> &newNode)
+                                                        std::shared_ptr<BaseNode> &newNode,
+                                                        int depth /* = 0 */)
 {
     std::vector<NodeOperation> ops;
 
-    // Si el nodo es uno de los contenedores de alto nivel, ignóralo y recorre sus hijos.
+    // Generar una indentación para los logs según la profundidad actual
+    QString indent(depth * 2, ' ');
+
+    // Log básico de comparación de nodos
+    // qDebug() << indent << "Comparando nodos:"
+    //          << QString::fromStdString(boost::uuids::to_string(oldNode->getId())) << "vs"
+    //          << QString::fromStdString(boost::uuids::to_string(newNode->getId()))
+    //          << "Tipo:" << QString::fromStdString(newNode->getNodeType());
+
+    // Si el nodo es uno de los contenedores de alto nivel, ignóralo y recorre sus hijos secuencialmente.
     std::string type = newNode->getNodeType();
     if (type == "FrontendRoot" || type == "Views" || type == "CustomComponents") {
-        // Recorrer ambos conjuntos de hijos de forma secuencial
         auto oldChildren = oldNode->getChildren();
         auto newChildren = newNode->getChildren();
 
-        // Primero, recorrer los hijos del nuevo nodo
+        // Recorrer hijos en orden
         for (size_t i = 0; i < newChildren.size(); ++i) {
             if (i < oldChildren.size()) {
-                // Llamar recursivamente para cada par de hijos existentes
-                auto childOps = diffTrees(oldChildren[i], newChildren[i]);
+                // Mensajes de debug para el hijo actual (por orden)
+                // {
+                //     auto oldNodeS = std::dynamic_pointer_cast<Section>(oldChildren[i]);
+                //     if (oldNodeS) {
+                //         qDebug() << indent << "  Hijo antiguo (secuencial) - Section:"
+                //                  << QString::fromStdString(oldNodeS->getName());
+                //     } else {
+                //         auto oldNodeC = std::dynamic_pointer_cast<Component>(oldChildren[i]);
+                //         if (oldNodeC) {
+                //             qDebug() << indent << "  Hijo antiguo (secuencial) - Component:"
+                //                      << QString::fromStdString(
+                //                             componentTypeToString(oldNodeC->getType()));
+                //         }
+                //     }
+                //     auto newNodeS = std::dynamic_pointer_cast<Section>(newChildren[i]);
+                //     if (newNodeS) {
+                //         qDebug() << indent << "  Hijo nuevo (secuencial) - Section:"
+                //                  << QString::fromStdString(newNodeS->getNodeType());
+                //     } else {
+                //         auto newNodeC = std::dynamic_pointer_cast<Component>(newChildren[i]);
+                //         if (newNodeC) {
+                //             qDebug() << indent << "  Hijo nuevo (secuencial) - Component:"
+                //                      << QString::fromStdString(
+                //                             componentTypeToString(newNodeC->getType()));
+                //         }
+                //     }
+                // }
+                auto childOps = diffTrees(oldChildren[i], newChildren[i], depth + 1);
                 ops.insert(ops.end(), childOps.begin(), childOps.end());
             } else {
-                // DEBUG
-                // qDebug() << "Marcados para insercion:";
-
-                // auto oldNodeS = std::dynamic_pointer_cast<Section>(oldChildren[i]);
-                // if (oldNodeS) {
-                //     qDebug() << oldNodeS->getName();
-                // } else {
-                //     auto oldNodeC = std::dynamic_pointer_cast<Component>(oldChildren[i]);
-                //     qDebug() << componentTypeToString(oldNodeC->getType());
+                // Si hay un hijo nuevo sin par, se trata de una inserción.
+                // {
+                //     auto newNodeS = std::dynamic_pointer_cast<Section>(newChildren[i]);
+                //     if (newNodeS) {
+                //         qDebug() << indent
+                //                  << "  Inserción detectada (secuencial) para Section con nombre:"
+                //                  << QString::fromStdString(newNodeS->getName());
+                //     } else {
+                //         auto newNodeC = std::dynamic_pointer_cast<Component>(newChildren[i]);
+                //         if (newNodeC) {
+                //             qDebug() << indent
+                //                      << "  Inserción detectada (secuencial) para Component de tipo:"
+                //                      << QString::fromStdString(
+                //                             componentTypeToString(newNodeC->getType()));
+                //         }
+                //     }
                 // }
-
-                // auto newNodeS = std::dynamic_pointer_cast<Section>(newChildren[i]);
-                // if (newNodeS) {
-                //     qDebug() << newNodeS->getNodeType();
-                // } else {
-                //     auto newNodeC = std::dynamic_pointer_cast<Component>(newChildren[i]);
-                //     qDebug() << componentTypeToString(newNodeC->getType());
-                // }
-                // DEBUG
-
-                // Si hay un hijo nuevo sin par, se trata de una inserción
                 ops.push_back(NodeOperation(OperationType::Insert, newChildren[i]));
             }
         }
-        // Cualquier hijo que haya quedado en el antiguo y no esté en el nuevo se considera eliminación
+        // Si hay más hijos en el antiguo que en el nuevo, se consideran eliminaciones.
         if (oldChildren.size() > newChildren.size()) {
             for (size_t i = newChildren.size(); i < oldChildren.size(); ++i) {
+                // {
+                //     auto oldNodeS = std::dynamic_pointer_cast<Section>(oldChildren[i]);
+                //     if (oldNodeS) {
+                //         qDebug() << indent
+                //                  << "  Eliminación detectada (secuencial) para Section con nombre:"
+                //                  << QString::fromStdString(oldNodeS->getName());
+                //     } else {
+                //         auto oldNodeC = std::dynamic_pointer_cast<Component>(oldChildren[i]);
+                //         if (oldNodeC) {
+                //             qDebug()
+                //                 << indent
+                //                 << "  Eliminación detectada (secuencial) para Component de tipo:"
+                //                 << QString::fromStdString(
+                //                        componentTypeToString(oldNodeC->getType()));
+                //         }
+                //     }
+                // }
                 ops.push_back(NodeOperation(OperationType::Delete, oldChildren[i]));
             }
         }
@@ -759,71 +810,63 @@ std::vector<NodeOperation> FrontendGenerator::diffTrees(std::shared_ptr<BaseNode
 
     // Para los demás nodos, si tienen el mismo ID y difieren en contenido, se marca como modificación.
     if (oldNode->getId() == newNode->getId() && oldNode->isDifferentFrom(newNode)) {
-        // DEBUG
-        // qDebug() << "Marcados para modificacion:";
-
-        // auto oldNodeS = std::dynamic_pointer_cast<Section>(oldNode);
-        // if (oldNodeS) {
-        //     qDebug() << oldNodeS->getName();
-        // } else {
-        //     auto oldNodeC = std::dynamic_pointer_cast<Component>(oldNode);
-        //     qDebug() << componentTypeToString(oldNodeC->getType());
-        // }
-
-        // auto newNodeS = std::dynamic_pointer_cast<Section>(newNode);
-        // if (newNodeS) {
-        //     qDebug() << newNodeS->getNodeType();
-        // } else {
-        //     auto newNodeC = std::dynamic_pointer_cast<Component>(newNode);
-        //     qDebug() << componentTypeToString(newNodeC->getType());
-        // }
-        // DEBUG
+        // qDebug() << indent << "  Modificación detectada para nodo con ID:"
+        //          << QString::fromStdString(boost::uuids::to_string(newNode->getId()))
+        //          << "Tipo:" << QString::fromStdString(newNode->getNodeType());
         ops.push_back(NodeOperation(OperationType::Modify, newNode));
     }
 
-    // Ahora, mapear hijos antiguos por ID para comparar fácilmente
+    // Ahora, mapear hijos antiguos por ID para comparar fácilmente.
     std::unordered_map<std::string, std::shared_ptr<BaseNode>> oldChildrenMap;
     for (auto child : oldNode->getChildren()) {
         std::string id = boost::uuids::to_string(child->getId());
         oldChildrenMap[id] = child;
     }
 
-    // Recorremos los hijos del nuevo nodo
+    // Recorremos los hijos del nuevo nodo usando el mapa.
     for (auto newChild : newNode->getChildren()) {
         std::string id = boost::uuids::to_string(newChild->getId());
         if (oldChildrenMap.find(id) != oldChildrenMap.end()) {
-            // El hijo existe, se compara recursivamente
-            auto childOps = diffTrees(oldChildrenMap[id], newChild);
+            auto childOps = diffTrees(oldChildrenMap[id], newChild, depth + 1);
             ops.insert(ops.end(), childOps.begin(), childOps.end());
             oldChildrenMap.erase(id);
         } else {
-            // DEBUG
-            // qDebug() << "Marcados para insercion:";
-
-            // auto oldNodeS = std::dynamic_pointer_cast<Section>(oldChildrenMap[id]);
-            // if (oldNodeS) {
-            //     qDebug() << oldNodeS->getName();
-            // } else {
-            //     auto oldNodeC = std::dynamic_pointer_cast<Component>(oldChildrenMap[id]);
-            //     qDebug() << componentTypeToString(oldNodeC->getType());
+            // {
+            //     auto newNodeS = std::dynamic_pointer_cast<Section>(newChild);
+            //     if (newNodeS) {
+            //         qDebug() << indent
+            //                  << "  Inserción detectada (por mapa) para Section con nombre:"
+            //                  << QString::fromStdString(newNodeS->getName());
+            //     } else {
+            //         auto newNodeC = std::dynamic_pointer_cast<Component>(newChild);
+            //         if (newNodeC) {
+            //             qDebug() << indent
+            //                      << "  Inserción detectada (por mapa) para Component de tipo:"
+            //                      << QString::fromStdString(
+            //                             componentTypeToString(newNodeC->getType()));
+            //         }
+            //     }
             // }
-
-            // auto newNodeS = std::dynamic_pointer_cast<Section>(newChild);
-            // if (newNodeS) {
-            //     qDebug() << newNodeS->getNodeType();
-            // } else {
-            //     auto newNodeC = std::dynamic_pointer_cast<Component>(newChild);
-            //     qDebug() << componentTypeToString(newNodeC->getType());
-            // }
-            // DEBUG
-
-            // Nodo insertado
             ops.push_back(NodeOperation(OperationType::Insert, newChild));
         }
     }
 
-    // Los nodos que quedaron en oldChildrenMap fueron eliminados
-    for (auto pair : oldChildrenMap) {
+    // Los nodos que quedaron en oldChildrenMap se consideran eliminaciones.
+    for (auto &pair : oldChildrenMap) {
+        // {
+        //     auto oldNodeS = std::dynamic_pointer_cast<Section>(pair.second);
+        //     if (oldNodeS) {
+        //         qDebug() << indent << "  Eliminación detectada (por mapa) para Section con nombre:"
+        //                  << QString::fromStdString(oldNodeS->getName());
+        //     } else {
+        //         auto oldNodeC = std::dynamic_pointer_cast<Component>(pair.second);
+        //         if (oldNodeC) {
+        //             qDebug() << indent
+        //                      << "  Eliminación detectada (por mapa) para Component de tipo:"
+        //                      << QString::fromStdString(componentTypeToString(oldNodeC->getType()));
+        //         }
+        //     }
+        // }
         ops.push_back(NodeOperation(OperationType::Delete, pair.second));
     }
 
@@ -832,7 +875,7 @@ std::vector<NodeOperation> FrontendGenerator::diffTrees(std::shared_ptr<BaseNode
 
 bool FrontendGenerator::updateFrontendCode()
 {
-    std::vector<NodeOperation> operations = diffTrees(oldRoot, frontendRoot);
+    std::vector<NodeOperation> operations = diffTrees(oldRoot, frontendRoot, 0);
 
     if (operations.empty()) {
         qDebug() << "No changes detected, skipping frontend generation.";
@@ -1076,7 +1119,7 @@ const std::shared_ptr<BaseNode> &FrontendGenerator::getFrontendRoot() const
 
 bool FrontendGenerator::isProgressSaved()
 {
-    std::vector<NodeOperation> operations = diffTrees(oldRoot, frontendRoot);
+    std::vector<NodeOperation> operations = diffTrees(oldRoot, frontendRoot, 0);
 
     if (operations.empty()) {
         qDebug() << "No changes detected.";

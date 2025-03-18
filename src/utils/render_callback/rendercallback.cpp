@@ -148,8 +148,8 @@ std::string renderComponent(inja::Environment &env,
         }
         output += "<div data-id=\"" + id + "\"";
 
-        if (!className.empty())
-            output += " className=\"" + layoutClass + "\"";
+        // if (!className.empty())
+        output += " className=\"" + layoutClass + "\"";
 
         output += ">\n";
 

@@ -60,16 +60,22 @@ void Section::updateFromJson(const nlohmann::json &json)
 
 std::shared_ptr<BaseNode> Section::clone() const
 {
-    // Crear una nueva instancia de Section con el mismo nombre
-    auto clonedSection = std::make_shared<Section>(this->name,
-                                                   this->id,
-                                                   this->createdOn,
-                                                   this->updatedOn);
+    std::shared_ptr<Section> clonedSection;
 
-    if (!this->path.empty())
-        clonedSection->setPath(this->path);
+    if (!this->path.empty()) {
+        clonedSection = std::make_shared<Section>(this->name,
+                                                  this->path,
+                                                  this->id,
+                                                  this->createdOn,
+                                                  this->updatedOn);
+    } else {
+        clonedSection = std::make_shared<Section>(this->name,
+                                                  this->id,
+                                                  this->createdOn,
+                                                  this->updatedOn);
+    }
 
-    // Clonar recursivamente los hijos
+    // Clonar recursivamente cada hijo
     for (const auto &child : this->children) {
         clonedSection->addChild(child->clone());
     }
