@@ -97,10 +97,10 @@ bool Component::isDifferentFrom(const std::shared_ptr<BaseNode> &other) const
         return true;
 
     // Comparar cada hijo
-    for (size_t i = 0; i < this->getChildren().size(); ++i) {
-        if (this->getChildren()[i]->isDifferentFrom(otherComponent->getChildren()[i]))
-            return true;
-    }
+    // for (size_t i = 0; i < this->getChildren().size(); ++i) {
+    //     if (this->getChildren()[i]->isDifferentFrom(otherComponent->getChildren()[i]))
+    //         return true;
+    // }
 
     return false;
 }

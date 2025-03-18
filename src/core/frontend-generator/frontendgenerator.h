@@ -2,6 +2,7 @@
 #define FRONTENDGENERATOR_H
 
 #include "../../models/component/component.h"
+#include "../../models/node-operation/nodeoperation.h"
 #include "../../models/section/section.h"
 #include <inja/inja.hpp>
 #include <nlohmann/json.hpp>
@@ -29,6 +30,16 @@ private:
     std::shared_ptr<Section> findCustomComponentByName(const std::string &viewName);
     bool generateView(const std::string &viewName);
     bool generateCustomComponent(const std::string &custComponentName);
+    // Auxiliar Updating
+    std::vector<NodeOperation> diffTrees(std::shared_ptr<BaseNode> &oldNode,
+                                         std::shared_ptr<BaseNode> &newNode);
+    void applyInsertion(std::shared_ptr<BaseNode> &node);
+    void applyModification(std::shared_ptr<BaseNode> &node);
+    void applyDeletion(std::shared_ptr<BaseNode> &node);
+    std::string getFilePathForNode(std::shared_ptr<BaseNode> &node);
+    std::string generateNodeFragment(std::shared_ptr<BaseNode> &node);
+    size_t findInsertionPosition(const std::string &fileContent,
+                                 const std::shared_ptr<BaseNode> &node);
 
 public:
     FrontendGenerator(const std::string &projectPath);

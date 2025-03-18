@@ -397,6 +397,8 @@ const std::shared_ptr<BaseNode> FrontendGenerator::getMainNode(const std::string
     return nullptr; // No se encontró el nodo
 }
 
+// Updating
+
 bool FrontendGenerator::updateSchema()
 {
     nlohmann::json jsonSchema;
@@ -703,25 +705,367 @@ bool FrontendGenerator::generateFrontendCode()
     return true;
 }
 
-bool FrontendGenerator::updateFrontendCode()
+std::vector<NodeOperation> FrontendGenerator::diffTrees(std::shared_ptr<BaseNode> &oldNode,
+                                                        std::shared_ptr<BaseNode> &newNode)
 {
-    if (!oldRoot || frontendRoot->isDifferentFrom(oldRoot)) {
-        if (updateSchema()) {
-            oldRoot = frontendRoot->clone(); // Guardamos la versión actual
+    std::vector<NodeOperation> ops;
 
-            if (generateFrontendCode())
-                return true;
-            else
-                qDebug() << "Failing in GENERATING FRONTEND CODE";
+    // Si el nodo es uno de los contenedores de alto nivel, ignóralo y recorre sus hijos.
+    std::string type = newNode->getNodeType();
+    if (type == "FrontendRoot" || type == "Views" || type == "CustomComponents") {
+        // Recorrer ambos conjuntos de hijos de forma secuencial
+        auto oldChildren = oldNode->getChildren();
+        auto newChildren = newNode->getChildren();
+
+        // Primero, recorrer los hijos del nuevo nodo
+        for (size_t i = 0; i < newChildren.size(); ++i) {
+            if (i < oldChildren.size()) {
+                // Llamar recursivamente para cada par de hijos existentes
+                auto childOps = diffTrees(oldChildren[i], newChildren[i]);
+                ops.insert(ops.end(), childOps.begin(), childOps.end());
+            } else {
+                // DEBUG
+                // qDebug() << "Marcados para insercion:";
+
+                // auto oldNodeS = std::dynamic_pointer_cast<Section>(oldChildren[i]);
+                // if (oldNodeS) {
+                //     qDebug() << oldNodeS->getName();
+                // } else {
+                //     auto oldNodeC = std::dynamic_pointer_cast<Component>(oldChildren[i]);
+                //     qDebug() << componentTypeToString(oldNodeC->getType());
+                // }
+
+                // auto newNodeS = std::dynamic_pointer_cast<Section>(newChildren[i]);
+                // if (newNodeS) {
+                //     qDebug() << newNodeS->getNodeType();
+                // } else {
+                //     auto newNodeC = std::dynamic_pointer_cast<Component>(newChildren[i]);
+                //     qDebug() << componentTypeToString(newNodeC->getType());
+                // }
+                // DEBUG
+
+                // Si hay un hijo nuevo sin par, se trata de una inserción
+                ops.push_back(NodeOperation(OperationType::Insert, newChildren[i]));
+            }
+        }
+        // Cualquier hijo que haya quedado en el antiguo y no esté en el nuevo se considera eliminación
+        if (oldChildren.size() > newChildren.size()) {
+            for (size_t i = newChildren.size(); i < oldChildren.size(); ++i) {
+                ops.push_back(NodeOperation(OperationType::Delete, oldChildren[i]));
+            }
+        }
+        return ops;
+    }
+
+    // Para los demás nodos, si tienen el mismo ID y difieren en contenido, se marca como modificación.
+    if (oldNode->getId() == newNode->getId() && oldNode->isDifferentFrom(newNode)) {
+        // DEBUG
+        // qDebug() << "Marcados para modificacion:";
+
+        // auto oldNodeS = std::dynamic_pointer_cast<Section>(oldNode);
+        // if (oldNodeS) {
+        //     qDebug() << oldNodeS->getName();
+        // } else {
+        //     auto oldNodeC = std::dynamic_pointer_cast<Component>(oldNode);
+        //     qDebug() << componentTypeToString(oldNodeC->getType());
+        // }
+
+        // auto newNodeS = std::dynamic_pointer_cast<Section>(newNode);
+        // if (newNodeS) {
+        //     qDebug() << newNodeS->getNodeType();
+        // } else {
+        //     auto newNodeC = std::dynamic_pointer_cast<Component>(newNode);
+        //     qDebug() << componentTypeToString(newNodeC->getType());
+        // }
+        // DEBUG
+        ops.push_back(NodeOperation(OperationType::Modify, newNode));
+    }
+
+    // Ahora, mapear hijos antiguos por ID para comparar fácilmente
+    std::unordered_map<std::string, std::shared_ptr<BaseNode>> oldChildrenMap;
+    for (auto child : oldNode->getChildren()) {
+        std::string id = boost::uuids::to_string(child->getId());
+        oldChildrenMap[id] = child;
+    }
+
+    // Recorremos los hijos del nuevo nodo
+    for (auto newChild : newNode->getChildren()) {
+        std::string id = boost::uuids::to_string(newChild->getId());
+        if (oldChildrenMap.find(id) != oldChildrenMap.end()) {
+            // El hijo existe, se compara recursivamente
+            auto childOps = diffTrees(oldChildrenMap[id], newChild);
+            ops.insert(ops.end(), childOps.begin(), childOps.end());
+            oldChildrenMap.erase(id);
         } else {
-            qDebug() << "Failing in UPDATING SCHEMA";
-            return false;
+            // DEBUG
+            // qDebug() << "Marcados para insercion:";
+
+            // auto oldNodeS = std::dynamic_pointer_cast<Section>(oldChildrenMap[id]);
+            // if (oldNodeS) {
+            //     qDebug() << oldNodeS->getName();
+            // } else {
+            //     auto oldNodeC = std::dynamic_pointer_cast<Component>(oldChildrenMap[id]);
+            //     qDebug() << componentTypeToString(oldNodeC->getType());
+            // }
+
+            // auto newNodeS = std::dynamic_pointer_cast<Section>(newChild);
+            // if (newNodeS) {
+            //     qDebug() << newNodeS->getNodeType();
+            // } else {
+            //     auto newNodeC = std::dynamic_pointer_cast<Component>(newChild);
+            //     qDebug() << componentTypeToString(newNodeC->getType());
+            // }
+            // DEBUG
+
+            // Nodo insertado
+            ops.push_back(NodeOperation(OperationType::Insert, newChild));
         }
     }
 
-    qDebug() << "No changes detected, skipping frontend generation.";
-    return true;
-    // return (updateSchema() ? generateFrontendCode() : false);
+    // Los nodos que quedaron en oldChildrenMap fueron eliminados
+    for (auto pair : oldChildrenMap) {
+        ops.push_back(NodeOperation(OperationType::Delete, pair.second));
+    }
+
+    return ops;
+}
+
+bool FrontendGenerator::updateFrontendCode()
+{
+    std::vector<NodeOperation> operations = diffTrees(oldRoot, frontendRoot);
+
+    if (operations.empty()) {
+        qDebug() << "No changes detected, skipping frontend generation.";
+        return true;
+    }
+
+    if (!updateSchema()) {
+        qDebug() << "Error on Updating Schema";
+        return false;
+    }
+
+    if (generateFrontendCode())
+        return true;
+    else {
+        qDebug() << "Failing in GENERATING FRONTEND CODE";
+        return false;
+    }
+
+    // // Aplicar cada operación de forma incremental
+    // for (auto op : operations) {
+    //     switch (op.type) {
+    //     case OperationType::Insert:
+    //         // Ubicar posición mediante op.node->id (data-id) y generar fragmento
+    //         applyInsertion(op.node);
+    //         break;
+    //     case OperationType::Modify:
+    //         // Buscar en el archivo el fragmento con data-id y actualizarlo
+    //         applyModification(op.node);
+    //         break;
+    //     case OperationType::Delete:
+    //         // Eliminar el fragmento con el data-id del nodo eliminado
+    //         applyDeletion(op.node);
+    //         break;
+    //     }
+    // }
+
+    // // Actualizar archivos que dependen de cambios a nivel de Section (ej. App.tsx, etc.)
+    // // updateDependentFiles();
+
+    // // Actualizar el oldRoot para futuras comparaciones
+    // oldRoot = cloneNode(frontendRoot);
+    // return true;
+}
+
+void FrontendGenerator::applyInsertion(std::shared_ptr<BaseNode> &node)
+{
+    // Si se quiere agregar un nuevo view o custom component
+    if (node->getNodeType() == "Section" && node->getParent()->getNodeType() != "Section"
+        && node->getParent()->getNodeType() != "Component") {
+        auto section = std::dynamic_pointer_cast<Section>(node);
+        if (!section) {
+            fmt::print(stderr, "Error: nodo identificado como section pero falla el cast.\n");
+            return;
+        }
+        if (section->getPath().empty()) {
+            if (generateCustomComponent(section->getName()))
+                return;
+        } else {
+            if (generateView(section->getName()))
+                return;
+        }
+    } else {
+        // Determinar en qué archivo se debe insertar el nodo
+        std::string filePath = getFilePathForNode(node);
+
+        // Generar el fragmento de código usando la plantilla (Inja u otro método)
+        std::string newFragment = generateNodeFragment(node);
+
+        // Leer el contenido actual del archivo
+        std::string fileContent = FileUtils::readFile(filePath);
+
+        // Determinar el punto de inserción:
+        size_t insertionPos = findInsertionPosition(fileContent, node);
+
+        // Insertar el nuevo fragmento en la posición calculada
+        fileContent.insert(insertionPos, newFragment);
+
+        // Escribir el contenido actualizado al archivo
+        return FileUtils::writeFile(filePath, fileContent);
+    }
+}
+
+void FrontendGenerator::applyModification(std::shared_ptr<BaseNode> &node) {}
+
+void FrontendGenerator::applyDeletion(std::shared_ptr<BaseNode> &node) {}
+
+std::string FrontendGenerator::getFilePathForNode(std::shared_ptr<BaseNode> &node)
+{
+    // Si el nodo es un Section, determinamos el archivo según el tipo
+    if (node->getNodeType() == "Section" && node->getParent()->getNodeType() != "Section"
+        && node->getParent()->getNodeType() != "Component") {
+        auto section = std::dynamic_pointer_cast<Section>(node);
+        // Si el section tiene un path, asumimos que es un view
+        if (!section->getPath().empty()) {
+            return projectPath + "/frontend/src/views/" + section->getName() + ".tsx";
+        } else {
+            // De lo contrario, es un custom component
+            return projectPath + "/frontend/src/components/" + section->getName() + ".tsx";
+        }
+    }
+
+    // Si es un Component u otro nodo, recorrer hacia arriba para obtener su Section contenedor
+    auto parent = node->getParent();
+    if (parent) {
+        return getFilePathForNode(parent);
+    }
+
+    // Si no se encontró, retorna cadena vacía o lanza un error según convenga
+    return "";
+}
+
+std::string FrontendGenerator::generateNodeFragment(std::shared_ptr<BaseNode> &node)
+{
+    nlohmann::json data;
+    std::string templatePath;
+
+    // Determinar qué tipo de nodo es y cargar el JSON y plantilla adecuada
+    if (node->getNodeType() == "Section") {
+        auto section = std::dynamic_pointer_cast<Section>(node);
+        if (!section) {
+            fmt::print(stderr, "Error: nodo identificado como section pero falla el cast.\n");
+            return "";
+        }
+        data = processSectionToJson(section);
+        // Si el section tiene un path, lo consideramos un view; de lo contrario, un custom component.
+        if (!section->getPath().empty()) {
+            templatePath = ":/inja/frontend/view";
+        } else {
+            templatePath = ":/inja/frontend/view";
+        }
+    } else if (node->getNodeType() == "Component") {
+        // Si el nodo es un componente
+        auto component = std::dynamic_pointer_cast<Component>(node);
+        if (!component) {
+            fmt::print(stderr, "Error: nodo identificado como component pero falla el cast.\n");
+            return "";
+        }
+        // Aquí podrías tener una función específica para componentes, o reutilizar processSectionToJson si aplica
+        data = processComponentToJson(component);
+        // templatePath = ":/inja/frontend/component_fragment";
+    } else {
+        fmt::print(stderr,
+                   "generateNodeFragment: Tipo de nodo no soportado para generación de "
+                   "fragmento.\n");
+        return "";
+    }
+
+    std::string templateString;
+    // Cargar el template desde recursos
+    if (templatePath.empty()) {
+        templateString = "{{ render_component(data, \"\") }}";
+    } else {
+        QFile file(QString::fromStdString(templatePath));
+        if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+            fmt::print(stderr, "Unable to open template file from resource: {}\n", templatePath);
+            return "";
+        }
+        QTextStream in(&file);
+        QString templateContent = in.readAll();
+        file.close();
+
+        templateString = templateContent.toStdString();
+    }
+
+    try {
+        // Renderizar el fragmento usando Inja
+        std::string result = env.render(templateString, {{"data", data}});
+        return result;
+    } catch (const std::exception &e) {
+        fmt::print(stderr,
+                   "Error rendering fragment for node {}: {}\n",
+                   boost::uuids::to_string(node->getId()),
+                   e.what());
+        return "";
+    }
+}
+
+size_t FrontendGenerator::findInsertionPosition(const std::string &fileContent,
+                                                const std::shared_ptr<BaseNode> &node)
+{
+    auto parent = node->getParent();
+    if (parent) {
+        const auto &siblings = parent->getChildren();
+        // Buscar la posición del nodo entre sus hermanos
+        size_t index = 0;
+        bool found = false;
+        for (size_t i = 0; i < siblings.size(); ++i) {
+            if (siblings[i] == node) {
+                index = i;
+                found = true;
+                break;
+            }
+        }
+        if (found) {
+            // Caso 1: Si hay un hermano anterior, usar su data-id
+            if (index > 0) {
+                auto prevSibling = siblings[index - 1];
+                std::string searchStr = "data-id=\"" + boost::uuids::to_string(prevSibling->getId())
+                                        + "\"";
+                size_t pos = fileContent.find(searchStr);
+                if (pos != std::string::npos) {
+                    // Encontrar el final de la etiqueta de ese hermano
+                    size_t endTagPos = fileContent.find(">", pos);
+                    if (endTagPos != std::string::npos) {
+                        return endTagPos + 1;
+                    }
+                }
+            }
+            // Caso 2: No hay hermano anterior, pero sí un hermano siguiente
+            if (index + 1 < siblings.size()) {
+                auto nextSibling = siblings[index + 1];
+                std::string searchStr = "data-id=\"" + boost::uuids::to_string(nextSibling->getId())
+                                        + "\"";
+                size_t pos = fileContent.find(searchStr);
+                if (pos != std::string::npos) {
+                    // Insertar justo antes del inicio del bloque del siguiente hermano
+                    return pos;
+                }
+            }
+        }
+    }
+
+    // Caso 3: Si no hay marcador, buscar el contenedor principal (el primer <div>)
+    size_t pos = fileContent.find("<div");
+    if (pos != std::string::npos) {
+        size_t endTagPos = fileContent.find(">", pos);
+        if (endTagPos != std::string::npos) {
+            return endTagPos + 1;
+        }
+    }
+
+    // Fallback: Si nada funciona, insertar al final del archivo
+    return fileContent.length();
 }
 
 // Getters

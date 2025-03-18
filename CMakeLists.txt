@@ -160,6 +160,7 @@ set(PROJECT_SOURCES
         src/models/base-node/basenode.cpp
         src/models/generic-node/genericnode.h
         src/models/generic-node/genericnode.cpp
+        src/models/node-operation/nodeoperation.h
         # Utils
         src/utils/database/database.h
         src/utils/database/database.cpp
