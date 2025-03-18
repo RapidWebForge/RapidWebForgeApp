@@ -11,7 +11,7 @@
 #include <string>
 
 OverviewPanel::OverviewPanel(QWidget *parent)
-    : QDialog(parent)
+    : QWidget(parent)
     , ui(new Ui::OverviewPanel)
 {
     ui->setupUi(this);

@@ -8,6 +8,7 @@
 #include "../../../src/components/pro-panel/propanel.h"
 #include "../../../src/components/tutorials-panel/tutorialspanel.h"
 #include "../../core/configuration-manager/configurationmanager.h"
+#include "../../core/project-manager/projectmanager.h"
 #include "../../models/project/project.h"
 #include "../configuration-view/configurationview.h"
 #include <vector>
@@ -23,15 +24,11 @@ class ProjectsPanel : public QWidget
 public:
     explicit ProjectsPanel(QWidget *parent = nullptr);
     ~ProjectsPanel();
-    void setupProjects(const std::vector<Project> &projects);
 
 private slots:
     void showRecents();
     void showTutorials();
     void showProjects();
-    void onAddProjectClicked();
-    void onProjectPreviewClicked(const Project &project);
-    void onDeleteProjectRequested(int projectId);
     void on_configurationButton_clicked();
 
 private:
@@ -42,7 +39,7 @@ private:
     QWidget *recentsPage;
     QWidget *tutorialsPage;
     QWidget *projectsPage;
-    std::vector<Project> projects;
+    ProjectManager projectManager;
     ConfigurationView *configView = nullptr;
     bool checkCommand(const std::string &command, bool dobleQuote = true);
     void applyStylesProj();
