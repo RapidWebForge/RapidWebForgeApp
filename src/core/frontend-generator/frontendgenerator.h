@@ -53,6 +53,8 @@ public:
     bool updateFrontendCode();
     // Getters
     const std::shared_ptr<BaseNode> &getFrontendRoot() const;
+    // Prevent lost nodes
+    bool isProgressSaved();
 };
 
 #endif // FRONTENDGENERATOR_H

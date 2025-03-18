@@ -508,6 +508,19 @@ void StepperDashboard::setupMenus()
     connect(deleteVersionAction, &QAction::triggered, this, &StepperDashboard::onDeleteVersion);
 }
 
+bool StepperDashboard::showConfirmationDialog(QWidget *parent,
+                                              const QString &title,
+                                              const QString &message)
+{
+    QMessageBox::StandardButton reply;
+    reply = QMessageBox::question(parent,
+                                  title,
+                                  message,
+                                  QMessageBox::Yes | QMessageBox::No,
+                                  QMessageBox::No);
+    return (reply == QMessageBox::Yes);
+}
+
 void StepperDashboard::onSaveChanges()
 {
     codeGenerator->backendGenerator.setTransactions(backendDashboard->getTransactions());
@@ -525,6 +538,14 @@ void StepperDashboard::onSaveChanges()
 
 void StepperDashboard::onCreateVersion()
 {
+    if (!codeGenerator->frontendGenerator.isProgressSaved()) {
+        if (!showConfirmationDialog(this,
+                                    "Unsaved Progress",
+                                    "You have unsaved progress. Do you want to continue?")) {
+            return;
+        }
+    }
+
     // Mostrar el diálogo para ingresar el nombre de la versión
     CreateVersion dialog(versionManager, this);
 
@@ -547,6 +568,14 @@ void StepperDashboard::onCreateVersion()
 
 void StepperDashboard::onChangeVersion()
 {
+    if (!codeGenerator->frontendGenerator.isProgressSaved()) {
+        if (!showConfirmationDialog(this,
+                                    "Unsaved Progress",
+                                    "You have unsaved progress. Do you want to continue?")) {
+            return;
+        }
+    }
+
     // Crear el diálogo y pasar el `versionManager`
     ManageVersion dialog(versionManager, this);
 
@@ -620,6 +649,14 @@ void StepperDashboard::onVersionHistory()
 
 void StepperDashboard::onDeployProject()
 {
+    if (!codeGenerator->frontendGenerator.isProgressSaved()) {
+        if (!showConfirmationDialog(this,
+                                    "Unsaved Progress",
+                                    "You have unsaved progress. Do you want to continue?")) {
+            return;
+        }
+    }
+
     std::vector<Transaction> transactions = codeGenerator->backendGenerator.getTransactions();
 
     if (transactions.empty()) {
@@ -653,6 +690,14 @@ void StepperDashboard::onDeployProject()
 
 void StepperDashboard::onProjectChange()
 {
+    if (!codeGenerator->frontendGenerator.isProgressSaved()) {
+        if (!showConfirmationDialog(this,
+                                    "Unsaved Progress",
+                                    "You have unsaved progress. Do you want to continue?")) {
+            return;
+        }
+    }
+
     ConfigurationManager configurationManager;
     // Detener Nginx al cerrar el proyecto
     try {
@@ -676,6 +721,14 @@ void StepperDashboard::onProjectChange()
 
 void StepperDashboard::onCreateProject()
 {
+    if (!codeGenerator->frontendGenerator.isProgressSaved()) {
+        if (!showConfirmationDialog(this,
+                                    "Unsaved Progress",
+                                    "You have unsaved progress. Do you want to continue?")) {
+            return;
+        }
+    }
+
     // Cerrar el StepperDashboard
     this->close();
 
@@ -978,4 +1031,18 @@ void StepperDashboard::onUserActionPerformed(const std::string &action,
     if (stepValidator->isStepCompleted(logAction.toStdString(), componentID)) {
         ui->nextStepButton->setEnabled(true);
     }
+}
+
+void StepperDashboard::closeEvent(QCloseEvent *event)
+{
+    if (!codeGenerator->frontendGenerator.isProgressSaved()) {
+        if (!showConfirmationDialog(this,
+                                    "Unsaved Progress",
+                                    "You have unsaved progress. Do you want to exit?")) {
+            event->ignore();
+            return;
+        }
+    }
+
+    event->accept();
 }

@@ -1073,3 +1073,16 @@ const std::shared_ptr<BaseNode> &FrontendGenerator::getFrontendRoot() const
 {
     return frontendRoot;
 }
+
+bool FrontendGenerator::isProgressSaved()
+{
+    std::vector<NodeOperation> operations = diffTrees(oldRoot, frontendRoot);
+
+    if (operations.empty()) {
+        qDebug() << "No changes detected.";
+        return true;
+    } else {
+        qDebug() << "Changes detected.";
+        return false;
+    }
+}

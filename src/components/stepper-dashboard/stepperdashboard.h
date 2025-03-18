@@ -35,9 +35,11 @@ public:
     ~StepperDashboard();
 
     void loadTutorialData();
+    bool showConfirmationDialog(QWidget *parent, const QString &title, const QString &message);
 
 protected:
     void showEvent(QShowEvent *event) override;
+    void closeEvent(QCloseEvent *event) override;
 
 signals:
     void backendSchemaLoaded();

@@ -29,10 +29,8 @@ ProjectsPanel::ProjectsPanel(QWidget *parent)
     ui->stackedWidget->addWidget(proPanel);
     ui->stackedWidget->setCurrentWidget(proPanel);
 
-    // 📌 Cargar la pantalla inicial
     showRecents(); // Cambia a la pestaña "Overview"
 
-    // 📌 FORZAR la actualización del stackedWidget para que se renderice
     ui->stackedWidget->update();
     ui->stackedWidget->repaint();
 
