@@ -186,6 +186,7 @@ void BackendDashboard::setupMethodsList()
         // Crear un QCheckBox y agregarlo al layout del contenedor
         QCheckBox *checkbox = new QCheckBox(method, container);
         checkbox->setChecked(true); // Establecer como marcado por defecto
+        checkbox->setEnabled(false); // No se permite cambiar los valores de los checkbox
         layout->addWidget(checkbox);
         layout->setAlignment(Qt::AlignLeft); // Alinear a la izquierda
 

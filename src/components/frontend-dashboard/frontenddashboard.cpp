@@ -879,6 +879,8 @@ void FrontendDashboard::on_deleteButton_clicked()
         viewsPtr->removeChild(viewIt);
         delete selectedItem;
         qDebug() << "View deleted:" << QString::fromStdString(selectedItemName);
+        // Limpiar para evitar editar algo inexistente
+        cleanPropertiesTable();
 
         ui->sectionComboBox->removeItem(ui->sectionComboBox->currentIndex());
         return;
@@ -902,6 +904,8 @@ void FrontendDashboard::on_deleteButton_clicked()
         customComponentsPtr->removeChild(custComponentIt);
         delete selectedItem;
         qDebug() << "Custom component deleted:" << QString::fromStdString(selectedItemName);
+        // Limpiar para evitar editar algo inexistente
+        cleanPropertiesTable();
 
         ui->sectionComboBox->removeItem(ui->sectionComboBox->currentIndex());
         return;
@@ -926,6 +930,8 @@ void FrontendDashboard::on_deleteButton_clicked()
     if (deleteComponentByHierarchy(currentSectionPtr, hierarchy)) {
         delete selectedItem;
         qDebug() << "Item deleted from section:" << QString::fromStdString(selectedItemName);
+        // Limpiar para evitar editar algo inexistente
+        cleanPropertiesTable();
     } else {
         qDebug() << "Failed to delete item: Not found in hierarchy.";
     }
