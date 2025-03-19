@@ -27,8 +27,10 @@ void EditFieldDialog::setField(const Field &field)
     ui->foreignKeyCheckBox->setChecked(field.isForeignKey());
     ui->nullCheckBox->setChecked(field.getIsNull());
     ui->uniqueCheckBox->setChecked(field.getIsUnique());
-    ui->checkCheckBox->setChecked(field.getHasCheck());
-    ui->defaultCheckBox->setChecked(field.getHasDefault());
+    // ui->checkCheckBox->setChecked(field.getHasCheck());
+    // ui->defaultCheckBox->setChecked(field.getHasDefault());
+    ui->checkCheckBox->setHidden(true);
+    ui->defaultCheckBox->setHidden(true);
 
     // Si es Foreign Key, mostrar la tabla relacionada
     if (field.isForeignKey()) {
@@ -69,8 +71,8 @@ void EditFieldDialog::on_acceptButton_clicked()
     currentField.setIsForeignKey(ui->foreignKeyCheckBox->isChecked());
     currentField.setIsNull(ui->nullCheckBox->isChecked());
     currentField.setIsUnique(ui->uniqueCheckBox->isChecked());
-    currentField.setHasCheck(ui->checkCheckBox->isChecked());
-    currentField.setHasDefault(ui->defaultCheckBox->isChecked());
+    // currentField.setHasCheck(ui->checkCheckBox->isChecked());
+    // currentField.setHasDefault(ui->defaultCheckBox->isChecked());
 
     if (ui->foreignKeyCheckBox->isChecked()) {
         currentField.setForeignKeyTable(ui->foreignKeyTableComboBox->currentText().toStdString());

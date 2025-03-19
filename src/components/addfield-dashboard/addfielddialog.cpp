@@ -25,6 +25,8 @@ AddFieldDialog::AddFieldDialog(QWidget *parent)
 
     ui->primaryKeyLabel->hide();
     ui->primaryKeyCheckBox->hide();
+    ui->checkCheckBox->setHidden(true);
+    ui->defaultCheckBox->setHidden(true);
 
     applyStyles();
 }
@@ -119,15 +121,15 @@ void AddFieldDialog::on_addButton_clicked()
     // Verificar las restricciones de NULL y UNIQUE
     bool isNull = ui->nullCheckBox->isChecked();
     bool isUnique = ui->uniqueCheckBox->isChecked();
-    bool hasCheck = ui->checkCheckBox->isChecked();
-    bool hasDefault = ui->defaultCheckBox->isChecked();
+    // bool hasCheck = ui->checkCheckBox->isChecked();
+    // bool hasDefault = ui->defaultCheckBox->isChecked();
 
     // field.setIsPrimaryKey(ui->primaryKeyCheckBox->isChecked());
     field.setIsPrimaryKey(false);
     field.setIsNull(isNull);
     field.setIsUnique(isUnique);
-    field.setHasCheck(hasCheck);
-    field.setHasDefault(hasDefault);
+    // field.setHasCheck(hasCheck);
+    // field.setHasDefault(hasDefault);
 
     std::string logMessage = "fieldName=" + fieldName + ", fieldType=" + fieldType
                              + ", isPrimaryKey=" + (field.isPrimaryKey() ? "true" : "false")
@@ -164,8 +166,8 @@ void AddFieldDialog::on_addButton_clicked()
     ui->foreignKeyCheckBox->setChecked(false);
     ui->nullCheckBox->setChecked(false);
     ui->uniqueCheckBox->setChecked(false);
-    ui->checkCheckBox->setChecked(false);
-    ui->defaultCheckBox->setChecked(false);
+    // ui->checkCheckBox->setChecked(false);
+    // ui->defaultCheckBox->setChecked(false);
 
     accept();
 }

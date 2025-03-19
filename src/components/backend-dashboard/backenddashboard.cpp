@@ -342,18 +342,23 @@ void BackendDashboard::updateFieldsTable(const Transaction &transaction)
         ui->fieldsTableWidget->setItem(row, 3, fkItem);
 
         // Restricciones adicionales (UNIQUE, NULL, etc.)
-        QString constraints;
+        std::vector<std::string> constraints;
+        QString constraintsLabel;
         if (field.getIsUnique()) {
-            constraints.append("UNIQUE ");
+            constraints.push_back("UNIQUE");
         }
         if (field.getIsNull()) {
-            constraints.append("NULL ");
+            constraints.push_back("NULL");
         }
-        // Crear un elemento de la columna Const para mostrar restricciones adicionales como UNIQUE o CHECK
-        ui->fieldsTableWidget->setItem(row,
-                                       4,
-                                       new QTableWidgetItem(QString::fromStdString(
-                                           field.getIsUnique() ? "UNIQUE" : "")));
+
+        for (size_t i = 0; i < constraints.size(); ++i) {
+            constraintsLabel.append(constraints.at(i));
+            if (constraints.size() - (i + 1) > 0)
+                constraintsLabel.append("\n");
+        }
+
+        // Crear un elemento de la columna Const para mostrar restricciones adicionales
+        ui->fieldsTableWidget->setItem(row, 4, new QTableWidgetItem(constraintsLabel));
     }
 
     // Ajustar el tamaño de las celdas para adaptarse al contenido
