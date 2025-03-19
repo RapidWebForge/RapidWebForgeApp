@@ -22,7 +22,7 @@ public:
     explicit OverviewPanel(QWidget *parent = nullptr);
     ~OverviewPanel();
 
-    void setupProjects(const std::vector<Project> &projects); // 🚀 Agregamos esta función
+    void setupProjects(const std::vector<Project> &projects);
 
 private:
     Ui::OverviewPanel *ui;

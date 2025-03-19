@@ -102,7 +102,7 @@ void OverviewPanel::setupProjects(const std::vector<Project> &projects)
 
         QString tutorialPath = it.value();
         int projectId
-            = 1; // 📌 Aquí puedes definir un ID de proyecto por defecto o seleccionar uno dinámicamente
+            = 1; // Aquí puedes definir un ID de proyecto por defecto o seleccionar uno dinámicamente
 
         // Conectar el botón con la señal `openTutorial()`
         connect(tutorialButton, &QPushButton::clicked, this, [this, tutorialPath, projectId]() {
@@ -210,7 +210,11 @@ void OverviewPanel::onAddProjectClicked()
         return;
     }
 
-    this->hide();
+    QWidget *projectsPanel = this;
+    while (projectsPanel->parentWidget() != nullptr) {
+        projectsPanel = projectsPanel->parentWidget();
+    }
+    projectsPanel->hide();
 
     // When the "+" button is clicked, open the Stepper window
     Stepper *stepper = new Stepper();
@@ -224,6 +228,7 @@ void OverviewPanel::onAddProjectClicked()
         this->show();
     });
 }
+
 void OverviewPanel::onDeleteProjectRequested(int projectId)
 {
     qDebug() << "Intentando eliminar el proyecto con ID:" << projectId;
@@ -252,16 +257,16 @@ void OverviewPanel::onDeleteProjectRequested(int projectId)
 
 void OverviewPanel::onProjectPreviewClicked(const Project &project)
 {
-    // 📌 Buscar la ventana principal (ProjectsPanel) a partir de `OverviewPanel`
+    // Buscar la ventana principal (ProjectsPanel) a partir de `OverviewPanel`
     QWidget *projectsPanel = this;
     while (projectsPanel->parentWidget() != nullptr) {
         projectsPanel = projectsPanel->parentWidget();
     }
 
-    // 📌 OCULTAR `ProjectsPanel` completamente
+    // OCULTAR `ProjectsPanel` completamente
     projectsPanel->hide();
 
-    // 📌 Abrir el `StepperDashboard` asegurando que tenga un `projectId` válido
+    // Abrir el `StepperDashboard` asegurando que tenga un `projectId` válido
     if (project.getId() == -1) {
         QMessageBox::critical(this, "Error", "Invalid project ID.");
         projectsPanel->show();
@@ -271,23 +276,24 @@ void OverviewPanel::onProjectPreviewClicked(const Project &project)
     StepperDashboard *stprDashboard = new StepperDashboard(nullptr, project);
     stprDashboard->showMaximized();
 
-    // 📌 Restaurar `ProjectsPanel` cuando `StepperDashboard` se cierre
+    // Restaurar `ProjectsPanel` cuando `StepperDashboard` se cierre
     connect(stprDashboard, &StepperDashboard::destroyed, projectsPanel, [projectsPanel]() {
         projectsPanel->show();
     });
 }
+
 void OverviewPanel::onTutorialClicked(const QString &tutorialPath, int projectId)
 {
-    // 📌 Buscar la ventana principal (ProjectsPanel) desde `TutorialsPanel`
+    // Buscar la ventana principal (ProjectsPanel) desde `TutorialsPanel`
     QWidget *projectsPanel = this;
     while (projectsPanel->parentWidget() != nullptr) {
         projectsPanel = projectsPanel->parentWidget();
     }
 
-    // 📌 OCULTAR `ProjectsPanel` completamente
+    // OCULTAR `ProjectsPanel` completamente
     projectsPanel->hide();
 
-    // 📌 Verificar si `projectId` es válido antes de proceder
+    // Verificar si `projectId` es válido antes de proceder
     ProjectManager projectManager;
     std::optional<Project> projectOpt = projectManager.getProjectById(projectId);
 
@@ -296,14 +302,14 @@ void OverviewPanel::onTutorialClicked(const QString &tutorialPath, int projectId
         projectsPanel->show();
         return;
     }
-    // 📌 Extraer el valor del `std::optional<Project>`
+    // Extraer el valor del `std::optional<Project>`
     Project project = projectOpt.value();
 
-    // 📌 Crear instancia de `StepperDashboard`, pasando el `tutorialPath` como parámetro
+    // Crear instancia de `StepperDashboard`, pasando el `tutorialPath` como parámetro
     StepperDashboard *stprDashboard = new StepperDashboard(nullptr, project, tutorialPath);
     stprDashboard->showMaximized();
 
-    // 📌 Restaurar `ProjectsPanel` cuando `StepperDashboard` se cierre
+    // Restaurar `ProjectsPanel` cuando `StepperDashboard` se cierre
     connect(stprDashboard, &StepperDashboard::destroyed, projectsPanel, [projectsPanel]() {
         projectsPanel->show();
     });
