@@ -887,9 +887,10 @@ bool FrontendGenerator::updateFrontendCode()
         return false;
     }
 
-    if (generateFrontendCode())
+    if (generateFrontendCode()) {
+        oldRoot = cloneNode(frontendRoot);
         return true;
-    else {
+    } else {
         qDebug() << "Failing in GENERATING FRONTEND CODE";
         return false;
     }
