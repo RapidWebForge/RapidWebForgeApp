@@ -68,7 +68,7 @@ std::string renderComponent(inja::Environment &env,
             if (!className.empty())
                 output += " className=\"" + className + "\"";
 
-            output += " data-id=\"" + id + "\">\n" + value + "\n</h" + number + ">";
+            output += " data-id=\"" + id + "\">\n" + value + "\n</h" + number + ">\n";
 
         } else {
             fmt::print(stderr, "Unsupported component type: {}\n", type);
@@ -82,7 +82,7 @@ std::string renderComponent(inja::Environment &env,
         if (!className.empty())
             output += " className=\"" + className + "\"";
 
-        output += " data-id=\"" + id + "\">\n" + value + "\n</p>";
+        output += " data-id=\"" + id + "\">\n" + value + "\n</p>\n";
 
     } else if (type == "Input") {
         std::string placeholder = props.value("placeholder", "");
@@ -107,7 +107,7 @@ std::string renderComponent(inja::Environment &env,
             output += " type=\"" + type + "\"";
 
         output += inputValue + (parentType == "Form" ? "onChange={handleChange}" : "")
-                  + " data-id=\"" + id + "\"/>";
+                  + " data-id=\"" + id + "\"/>\n";
 
     } else if (type == "Text Area") {
         std::string placeholder = props.value("placeholder", "");
@@ -120,7 +120,7 @@ std::string renderComponent(inja::Environment &env,
         if (!placeholder.empty())
             placeholder += " placeholder=\"" + placeholder + "\"";
 
-        output += " data-id=\"" + id + "\" />";
+        output += " data-id=\"" + id + "\" />\n";
     } else if (type == "Button") {
         value = props.value("text", "Default Button");
         std::string type = props.value("type", "button");
@@ -133,7 +133,7 @@ std::string renderComponent(inja::Environment &env,
         if (!type.empty())
             type += " type=\"" + type + "\"";
 
-        output += " data-id=\"" + id + "\">\n" + value + "\n</button>";
+        output += " data-id=\"" + id + "\">\n" + value + "\n</button>\n";
     } else if (type == "Horizontal Layout" || type == "Vertical Layout" || type == "Model Layout") {
         std::string layoutClass;
 
@@ -158,7 +158,8 @@ std::string renderComponent(inja::Environment &env,
             std::string model = props.value("model", "Model");
             if (!model.empty() && model != "Model") {
                 std::string lowerModel = toLower(model);
-                output += "{" + lowerModel + ".map((obj, index) => (";
+                output += "{" + lowerModel + ".map((obj, index) => (\n";
+                output += "<div index={index}>\n";
             }
         }
 
@@ -176,14 +177,13 @@ std::string renderComponent(inja::Environment &env,
                     output += "<!-- Error rendering nested component -->";
                 }
             }
-        } /* else {
-            fmt::print(stderr, "Invalid or missing nestedComponents array.\n");
-        }*/
+        }
 
         if (type == "Model Layout") {
             std::string model = props.value("model", "Model");
             if (!model.empty() && model != "Model") {
-                output += "))}";
+                output += "</div>\n";
+                output += "\n))}";
             }
         }
 
@@ -222,7 +222,7 @@ std::string renderComponent(inja::Environment &env,
             fmt::print(stderr, "Invalid or missing nestedComponents array.\n");
         }
 
-        output += "\n</form>";
+        output += "\n</form>\n";
     } else {
         fmt::print(stderr, "Unsupported component type: {}\n", type);
         output = "<!-- Unsupported component type: " + type + " -->";
