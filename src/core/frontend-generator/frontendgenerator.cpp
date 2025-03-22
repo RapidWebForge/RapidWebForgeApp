@@ -887,38 +887,38 @@ bool FrontendGenerator::updateFrontendCode()
         return false;
     }
 
-    if (generateFrontendCode()) {
-        oldRoot = cloneNode(frontendRoot);
-        return true;
-    } else {
-        qDebug() << "Failing in GENERATING FRONTEND CODE";
-        return false;
-    }
-
-    // // Aplicar cada operación de forma incremental
-    // for (auto op : operations) {
-    //     switch (op.type) {
-    //     case OperationType::Insert:
-    //         // Ubicar posición mediante op.node->id (data-id) y generar fragmento
-    //         applyInsertion(op.node);
-    //         break;
-    //     case OperationType::Modify:
-    //         // Buscar en el archivo el fragmento con data-id y actualizarlo
-    //         applyModification(op.node);
-    //         break;
-    //     case OperationType::Delete:
-    //         // Eliminar el fragmento con el data-id del nodo eliminado
-    //         applyDeletion(op.node);
-    //         break;
-    //     }
+    // if (generateFrontendCode()) {
+    //     oldRoot = cloneNode(frontendRoot);
+    //     return true;
+    // } else {
+    //     qDebug() << "Failing in GENERATING FRONTEND CODE";
+    //     return false;
     // }
 
-    // // Actualizar archivos que dependen de cambios a nivel de Section (ej. App.tsx, etc.)
-    // // updateDependentFiles();
+    // Aplicar cada operación de forma incremental
+    for (auto op : operations) {
+        switch (op.type) {
+        case OperationType::Insert:
+            // Ubicar posición mediante op.node->id (data-id) y generar fragmento
+            applyInsertion(op.node);
+            break;
+        case OperationType::Modify:
+            // Buscar en el archivo el fragmento con data-id y actualizarlo
+            applyModification(op.node);
+            break;
+        case OperationType::Delete:
+            // Eliminar el fragmento con el data-id del nodo eliminado
+            applyDeletion(op.node);
+            break;
+        }
+    }
 
-    // // Actualizar el oldRoot para futuras comparaciones
-    // oldRoot = cloneNode(frontendRoot);
-    // return true;
+    // Actualizar archivos que dependen de cambios a nivel de Section (ej. App.tsx, etc.)
+    // updateDependentFiles();
+
+    // Actualizar el oldRoot para futuras comparaciones
+    oldRoot = cloneNode(frontendRoot);
+    return true;
 }
 
 void FrontendGenerator::applyInsertion(std::shared_ptr<BaseNode> &node)
