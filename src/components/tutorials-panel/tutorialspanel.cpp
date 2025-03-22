@@ -19,103 +19,112 @@ TutorialsPanel::TutorialsPanel(QWidget *parent)
 }
 void TutorialsPanel::setupTutorials()
 {
-    // Obtener el layout del scroll vertical
-    QGridLayout *tutorialLayout = qobject_cast<QGridLayout *>(
-        ui->scrollAreaWidgetContents->layout());
+    // Obtener los layouts de cada nivel desde el XML
+    QGridLayout *gridBeginner = ui->scrollAreaWidgetContents->findChild<QGridLayout *>("gridBeginner");
+    QGridLayout *gridIntermediate = ui->scrollAreaWidgetContents->findChild<QGridLayout *>("gridIntermediate");
+    QGridLayout *gridAdvanced = ui->scrollAreaWidgetContents->findChild<QGridLayout *>("gridAdvanced");
 
-    if (!tutorialLayout)
+    if (!gridBeginner || !gridIntermediate || !gridAdvanced)
         return;
 
-    // Limpiar el layout antes de agregar nuevos tutoriales
-    QLayoutItem *child;
-    while ((child = tutorialLayout->takeAt(0)) != nullptr) {
-        if (child->widget()) {
-            child->widget()->deleteLater();
+    // Limpiar los layouts antes de agregar nuevos tutoriales
+    auto clearLayout = [](QGridLayout *layout) {
+        QLayoutItem *child;
+        while ((child = layout->takeAt(0)) != nullptr) {
+            if (child->widget()) {
+                child->widget()->deleteLater();
+            }
+            delete child;
         }
-        delete child;
+    };
+
+    clearLayout(gridBeginner);
+    clearLayout(gridIntermediate);
+    clearLayout(gridAdvanced);
+
+    // Lista de tutoriales organizados por nivel
+    QMap<QGridLayout *, QList<QPair<QString, QString>>> tutorialsByLevel;
+    tutorialsByLevel[gridBeginner] = {
+                                      {"HTML - Introducción a las etiquetas",
+                                       ":/resources/log_tutorials/begginer/begginer-tutorial-1.json"},
+                                      {"HTML - Atributos de las etiquetas",
+                                       ":/resources/log_tutorials/begginer/begginer-tutorial-2.json"},
+                                      {"CSS - Conociendo los estilos en cascada",
+                                       ":/resources/log_tutorials/begginer/begginer-tutorial-3.json"},
+                                      {"CSS - Diseño responsive",
+                                       ":/resources/log_tutorials/begginer/begginer-tutorial-4.json"},
+                                      {"React - Creando componentes",
+                                       ":/resources/log_tutorials/begginer/begginer-tutorial-5.json"},
+                                      {"React - Creando nuevas vistas",
+                                       ":/resources/log_tutorials/begginer/begginer-tutorial-6.json"},
+                                      };
+
+    tutorialsByLevel[gridIntermediate] = {
+        {"Base de datos - Creando nuestros modelos",":/resources/log_tutorials/intermedium/intermediate-tutorial-1.json"},
+        {"Base de Datos - Relaciones SQL",":/resources/log_tutorials/intermedium/intermediate-tutorial-2.json"},
+        {"ORM - Entendiendo el ORM",":/resources/log_tutorials/intermedium/intermediate-tutorial-3.json"}
+    };
+
+    tutorialsByLevel[gridAdvanced] = {
+        {"Backend - Creando APIs REST", ":/resources/log_tutorials/advanced/advanced-tutorial-1.json"},
+        {"Seguridad - Autenticación y autorización", ":/resources/log_tutorials/advanced/advanced-tutorial-2.json"}
+    };
+
+    // Agregar tutoriales a cada nivel
+    for (auto it = tutorialsByLevel.begin(); it != tutorialsByLevel.end(); ++it) {
+        QGridLayout *grid = it.key();
+        QList<QPair<QString, QString>> tutorials = it.value();
+
+        int row = 0, col = 0;
+        for (const auto &tutorial : tutorials) {
+            QString tutorialTitle = tutorial.first;
+            QString tutorialPath = tutorial.second;
+
+            // Crear botón contenedor
+            QPushButton *tutorialButton = new QPushButton(this);
+            tutorialButton->setFixedSize(200, 122);
+            tutorialButton->setStyleSheet(
+                "QPushButton {"
+                "   background-color: white;"
+                "   border-radius: 10px;"
+                "   border: 1px solid #ddd;"
+                "   padding: 5px;"
+                "} "
+                "QPushButton:hover {"
+                "   background-color: #f5f5f5;"
+                "}");
+
+            // Crear QLabel para el texto del botón
+            QLabel *buttonLabel = new QLabel(tutorialTitle, tutorialButton);
+            buttonLabel->setWordWrap(true); // ✅ Permitir saltos de línea si es necesario
+            buttonLabel->setAlignment(Qt::AlignCenter); // ✅ Centrar el texto
+            buttonLabel->setStyleSheet("font-size: 14px; color: black; background-color: transparent;");
+
+            // Crear un layout para el botón y agregar el QLabel dentro
+            QVBoxLayout *buttonLayout = new QVBoxLayout(tutorialButton);
+            buttonLayout->addWidget(buttonLabel);
+            buttonLayout->setAlignment(Qt::AlignCenter);
+            buttonLayout->setContentsMargins(5, 5, 5, 5);
+            tutorialButton->setLayout(buttonLayout);
+
+            connect(tutorialButton, &QPushButton::clicked, this,
+                    [this, tutorialPath]() { onTutorialClicked(tutorialPath, 1); });
+
+            grid->addWidget(tutorialButton, row, col);
+
+            if (++col >= 3) { // Máximo 3 botones por fila
+                col = 0;
+                row++;
+            }
+        }
     }
 
-    // Configurar el fondo del área de tutoriales como blanco
-    ui->scrollAreaWidgetContents->setStyleSheet("background-color: white;");
-    ui->scrollArea->setStyleSheet("background-color: white; border: none;");
-
-    // Habilitar el desplazamiento táctil y con mouse en el área de tutoriales
-    QScroller::grabGesture(ui->scrollArea, QScroller::LeftMouseButtonGesture);
     ui->scrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     ui->scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
-    // Espaciado entre tutoriales
-    tutorialLayout->setSpacing(15);
-    tutorialLayout->setContentsMargins(20, 10, 20, 10);
-
-    // Lista de tutoriales con sus rutas
-    QMap<QString, QString> tutorials
-        = {{"Beginner: HTML - Introducción a las etiquetas",
-            ":/resources/log_tutorials/begginer/begginer-tutorial-1.json"},
-           {"Beginner: HTML - Atributos de las etiquetas",
-            ":/resources/log_tutorials/begginer/begginer-tutorial-2.json"},
-           {"Beginner: CSS - Conociendo los estilos en cascada",
-            ":/resources/log_tutorials/begginer/begginer-tutorial-3.json"},
-           {"Beginner: CSS - Diseño responsive",
-            ":/resources/log_tutorials/begginer/begginer-tutorial-4.json"},
-           {"Beginner: React - Creando componentes",
-            ":/resources/log_tutorials/begginer/begginer-tutorial-5.json"},
-           {"Beginner: React - Creando nuevas vistas",
-            ":/resources/log_tutorials/begginer/begginer-tutorial-6.json"},
-           {"Intermediate: Base de datos - Creando nuestros modelos",
-            ":/resources/log_tutorials/intermedium/intermediate-tutorial-1.json"},
-           {"Intermediate: Base de Datos - Relaciones SQL",
-            ":/resources/log_tutorials/intermedium/intermediate-tutorial-2.json"},
-           {"Intermediate: ORM - Entendiendo el ORM",
-            ":/resources/log_tutorials/intermedium/intermediate-tutorial-3.json"}};
-
-    int row = 0;
-    for (auto it = tutorials.begin(); it != tutorials.end(); ++it) {
-        // Crear un botón para cada tutorial
-        QPushButton *tutorialButton = new QPushButton(this);
-        tutorialButton->setFixedSize(400, 80); // Botón más grande para mejor legibilidad
-        tutorialButton->setStyleSheet("QPushButton {"
-                                      "   background-color: white;"
-                                      "   border-radius: 10px;"
-                                      "   border: 1px solid #ddd;"
-                                      "   box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);"
-                                      "   padding: 5px;"
-                                      "} "
-                                      "QPushButton:hover {"
-                                      "   background-color: #f5f5f5;"
-                                      "}");
-
-        // Crear un QLabel dentro del botón para mostrar el título del tutorial con saltos de línea
-        QLabel *label = new QLabel(it.key(), tutorialButton);
-        label->setWordWrap(true);
-        label->setAlignment(Qt::AlignCenter);
-        label->setStyleSheet(
-            "font-size: 14px; color: black; padding: 5px; background-color: transparent;");
-
-        // Crear un layout dentro del botón para organizar el texto
-        QVBoxLayout *layout = new QVBoxLayout(tutorialButton);
-        layout->addWidget(label);
-        layout->setContentsMargins(5, 5, 5, 5);
-        layout->setAlignment(Qt::AlignCenter);
-
-        QString tutorialPath = it.value();
-        int projectId
-            = 1; // 📌 Aquí puedes definir un ID de proyecto por defecto o seleccionar uno dinámicamente
-
-        // Conectar el botón con la señal `openTutorial()`
-        connect(tutorialButton, &QPushButton::clicked, this, [this, tutorialPath, projectId]() {
-            onTutorialClicked(tutorialPath, projectId);
-        });
-
-        tutorialLayout->addWidget(tutorialButton);
-        row++;
-    }
-
-    // Ajustar tamaño del contenedor para permitir el scroll vertical
-    int totalHeight = (tutorials.size() * 90)
-                      + (tutorialLayout->spacing() * (tutorials.size() - 1));
-    ui->scrollAreaWidgetContents->setMinimumHeight(totalHeight);
-    ui->scrollAreaWidgetContents->setMaximumHeight(totalHeight);
+    // Ajustar tamaño del contenedor
+    ui->scrollAreaWidgetContents->adjustSize();
+    ui->scrollArea->update();
 }
 
 void TutorialsPanel::onAddProjectClicked()

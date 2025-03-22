@@ -11,27 +11,77 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Dialog</string>
+   <string>Tutorials</string>
   </property>
   <layout class="QVBoxLayout" name="mainLayout">
    <item>
     <widget class="QScrollArea" name="scrollArea">
      <property name="widgetResizable">
-      <bool>true</bool>
+      <bool>true</bool> <!-- ✅ Asegura que el contenido se ajuste -->
+     </property>
+     <property name="verticalScrollBarPolicy">
+      <enum>Qt::ScrollBarAsNeeded</enum> <!-- ✅ Activa el scroll si es necesario -->
+     </property>
+     <property name="horizontalScrollBarPolicy">
+      <enum>Qt::ScrollBarAlwaysOff</enum>
      </property>
      <widget class="QWidget" name="scrollAreaWidgetContents">
-      <property name="geometry">
-       <rect>
-        <x>0</x>
-        <y>0</y>
-        <width>780</width>
-        <height>580</height>
-       </rect>
-      </property>
-      <layout class="QGridLayout" name="gridLayout">
-       <item row="0" column="0">
-        <layout class="QGridLayout" name="gridLayout_2"/>
+      <layout class="QVBoxLayout" name="tutorialLayout"> <!-- ✅ Contenedor principal -->
+       
+       <!-- Sección: Beginner -->
+       <item>
+        <widget class="QLabel" name="labelBeginner">
+         <property name="text">
+          <string>Beginner</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignLeft</set>
+         </property>
+         <property name="styleSheet">
+          <string>font-size: 18px; font-weight: bold; margin-top: 10px;</string>
+         </property>
+        </widget>
        </item>
+       <item>
+        <layout class="QGridLayout" name="gridBeginner"/> <!-- Aquí se agregarán los tutoriales -->
+       </item>
+
+       <!-- Sección: Intermediate -->
+       <item>
+        <widget class="QLabel" name="labelIntermediate">
+         <property name="text">
+          <string>Intermediate</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignLeft</set>
+         </property>
+         <property name="styleSheet">
+          <string>font-size: 18px; font-weight: bold; margin-top: 10px;</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <layout class="QGridLayout" name="gridIntermediate"/>
+       </item>
+
+       <!-- Sección: Advanced -->
+       <item>
+        <widget class="QLabel" name="labelAdvanced">
+         <property name="text">
+          <string>Advanced</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignLeft</set>
+         </property>
+         <property name="styleSheet">
+          <string>font-size: 18px; font-weight: bold; margin-top: 10px;</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <layout class="QGridLayout" name="gridAdvanced"/>
+       </item>
+
       </layout>
      </widget>
     </widget>

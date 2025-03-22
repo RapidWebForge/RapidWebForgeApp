@@ -36,3 +36,23 @@ QString FileWatcher::getLastModifiedFile() {
 
     return lastModifiedFile;
 }
+std::string FileWatcher::getLastModifiedFileInFolder(const std::string &folderPath) {
+    QDir dir(QString::fromStdString(folderPath));
+    if (!dir.exists()) {
+        qDebug() << "❌ Carpeta no encontrada: " << QString::fromStdString(folderPath);
+        return "";
+    }
+
+    // ✅ Filtrar solo archivos dentro de la carpeta (excluir backend.json y frontend.json)
+    QFileInfoList files = dir.entryInfoList(QDir::Files, QDir::Time | QDir::Reversed);
+
+    for (const QFileInfo &file : files) {
+        if (file.fileName() != "backend.json" && file.fileName() != "frontend.json") {
+            qDebug() << "✅ Último archivo encontrado en carpeta: " << file.absoluteFilePath();
+            return file.absoluteFilePath().toStdString();
+        }
+    }
+
+    qDebug() << "⚠ No se encontraron archivos en: " << QString::fromStdString(folderPath);
+    return "";
+}

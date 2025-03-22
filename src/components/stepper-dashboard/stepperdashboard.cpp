@@ -973,7 +973,6 @@ void StepperDashboard::showStep(int index)
     //    ui->nextStepButton->setEnabled(isCompleted);
     //    ui->nextStepButton->setText("Next"); // Restaurar el texto del botón
     //}
-    // 🚀 Si estamos en el último paso, el botón cambia a "Finish"
     if (index == tutorialSteps.size() - 1) {
         ui->nextStepButton->setText("Finish");
     } else {
@@ -1074,18 +1073,55 @@ void StepperDashboard::validateCurrentStep(const QString &logAction)
     }
 }
 void StepperDashboard::openLastModifiedFile() {
-    qDebug() << "🔹 Botón presionado: Intentando abrir archivo en VS Code";
+    qDebug() << "🔹 Botón presionado: Intentando abrir el último archivo modificado en VS Code";
 
     QString lastModifiedFile = fileWatcher->getLastModifiedFile();
-    std::string projectPath = project.getPath();  // ✅ Ya es std::string
+    std::string projectPath = project.getPath();  // ✅ Ruta base del proyecto
 
     if (!lastModifiedFile.isEmpty()) {
-        std::string filePath = lastModifiedFile.toStdString();  // ✅ Conversión correcta
-        qDebug() << "✅ Archivo encontrado: " << QString::fromStdString(filePath);
-        FileOpener::openInVSCode(filePath);
+        std::string filePath = lastModifiedFile.toStdString();
+
+        // 📌 Validar que el archivo modificado NO sea backend.json o frontend.json
+        if (filePath.find("backend.json") != std::string::npos ||
+            filePath.find("frontend.json") != std::string::npos) {
+            qDebug() << "⚠ Se modificó un archivo de configuración JSON. Buscando archivos dentro de frontend/ o backend/";
+
+            // ✅ Buscar el archivo más reciente dentro de frontend/
+            std::string frontendFile = fileWatcher->getLastModifiedFileInFolder(projectPath + "/frontend/src");
+            if (!frontendFile.empty()) {
+                qDebug() << "📂 Último archivo modificado en Frontend: " << QString::fromStdString(frontendFile);
+                FileOpener::openInVSCode(projectPath + "/frontend/src", frontendFile);
+                return;
+            }
+
+            // ✅ Buscar el archivo más reciente dentro de backend/
+            std::string backendFile = fileWatcher->getLastModifiedFileInFolder(projectPath + "/backend/src");
+            if (!backendFile.empty()) {
+                qDebug() << "📂 Último archivo modificado en Backend: " << QString::fromStdString(backendFile);
+                FileOpener::openInVSCode(projectPath + "/backend/src", backendFile);
+                return;
+            }
+
+            qDebug() << "⚠ No se encontraron archivos recientes en frontend/ o backend/. Abriendo carpeta completa.";
+            FileOpener::openInVSCode(projectPath);
+        } else {
+            qDebug() << "✅ Último archivo modificado: " << QString::fromStdString(filePath);
+
+            // 📌 Determinar si pertenece a frontend/ o backend/
+            if (filePath.find("/frontend/src") != std::string::npos) {
+                qDebug() << "📂 Última modificación en Frontend.";
+                FileOpener::openInVSCode(projectPath + "/frontend/src", filePath);
+            } else if (filePath.find("/backend/src") != std::string::npos) {
+                qDebug() << "📂 Última modificación en Backend.";
+                FileOpener::openInVSCode(projectPath + "/backend/src", filePath);
+            } else {
+                qDebug() << "⚠ Archivo fuera de frontend/ y backend/. Abriendo proyecto completo.";
+                FileOpener::openInVSCode(projectPath);
+            }
+        }
     } else {
         qDebug() << "⚠ No hay archivos modificados recientemente. Abriendo proyecto completo en VS Code.";
-        FileOpener::openInVSCode(projectPath);  // ✅ Usar directamente std::string
+        FileOpener::openInVSCode(projectPath);
     }
 }
 void StepperDashboard::setupFloatingButton() {
@@ -1206,7 +1242,7 @@ void StepperDashboard::toggleExtraButtons() {
 
 // 📌 Abrir la carpeta `backend` en VS Code
 void StepperDashboard::openBackendInVSCode() {
-    std::string backendPath = project.getPath() + "/backend";  // ✅ Path dinámico
+    std::string backendPath = project.getPath() + "/backend";
     qDebug() << "📂 Abriendo Backend en VS Code: " << QString::fromStdString(backendPath);
 
     if (!FileOpener::openInVSCode(backendPath)) {
@@ -1216,7 +1252,7 @@ void StepperDashboard::openBackendInVSCode() {
 
 // 📌 Abrir la carpeta `frontend` en VS Code
 void StepperDashboard::openFrontendInVSCode() {
-    std::string frontendPath = project.getPath() + "/frontend";  // ✅ Path dinámico
+    std::string frontendPath = project.getPath() + "/frontend";
     qDebug() << "📂 Abriendo Frontend en VS Code: " << QString::fromStdString(frontendPath);
 
     if (!FileOpener::openInVSCode(frontendPath)) {

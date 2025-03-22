@@ -6,7 +6,7 @@
 
 class FileOpener {
 public:
-    static bool openInVSCode(const std::string &path);
+    static bool openInVSCode(const std::string &folderPath, const std::string &filePath = "");
 };
 
 #endif // FILEOPENER_H
