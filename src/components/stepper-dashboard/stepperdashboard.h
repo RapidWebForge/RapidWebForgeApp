@@ -3,10 +3,14 @@
 
 #include <QAction>
 #include <QDialog>
+#include <QEnterEvent>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QMenu>
+#include <QPropertyAnimation>
+#include <QPushButton>
+#include <QResizeEvent>
 #include <QString>
 #include <QTimer>
 #include <QWidget>
@@ -15,17 +19,13 @@
 #include "../../core/logging/stepvalidator.h"
 #include "../../core/version-manager/versionmanager.h"
 #include "../../models/project/project.h"
+#include "../../utils/file/filewatcher.h"  // Detectar archivos modificados
+#include "../../utils/vscode/fileopener.h" // Abrir VS Code
 #include "../backend-dashboard/backenddashboard.h"
 #include "../custom-tree-widget/customtreewidget.h"
 #include "../frontend-dashboard/frontenddashboard.h"
 #include <nlohmann/json.hpp>
 #include <variant>
-#include <QResizeEvent>
-#include <QEnterEvent>
-#include <QPropertyAnimation>
-#include <QPushButton>
-#include "../../utils/file/FileWatcher.h"  // Detectar archivos modificados
-#include "../../utils/vscode/FileOpener.h" // Abrir VS Code
 
 namespace Ui {
 class StepperDashboard;
@@ -47,7 +47,6 @@ public:
 protected:
     void showEvent(QShowEvent *event) override;
     void closeEvent(QCloseEvent *event) override;
-    void loadTutorialData();
     void resizeEvent(QResizeEvent *event) override;
     void contextMenuEvent(QContextMenuEvent *event) override;
 
