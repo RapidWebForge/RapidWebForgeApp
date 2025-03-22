@@ -19,10 +19,18 @@
 #include <fstream>
 #include <memory>
 #include <nlohmann/json.hpp>
+#include <QResizeEvent>
+
+#include <QPushButton>
+#include <QDebug>
+#include <QIcon>
+#include <QVBoxLayout>
 
 nlohmann::json tutorialData;
 
-StepperDashboard::StepperDashboard(QWidget *parent, const Project &project, const QString &tutorialPath)
+StepperDashboard::StepperDashboard(QWidget *parent,
+                                   const Project &project,
+                                   const QString &tutorialPath)
     : QWidget(parent)
     , ui(new Ui::StepperDashboard)
     , frontendDashboard(new FrontendDashboard())
@@ -40,7 +48,11 @@ StepperDashboard::StepperDashboard(QWidget *parent, const Project &project, cons
     , project(project)
     , codeGenerator(new CodeGenerator(project))
     , versionManager(new VersionManager(project.getPath()))
+    , customTreeWidget(new CustomTreeWidget(nullptr)) // Se crea sin añadirse a la UI
     , tutorialFilePath(tutorialPath)
+    , fileWatcher(new FileWatcher(this)) // Instancia de FileWatcher
+    , floatingButton(nullptr)            // 📌 Inicializar como nullptr
+
 {
     ui->setupUi(this);
 
@@ -74,6 +86,13 @@ StepperDashboard::StepperDashboard(QWidget *parent, const Project &project, cons
     connect(ui->frontendButton, &QPushButton::clicked, this, &StepperDashboard::showFrontendPage);
     connect(ui->commentButton, &QPushButton::clicked, this, &StepperDashboard::showTutorialComment);
     connect(ui->helpButton, &QPushButton::clicked, this, &StepperDashboard::showTutorialHelp);
+
+
+    connect(customTreeWidget,
+            &CustomTreeWidget::stepUpdated,
+            this,
+            &StepperDashboard::validateCurrentStep,
+            Qt::QueuedConnection);
 
     // Asignar los menús a los botones
     ui->projectButton->setMenu(projectMenu);
@@ -135,6 +154,18 @@ StepperDashboard::StepperDashboard(QWidget *parent, const Project &project, cons
 
     // Conectar la señal `openTutorial` con el método `loadTutorialData`
     connect(overviewPanel, &OverviewPanel::openTutorial, this, &StepperDashboard::loadTutorialData);
+
+    setupFloatingButton();
+    // 📌 Conectar el botón con la función que abre el archivo en VS Code
+    connect(floatingButton, &QPushButton::clicked, this, &StepperDashboard::openLastModifiedFile);
+
+    // 📌 Configurar FileWatcher para monitorear cambios en archivos del proyecto
+    fileWatcher->watchProjectFiles(QString::fromStdString(project.getPath()));
+
+    QString projectPath = QString::fromStdString(project.getPath());
+    qDebug() << "📂 Ruta asignada para monitoreo: " << projectPath;
+
+    fileWatcher->watchProjectFiles(projectPath);
 }
 
 void StepperDashboard::showEvent(QShowEvent *event)
@@ -766,6 +797,10 @@ void StepperDashboard::initializeTutorialBar()
 
 void StepperDashboard::setupTutorialConnections()
 {
+    // 🔹 Desconectar cualquier conexión previa para evitar ejecuciones múltiples
+    disconnect(ui->nextStepButton, nullptr, this, nullptr);
+
+    // 🔹 Conectar el botón Next correctamente a goToNextTutorialStep()
     connect(ui->nextStepButton,
             &QPushButton::clicked,
             this,
@@ -822,44 +857,40 @@ void StepperDashboard::showTutorialHelp()
 
 void StepperDashboard::goToNextTutorialStep()
 {
-    // Si aún hay más pasos disponibles, avanzamos
+    static bool tutorialCompleted = false; // 🔹 Variable de control para evitar ejecución doble
+
+    if (tutorialCompleted) {
+        return; // Si ya se ejecutó una vez, no hacer nada
+    }
+    // Validar si el usuario ha completado el paso actual antes de permitir avanzar
+    QJsonObject step = tutorialSteps[currentStepIndex].toObject();
+    QString logAction = step["log"].toString();
+    bool isCompleted = stepValidator->isStepCompleted(logAction.toStdString(), "");
+
+    if (!isCompleted) {
+        qDebug() << "❌ Step " << currentStepIndex
+                 << " not completed. Next button remains disabled.";
+        return; // No avanza hasta que el paso se complete
+    }
+
+    // Si hay más pasos, avanzar al siguiente
     if (currentStepIndex < tutorialSteps.size() - 1) {
         currentStepIndex++;
         showStep(currentStepIndex);
     }
-    // Si estamos en el último paso, mostramos un mensaje, pero NO cerramos aún
+    // Si ya estamos en el último paso y el usuario lo ha completado, mostrar el mensaje de finalización
     else if (currentStepIndex == tutorialSteps.size() - 1) {
-        QMessageBox::information(this,
-                                 "Tutorial",
-                                 "You are now on the last step. Click 'Next' again to finish.");
-        currentStepIndex++; // Marcamos que ya está en el último paso para la siguiente vez
-    }
-    // Solo cerramos si ya se dio *Next* una vez estando en el último paso
-    else {
+        tutorialCompleted = true; // 🔹 Marcar como completado para evitar ejecución doble
+
         QMessageBox::information(this, "Tutorial", "You have completed all steps.");
 
-        // Cerrar el StepperDashboard y abrir el ProjectsPanel
+        // Cerrar el tutorial
         this->close();
-
-        // Crear y mostrar el ProjectsPanel
+        // 🚀 Abrir el ProjectsPanel después de cerrar el StepperDashboard
         ProjectsPanel *projectsPanel = new ProjectsPanel();
         projectsPanel->setAttribute(
             Qt::WA_DeleteOnClose); // Liberar memoria automáticamente al cerrar
         projectsPanel->show();
-    }
-    if (currentStepIndex < tutorialSteps.size()) {
-        QJsonObject step = tutorialSteps[currentStepIndex].toObject();
-        QString logAction = step["log"].toString();
-
-        if (!stepValidator->isStepCompleted(logAction.toStdString(), "")) {
-            QMessageBox::warning(this,
-                                 "Paso no completado",
-                                 "Debes completar este paso antes de continuar.");
-            return;
-        }
-
-        currentStepIndex++;
-        showStep(currentStepIndex);
     }
 }
 
@@ -974,8 +1005,11 @@ void StepperDashboard::showStep(int index)
     ui->commentButton->setToolTip(step["comment"].toString());
     ui->helpButton->setToolTip(step["help"].toString());
 
-    qDebug() << "Total Steps Available: " << tutorialSteps.size();
-    qDebug() << "Trying to show step: " << index;
+    qDebug() << "Step " << index << " Goal: " << goal;
+    qDebug() << "Step " << index << " Log Action: " << logAction;
+
+    // Validar el estado actual del paso
+    validateCurrentStep(logAction);
 
     // Muestra los datos del paso en los widgets correspondientes
     ui->goalLabel->setText(goal);
@@ -986,9 +1020,23 @@ void StepperDashboard::showStep(int index)
     bool isCompleted = stepValidator->isStepCompleted(logAction.toStdString(), "");
     // Habilitar o deshabilitar el botón "Next"
     ui->nextStepButton->setEnabled(isCompleted);
+
+    //if (index == tutorialSteps.size() - 1) {
+    //    ui->nextStepButton->setEnabled(true);
+    //    ui->nextStepButton->setText("Finish"); // Cambiar el texto del botón
+    //    //connect(ui->nextStepButton, &QPushButton::clicked, this, &StepperDashboard::close);
+    //} else {
+    //    ui->nextStepButton->setEnabled(isCompleted);
+    //    ui->nextStepButton->setText("Next"); // Restaurar el texto del botón
+    //}
+    if (index == tutorialSteps.size() - 1) {
+        ui->nextStepButton->setText("Finish");
+    } else {
+        ui->nextStepButton->setText("Next");
+    }
+
     if (isCompleted) {
         ui->nextStepButton->setEnabled(true);
-
         ui->nextStepButton->setStyleSheet(
             "QPushButton {"
             "   background-color: #28a745;" // Fondo verde
@@ -1007,6 +1055,7 @@ void StepperDashboard::showStep(int index)
             "}");
     } else {
         ui->nextStepButton->setEnabled(false);
+
         ui->nextStepButton->setStyleSheet(
             "QPushButton { background-color: #ccc; color: #666; "
             "   border: none;"       // Sin bordes
@@ -1045,4 +1094,269 @@ void StepperDashboard::closeEvent(QCloseEvent *event)
     }
 
     event->accept();
+}
+
+void StepperDashboard::validateCurrentStep(const QString &logAction)
+{
+    if (currentStepIndex < 0 || currentStepIndex >= tutorialSteps.size()) {
+        return;
+    }
+    QJsonObject step = tutorialSteps[currentStepIndex].toObject();
+    QString expectedLog = step["log"].toString();
+
+    bool completed = stepValidator->isStepCompleted(expectedLog.toStdString(), "");
+
+    // Habilitar o deshabilitar el botón "Next"
+    if (completed) {
+        ui->nextStepButton->setEnabled(true);
+
+        ui->nextStepButton->setStyleSheet(
+            "QPushButton {"
+            "   background-color: #28a745;" // Fondo verde
+            "   color: white;"              // Texto blanco
+            "   border: none;"              // Sin bordes
+            "   border-radius: 8px;"        // Bordes redondeados
+            "   padding: 8px 20px;"         // Espaciado interno
+            "   font-size: 16px;"           // Tamaño de fuente
+            "   font-weight: bold;"         // Texto en negrita
+            "} "
+            "QPushButton:hover {"
+            "   background-color: #218838;" // Verde más oscuro al pasar el cursor
+            "} "
+            "QPushButton:pressed {"
+            "   background-color: #1e7e34;" // Verde aún más oscuro al presionar
+            "}");
+    } else {
+        // 🚀 Deshabilita el botón hasta que el usuario complete el paso
+        ui->nextStepButton->setEnabled(false);
+
+        ui->nextStepButton->setStyleSheet(
+            "QPushButton { background-color: #ccc; color: #666; "
+            "   border: none;"       // Sin bordes
+            "   border-radius: 8px;" // Bordes redondeados
+            "   padding: 8px 20px;"  // Espaciado interno
+            "   font-size: 16px;"    // Tamaño de fuente
+            "   font-weight: bold;"
+            "} "
+            "QPushButton:hover {"
+            "   background-color: #1e7e34;" // Verde aún más oscuro al presionar
+            "}");
+    }
+}
+
+void StepperDashboard::openLastModifiedFile() {
+    qDebug() << "🔹 Botón presionado: Intentando abrir el último archivo modificado en VS Code";
+
+    QString lastModifiedFile = fileWatcher->getLastModifiedFile();
+    std::string projectPath = project.getPath();  // ✅ Ruta base del proyecto
+
+    if (!lastModifiedFile.isEmpty()) {
+        std::string filePath = lastModifiedFile.toStdString();
+
+        // 📌 Validar que el archivo modificado NO sea backend.json o frontend.json
+        if (filePath.find("backend.json") != std::string::npos ||
+            filePath.find("frontend.json") != std::string::npos) {
+            qDebug() << "⚠ Se modificó un archivo de configuración JSON. Buscando archivos dentro de frontend/ o backend/";
+
+            // ✅ Buscar el archivo más reciente dentro de frontend/
+            std::string frontendFile = fileWatcher->getLastModifiedFileInFolder(projectPath + "/frontend/src");
+            if (!frontendFile.empty()) {
+                qDebug() << "📂 Último archivo modificado en Frontend: " << QString::fromStdString(frontendFile);
+                FileOpener::openInVSCode(projectPath + "/frontend/src", frontendFile);
+                return;
+            }
+
+            // ✅ Buscar el archivo más reciente dentro de backend/
+            std::string backendFile = fileWatcher->getLastModifiedFileInFolder(projectPath + "/backend/src");
+            if (!backendFile.empty()) {
+                qDebug() << "📂 Último archivo modificado en Backend: " << QString::fromStdString(backendFile);
+                FileOpener::openInVSCode(projectPath + "/backend/src", backendFile);
+                return;
+            }
+
+            qDebug() << "⚠ No se encontraron archivos recientes en frontend/ o backend/. Abriendo carpeta completa.";
+            FileOpener::openInVSCode(projectPath);
+        } else {
+            qDebug() << "✅ Último archivo modificado: " << QString::fromStdString(filePath);
+
+            // 📌 Determinar si pertenece a frontend/ o backend/
+            if (filePath.find("/frontend/src") != std::string::npos) {
+                qDebug() << "📂 Última modificación en Frontend.";
+                FileOpener::openInVSCode(projectPath + "/frontend/src", filePath);
+            } else if (filePath.find("/backend/src") != std::string::npos) {
+                qDebug() << "📂 Última modificación en Backend.";
+                FileOpener::openInVSCode(projectPath + "/backend/src", filePath);
+            } else {
+                qDebug() << "⚠ Archivo fuera de frontend/ y backend/. Abriendo proyecto completo.";
+                FileOpener::openInVSCode(projectPath);
+            }
+        }
+    } else {
+        qDebug() << "⚠ No hay archivos modificados recientemente. Abriendo proyecto completo en VS Code.";
+        FileOpener::openInVSCode(projectPath);
+    }
+}
+void StepperDashboard::setupFloatingButton() {
+    // 📌 Crear el botón flotante
+    floatingButton = new QPushButton(this);
+    floatingButton->setIcon(QIcon(":/icons/VS.png")); // 📌 Ruta del icono
+    floatingButton->setIconSize(QSize(36, 36)); // 📌 Ajustar tamaño del icono
+    floatingButton->setFixedSize(65, 65); // 📌 Hace que el botón sea circular
+    floatingButton->setStyleSheet(
+        "QPushButton {"
+        "   background-color: #E1E1E1;" // 📌 Azul de VS Code
+        "   border-radius: 32px;" // 📌 Lo hace circular
+        "   border: 1px solid #0F66DE;" // 📌 Borde azul de VS Code
+        "   box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);" // 📌 Efecto flotante
+        "}"
+        "QPushButton:hover {"
+        "   background-color: #0F66DE;" // 📌 Color más oscuro al pasar el mouse
+        "   border: 1px solid #0F66DE;" // 📌 Borde azul de VS Code
+        "   qproperty-icon: url(:/icons/vs2.png);" // 📌 Icono en hover
+        "}"
+        "QPushButton:pressed {"
+        "   background-color: #003F73;" // 📌 Color más oscuro al presionar
+        "   border: 1px solid #003F73;" // 📌 Borde azul de VS Code
+        "}");
+
+    // 📌 Conectar el botón a la función de abrir VS Code
+    connect(floatingButton, &QPushButton::clicked, this, &StepperDashboard::openLastModifiedFile);
+
+    // 📌 Crear botones desplegables (inicialmente ocultos)
+    backendButton = new QPushButton(this);
+    frontendButton = new QPushButton(this);
+    lastFileButton = new QPushButton(this);
+
+
+    QList<QPushButton*> buttons = {backendButton, frontendButton, lastFileButton};
+    for (QPushButton* btn : buttons) {
+        btn->setFixedSize(50, 50);
+        btn->setVisible(false);
+        btn->setStyleSheet(
+            "QPushButton {"
+            "   background-color: #E1E1E1;"
+            "   border-radius: 25px;"
+            "   border: 1px solid #0F66DE;" // 📌 Borde azul de VS Code
+            "   color: white;"
+            "   font-size: 14px;"
+            "}"
+            "QPushButton:hover {"
+            "   background-color: #0F66DE;"
+            "}"
+            );
+    }
+
+    backendButton->setIcon(QIcon(":/icons/exp.png")); // 🔼 Botón para abrir `backend`
+    frontendButton->setIcon(QIcon(":/icons/Icono React.webp")); // 🔼 Botón para abrir `frontend`
+    lastFileButton->setIcon(QIcon(":/icons/recent2.png"));// ◀ Botón para abrir último archivo
+
+    // 📌 Conectar botones a funciones
+    connect(backendButton, &QPushButton::clicked, this, &StepperDashboard::openBackendInVSCode);
+    connect(frontendButton, &QPushButton::clicked, this, &StepperDashboard::openFrontendInVSCode);
+    connect(lastFileButton, &QPushButton::clicked, this, &StepperDashboard::openLastModifiedFile);
+
+
+    // 📌 Posicionar el botón sobre todo el contenido (sin afectar layouts)
+    floatingButton->setAttribute(Qt::WA_TransparentForMouseEvents, false);
+    floatingButton->raise();  // 📌 Asegura que esté sobre todo
+    floatingButton->move(width() - 95, height() - 95);  // 📌 Ajusta su posición
+    // 📌 Inicializar animaciones
+    createAnimations();
+}
+
+// 📌 Muestra/Oculta los botones cuando se hace clic derecho
+void StepperDashboard::contextMenuEvent(QContextMenuEvent *event) {
+    Q_UNUSED(event);
+    toggleExtraButtons();
+}
+
+// 📌 Función para mostrar/ocultar botones
+void StepperDashboard::toggleExtraButtons() {
+    bool isVisible = backendButton->isVisible();
+
+    backendButton->setVisible(!isVisible);
+    frontendButton->setVisible(!isVisible);
+    lastFileButton->setVisible(!isVisible);
+
+    if (!isVisible) {
+        backendAnimation->setStartValue(floatingButton->pos());
+        backendAnimation->setEndValue(QPoint(floatingButton->x(), floatingButton->y() - 67));
+        backendAnimation->start();
+
+        frontendAnimation->setStartValue(floatingButton->pos());
+        frontendAnimation->setEndValue(QPoint(floatingButton->x(), floatingButton->y() - 130));
+        frontendAnimation->start();
+
+        lastFileAnimation->setStartValue(floatingButton->pos());
+        lastFileAnimation->setEndValue(QPoint(floatingButton->x() - 67, floatingButton->y()));
+        lastFileAnimation->start();
+    } else {
+        backendAnimation->setStartValue(backendButton->pos());
+        backendAnimation->setEndValue(floatingButton->pos());
+        backendAnimation->start();
+
+        frontendAnimation->setStartValue(frontendButton->pos());
+        frontendAnimation->setEndValue(floatingButton->pos());
+        frontendAnimation->start();
+
+        lastFileAnimation->setStartValue(lastFileButton->pos());
+        lastFileAnimation->setEndValue(floatingButton->pos());
+        lastFileAnimation->start();
+
+        // Retrasar la ocultación de los botones
+        QTimer::singleShot(300, this, [=]() {
+            backendButton->setVisible(false);
+            frontendButton->setVisible(false);
+            lastFileButton->setVisible(false);
+        });
+    }
+}
+
+// 📌 Abrir la carpeta `backend` en VS Code
+void StepperDashboard::openBackendInVSCode() {
+    std::string backendPath = project.getPath() + "/backend";
+    qDebug() << "📂 Abriendo Backend en VS Code: " << QString::fromStdString(backendPath);
+
+    if (!FileOpener::openInVSCode(backendPath)) {
+        qDebug() << "❌ Error al abrir VS Code en la carpeta Backend.";
+    }
+}
+
+// 📌 Abrir la carpeta `frontend` en VS Code
+void StepperDashboard::openFrontendInVSCode() {
+    std::string frontendPath = project.getPath() + "/frontend";
+    qDebug() << "📂 Abriendo Frontend en VS Code: " << QString::fromStdString(frontendPath);
+
+    if (!FileOpener::openInVSCode(frontendPath)) {
+        qDebug() << "❌ Error al abrir VS Code en la carpeta Frontend.";
+    }
+}
+
+// 📌 Sobrescribir `resizeEvent()` para mantener la posición del botón flotante
+void StepperDashboard::resizeEvent(QResizeEvent *event) {
+    QWidget::resizeEvent(event); // 📌 Llamar a la implementación base
+
+    // 📌 Mover el botón flotante a la esquina inferior derecha
+    floatingButton->move(width() - 90, height() - 90);
+
+    // 📌 Si los botones extras están visibles, los reubica correctamente
+    if (backendButton->isVisible()) {
+        backendButton->move(floatingButton->x(), floatingButton->y() - 60);
+        frontendButton->move(floatingButton->x(), floatingButton->y() - 120);
+        lastFileButton->move(floatingButton->x() - 60, floatingButton->y());
+    }
+}
+
+void StepperDashboard::createAnimations() {
+    backendAnimation = new QPropertyAnimation(backendButton, "pos");
+    frontendAnimation = new QPropertyAnimation(frontendButton, "pos");
+    lastFileAnimation = new QPropertyAnimation(lastFileButton, "pos");
+
+    backendAnimation->setDuration(300);
+    frontendAnimation->setDuration(300);
+    lastFileAnimation->setDuration(300);
+
+    backendAnimation->setEasingCurve(QEasingCurve::OutBack);
+    frontendAnimation->setEasingCurve(QEasingCurve::OutBack);
+    lastFileAnimation->setEasingCurve(QEasingCurve::OutBack);
 }

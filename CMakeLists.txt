@@ -170,6 +170,12 @@ set(PROJECT_SOURCES
         src/utils/file/fileutiils.cpp
         src/utils/render_callback/rendercallback.h
         src/utils/render_callback/rendercallback.cpp
+        src/utils/file/filewatcher.h
+        src/utils/file/filewatcher.cpp
+        src/utils/vscode/fileopener.h
+        src/utils/vscode/fileopener.cpp
+        src/utils/ui/codeviewer.h
+        src/utils/ui/codeviewer.cpp
         # Resources
         src/resources/resources.qrc
 )

@@ -1,6 +1,7 @@
 #ifndef CUSTOMTREEWIDGET_H
 #define CUSTOMTREEWIDGET_H
 
+#include <QEvent>
 #include <QTreeWidget>
 #include "../../core/logging/actionloggerjson.h" // Para manejar logs en formato .json
 
@@ -15,6 +16,7 @@ private:
     QRect dropIndicatorRect;        // Almacena el rectángulo del indicador
     bool showDropIndicator = false; // Controla si se debe mostrar el indicador
     ActionLoggerJson loggerJson;    // Logs en formato .json
+    void sendStepUpdatedEvent(const QString &logAction);
 
 protected:
     void dragEnterEvent(QDragEnterEvent *event) override;
@@ -24,6 +26,6 @@ protected:
 
 signals:
     void itemDropped(QTreeWidgetItem* parent, QTreeWidgetItem* item, int index);
+    void stepUpdated(const QString &logAction);
 };
-
 #endif // CUSTOMTREEWIDGET_H

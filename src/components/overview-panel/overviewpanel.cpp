@@ -53,7 +53,8 @@ void OverviewPanel::setupProjects(const std::vector<Project> &projects)
 
     // Lista de tutoriales con sus rutas
     QMap<QString, QString> tutorials
-        = {{"Beginner: HTML - Introducción a las etiquetas",
+        = {
+           {"Beginner: HTML - Introducción a las etiquetas",
             ":/resources/log_tutorials/begginer/begginer-tutorial-1.json"},
            {"Beginner: HTML - Atributos de las etiquetas",
             ":/resources/log_tutorials/begginer/begginer-tutorial-2.json"},

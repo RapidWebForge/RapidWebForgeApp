@@ -16,9 +16,16 @@
 #include "../../core/version-manager/versionmanager.h"
 #include "../../models/project/project.h"
 #include "../backend-dashboard/backenddashboard.h"
+#include "../custom-tree-widget/customtreewidget.h"
 #include "../frontend-dashboard/frontenddashboard.h"
 #include <nlohmann/json.hpp>
 #include <variant>
+#include <QResizeEvent>
+#include <QEnterEvent>
+#include <QPropertyAnimation>
+#include <QPushButton>
+#include "../../utils/file/FileWatcher.h"  // Detectar archivos modificados
+#include "../../utils/vscode/FileOpener.h" // Abrir VS Code
 
 namespace Ui {
 class StepperDashboard;
@@ -40,11 +47,18 @@ public:
 protected:
     void showEvent(QShowEvent *event) override;
     void closeEvent(QCloseEvent *event) override;
+    void loadTutorialData();
+    void resizeEvent(QResizeEvent *event) override;
+    void contextMenuEvent(QContextMenuEvent *event) override;
+
+public slots:
+    void validateCurrentStep(const QString &logAction);
 
 signals:
     void backendSchemaLoaded();
     void frontendSchemaLoaded();
     void projectDeleteRequested(const Project &project);
+    void stepUpdated(const QString &logAction);
 
 private slots:
     void showBackendPage();
@@ -68,15 +82,33 @@ private slots:
     void showTutorialIntro();
     void onUserActionPerformed(const std::string &action, const std::string &componentID);
 
+
 private:
     Ui::StepperDashboard *ui;
     BackendDashboard *backendDashboard;
     FrontendDashboard *frontendDashboard;
     StepValidator *stepValidator;
+    CustomTreeWidget *customTreeWidget;
+    QPushButton *floatingButton;
+    QPushButton *backendButton;
+    QPushButton *frontendButton;
+    QPushButton *lastFileButton;
+
+    QPropertyAnimation *backendAnimation;
+    QPropertyAnimation *frontendAnimation;
+    QPropertyAnimation *lastFileAnimation;
 
     // Tutorial bar methods
     void initializeTutorialBar();
     void setupTutorialConnections();
+    void setupFloatingButton();
+    void toggleExtraButtons();
+    void createAnimations();
+
+    void openBackendInVSCode();
+    void openFrontendInVSCode();
+    void openLastModifiedFile();
+
     // Definición de menús
     QMenu *projectMenu;
     QMenu *versionsMenu;
@@ -122,6 +154,8 @@ private:
     QString tutorialTitle;
     QString tutorialDescription;
     QString currentReference;
+
+    FileWatcher *fileWatcher;
 };
 
 #endif // STEPPERDASHBOARD_H
