@@ -157,8 +157,8 @@ private:
     QString tutorialDescription;
     QString currentReference;
 
-    QPushButton *btnOpenVSCode;  // 📌 Botón para abrir VS Code
-    FileWatcher *fileWatcher;    // 📌 Instancia para monitorear archivos
+    //    QPushButton *btnOpenVSCode;  // 📌 Botón para abrir VS Code
+    FileWatcher *fileWatcher; // 📌 Instancia para monitorear archivos
 };
 
 #endif // STEPPERDASHBOARD_H

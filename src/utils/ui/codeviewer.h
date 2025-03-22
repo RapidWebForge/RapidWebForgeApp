@@ -5,7 +5,8 @@
 #include <QPlainTextEdit>
 #include <QString>
 
-class CodeViewer : public QDialog {
+class CodeViewer : public QDialog
+{
     Q_OBJECT
 
 public:

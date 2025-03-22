@@ -51,8 +51,7 @@ StepperDashboard::StepperDashboard(QWidget *parent,
     , customTreeWidget(new CustomTreeWidget(nullptr)) // Se crea sin añadirse a la UI
     , tutorialFilePath(tutorialPath)
     , fileWatcher(new FileWatcher(this)) // Instancia de FileWatcher
-    , floatingButton(nullptr)  // 📌 Inicializar como nullptr
-
+    , floatingButton(nullptr)            // 📌 Inicializar como nullptr
 
 {
     ui->setupUi(this);
@@ -156,10 +155,9 @@ StepperDashboard::StepperDashboard(QWidget *parent,
     // Conectar la señal `openTutorial` con el método `loadTutorialData`
     connect(overviewPanel, &OverviewPanel::openTutorial, this, &StepperDashboard::loadTutorialData);
 
-
     setupFloatingButton();
     // 📌 Conectar el botón con la función que abre el archivo en VS Code
-    connect(btnOpenVSCode, &QPushButton::clicked, this, &StepperDashboard::openLastModifiedFile);
+    connect(floatingButton, &QPushButton::clicked, this, &StepperDashboard::openLastModifiedFile);
 
     // 📌 Configurar FileWatcher para monitorear cambios en archivos del proyecto
     fileWatcher->watchProjectFiles(QString::fromStdString(project.getPath()));
