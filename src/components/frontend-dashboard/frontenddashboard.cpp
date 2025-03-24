@@ -85,7 +85,7 @@ void FrontendDashboard::setUpTreeWidgets()
     configureTreeWidget(ui->currentSectionTree, true, QAbstractItemView::DropOnly);
 }
 
-// Start of general auxiliar functions
+// Inicio de las funciones auxiliares generales
 
 QTreeWidgetItem *FrontendDashboard::createTreeItem(const QString &text,
                                                    CustomTreeWidget *treeWidget,
@@ -116,9 +116,9 @@ std::string FrontendDashboard::getComponentIdFromTree(QTreeWidgetItem *item) con
     return {};
 }
 
-// End of general auxiliar functions
+// Final de las funciones auxiliares generales
 
-// Draggable settings
+// Configuraciones de arrastre
 
 void FrontendDashboard::setDraggableFlags(QTreeWidgetItem *item, bool isDraggable)
 {
@@ -245,10 +245,10 @@ void FrontendDashboard::fillAvailableSections()
 
 void FrontendDashboard::on_sectionComboBox_currentIndexChanged(int index)
 {
-    // Get the name of the selected section
+    // Obtener el nombre del section elegido
     std::string newSectionSelected = ui->sectionComboBox->currentText().toStdString();
 
-    // Search in views
+    // Buscar en views
     auto viewsNode = getMainNode("Views");
 
     if (!viewsNode) {
@@ -272,7 +272,7 @@ void FrontendDashboard::on_sectionComboBox_currentIndexChanged(int index)
         }
     }
 
-    // Search in customcomponents
+    // Buscar en customComponents
 
     auto customComponentsNode = getMainNode("CustomComponents");
 
@@ -302,7 +302,7 @@ void FrontendDashboard::on_sectionComboBox_currentIndexChanged(int index)
                          "The view or custom component selected wasn't found.");
 }
 
-// Start of populate current section tree
+// Inicio de populate current section tree
 
 void FrontendDashboard::populateCurrentSectionTree()
 {
@@ -386,15 +386,14 @@ void FrontendDashboard::populateNestedItems(
     }
 }
 
-// End of populate current section tree
+// Fin de populate current section tree
 
-// Auxiliar functions to onItemDropped
+// Funciones auxiliares para onItemDropped
 
 void FrontendDashboard::insertComponentInSection(std::shared_ptr<BaseNode> &newComponent,
                                                  QTreeWidgetItem *parentItem,
                                                  int dropIndex)
 {
-    // To insert in a custom component or a view is the same to insert in the cur
     auto sectionPtr = std::dynamic_pointer_cast<Section>(currentSection);
     if (!sectionPtr) {
         QMessageBox::warning(this, "Error", "Current section is not valid.");
@@ -510,7 +509,7 @@ std::shared_ptr<BaseNode> FrontendDashboard::convertItemToBaseNode(QTreeWidgetIt
     }
 }
 
-// End of Auxiliar functions to onItemDropped
+// Funciones auxiliares para onItemDropped
 
 void FrontendDashboard::onItemDropped(QTreeWidgetItem *parentItem,
                                       QTreeWidgetItem *droppedItem,
@@ -562,7 +561,7 @@ void FrontendDashboard::onCurrentSectionTreeItemSelected(QTreeWidgetItem *item, 
         return;
     }
 
-    // If is not a view or a custom component, check in the current section
+    // Si no es una view o un custom component, revisar en la section actual
 
     // Usamos una pila de QTreeWidgetItem para guardar la jerarquía completa hasta el item actual
     std::vector<QTreeWidgetItem *> hierarchy;
@@ -779,8 +778,6 @@ std::shared_ptr<Component> FrontendDashboard::findComponentByHierarchy(
     return nullptr;
 }
 
-// New section saved from dialog
-
 void FrontendDashboard::onSectionSaved(const std::shared_ptr<Section> &section)
 {
     if (section->getPath().empty()) {
@@ -792,7 +789,7 @@ void FrontendDashboard::onSectionSaved(const std::shared_ptr<Section> &section)
 
             sectionNode->addChild(section);
 
-            // Get the first QTreeWidgetItem (Custom)
+            // Obtener el primer QTreeWidgetItem (Custom)
             QTreeWidgetItem *customComponents = ui->componentsTree->topLevelItem(0);
 
             // Crear un nuevo QTreeWidgetItem para el component y agregarlo al
@@ -803,17 +800,17 @@ void FrontendDashboard::onSectionSaved(const std::shared_ptr<Section> &section)
 
             newCustomComponent->setText(0, QString::fromStdString(componentPtr->getName()));
 
-            // Add the new component in case it have a name
+            // Añadir el nuevo component en caso tenga un nombre
             customComponents->addChild(newCustomComponent);
 
-            // Verification
+            // Verificación
             bool childAdded = (customComponents->childCount() > 0
                                && customComponents->child(customComponents->childCount() - 1)
                                       == newCustomComponent);
 
             assert(childAdded && "Custom Component added");
 
-            // Add the new view to combobox
+            // Añadir la nueva view al combobox
             ui->sectionComboBox->addItem(QString::fromStdString(componentPtr->getName()));
         }
 

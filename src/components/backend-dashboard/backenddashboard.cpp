@@ -17,7 +17,7 @@ BackendDashboard::BackendDashboard(QWidget *parent)
 {
     ui->setupUi(this);
 
-    // Create and setting root
+    // Crear y configurar root
     rootItem = new QTreeWidgetItem(ui->tablesTreeWidget);
     rootItem->setText(0, "Database tables");
     rootItem->setIcon(0, QIcon(":/icons/database.png"));
@@ -61,7 +61,7 @@ void BackendDashboard::applyStylesBack()
     ui->labelMethods->setStyleSheet("font-size: 16px; color: #27292A; padding-top: 0px; "
                                     "padding-left: 10px; padding-bottom: 10px;");
 
-    // Puedes ajustar los iconos y tamaño de los botones
+    // Ajustar los iconos y tamaño de los botones
     ui->editField->setIcon(QIcon(":/icons/edit.png"));
     ui->editField->setIconSize(QSize(16, 16));
     ui->editField->setToolTip("Edit Field");
@@ -218,10 +218,10 @@ void BackendDashboard::setTransactions(const std::vector<Transaction> &newTransa
 {
     transactions = newTransactions;
 
-    // Clear rootItem
+    // Limpiar rootItem
     rootItem->takeChildren();
 
-    // Add transactions like children
+    // Añadir transactions como hijos
     for (const auto &transaction : transactions) {
         QTreeWidgetItem *item = new QTreeWidgetItem(rootItem);
         item->setText(0, QString::fromStdString(transaction.getName()));
@@ -230,13 +230,13 @@ void BackendDashboard::setTransactions(const std::vector<Transaction> &newTransa
     // Expandir todo el árbol para mostrar todas las tablas
     ui->tablesTreeWidget->expandAll();
 
-    // If transactions are available, set the first one as the current transaction
+    // Si transactions están habilitados, configurar el primero como la transaction actual
     if (!transactions.empty()) {
-        // Load the first transaction automatically
+        // Cargar el primer transaction automáticamente
         setCurrentTransaction(transactions[0]);
         updateFieldsTable(transactions[0]);
 
-        // Update UI labels for the first transaction
+        // Actualizar el UI de los labels para la primera transaction
         ui->fieldLabel->setText(QString::fromStdString(transactions[0].getName()) + " Table");
         ui->labelMethods->setText(QString::fromStdString(transactions[0].getName()) + " Methods");
     }

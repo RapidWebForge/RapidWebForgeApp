@@ -1,9 +1,9 @@
 #include "FileOpener.h"
 #include <QDebug>
-#include <QFileInfo>               // 📌 Agrega esta línea
-#include <QOperatingSystemVersion> // 📌 Detectar sistema operativo
+#include <QFileInfo>               // Agrega esta línea
+#include <QOperatingSystemVersion> // Detectar sistema operativo
 #include <QProcess>
-#include <boost/process.hpp> // 📌 Usar Boost.Process
+#include <boost/process.hpp> // Usar Boost.Process
 #include <iostream>
 
 namespace bp = boost::process;
@@ -13,16 +13,16 @@ bool FileOpener::openInVSCode(const std::string &folderPath, const std::string &
     try {
         std::string command;
 
-// 📌 Detectar sistema operativo y formar comando adecuado
+// Detectar sistema operativo y formar comando adecuado
 #ifdef _WIN32
-        command = "code \"" + folderPath + "\""; // ✅ Comando para Windows
+        command = "code \"" + folderPath + "\""; // Comando para Windows
         if (!filePath.empty()) {
-            command += " -g \"" + filePath + "\""; // ✅ Abrir archivo específico
+            command += " -g \"" + filePath + "\""; // Abrir archivo específico
         }
 #else
-        command = "/usr/local/bin/code \"" + folderPath + "\""; // ✅ Comando para Mac/Linux
+        command = "/usr/local/bin/code \"" + folderPath + "\""; // Comando para Mac/Linux
         if (!filePath.empty()) {
-            command += " -g \"" + filePath + "\""; // ✅ Abrir archivo específico
+            command += " -g \"" + filePath + "\""; // Abrir archivo específico
         }
 #endif
         qDebug() << "🖥 Ejecutando comando:" << QString::fromStdString(command);

@@ -95,7 +95,7 @@ void CustomTreeWidget::dropEvent(QDropEvent *event)
     ComponentType typeTarget = stringToComponentType(componentTypeStrTarget);
     Component tempComponent(typeTarget);
 
-    // Check for sections
+    // Verificar para sections
     bool targetIsSection = (componentTypeToString(typeTarget) == "Undefined");
     bool isTopLevel = (targetItem->parent() == nullptr);
 

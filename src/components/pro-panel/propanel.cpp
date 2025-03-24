@@ -157,20 +157,20 @@ void ProPanel::onDeleteProjectRequested(int projectId)
 
 void ProPanel::onProjectPreviewClicked(const Project &project)
 {
-    // 📌 Buscar la ventana principal (ProjectsPanel) a partir de `OverviewPanel`
+    // Buscar la ventana principal (ProjectsPanel) a partir de `OverviewPanel`
     QWidget *projectsPanel = this;
     while (projectsPanel->parentWidget() != nullptr) {
         projectsPanel = projectsPanel->parentWidget();
     }
 
-    // 📌 OCULTAR `ProjectsPanel` completamente
+    // OCULTAR `ProjectsPanel` completamente
     projectsPanel->hide();
 
-    // 📌 Abrir el `StepperDashboard` para el proyecto seleccionado
+    // Abrir el `StepperDashboard` para el proyecto seleccionado
     StepperDashboard *stprDashboard = new StepperDashboard(nullptr, project);
     stprDashboard->showMaximized();
 
-    // 📌 Restaurar `ProjectsPanel` cuando `StepperDashboard` se cierre
+    // Restaurar `ProjectsPanel` cuando `StepperDashboard` se cierre
     connect(stprDashboard, &StepperDashboard::destroyed, projectsPanel, [projectsPanel]() {
         projectsPanel->show();
     });
