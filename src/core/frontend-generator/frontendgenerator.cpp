@@ -1,12 +1,14 @@
 #include "frontendgenerator.h"
 #include <QDebug>
 #include <QFile>
+#include <QStandardPaths>
 #include <QTextStream>
 #include "../../models/component-type/componenttype.h"
 #include "../../models/generic-node/genericnode.h"
 #include "../../models/time-chrono/timechrono.h"
 #include "../../utils/file/fileutiils.h"
 #include "../../utils/render_callback/rendercallback.h"
+#include <boost/process.hpp>
 #include <boost/uuid/string_generator.hpp>
 #include <boost/uuid/uuid_generators.hpp>
 #include <boost/uuid/uuid_io.hpp>
@@ -708,20 +710,12 @@ bool FrontendGenerator::generateFrontendCode()
     return true;
 }
 
+// Funciones Auxiliares para modificaciones
+
 std::vector<NodeOperation> FrontendGenerator::diffTrees(std::shared_ptr<BaseNode> &oldNode,
-                                                        std::shared_ptr<BaseNode> &newNode,
-                                                        int depth /* = 0 */)
+                                                        std::shared_ptr<BaseNode> &newNode)
 {
     std::vector<NodeOperation> ops;
-
-    // Generar una indentación para los logs según la profundidad actual
-    QString indent(depth * 2, ' ');
-
-    // Log básico de comparación de nodos
-    // qDebug() << indent << "Comparando nodos:"
-    //          << QString::fromStdString(boost::uuids::to_string(oldNode->getId())) << "vs"
-    //          << QString::fromStdString(boost::uuids::to_string(newNode->getId()))
-    //          << "Tipo:" << QString::fromStdString(newNode->getNodeType());
 
     // Si el nodo es uno de los contenedores de alto nivel, ignóralo y recorre sus hijos secuencialmente.
     std::string type = newNode->getNodeType();
@@ -732,76 +726,15 @@ std::vector<NodeOperation> FrontendGenerator::diffTrees(std::shared_ptr<BaseNode
         // Recorrer hijos en orden
         for (size_t i = 0; i < newChildren.size(); ++i) {
             if (i < oldChildren.size()) {
-                // Mensajes de debug para el hijo actual (por orden)
-                // {
-                //     auto oldNodeS = std::dynamic_pointer_cast<Section>(oldChildren[i]);
-                //     if (oldNodeS) {
-                //         qDebug() << indent << "  Hijo antiguo (secuencial) - Section:"
-                //                  << QString::fromStdString(oldNodeS->getName());
-                //     } else {
-                //         auto oldNodeC = std::dynamic_pointer_cast<Component>(oldChildren[i]);
-                //         if (oldNodeC) {
-                //             qDebug() << indent << "  Hijo antiguo (secuencial) - Component:"
-                //                      << QString::fromStdString(
-                //                             componentTypeToString(oldNodeC->getType()));
-                //         }
-                //     }
-                //     auto newNodeS = std::dynamic_pointer_cast<Section>(newChildren[i]);
-                //     if (newNodeS) {
-                //         qDebug() << indent << "  Hijo nuevo (secuencial) - Section:"
-                //                  << QString::fromStdString(newNodeS->getNodeType());
-                //     } else {
-                //         auto newNodeC = std::dynamic_pointer_cast<Component>(newChildren[i]);
-                //         if (newNodeC) {
-                //             qDebug() << indent << "  Hijo nuevo (secuencial) - Component:"
-                //                      << QString::fromStdString(
-                //                             componentTypeToString(newNodeC->getType()));
-                //         }
-                //     }
-                // }
-                auto childOps = diffTrees(oldChildren[i], newChildren[i], depth + 1);
+                auto childOps = diffTrees(oldChildren[i], newChildren[i]);
                 ops.insert(ops.end(), childOps.begin(), childOps.end());
             } else {
-                // Si hay un hijo nuevo sin par, se trata de una inserción.
-                // {
-                //     auto newNodeS = std::dynamic_pointer_cast<Section>(newChildren[i]);
-                //     if (newNodeS) {
-                //         qDebug() << indent
-                //                  << "  Inserción detectada (secuencial) para Section con nombre:"
-                //                  << QString::fromStdString(newNodeS->getName());
-                //     } else {
-                //         auto newNodeC = std::dynamic_pointer_cast<Component>(newChildren[i]);
-                //         if (newNodeC) {
-                //             qDebug() << indent
-                //                      << "  Inserción detectada (secuencial) para Component de tipo:"
-                //                      << QString::fromStdString(
-                //                             componentTypeToString(newNodeC->getType()));
-                //         }
-                //     }
-                // }
                 ops.push_back(NodeOperation(OperationType::Insert, newChildren[i]));
             }
         }
         // Si hay más hijos en el antiguo que en el nuevo, se consideran eliminaciones.
         if (oldChildren.size() > newChildren.size()) {
             for (size_t i = newChildren.size(); i < oldChildren.size(); ++i) {
-                // {
-                //     auto oldNodeS = std::dynamic_pointer_cast<Section>(oldChildren[i]);
-                //     if (oldNodeS) {
-                //         qDebug() << indent
-                //                  << "  Eliminación detectada (secuencial) para Section con nombre:"
-                //                  << QString::fromStdString(oldNodeS->getName());
-                //     } else {
-                //         auto oldNodeC = std::dynamic_pointer_cast<Component>(oldChildren[i]);
-                //         if (oldNodeC) {
-                //             qDebug()
-                //                 << indent
-                //                 << "  Eliminación detectada (secuencial) para Component de tipo:"
-                //                 << QString::fromStdString(
-                //                        componentTypeToString(oldNodeC->getType()));
-                //         }
-                //     }
-                // }
                 ops.push_back(NodeOperation(OperationType::Delete, oldChildren[i]));
             }
         }
@@ -810,9 +743,6 @@ std::vector<NodeOperation> FrontendGenerator::diffTrees(std::shared_ptr<BaseNode
 
     // Para los demás nodos, si tienen el mismo ID y difieren en contenido, se marca como modificación.
     if (oldNode->getId() == newNode->getId() && oldNode->isDifferentFrom(newNode)) {
-        // qDebug() << indent << "  Modificación detectada para nodo con ID:"
-        //          << QString::fromStdString(boost::uuids::to_string(newNode->getId()))
-        //          << "Tipo:" << QString::fromStdString(newNode->getNodeType());
         ops.push_back(NodeOperation(OperationType::Modify, newNode));
     }
 
@@ -827,46 +757,16 @@ std::vector<NodeOperation> FrontendGenerator::diffTrees(std::shared_ptr<BaseNode
     for (auto newChild : newNode->getChildren()) {
         std::string id = boost::uuids::to_string(newChild->getId());
         if (oldChildrenMap.find(id) != oldChildrenMap.end()) {
-            auto childOps = diffTrees(oldChildrenMap[id], newChild, depth + 1);
+            auto childOps = diffTrees(oldChildrenMap[id], newChild);
             ops.insert(ops.end(), childOps.begin(), childOps.end());
             oldChildrenMap.erase(id);
         } else {
-            // {
-            //     auto newNodeS = std::dynamic_pointer_cast<Section>(newChild);
-            //     if (newNodeS) {
-            //         qDebug() << indent
-            //                  << "  Inserción detectada (por mapa) para Section con nombre:"
-            //                  << QString::fromStdString(newNodeS->getName());
-            //     } else {
-            //         auto newNodeC = std::dynamic_pointer_cast<Component>(newChild);
-            //         if (newNodeC) {
-            //             qDebug() << indent
-            //                      << "  Inserción detectada (por mapa) para Component de tipo:"
-            //                      << QString::fromStdString(
-            //                             componentTypeToString(newNodeC->getType()));
-            //         }
-            //     }
-            // }
             ops.push_back(NodeOperation(OperationType::Insert, newChild));
         }
     }
 
     // Los nodos que quedaron en oldChildrenMap se consideran eliminaciones.
     for (auto &pair : oldChildrenMap) {
-        // {
-        //     auto oldNodeS = std::dynamic_pointer_cast<Section>(pair.second);
-        //     if (oldNodeS) {
-        //         qDebug() << indent << "  Eliminación detectada (por mapa) para Section con nombre:"
-        //                  << QString::fromStdString(oldNodeS->getName());
-        //     } else {
-        //         auto oldNodeC = std::dynamic_pointer_cast<Component>(pair.second);
-        //         if (oldNodeC) {
-        //             qDebug() << indent
-        //                      << "  Eliminación detectada (por mapa) para Component de tipo:"
-        //                      << QString::fromStdString(componentTypeToString(oldNodeC->getType()));
-        //         }
-        //     }
-        // }
         ops.push_back(NodeOperation(OperationType::Delete, pair.second));
     }
 
@@ -875,16 +775,11 @@ std::vector<NodeOperation> FrontendGenerator::diffTrees(std::shared_ptr<BaseNode
 
 bool FrontendGenerator::updateFrontendCode()
 {
-    std::vector<NodeOperation> operations = diffTrees(oldRoot, frontendRoot, 0);
+    std::vector<NodeOperation> operations = diffTrees(oldRoot, frontendRoot);
 
     if (operations.empty()) {
         qDebug() << "No changes detected, skipping frontend generation.";
         return true;
-    }
-
-    if (!updateSchema()) {
-        qDebug() << "Error on Updating Schema";
-        return false;
     }
 
     // if (generateFrontendCode()) {
@@ -916,6 +811,11 @@ bool FrontendGenerator::updateFrontendCode()
     // Actualizar archivos que dependen de cambios a nivel de Section (ej. App.tsx, etc.)
     // updateDependentFiles();
 
+    if (!updateSchema()) {
+        qDebug() << "Error on Updating Schema";
+        return false;
+    }
+
     // Actualizar el oldRoot para futuras comparaciones
     oldRoot = cloneNode(frontendRoot);
     return true;
@@ -942,20 +842,54 @@ void FrontendGenerator::applyInsertion(std::shared_ptr<BaseNode> &node)
         // Determinar en qué archivo se debe insertar el nodo
         std::string filePath = getFilePathForNode(node);
 
-        // Generar el fragmento de código usando la plantilla (Inja u otro método)
-        std::string newFragment = generateNodeFragment(node);
+        // Generar el fragmento de código usando la plantilla Inja
+        std::string jsxFragment = generateNodeFragment(node);
 
-        // Leer el contenido actual del archivo
-        std::string fileContent = FileUtils::readFile(filePath);
+        QString safeJsx
+            = QString::fromStdString(jsxFragment).replace("\\", "\\\\").replace("\"", "\\\"");
+        std::string finalJsxArg = "\"" + safeJsx.toStdString() + "\"";
 
-        // Determinar el punto de inserción:
-        size_t insertionPos = findInsertionPosition(fileContent, node);
+        // Obtener la el dataId de referencia y la posición correspondiente de este id
+        std::string referenceId, position;
+        getReferenceForInsertion(referenceId, position, node);
 
-        // Insertar el nuevo fragmento en la posición calculada
-        fileContent.insert(insertionPos, newFragment);
+        // Nuevo método con Babel
 
-        // Escribir el contenido actualizado al archivo
-        return FileUtils::writeFile(filePath, fileContent);
+        QString resourcePath = ":/babel/editor";
+        QFile resourceFile(resourcePath);
+        if (!resourceFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
+            fmt::print(stderr, "❌ Unable to open resource: {}\n", resourcePath.toStdString());
+            return;
+        }
+
+        QString tempPath = QStandardPaths::writableLocation(QStandardPaths::TempLocation);
+        QString tempFilePath = tempPath + "/editor.js";
+
+        QFile tempFile(tempFilePath);
+        if (tempFile.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text)) {
+            tempFile.write(resourceFile.readAll());
+            tempFile.close();
+        } else {
+            fmt::print(stderr, "❌ Unable to write temporary editor.js\n");
+            return;
+        }
+
+        // Correr el comando externo con Node.js
+
+        namespace bp = boost::process;
+
+        bp::environment env = boost::this_process::environment();
+        env["NODE_PATH"] = "/usr/local/lib/node_modules"; // Ajusta según tu sistema
+
+        bp::child c("/usr/local/bin/node",
+                    tempFilePath.toStdString(),
+                    filePath,
+                    "insert",
+                    referenceId,
+                    position,
+                    finalJsxArg,
+                    env);
+        c.wait();
     }
 }
 
@@ -1054,62 +988,46 @@ std::string FrontendGenerator::generateNodeFragment(std::shared_ptr<BaseNode> &n
     }
 }
 
-size_t FrontendGenerator::findInsertionPosition(const std::string &fileContent,
-                                                const std::shared_ptr<BaseNode> &node)
+void FrontendGenerator::getReferenceForInsertion(std::string &referenceId,
+                                                 std::string &position,
+                                                 std::shared_ptr<BaseNode> &node)
 {
+    if (!node->getParent())
+        return;
+
     auto parent = node->getParent();
-    if (parent) {
-        const auto &siblings = parent->getChildren();
-        // Buscar la posición del nodo entre sus hermanos
-        size_t index = 0;
-        bool found = false;
-        for (size_t i = 0; i < siblings.size(); ++i) {
-            if (siblings[i] == node) {
-                index = i;
-                found = true;
-                break;
-            }
+    auto children = parent->getChildren();
+
+    if (children.empty()) {
+        if (auto section = std::dynamic_pointer_cast<Section>(parent)) {
+            referenceId = "none";
+            position = "inner";
         }
-        if (found) {
-            // Caso 1: Si hay un hermano anterior, usar su data-id
-            if (index > 0) {
-                auto prevSibling = siblings[index - 1];
-                std::string searchStr = "data-id=\"" + boost::uuids::to_string(prevSibling->getId())
-                                        + "\"";
-                size_t pos = fileContent.find(searchStr);
-                if (pos != std::string::npos) {
-                    // Encontrar el final de la etiqueta de ese hermano
-                    size_t endTagPos = fileContent.find(">", pos);
-                    if (endTagPos != std::string::npos) {
-                        return endTagPos + 1;
-                    }
-                }
-            }
-            // Caso 2: No hay hermano anterior, pero sí un hermano siguiente
-            if (index + 1 < siblings.size()) {
-                auto nextSibling = siblings[index + 1];
-                std::string searchStr = "data-id=\"" + boost::uuids::to_string(nextSibling->getId())
-                                        + "\"";
-                size_t pos = fileContent.find(searchStr);
-                if (pos != std::string::npos) {
-                    // Insertar justo antes del inicio del bloque del siguiente hermano
-                    return pos;
-                }
-            }
-        }
+        return;
     }
 
-    // Caso 3: Si no hay marcador, buscar el contenedor principal (el primer <div>)
-    size_t pos = fileContent.find("<div");
-    if (pos != std::string::npos) {
-        size_t endTagPos = fileContent.find(">", pos);
-        if (endTagPos != std::string::npos) {
-            return endTagPos + 1;
-        }
+    auto it = std::find(children.begin(), children.end(), node);
+    if (it == children.end()) {
+        fmt::print("Error: node {} wasn't found among parent's children.\n",
+                   boost::uuids::to_string(node->getId()));
+        return;
     }
 
-    // Fallback: Si nada funciona, insertar al final del archivo
-    return fileContent.length();
+    size_t index = std::distance(children.begin(), it);
+
+    if (children.size() == 1) {
+        // Único hijo, se inserta dentro del padre (opcional)
+        referenceId = "none";
+        position = "inner";
+    } else if (index == 0) {
+        // Es el primero, usar el segundo como referencia con "before"
+        referenceId = boost::uuids::to_string(children.at(1)->getId());
+        position = "before";
+    } else {
+        // Insertar después del anterior
+        referenceId = boost::uuids::to_string(children.at(index - 1)->getId());
+        position = "after";
+    }
 }
 
 // Getters
@@ -1120,7 +1038,7 @@ const std::shared_ptr<BaseNode> &FrontendGenerator::getFrontendRoot() const
 
 bool FrontendGenerator::isProgressSaved()
 {
-    std::vector<NodeOperation> operations = diffTrees(oldRoot, frontendRoot, 0);
+    std::vector<NodeOperation> operations = diffTrees(oldRoot, frontendRoot);
 
     if (operations.empty()) {
         qDebug() << "No changes detected.";

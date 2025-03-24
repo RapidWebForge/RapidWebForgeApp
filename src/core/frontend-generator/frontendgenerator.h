@@ -30,17 +30,17 @@ private:
     std::shared_ptr<Section> findCustomComponentByName(const std::string &viewName);
     bool generateView(const std::string &viewName);
     bool generateCustomComponent(const std::string &custComponentName);
-    // Auxiliar Updating
+    // Funciones Auxiliares para modificaciones
     std::vector<NodeOperation> diffTrees(std::shared_ptr<BaseNode> &oldNode,
-                                         std::shared_ptr<BaseNode> &newNode,
-                                         int depth = 0);
+                                         std::shared_ptr<BaseNode> &newNode);
     void applyInsertion(std::shared_ptr<BaseNode> &node);
     void applyModification(std::shared_ptr<BaseNode> &node);
     void applyDeletion(std::shared_ptr<BaseNode> &node);
     std::string getFilePathForNode(std::shared_ptr<BaseNode> &node);
     std::string generateNodeFragment(std::shared_ptr<BaseNode> &node);
-    size_t findInsertionPosition(const std::string &fileContent,
-                                 const std::shared_ptr<BaseNode> &node);
+    void getReferenceForInsertion(std::string &referenceId,
+                                  std::string &position,
+                                  std::shared_ptr<BaseNode> &node);
 
 public:
     FrontendGenerator(const std::string &projectPath);
