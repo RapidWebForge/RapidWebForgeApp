@@ -782,14 +782,6 @@ bool FrontendGenerator::updateFrontendCode()
         return true;
     }
 
-    // if (generateFrontendCode()) {
-    //     oldRoot = cloneNode(frontendRoot);
-    //     return true;
-    // } else {
-    //     qDebug() << "Failing in GENERATING FRONTEND CODE";
-    //     return false;
-    // }
-
     // Aplicar cada operación de forma incremental
     for (auto op : operations) {
         switch (op.type) {
@@ -893,9 +885,113 @@ void FrontendGenerator::applyInsertion(std::shared_ptr<BaseNode> &node)
     }
 }
 
-void FrontendGenerator::applyModification(std::shared_ptr<BaseNode> &node) {}
+void FrontendGenerator::applyModification(std::shared_ptr<BaseNode> &node)
+{
+    // Si la modificación es en un view o custom component
+    if (node->getNodeType() == "Section")
+        return;
 
-void FrontendGenerator::applyDeletion(std::shared_ptr<BaseNode> &node) {}
+    // Si la modificación es en un Component
+
+    // Determinar en qué archivo se debe insertar el nodo
+    std::string filePath = getFilePathForNode(node);
+
+    // Generar el fragmento de código usando la plantilla Inja
+    std::string jsxFragment = generateNodeFragment(node);
+
+    QString safeJsx = QString::fromStdString(jsxFragment).replace("\\", "\\\\").replace("\"", "\\\"");
+    std::string finalJsxArg = "\"" + safeJsx.toStdString() + "\"";
+
+    // Obtener la el dataId
+    std::string dataId = boost::uuids::to_string(node->getId());
+
+    QString resourcePath = ":/babel/editor";
+    QFile resourceFile(resourcePath);
+    if (!resourceFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        fmt::print(stderr, "❌ Unable to open resource: {}\n", resourcePath.toStdString());
+        return;
+    }
+
+    QString tempPath = QStandardPaths::writableLocation(QStandardPaths::TempLocation);
+    QString tempFilePath = tempPath + "/editor.js";
+
+    QFile tempFile(tempFilePath);
+    if (tempFile.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text)) {
+        tempFile.write(resourceFile.readAll());
+        tempFile.close();
+    } else {
+        fmt::print(stderr, "❌ Unable to write temporary editor.js\n");
+        return;
+    }
+
+    // Correr el comando externo con Node.js
+
+    namespace bp = boost::process;
+
+    bp::environment env = boost::this_process::environment();
+    env["NODE_PATH"] = "/usr/local/lib/node_modules"; // Ajusta según tu sistema
+
+    bp::child c("/usr/local/bin/node",
+                tempFilePath.toStdString(),
+                filePath,
+                "modify",
+                dataId,
+                "",
+                finalJsxArg,
+                env);
+    c.wait();
+}
+
+void FrontendGenerator::applyDeletion(std::shared_ptr<BaseNode> &node)
+{
+    // Si la modificación es en un view o custom component
+    if (node->getNodeType() == "Section")
+        return;
+
+    // Si la modificación es en un Component
+
+    // Determinar en qué archivo se debe insertar el nodo
+    std::string filePath = getFilePathForNode(node);
+
+    // Obtener la el dataId
+    std::string dataId = boost::uuids::to_string(node->getId());
+
+    QString resourcePath = ":/babel/editor";
+    QFile resourceFile(resourcePath);
+    if (!resourceFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        fmt::print(stderr, "❌ Unable to open resource: {}\n", resourcePath.toStdString());
+        return;
+    }
+
+    QString tempPath = QStandardPaths::writableLocation(QStandardPaths::TempLocation);
+    QString tempFilePath = tempPath + "/editor.js";
+
+    QFile tempFile(tempFilePath);
+    if (tempFile.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text)) {
+        tempFile.write(resourceFile.readAll());
+        tempFile.close();
+    } else {
+        fmt::print(stderr, "❌ Unable to write temporary editor.js\n");
+        return;
+    }
+
+    // Correr el comando externo con Node.js
+
+    namespace bp = boost::process;
+
+    bp::environment env = boost::this_process::environment();
+    env["NODE_PATH"] = "/usr/local/lib/node_modules"; // Ajusta según tu sistema
+
+    bp::child c("/usr/local/bin/node",
+                tempFilePath.toStdString(),
+                filePath,
+                "delete",
+                dataId,
+                "",
+                "",
+                env);
+    c.wait();
+}
 
 std::string FrontendGenerator::getFilePathForNode(std::shared_ptr<BaseNode> &node)
 {

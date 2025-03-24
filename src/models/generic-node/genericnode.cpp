@@ -22,11 +22,11 @@ void GenericNode::updateFromJson(const nlohmann::json &json)
 
 std::shared_ptr<BaseNode> GenericNode::clone() const
 {
-    auto cloned = std::make_shared<GenericNode>(*this); // Copia los datos base
+    auto cloned = std::make_shared<GenericNode>(this->nodeType); // Copia los datos base
     // Ahora, reemplaza el vector de hijos con copias profundas de cada hijo.
-    cloned->children.clear();
+    cloned->getChildren().clear();
     for (const auto &child : this->children) {
-        cloned->children.push_back(child->clone());
+        cloned->addChild(child->clone());
     }
     return cloned;
 }

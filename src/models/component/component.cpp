@@ -88,6 +88,8 @@ std::shared_ptr<BaseNode> Component::clone() const
                                                        this->createdOn,
                                                        this->updatedOn);
 
+    clonedComponent->getChildren().clear();
+
     for (const auto &child : this->children) {
         clonedComponent->addChild(child->clone());
     }

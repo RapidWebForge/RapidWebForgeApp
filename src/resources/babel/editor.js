@@ -7,53 +7,27 @@ const prettier = require("prettier");
 const [, , filePath, operation, referenceId, position, payload] = process.argv;
 
 (async () => {
-  const sourceCode = fs.readFileSync(filePath, "utf-8");
-  const ast = parser.parse(sourceCode, {
-    sourceType: "module",
-    plugins: ["jsx", "typescript"],
-  });
+  try {
+    const sourceCode = fs.readFileSync(filePath, "utf-8");
 
-  const fragmentAst = payload
-    ? parser.parseExpression(JSON.parse(payload), { plugins: ["jsx"] })
-    : null;
-
-  let modified = false;
-
-  if (operation === "modify" || operation === "delete") {
-    traverse(ast, {
-      JSXElement(path) {
-        const attr = path.node.openingElement.attributes.find(
-          (a) => a.type === "JSXAttribute" && a.name.name === "data-id"
-        );
-        if (!attr || attr.value.value !== referenceId) return;
-
-        if (operation === "modify" && fragmentAst) {
-          path.replaceWith(fragmentAst);
-        } else if (operation === "delete") {
-          path.remove();
-        }
-
-        modified = true;
-        path.stop();
-      }
+    const ast = parser.parse(sourceCode, {
+      sourceType: "module",
+      plugins: ["jsx", "typescript"],
     });
-  }
 
-  if (operation === "insert" && fragmentAst) {
-    if (referenceId === "none" && position === "inner") {
-      traverse(ast, {
-        JSXElement(path) {
-          if (
-            path.node.openingElement.name.name === "div" &&
-            !modified
-          ) {
-            path.node.children.push(fragmentAst);
-            modified = true;
-            path.stop();
-          }
-        }
-      });
-    } else {
+    let fragmentAst = null;
+    try {
+      fragmentAst =
+        payload && payload !== '""'
+          ? parser.parseExpression(JSON.parse(payload), { plugins: ["jsx"] })
+          : null;
+    } catch (e) {
+      console.error("❌ Error parsing payload:", e.message);
+    }
+
+    let modified = false;
+
+    if (operation === "modify" || operation === "delete") {
       traverse(ast, {
         JSXElement(path) {
           const attr = path.node.openingElement.attributes.find(
@@ -61,19 +35,10 @@ const [, , filePath, operation, referenceId, position, payload] = process.argv;
           );
           if (!attr || attr.value.value !== referenceId) return;
 
-          switch (position) {
-            case "before":
-              path.insertBefore(fragmentAst);
-              break;
-            case "after":
-              path.insertAfter(fragmentAst);
-              break;
-            case "inner":
-              path.node.children.push(fragmentAst);
-              break;
-            default:
-              console.error("❌ Unknown insert position:", position);
-              return;
+          if (operation === "modify" && fragmentAst) {
+            path.replaceWith(fragmentAst);
+          } else if (operation === "delete") {
+            path.remove();
           }
 
           modified = true;
@@ -81,17 +46,65 @@ const [, , filePath, operation, referenceId, position, payload] = process.argv;
         },
       });
     }
+
+    if (operation === "insert" && fragmentAst) {
+      if (referenceId === "none" && position === "inner") {
+        traverse(ast, {
+          JSXElement(path) {
+            if (
+              path.node.openingElement.name.name === "div" &&
+              !modified
+            ) {
+              path.node.children.push(fragmentAst);
+              modified = true;
+              path.stop();
+            }
+          },
+        });
+      } else {
+        traverse(ast, {
+          JSXElement(path) {
+            const attr = path.node.openingElement.attributes.find(
+              (a) => a.type === "JSXAttribute" && a.name.name === "data-id"
+            );
+            if (!attr || attr.value.value !== referenceId) return;
+
+            switch (position) {
+              case "before":
+                path.insertBefore(fragmentAst);
+                break;
+              case "after":
+                path.insertAfter(fragmentAst);
+                break;
+              case "inner":
+                path.node.children.push(fragmentAst);
+                break;
+              default:
+                console.error("❌ Unknown insert position:", position);
+                return;
+            }
+
+            modified = true;
+            path.stop();
+          },
+        });
+      }
+    }
+
+    const output = generate(ast, { retainLines: true }, sourceCode);
+
+    const formattedCode = await prettier.format(output.code, {
+      parser: "babel-ts",
+      semi: true,
+      singleQuote: false,
+      trailingComma: "es5",
+      tabWidth: 2,
+    });
+
+    fs.writeFileSync(filePath, formattedCode);
+    console.log("✅ Code successfully modified and formatted.");
+  } catch (err) {
+    console.error("❌ Unexpected error:", err.message);
+    process.exit(1);
   }
-
-  const output = generate(ast, { retainLines: true }, sourceCode);
-
-  const formattedCode = await prettier.format(output.code, {
-    parser: "babel-ts",
-    semi: true,
-    singleQuote: false,
-    trailingComma: "es5",
-    tabWidth: 2,
-  });
-
-  fs.writeFileSync(filePath, formattedCode);
 })();

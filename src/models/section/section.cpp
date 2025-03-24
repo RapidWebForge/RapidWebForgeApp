@@ -75,6 +75,8 @@ std::shared_ptr<BaseNode> Section::clone() const
                                                   this->updatedOn);
     }
 
+    clonedSection->getChildren().clear();
+
     // Clonar recursivamente cada hijo
     for (const auto &child : this->children) {
         clonedSection->addChild(child->clone());
