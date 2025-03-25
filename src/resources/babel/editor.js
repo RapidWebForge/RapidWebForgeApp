@@ -31,7 +31,7 @@ const [, , filePath, operation, referenceId, position, payload] = process.argv;
       traverse(ast, {
         JSXElement(path) {
           const attr = path.node.openingElement.attributes.find(
-            (a) => a.type === "JSXAttribute" && a.name.name === "data-id"
+            (a) => a.type === "JSXAttribute" && a.name.name === "data-id",
           );
           if (!attr || attr.value.value !== referenceId) return;
 
@@ -47,14 +47,80 @@ const [, , filePath, operation, referenceId, position, payload] = process.argv;
       });
     }
 
+    if (operation === "refactor-delete" && referenceId) {
+      const importName = referenceId;
+
+      if (position === "View") {
+        // Refactor para vistas (views)
+        traverse(ast, {
+          ImportDeclaration(path) {
+            const importPath = path.node.source.value;
+            if (importPath.includes(importName)) {
+              path.remove();
+              modified = true;
+            }
+          },
+          CallExpression(path) {
+            // Eliminar React.lazy(() => import("./views/ViewName"))
+            if (
+              path.node.callee.type === "MemberExpression" &&
+              path.node.callee.property.name === "lazy" &&
+              path.node.arguments[0]?.body?.body[0]?.argument?.value?.includes(
+                importName,
+              )
+            ) {
+              path.remove();
+              modified = true;
+            }
+          },
+          JSXElement(path) {
+            // Eliminar <Route path="/" element={<ViewName />} />
+            if (
+              path.node.openingElement.name.name === "Route" &&
+              path.node.openingElement.attributes.some(
+                (attr) =>
+                  attr.type === "JSXAttribute" &&
+                  attr.name.name === "element" &&
+                  attr.value?.expression?.openingElement?.name?.name ===
+                    importName,
+              )
+            ) {
+              path.remove();
+              modified = true;
+            }
+          },
+        });
+      } else if (position === "CustomComponent") {
+        // Refactor para componentes personalizados
+        traverse(ast, {
+          ImportDeclaration(path) {
+            const importPath = path.node.source.value;
+            if (importPath.includes(importName)) {
+              path.remove();
+              modified = true;
+            }
+          },
+          JSXElement(path) {
+            // Eliminar <ComponentName />
+            if (
+              path.node.openingElement.name.type === "JSXIdentifier" &&
+              path.node.openingElement.name.name === importName
+            ) {
+              path.remove();
+              modified = true;
+            }
+          },
+        });
+      } else {
+        console.error("❌ Unknown refactor-delete position:", position);
+      }
+    }
+
     if (operation === "insert" && fragmentAst) {
       if (referenceId === "none" && position === "inner") {
         traverse(ast, {
           JSXElement(path) {
-            if (
-              path.node.openingElement.name.name === "div" &&
-              !modified
-            ) {
+            if (path.node.openingElement.name.name === "div" && !modified) {
               path.node.children.push(fragmentAst);
               modified = true;
               path.stop();
@@ -65,7 +131,7 @@ const [, , filePath, operation, referenceId, position, payload] = process.argv;
         traverse(ast, {
           JSXElement(path) {
             const attr = path.node.openingElement.attributes.find(
-              (a) => a.type === "JSXAttribute" && a.name.name === "data-id"
+              (a) => a.type === "JSXAttribute" && a.name.name === "data-id",
             );
             if (!attr || attr.value.value !== referenceId) return;
 

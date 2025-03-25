@@ -8,6 +8,7 @@
 #include "../../models/time-chrono/timechrono.h"
 #include "../../utils/file/fileutiils.h"
 #include "../../utils/render_callback/rendercallback.h"
+#include <boost/filesystem.hpp>
 #include <boost/process.hpp>
 #include <boost/uuid/string_generator.hpp>
 #include <boost/uuid/uuid_generators.hpp>
@@ -222,7 +223,6 @@ void FrontendGenerator::parseJson(const nlohmann::json &jsonSchema)
         auto customSection = std::make_shared<Section>(name, id, createdOn, updatedOn);
 
         // Parse components inside the section
-        // if (custComponentJson.contains("components") && custComponentJson["components"].is_array())
         for (const auto &componentJson : custComponentJson["components"]) {
             auto componentNode = parseComponent(componentJson);
             if (componentNode) {
@@ -942,11 +942,36 @@ void FrontendGenerator::applyModification(std::shared_ptr<BaseNode> &node)
     c.wait();
 }
 
+void deleteFile(const std::string &path)
+{
+    boost::filesystem::path filePath(path);
+    if (boost::filesystem::exists(filePath)) {
+        boost::filesystem::remove(filePath);
+    }
+}
+
 void FrontendGenerator::applyDeletion(std::shared_ptr<BaseNode> &node)
 {
-    // Si la modificación es en un view o custom component
-    if (node->getNodeType() == "Section")
+    // Si la modificación es un section
+    // Y si es un view o un custom component
+    if (node->getNodeType() == "Section"
+        && (node->getParent()->getNodeType() == "Views"
+            || node->getParent()->getNodeType() == "CustomComponents")) {
+        std::string sectionName = std::dynamic_pointer_cast<Section>(node)->getName();
+        std::string filePath;
+
+        filePath = projectPath + "/frontend/src/"
+                   + (node->getParent()->getNodeType() == "Views" ? "views/" : "components/")
+                   + sectionName + ".tsx";
+
+        deleteFile(filePath);
+        applyRefactorForDeletedSection(sectionName,
+                                       node->getParent()->getNodeType() == "Views"
+                                           ? "View"
+                                           : "CustomComponent");
+
         return;
+    }
 
     // Si la modificación es en un Component
 
@@ -1123,6 +1148,69 @@ void FrontendGenerator::getReferenceForInsertion(std::string &referenceId,
         // Insertar después del anterior
         referenceId = boost::uuids::to_string(children.at(index - 1)->getId());
         position = "after";
+    }
+}
+
+void FrontendGenerator::applyRefactorForDeletedSection(const std::string &sectionName,
+                                                       const std::string &sectionType)
+{
+    namespace fs = std::filesystem;
+
+    std::vector<std::string> filesToCheck;
+
+    // Siempre revisar App.tsx si es una vista
+    if (sectionType == "View") {
+        filesToCheck.push_back(projectPath + "/frontend/src/App.tsx");
+    }
+
+    // Revisar todos los archivos de views y components
+    std::vector<std::string> folders = {
+        projectPath + "/frontend/src/views",
+        projectPath + "/frontend/src/components",
+    };
+
+    for (const auto &folder : folders) {
+        for (const auto &entry : fs::recursive_directory_iterator(folder)) {
+            if (entry.is_regular_file() && entry.path().extension() == ".tsx") {
+                filesToCheck.push_back(entry.path().string());
+            }
+        }
+    }
+
+    // Ejecutar refactor-delete en todos los archivos afectados
+    for (const auto &filePath : filesToCheck) {
+        QString resourcePath = ":/babel/editor";
+        QFile resourceFile(resourcePath);
+        if (!resourceFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
+            fmt::print(stderr, "❌ Unable to open resource: {}\n", resourcePath.toStdString());
+            continue;
+        }
+
+        QString tempPath = QStandardPaths::writableLocation(QStandardPaths::TempLocation);
+        QString tempFilePath = tempPath + "/editor.js";
+
+        QFile tempFile(tempFilePath);
+        if (tempFile.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text)) {
+            tempFile.write(resourceFile.readAll());
+            tempFile.close();
+        } else {
+            fmt::print(stderr, "❌ Unable to write temporary editor.js\n");
+            continue;
+        }
+
+        namespace bp = boost::process;
+        bp::environment env = boost::this_process::environment();
+        env["NODE_PATH"] = "/usr/local/lib/node_modules";
+
+        bp::child c("/usr/local/bin/node",
+                    tempFilePath.toStdString(),
+                    filePath,
+                    "refactor-delete",
+                    sectionName,
+                    sectionType,
+                    "", // payload
+                    env);
+        c.wait();
     }
 }
 

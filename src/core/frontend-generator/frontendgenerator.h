@@ -41,6 +41,8 @@ private:
     void getReferenceForInsertion(std::string &referenceId,
                                   std::string &position,
                                   std::shared_ptr<BaseNode> &node);
+    void applyRefactorForDeletedSection(const std::string &sectionName,
+                                        const std::string &sectionType);
 
 public:
     FrontendGenerator(const std::string &projectPath);
