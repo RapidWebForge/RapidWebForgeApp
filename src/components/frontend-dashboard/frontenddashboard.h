@@ -95,6 +95,8 @@ private:
     bool isView(QTreeWidgetItem *item) const;
     bool isCustomComponent(QTreeWidgetItem *item) const;
 
+    // Funciones Auxiliares para on_deleteButton_clicked
+    void removeSubsectionsOnAST(std::shared_ptr<BaseNode> &node, const std::string &sectionName);
     bool deleteComponentByHierarchy(const std::shared_ptr<BaseNode> &parent,
                                     const std::vector<QTreeWidgetItem *> &hierarchy);
 

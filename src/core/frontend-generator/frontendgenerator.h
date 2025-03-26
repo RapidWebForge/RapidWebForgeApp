@@ -25,9 +25,6 @@ private:
     std::vector<std::shared_ptr<BaseNode>> parseNestedComponents(
         const nlohmann::json &nestedJsonArray);
     void parseJson(const nlohmann::json &jsonSchema);
-    // Funciones Auxiliares para updating schema
-    nlohmann::json processComponentToJson(const std::shared_ptr<Component> &component);
-    nlohmann::json processSectionToJson(const std::shared_ptr<Section> &section);
     // Funciones Auxiliares de búsqueda
     std::shared_ptr<Section> findViewByName(const std::string &viewName);
     std::shared_ptr<Section> findCustomComponentByName(const std::string &viewName);

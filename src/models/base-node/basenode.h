@@ -55,7 +55,7 @@ public:
     void clearChildren();
     std::vector<std::shared_ptr<BaseNode>> &getChildren();
     const std::vector<std::shared_ptr<BaseNode>> &getChildren() const; // Versión const
-    bool removeChildForById(std::string id);
+    bool removeChildById(std::string id);
     // Gestión del nodo padre
     void setParent(const std::shared_ptr<BaseNode> &parentNode);
     std::shared_ptr<BaseNode> getParent() const;

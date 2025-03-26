@@ -151,35 +151,6 @@ std::vector<std::shared_ptr<BaseNode>> FrontendGenerator::parseNestedComponents(
     return nestedComponents;
 }
 
-// void printNodeTree(const std::shared_ptr<BaseNode> &node, int depth = 0)
-// {
-//     if (!node)
-//         return;
-
-//     QString indent = QString(" ").repeated(depth * 2);
-
-//     if (auto component = std::dynamic_pointer_cast<Component>(node)) {
-//         qDebug().noquote() << indent + "  (ID: "
-//                                   + QString::fromStdString(
-//                                       boost::uuids::to_string(component->getId()))
-//                                   + ")";
-//         qDebug().noquote() << indent + "  (Type: "
-//                                   + QString::fromStdString(
-//                                       componentTypeToString(component->getType()))
-//                                   + ")";
-
-//     } else if (auto section = std::dynamic_pointer_cast<Section>(node)) {
-//         qDebug().noquote() << indent + "- " + QString::fromStdString(section->getName());
-//     } else {
-//         qDebug().noquote() << indent + "- " + QString::fromStdString(node->getNodeType());
-//     }
-
-//     // Recursively print children
-//     for (const auto &child : node->getChildren()) {
-//         printNodeTree(child, depth + 1);
-//     }
-// }
-
 std::shared_ptr<BaseNode> cloneNode(const std::shared_ptr<BaseNode> &node)
 {
     if (!node) {
@@ -320,7 +291,7 @@ bool allowsNestedComponents(ComponentType type)
            || type == ComponentType::VerticalLayout || type == ComponentType::ModelLayout;
 }
 
-nlohmann::json FrontendGenerator::processComponentToJson(const std::shared_ptr<Component> &component)
+nlohmann::json processComponentToJson(const std::shared_ptr<Component> &component)
 {
     nlohmann::json componentJson;
     componentJson["type"] = componentTypeToString(component->getType());
@@ -343,10 +314,6 @@ nlohmann::json FrontendGenerator::processComponentToJson(const std::shared_ptr<C
             if (auto nestedComponent = std::dynamic_pointer_cast<Component>(child)) {
                 componentJson["nestedComponents"].push_back(processComponentToJson(nestedComponent));
             } else if (auto nestedSection = std::dynamic_pointer_cast<Section>(child)) {
-                // Si la sub-seccion no se encuentra ignorarlo
-                if (!findCustomComponentByName(nestedSection->getName()))
-                    continue;
-
                 // Si en algún caso se manejan sub-secciones
                 nlohmann::json subSectionJson;
                 subSectionJson["name"] = nestedSection->getName();
@@ -361,7 +328,7 @@ nlohmann::json FrontendGenerator::processComponentToJson(const std::shared_ptr<C
     return componentJson;
 }
 
-nlohmann::json FrontendGenerator::processSectionToJson(const std::shared_ptr<Section> &section)
+nlohmann::json processSectionToJson(const std::shared_ptr<Section> &section)
 {
     nlohmann::json sectionJson;
     sectionJson["name"] = section->getName();
@@ -377,10 +344,6 @@ nlohmann::json FrontendGenerator::processSectionToJson(const std::shared_ptr<Sec
         if (auto component = std::dynamic_pointer_cast<Component>(child)) {
             sectionJson["components"].push_back(processComponentToJson(component));
         } else if (auto subSection = std::dynamic_pointer_cast<Section>(child)) {
-            // Si la sub-seccion no se encuentra ignorarlo
-            if (!findCustomComponentByName(subSection->getName()))
-                continue;
-
             nlohmann::json subSectionJson;
             subSectionJson["name"] = subSection->getName();
             subSectionJson["createdOn"] = timePointToString(subSection->getCreatedOn());
@@ -743,7 +706,14 @@ std::vector<NodeOperation> FrontendGenerator::diffTrees(std::shared_ptr<BaseNode
         // Si hay más hijos en el antiguo que en el nuevo, se consideran eliminaciones.
         if (oldChildren.size() > newChildren.size()) {
             for (size_t i = newChildren.size(); i < oldChildren.size(); ++i) {
-                ops.push_back(NodeOperation(OperationType::Delete, oldChildren[i]));
+                // NO contar los custom components `importados` que no tengan el custom component
+                // en el nodo `CustomComponents` porque seria sumar operaciones Delete innecesarias
+                auto subSection = std::dynamic_pointer_cast<Section>(oldChildren[i]);
+                if (subSection
+                    && RenderCallback::customComponentsCache.find(subSection->getName())
+                           == RenderCallback::customComponentsCache.end()) {
+                    ops.push_back(NodeOperation(OperationType::Delete, oldChildren[i]));
+                }
             }
         }
         return ops;
@@ -775,7 +745,14 @@ std::vector<NodeOperation> FrontendGenerator::diffTrees(std::shared_ptr<BaseNode
 
     // Los nodos que quedaron en oldChildrenMap se consideran eliminaciones.
     for (auto &pair : oldChildrenMap) {
-        ops.push_back(NodeOperation(OperationType::Delete, pair.second));
+        // NO contar los custom components `importados` que no tengan el custom component
+        // en el nodo `CustomComponents` porque seria sumar operaciones Delete innecesarias
+        auto subSection = std::dynamic_pointer_cast<Section>(pair.second);
+        if (subSection
+            && RenderCallback::customComponentsCache.find(subSection->getName())
+                   == RenderCallback::customComponentsCache.end()) {
+            ops.push_back(NodeOperation(OperationType::Delete, pair.second));
+        }
     }
 
     return ops;
@@ -967,8 +944,6 @@ void FrontendGenerator::applyDeletion(std::shared_ptr<BaseNode> &node)
             || node->getParent()->getNodeType() == "CustomComponents")) {
         std::string sectionName = std::dynamic_pointer_cast<Section>(node)->getName();
         std::string filePath;
-
-        RenderCallback::customComponentsCache.erase(sectionName);
 
         filePath = projectPath + "/frontend/src/"
                    + (node->getParent()->getNodeType() == "Views" ? "views/" : "components/")

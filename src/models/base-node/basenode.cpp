@@ -162,7 +162,7 @@ const std::vector<std::shared_ptr<BaseNode>> &BaseNode::getChildren() const
     return children;
 }
 
-bool BaseNode::removeChildForById(std::string id)
+bool BaseNode::removeChildById(std::string id)
 {
     auto it = std::find_if(children.begin(),
                            children.end(),

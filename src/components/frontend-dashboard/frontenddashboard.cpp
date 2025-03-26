@@ -6,6 +6,7 @@
 #include "../../core/logging/actionloggerjson.h"
 #include "../../models/component-type/componenttype.h"
 #include "../../models/generic-node/genericnode.h"
+#include "../../utils/render_callback/rendercallback.h"
 #include "ui_frontenddashboard.h"
 #include <boost/uuid/uuid_io.hpp>
 #include <cassert>
@@ -172,42 +173,6 @@ void FrontendDashboard::addCustomComponentsOnComponentsTree()
 
 // ComboBox Sections
 
-// For testing
-// void printNodeTree(const std::shared_ptr<BaseNode> &node, int depth = 0)
-// {
-//     if (!node)
-//         return;
-
-//     QString indent = QString(" ").repeated(depth * 2);
-
-//     if (auto component = std::dynamic_pointer_cast<Component>(node)) {
-//         qDebug() << indent + "Component:";
-//         qDebug().noquote() << indent + "  (ID: "
-//                                   + QString::fromStdString(
-//                                       boost::uuids::to_string(component->getId()))
-//                                   + ")";
-//         qDebug().noquote() << indent + "  (Type: "
-//                                   + QString::fromStdString(
-//                                       componentTypeToString(component->getType()))
-//                                   + ")";
-
-//     } else if (auto section = std::dynamic_pointer_cast<Section>(node)) {
-//         qDebug() << indent + "Section:";
-//         qDebug().noquote() << indent + "- " + QString::fromStdString(section->getName());
-//         qDebug().noquote() << indent + "  (ID: "
-//                                   + QString::fromStdString(boost::uuids::to_string(section->getId()))
-//                                   + ")";
-//     } else {
-//         qDebug() << indent + "GenericNode or BaseNode:";
-//         qDebug().noquote() << indent + "- " + QString::fromStdString(node->getNodeType());
-//     }
-
-//     // Recursively print children
-//     for (const auto &child : node->getChildren()) {
-//         printNodeTree(child, depth + 1);
-//     }
-// }
-
 void FrontendDashboard::fillAvailableSections()
 {
     // Limpia el combo box antes de rellenarlo
@@ -307,8 +272,6 @@ void FrontendDashboard::on_sectionComboBox_currentIndexChanged(int index)
 void FrontendDashboard::populateCurrentSectionTree()
 {
     ui->currentSectionTree->clear();
-
-    // printNodeTree(frontendRoot);
 
     // Verifica si currentSection es un Section
     auto sectionPtr = std::dynamic_pointer_cast<Section>(currentSection);
@@ -895,16 +858,44 @@ void FrontendDashboard::on_deleteButton_clicked()
                                             return nodePtr->getName() == selectedItemName;
                                         });
 
-    // If the custom component is high level so remove, if not continue to search it as
-    // a subcomponent or subsection
+    // Si el custom component es de alto nivel se elimina, sino se continua buscando
+    // como un subcomponent o subsection
     if (custComponentIt != customComponentsPtr->getChildren().end() && !selectedItem->parent()) {
-        customComponentsPtr->removeChild(custComponentIt);
+        // Remover del customTreeWidget
         delete selectedItem;
-        qDebug() << "Custom component deleted:" << QString::fromStdString(selectedItemName);
+
+        // Remover del AST
+        customComponentsPtr->removeChild(custComponentIt);
+
+        // Remover los subsections
+        removeSubsectionsOnAST(frontendRoot, selectedItemName);
+
+        // Remover del cache
+        RenderCallback::customComponentsCache.erase(selectedItemName);
+
         // Limpiar para evitar editar algo inexistente
         cleanPropertiesTable();
 
+        // Remover del QTreeWidgetItem de custom components
+        QList<QTreeWidgetItem *> customItems
+            = ui->componentsTree->findItems("Custom", Qt::MatchExactly | Qt::MatchRecursive, 0);
+
+        for (QTreeWidgetItem *customItem : customItems) {
+            for (int i = 0; i < customItem->childCount(); ++i) {
+                QTreeWidgetItem *child = customItem->child(i);
+                if (child->text(0) == QString::fromStdString(selectedItemName)) {
+                    customItem->removeChild(child);
+                    delete child; // Liberar memoria
+                    break;        // solo uno
+                }
+            }
+        }
+
+        // Remover del comboBox
         ui->sectionComboBox->removeItem(ui->sectionComboBox->currentIndex());
+
+        qDebug() << "Custom component deleted:" << QString::fromStdString(selectedItemName);
+
         return;
     }
 
@@ -934,6 +925,39 @@ void FrontendDashboard::on_deleteButton_clicked()
     }
 }
 
+void FrontendDashboard::removeSubsectionsOnAST(std::shared_ptr<BaseNode> &node,
+                                               const std::string &sectionName)
+{
+    auto &children = node->getChildren();
+    std::vector<boost::uuids::uuid> toRemove;
+
+    for (auto child : children) {
+        if (auto section = std::dynamic_pointer_cast<Section>(child)) {
+            const std::string parentType = section->getParent()->getNodeType();
+
+            // Si el nombre coincide, lo marcamos para eliminar
+            if (section->getName() == sectionName) {
+                toRemove.push_back(section->getId());
+            } else {
+                if (!section->getChildren().empty())
+                    removeSubsectionsOnAST(child, sectionName);
+            }
+        } else if (auto component = std::dynamic_pointer_cast<Component>(child)) {
+            if (component->isAllowingItems() && !component->getChildren().empty()) {
+                removeSubsectionsOnAST(child, sectionName);
+            }
+        } else {
+            // GenericNodes
+            removeSubsectionsOnAST(child, sectionName);
+        }
+    }
+
+    // Borrar luego de recorrer (para evitar errores por modificar mientras se itera)
+    for (const auto &id : toRemove) {
+        node->removeChildById(boost::uuids::to_string(id));
+    }
+}
+
 bool FrontendDashboard::deleteComponentByHierarchy(const std::shared_ptr<BaseNode> &parent,
                                                    const std::vector<QTreeWidgetItem *> &hierarchy)
 {
@@ -945,11 +969,11 @@ bool FrontendDashboard::deleteComponentByHierarchy(const std::shared_ptr<BaseNod
 
     // Usamos el método encapsulado para eliminar el componente
     auto parentSection = std::dynamic_pointer_cast<Section>(parent);
-    if (parentSection && parentSection->removeChildForById(targetId))
+    if (parentSection && parentSection->removeChildById(targetId))
         return true;
 
     auto parentComponent = std::dynamic_pointer_cast<Component>(parent);
-    if (parentComponent && parentComponent->removeChildForById(targetId))
+    if (parentComponent && parentComponent->removeChildById(targetId))
         return true;
 
     // Si no está en los componentes directos, buscar en subcomponentes
