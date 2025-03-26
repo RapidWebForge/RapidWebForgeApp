@@ -320,7 +320,7 @@ bool allowsNestedComponents(ComponentType type)
            || type == ComponentType::VerticalLayout || type == ComponentType::ModelLayout;
 }
 
-nlohmann::json processComponentToJson(const std::shared_ptr<Component> &component)
+nlohmann::json FrontendGenerator::processComponentToJson(const std::shared_ptr<Component> &component)
 {
     nlohmann::json componentJson;
     componentJson["type"] = componentTypeToString(component->getType());
@@ -343,6 +343,10 @@ nlohmann::json processComponentToJson(const std::shared_ptr<Component> &componen
             if (auto nestedComponent = std::dynamic_pointer_cast<Component>(child)) {
                 componentJson["nestedComponents"].push_back(processComponentToJson(nestedComponent));
             } else if (auto nestedSection = std::dynamic_pointer_cast<Section>(child)) {
+                // Si la sub-seccion no se encuentra ignorarlo
+                if (!findCustomComponentByName(nestedSection->getName()))
+                    continue;
+
                 // Si en algún caso se manejan sub-secciones
                 nlohmann::json subSectionJson;
                 subSectionJson["name"] = nestedSection->getName();
@@ -357,7 +361,7 @@ nlohmann::json processComponentToJson(const std::shared_ptr<Component> &componen
     return componentJson;
 }
 
-nlohmann::json processSectionToJson(const std::shared_ptr<Section> &section)
+nlohmann::json FrontendGenerator::processSectionToJson(const std::shared_ptr<Section> &section)
 {
     nlohmann::json sectionJson;
     sectionJson["name"] = section->getName();
@@ -373,6 +377,10 @@ nlohmann::json processSectionToJson(const std::shared_ptr<Section> &section)
         if (auto component = std::dynamic_pointer_cast<Component>(child)) {
             sectionJson["components"].push_back(processComponentToJson(component));
         } else if (auto subSection = std::dynamic_pointer_cast<Section>(child)) {
+            // Si la sub-seccion no se encuentra ignorarlo
+            if (!findCustomComponentByName(subSection->getName()))
+                continue;
+
             nlohmann::json subSectionJson;
             subSectionJson["name"] = subSection->getName();
             subSectionJson["createdOn"] = timePointToString(subSection->getCreatedOn());
@@ -523,7 +531,7 @@ std::shared_ptr<Section> FrontendGenerator::findCustomComponentByName(const std:
         return nullptr;
     }
 
-    // Usar std::find_if para buscar la vista por nombre
+    // Usar std::find_if para buscar el custom component por nombre
     auto it = std::find_if(sectionNode->getChildren().begin(),
                            sectionNode->getChildren().end(),
                            [&viewName](const std::shared_ptr<BaseNode> &node) {
@@ -536,7 +544,7 @@ std::shared_ptr<Section> FrontendGenerator::findCustomComponentByName(const std:
         return std::dynamic_pointer_cast<Section>(*it);
     }
 
-    return nullptr; // No se encontró la vista
+    return nullptr; // No se encontró el custom component
 }
 
 bool FrontendGenerator::generateView(const std::string &viewName)
@@ -960,6 +968,8 @@ void FrontendGenerator::applyDeletion(std::shared_ptr<BaseNode> &node)
         std::string sectionName = std::dynamic_pointer_cast<Section>(node)->getName();
         std::string filePath;
 
+        RenderCallback::customComponentsCache.erase(sectionName);
+
         filePath = projectPath + "/frontend/src/"
                    + (node->getParent()->getNodeType() == "Views" ? "views/" : "components/")
                    + sectionName + ".tsx";
@@ -969,7 +979,6 @@ void FrontendGenerator::applyDeletion(std::shared_ptr<BaseNode> &node)
                                        node->getParent()->getNodeType() == "Views"
                                            ? "View"
                                            : "CustomComponent");
-
         return;
     }
 
