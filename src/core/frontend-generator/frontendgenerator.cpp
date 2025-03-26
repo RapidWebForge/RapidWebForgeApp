@@ -1,8 +1,10 @@
 #include "frontendgenerator.h"
 #include <QDebug>
+#include <QDir>
 #include <QFile>
 #include <QStandardPaths>
 #include <QTextStream>
+#include "../../core/configuration-manager/configurationmanager.h"
 #include "../../models/component-type/componenttype.h"
 #include "../../models/generic-node/genericnode.h"
 #include "../../models/time-chrono/timechrono.h"
@@ -712,8 +714,9 @@ std::vector<NodeOperation> FrontendGenerator::diffTrees(std::shared_ptr<BaseNode
                 if (subSection
                     && RenderCallback::customComponentsCache.find(subSection->getName())
                            == RenderCallback::customComponentsCache.end()) {
-                    ops.push_back(NodeOperation(OperationType::Delete, oldChildren[i]));
+                    continue;
                 }
+                ops.push_back(NodeOperation(OperationType::Delete, oldChildren[i]));
             }
         }
         return ops;
@@ -751,8 +754,9 @@ std::vector<NodeOperation> FrontendGenerator::diffTrees(std::shared_ptr<BaseNode
         if (subSection
             && RenderCallback::customComponentsCache.find(subSection->getName())
                    == RenderCallback::customComponentsCache.end()) {
-            ops.push_back(NodeOperation(OperationType::Delete, pair.second));
+            continue;
         }
+        ops.push_back(NodeOperation(OperationType::Delete, pair.second));
     }
 
     return ops;
@@ -798,98 +802,8 @@ bool FrontendGenerator::updateFrontendCode()
     return true;
 }
 
-void FrontendGenerator::applyInsertion(std::shared_ptr<BaseNode> &node)
+void FrontendGenerator::runEditorScript(const std::vector<std::string> args)
 {
-    // Si se quiere agregar un nuevo view o custom component
-    if (node->getNodeType() == "Section" && node->getParent()->getNodeType() != "Section"
-        && node->getParent()->getNodeType() != "Component") {
-        auto section = std::dynamic_pointer_cast<Section>(node);
-        if (!section) {
-            fmt::print(stderr, "Error: nodo identificado como section pero falla el cast.\n");
-            return;
-        }
-        if (section->getPath().empty()) {
-            if (generateCustomComponent(section->getName()))
-                return;
-        } else {
-            if (generateView(section->getName()))
-                return;
-        }
-    } else {
-        // Determinar en qué archivo se debe insertar el nodo
-        std::string filePath = getFilePathForNode(node);
-
-        // Generar el fragmento de código usando la plantilla Inja
-        std::string jsxFragment = generateNodeFragment(node);
-
-        QString safeJsx
-            = QString::fromStdString(jsxFragment).replace("\\", "\\\\").replace("\"", "\\\"");
-        std::string finalJsxArg = "\"" + safeJsx.toStdString() + "\"";
-
-        // Obtener la el dataId de referencia y la posición correspondiente de este id
-        std::string referenceId, position;
-        getReferenceForInsertion(referenceId, position, node);
-
-        // Nuevo método con Babel
-
-        QString resourcePath = ":/babel/editor";
-        QFile resourceFile(resourcePath);
-        if (!resourceFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
-            fmt::print(stderr, "❌ Unable to open resource: {}\n", resourcePath.toStdString());
-            return;
-        }
-
-        QString tempPath = QStandardPaths::writableLocation(QStandardPaths::TempLocation);
-        QString tempFilePath = tempPath + "/editor.js";
-
-        QFile tempFile(tempFilePath);
-        if (tempFile.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text)) {
-            tempFile.write(resourceFile.readAll());
-            tempFile.close();
-        } else {
-            fmt::print(stderr, "❌ Unable to write temporary editor.js\n");
-            return;
-        }
-
-        // Correr el comando externo con Node.js
-
-        namespace bp = boost::process;
-
-        bp::environment env = boost::this_process::environment();
-        env["NODE_PATH"] = "/usr/local/lib/node_modules"; // Ajusta según tu sistema
-
-        bp::child c("/usr/local/bin/node",
-                    tempFilePath.toStdString(),
-                    filePath,
-                    "insert",
-                    referenceId,
-                    position,
-                    finalJsxArg,
-                    env);
-        c.wait();
-    }
-}
-
-void FrontendGenerator::applyModification(std::shared_ptr<BaseNode> &node)
-{
-    // Si la modificación es en un view o custom component
-    if (node->getNodeType() == "Section")
-        return;
-
-    // Si la modificación es en un Component
-
-    // Determinar en qué archivo se debe insertar el nodo
-    std::string filePath = getFilePathForNode(node);
-
-    // Generar el fragmento de código usando la plantilla Inja
-    std::string jsxFragment = generateNodeFragment(node);
-
-    QString safeJsx = QString::fromStdString(jsxFragment).replace("\\", "\\\\").replace("\"", "\\\"");
-    std::string finalJsxArg = "\"" + safeJsx.toStdString() + "\"";
-
-    // Obtener la el dataId
-    std::string dataId = boost::uuids::to_string(node->getId());
-
     QString resourcePath = ":/babel/editor";
     QFile resourceFile(resourcePath);
     if (!resourceFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
@@ -913,18 +827,113 @@ void FrontendGenerator::applyModification(std::shared_ptr<BaseNode> &node)
 
     namespace bp = boost::process;
 
-    bp::environment env = boost::this_process::environment();
-    env["NODE_PATH"] = "/usr/local/lib/node_modules"; // Ajusta según tu sistema
+    ConfigurationManager configurationManager;
 
-    bp::child c("/usr/local/bin/node",
-                tempFilePath.toStdString(),
-                filePath,
-                "modify",
-                dataId,
-                "",
-                finalJsxArg,
-                env);
+    std::string bunPath = configurationManager.getConfiguration().getBunPath();
+
+    std::string frontendDir
+        = QDir::toNativeSeparators(QString::fromStdString(projectPath) + "/frontend").toStdString();
+
+    std::vector<std::string> fullArgs = {"run", "edit", "--", tempFilePath.toStdString()};
+    fullArgs.insert(fullArgs.end(), args.begin(), args.end());
+
+    bp::child c(bunPath,
+                bp::args = fullArgs,
+                bp::start_dir = frontendDir,
+                bp::std_out > stdout,
+                bp::std_err > stderr);
+
     c.wait();
+}
+
+void FrontendGenerator::applyInsertion(std::shared_ptr<BaseNode> &node)
+{
+    // Si se quiere agregar un nuevo view o custom component
+    if (node->getNodeType() == "Section" && node->getParent()->getNodeType() != "Section"
+        && node->getParent()->getNodeType() != "Component") {
+        auto section = std::dynamic_pointer_cast<Section>(node);
+        if (!section) {
+            fmt::print(stderr, "Error: nodo identificado como section pero falla el cast.\n");
+            return;
+        }
+        if (section->getPath().empty()) {
+            if (generateCustomComponent(section->getName()))
+                return;
+        } else {
+            if (generateView(section->getName()))
+                return;
+        }
+    } else {
+        // Determinar en qué archivo se debe insertar el nodo
+        std::string filePath = getFilePathForNode(node);
+
+        // Obtener la el dataId de referencia y la posición correspondiente de este id
+        std::string referenceId, position;
+        getReferenceForInsertion(referenceId, position, node);
+
+        // Generar el fragmento de código usando la plantilla Inja
+        std::string jsxFragment = generateNodeFragment(node);
+        std::string payloadJson = nlohmann::json(jsxFragment).dump();
+
+        // Escribir el payload a archivo temporal
+        QString tempPath = QStandardPaths::writableLocation(QStandardPaths::TempLocation);
+        QString payloadPath = tempPath + "/payload.json";
+        QFile payloadFile(payloadPath);
+        if (payloadFile.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text)) {
+            QTextStream out(&payloadFile);
+            out << QString::fromStdString(payloadJson);
+            payloadFile.close();
+        } else {
+            fmt::print(stderr, "❌ Unable to write temporary payload.json\n");
+            return;
+        }
+
+        std::vector<std::string> args = {filePath,
+                                         "insert",
+                                         referenceId,
+                                         position,
+                                         payloadPath.toStdString()};
+
+        // Run script
+        runEditorScript(args);
+    }
+}
+
+void FrontendGenerator::applyModification(std::shared_ptr<BaseNode> &node)
+{
+    // Si la modificación es en un view o custom component
+    if (node->getNodeType() == "Section")
+        return;
+
+    // Si la modificación es en un Component
+
+    // Determinar en qué archivo se debe insertar el nodo
+    std::string filePath = getFilePathForNode(node);
+
+    // Obtener la el dataId
+    std::string dataId = boost::uuids::to_string(node->getId());
+
+    // Generar el fragmento de código usando la plantilla Inja
+    std::string jsxFragment = generateNodeFragment(node);
+    std::string payloadJson = nlohmann::json(jsxFragment).dump();
+
+    // Escribir el payload a archivo temporal
+    QString tempPath = QStandardPaths::writableLocation(QStandardPaths::TempLocation);
+    QString payloadPath = tempPath + "/payload.json";
+    QFile payloadFile(payloadPath);
+    if (payloadFile.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text)) {
+        QTextStream out(&payloadFile);
+        out << QString::fromStdString(payloadJson);
+        payloadFile.close();
+    } else {
+        fmt::print(stderr, "❌ Unable to write temporary payload.json\n");
+        return;
+    }
+
+    std::vector<std::string> args = {filePath, "modify", dataId, "", payloadPath.toStdString()};
+
+    // Run script
+    runEditorScript(args);
 }
 
 void deleteFile(const std::string &path)
@@ -959,47 +968,16 @@ void FrontendGenerator::applyDeletion(std::shared_ptr<BaseNode> &node)
 
     // Si la modificación es en un Component
 
-    // Determinar en qué archivo se debe insertar el nodo
+    // Determinar en qué archivo se debe eliminar el nodo
     std::string filePath = getFilePathForNode(node);
 
     // Obtener la el dataId
     std::string dataId = boost::uuids::to_string(node->getId());
 
-    QString resourcePath = ":/babel/editor";
-    QFile resourceFile(resourcePath);
-    if (!resourceFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        fmt::print(stderr, "❌ Unable to open resource: {}\n", resourcePath.toStdString());
-        return;
-    }
+    std::vector<std::string> args = {filePath, "delete", dataId, "", ""};
 
-    QString tempPath = QStandardPaths::writableLocation(QStandardPaths::TempLocation);
-    QString tempFilePath = tempPath + "/editor.js";
-
-    QFile tempFile(tempFilePath);
-    if (tempFile.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text)) {
-        tempFile.write(resourceFile.readAll());
-        tempFile.close();
-    } else {
-        fmt::print(stderr, "❌ Unable to write temporary editor.js\n");
-        return;
-    }
-
-    // Correr el comando externo con Node.js
-
-    namespace bp = boost::process;
-
-    bp::environment env = boost::this_process::environment();
-    env["NODE_PATH"] = "/usr/local/lib/node_modules"; // Ajusta según tu sistema
-
-    bp::child c("/usr/local/bin/node",
-                tempFilePath.toStdString(),
-                filePath,
-                "delete",
-                dataId,
-                "",
-                "",
-                env);
-    c.wait();
+    // Run script
+    runEditorScript(args);
 }
 
 std::string FrontendGenerator::getFilePathForNode(std::shared_ptr<BaseNode> &node)

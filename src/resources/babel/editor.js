@@ -4,7 +4,7 @@ const generate = require("@babel/generator").default;
 const traverse = require("@babel/traverse").default;
 const prettier = require("prettier");
 
-const [, , filePath, operation, referenceId, position, payload] = process.argv;
+const [, , filePath, operation, referenceId, ...rest] = process.argv;
 
 (async () => {
   try {
@@ -15,15 +15,26 @@ const [, , filePath, operation, referenceId, position, payload] = process.argv;
       plugins: ["jsx", "typescript"],
     });
 
-    let fragmentAst = null;
-    try {
-      fragmentAst =
-        payload && payload !== '""'
-          ? parser.parseExpression(JSON.parse(payload), { plugins: ["jsx"] })
-          : null;
-    } catch (e) {
-      console.error("❌ Error parsing payload:", e.message);
+
+    let position = "";
+    let payloadPath = "";
+
+    if (operation === "modify") {
+      payloadPath = rest[0] || "";
+    } else if (operation === "insert") {
+      position = rest[0] || "";
+      payloadPath = rest[1] || "";
     }
+
+    let fragmentAst = null;
+    if (operation !== "delete")
+      try {
+        const raw = fs.readFileSync(payloadPath, "utf-8");
+        fragmentAst = parser.parseExpression(JSON.parse(raw), { plugins: ["jsx"] });
+      } catch (e) {
+        console.error("❌ Error parsing payload:", e.message);
+        fragmentAst = null;
+      }
 
     let modified = false;
 
