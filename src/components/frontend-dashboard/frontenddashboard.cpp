@@ -546,18 +546,10 @@ void FrontendDashboard::onCurrentSectionTreeItemSelected(QTreeWidgetItem *item, 
 
         auto currentComponentPtr = std::dynamic_pointer_cast<Component>(currentComponent);
 
-        // qDebug() << "Found Component:"
-        //          << QString::fromStdString(componentTypeToString(currentComponentPtr->getType()))
-        //          << "with id" << QString::fromStdString(getComponentIdFromTree(item));
-
         // Llenar la tabla de propiedades con las propiedades del componente
         populatePropertiesTable(currentComponent);
-    } else {
+    } else
         cleanPropertiesTable();
-        // qDebug() << "Component of type" << QString::fromStdString(item->text(0).toStdString())
-        //          << "with id" << QString::fromStdString(getComponentIdFromTree(item))
-        //          << "not found.";
-    }
 }
 
 void FrontendDashboard::populatePropertiesTable(const std::shared_ptr<Component> &component)
@@ -743,69 +735,105 @@ std::shared_ptr<Component> FrontendDashboard::findComponentByHierarchy(
 
 void FrontendDashboard::onSectionSaved(const std::shared_ptr<Section> &section)
 {
-    if (section->getPath().empty()) {
-        // Custom Component
-        auto customComponentsNode = getMainNode("CustomComponents");
+    // Custom Component
+    auto customComponentsNode = getMainNode("CustomComponents");
 
-        if (customComponentsNode) {
-            auto customComponentPtr = std::dynamic_pointer_cast<GenericNode>(customComponentsNode);
+    // Views
+    auto viewsNode = getMainNode("Views");
 
-            customComponentPtr->addChild(section);
+    if (!viewsNode) {
+        qDebug() << "Views node not found.";
+        return;
+    }
 
-            // Obtener el primer QTreeWidgetItem (Custom)
-            QTreeWidgetItem *customComponents = ui->componentsTree->topLevelItem(0);
+    if (!customComponentsNode) {
+        qDebug() << "Custom Components node not found.";
+        return;
+    }
 
-            // Crear un nuevo QTreeWidgetItem para el component y agregarlo al
-            // `Custom` QTreeWidgetItem del `componentsTree`
-            QTreeWidgetItem *newCustomComponent = new QTreeWidgetItem();
+    auto customComponentPtr = std::dynamic_pointer_cast<GenericNode>(customComponentsNode);
+    auto viewsPtr = std::dynamic_pointer_cast<GenericNode>(viewsNode);
 
-            auto sectionPtr = std::dynamic_pointer_cast<Section>(section);
-
-            newCustomComponent->setText(0, QString::fromStdString(sectionPtr->getName()));
-
-            // Añadir el nuevo component en caso tenga un nombre
-            customComponents->addChild(newCustomComponent);
-
-            // Verificación
-            bool childAdded = (customComponents->childCount() > 0
-                               && customComponents->child(customComponents->childCount() - 1)
-                                      == newCustomComponent);
-
-            assert(childAdded && "Custom Component added");
-
-            // Añadir la nueva view al combobox
-            ui->sectionComboBox->addItem(QString::fromStdString(sectionPtr->getName()));
-
-            // Añadir al cache
-            RenderCallback::customComponentsCache.insert(sectionPtr->getName());
+    for (auto child : customComponentPtr->getChildren()) {
+        auto childSec = std::dynamic_pointer_cast<Section>(child);
+        if (childSec->getName() == section->getName()) {
+            QMessageBox::warning(
+                this,
+                "Name Error",
+                "The section has the same name as another custom component that already exists.");
+            return;
         }
+    }
+
+    for (auto child : viewsPtr->getChildren()) {
+        auto childSec = std::dynamic_pointer_cast<Section>(child);
+        if (childSec->getName() == section->getName()) {
+            QMessageBox::warning(
+                this,
+                "Name Error",
+                "The section has the same name as another view that already exists.");
+            return;
+        }
+
+        if (!section->getPath().empty() && childSec->getPath() == section->getPath()) {
+            QMessageBox::warning(
+                this,
+                "Path Error",
+                "The section has the same path as another view that already exists.");
+            return;
+        }
+    }
+
+    if (section->getPath().empty()) {
+        // Añadir hijo
+        customComponentPtr->addChild(section);
+
+        // Obtener el primer QTreeWidgetItem (Custom)
+        QTreeWidgetItem *customComponents = ui->componentsTree->topLevelItem(0);
+
+        // Crear un nuevo QTreeWidgetItem para el component y agregarlo al
+        // `Custom` QTreeWidgetItem del `componentsTree`
+        QTreeWidgetItem *newCustomComponent = new QTreeWidgetItem();
+
+        auto sectionPtr = std::dynamic_pointer_cast<Section>(section);
+
+        newCustomComponent->setText(0, QString::fromStdString(sectionPtr->getName()));
+
+        // Añadir el nuevo component en caso tenga un nombre
+        customComponents->addChild(newCustomComponent);
+
+        // Verificación
+        bool childAdded = (customComponents->childCount() > 0
+                           && customComponents->child(customComponents->childCount() - 1)
+                                  == newCustomComponent);
+
+        assert(childAdded && "Custom Component added");
+
+        // Añadir la nueva view al combobox
+        ui->sectionComboBox->addItem(QString::fromStdString(sectionPtr->getName()));
+
+        // Añadir al cache
+        RenderCallback::customComponentsCache.insert(sectionPtr->getName());
 
     } else {
-        // Route
-        auto viewsNode = getMainNode("Views");
+        viewsPtr->addChild(section);
 
-        if (viewsNode) {
-            auto viewsPtr = std::dynamic_pointer_cast<GenericNode>(viewsNode);
+        // Crear un componente `Header H1` predeterminado
+        auto headerComponent = std::make_shared<Component>(ComponentType::HeaderH1);
 
-            viewsPtr->addChild(section);
+        // Asignar propiedades predeterminadas al `Header H1`
+        headerComponent->setProps({{"class", ""}, {"text", "Default Header"}});
 
-            // Crear un componente `Header H1` predeterminado
-            auto headerComponent = std::make_shared<Component>(ComponentType::HeaderH1);
+        // Agregar `Header H1` a los componentes de la vista
+        section->addChild(headerComponent);
 
-            // Asignar propiedades predeterminadas al `Header H1`
-            headerComponent->setProps({{"class", ""}, {"text", "Default Header"}});
+        auto currentSectionPtr = std::dynamic_pointer_cast<Section>(currentSection);
 
-            // Agregar `Header H1` a los componentes de la vista
-            section->addChild(headerComponent);
-
-            auto currentSectionPtr = std::dynamic_pointer_cast<Section>(currentSection);
-
-            if (currentSectionPtr && section->getName() == currentSectionPtr->getName()) {
-                setCurrentSection(section);
-            }
-
-            ui->sectionComboBox->addItem(QString::fromStdString(section->getName()));
+        if (currentSectionPtr && section->getName() == currentSectionPtr->getName()) {
+            setCurrentSection(section);
         }
+
+        ui->sectionComboBox->addItem(QString::fromStdString(section->getName()));
     }
 }
 

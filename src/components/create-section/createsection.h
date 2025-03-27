@@ -32,6 +32,7 @@ private:
     ActionLoggerJson loggerJson; // Logs en formato .json
 
     void applyStyles();
+    void resetFields();
 };
 
 #endif // CREATESECTION_H

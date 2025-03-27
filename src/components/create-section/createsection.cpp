@@ -61,6 +61,8 @@ void CreateSection::on_createButton_clicked()
             // Log para crear una nueva vista React
             loggerJson.logAction("create-react-view",
                                  "sectionName=" + sectionName + ", path=" + path);
+
+            resetFields();
             accept();
         } else
             QMessageBox::warning(this, "Warning", "Fill all the fields to create");
@@ -72,6 +74,8 @@ void CreateSection::on_createButton_clicked()
 
             // Log para crear un nuevo componente React
             loggerJson.logAction("create-react-component", "sectionName=" + sectionName);
+
+            resetFields();
             accept();
         } else
             QMessageBox::warning(this, "Warning", "Fill all the fields to create");
@@ -89,4 +93,11 @@ void CreateSection::on_isViewCheckBox_checkStateChanged(const Qt::CheckState &ar
 
     ui->viewRouteLabel->setEnabled(isView);
     ui->viewRouteLineEdit->setEnabled(isView);
+}
+
+void CreateSection::resetFields()
+{
+    ui->isViewCheckBox->setChecked(false);
+    ui->viewRouteLineEdit->setText("");
+    ui->sectionNameLineEdit->setText("");
 }
