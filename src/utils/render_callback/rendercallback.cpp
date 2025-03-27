@@ -28,7 +28,7 @@ std::string renderCustomComponent(const nlohmann::json componentJson)
 
     std::string componentName = componentJson["name"];
     if (customComponentsCache.find(componentName) != customComponentsCache.end()) {
-        output = "<" + componentName + " data-id=\"" + id + "/>";
+        output = "<" + componentName + " data-id=\"" + id + "\" />";
     } else {
         fmt::print(stderr, "Unsupported custom component: {}\n", componentName);
         output = "<!-- Unsupported custom component: " + componentName + " -->";

@@ -748,9 +748,9 @@ void FrontendDashboard::onSectionSaved(const std::shared_ptr<Section> &section)
         auto customComponentsNode = getMainNode("CustomComponents");
 
         if (customComponentsNode) {
-            auto sectionNode = std::dynamic_pointer_cast<GenericNode>(customComponentsNode);
+            auto customComponentPtr = std::dynamic_pointer_cast<GenericNode>(customComponentsNode);
 
-            sectionNode->addChild(section);
+            customComponentPtr->addChild(section);
 
             // Obtener el primer QTreeWidgetItem (Custom)
             QTreeWidgetItem *customComponents = ui->componentsTree->topLevelItem(0);
@@ -759,9 +759,9 @@ void FrontendDashboard::onSectionSaved(const std::shared_ptr<Section> &section)
             // `Custom` QTreeWidgetItem del `componentsTree`
             QTreeWidgetItem *newCustomComponent = new QTreeWidgetItem();
 
-            auto componentPtr = std::dynamic_pointer_cast<Section>(section);
+            auto sectionPtr = std::dynamic_pointer_cast<Section>(section);
 
-            newCustomComponent->setText(0, QString::fromStdString(componentPtr->getName()));
+            newCustomComponent->setText(0, QString::fromStdString(sectionPtr->getName()));
 
             // Añadir el nuevo component en caso tenga un nombre
             customComponents->addChild(newCustomComponent);
@@ -774,7 +774,10 @@ void FrontendDashboard::onSectionSaved(const std::shared_ptr<Section> &section)
             assert(childAdded && "Custom Component added");
 
             // Añadir la nueva view al combobox
-            ui->sectionComboBox->addItem(QString::fromStdString(componentPtr->getName()));
+            ui->sectionComboBox->addItem(QString::fromStdString(sectionPtr->getName()));
+
+            // Añadir al cache
+            RenderCallback::customComponentsCache.insert(sectionPtr->getName());
         }
 
     } else {
@@ -782,9 +785,9 @@ void FrontendDashboard::onSectionSaved(const std::shared_ptr<Section> &section)
         auto viewsNode = getMainNode("Views");
 
         if (viewsNode) {
-            auto sectionNode = std::dynamic_pointer_cast<GenericNode>(viewsNode);
+            auto viewsPtr = std::dynamic_pointer_cast<GenericNode>(viewsNode);
 
-            sectionNode->addChild(section);
+            viewsPtr->addChild(section);
 
             // Crear un componente `Header H1` predeterminado
             auto headerComponent = std::make_shared<Component>(ComponentType::HeaderH1);

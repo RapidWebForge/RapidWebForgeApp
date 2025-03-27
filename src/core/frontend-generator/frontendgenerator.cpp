@@ -246,11 +246,6 @@ void FrontendGenerator::parseJson(const nlohmann::json &jsonSchema)
 
     // Generate clone
     oldRoot = cloneNode(frontendRoot);
-
-    // qDebug() << "FrontendRoot";
-    // printNodeTree(frontendRoot);
-    // qDebug() << "OldRoot";
-    // printNodeTree(oldRoot);
 }
 
 bool FrontendGenerator::loadSchema()
@@ -381,8 +376,6 @@ bool FrontendGenerator::updateSchema()
 {
     nlohmann::json jsonSchema;
 
-    // printNodeTree(frontendRoot);
-
     auto viewsNode = getMainNode("Views");
 
     // Create the views
@@ -439,8 +432,6 @@ bool FrontendGenerator::updateSchema()
         fmt::print(stderr, "Failed to open the file for writing: {}\n", filePath);
         return false;
     }
-
-    // std::cout << jsonSchema.dump(2) << std::endl; // Imprime el JSON en la consola antes de guardar
 
     jsonFile << jsonSchema.dump(2);
     jsonFile.close();
@@ -1008,7 +999,7 @@ std::string FrontendGenerator::getFilePathForNode(std::shared_ptr<BaseNode> &nod
 std::string FrontendGenerator::generateNodeFragment(std::shared_ptr<BaseNode> &node)
 {
     nlohmann::json data;
-    std::string templatePath;
+    std::string templatePath, templateString = "{{ render_component(data, \"\") }}";
 
     // Determinar qué tipo de nodo es y cargar el JSON y plantilla adecuada
     if (node->getNodeType() == "Section") {
@@ -1018,12 +1009,6 @@ std::string FrontendGenerator::generateNodeFragment(std::shared_ptr<BaseNode> &n
             return "";
         }
         data = processSectionToJson(section);
-        // Si el section tiene un path, lo consideramos un view; de lo contrario, un custom component.
-        if (!section->getPath().empty()) {
-            templatePath = ":/inja/frontend/view";
-        } else {
-            templatePath = ":/inja/frontend/view";
-        }
     } else if (node->getNodeType() == "Component") {
         // Si el nodo es un componente
         auto component = std::dynamic_pointer_cast<Component>(node);
@@ -1031,31 +1016,12 @@ std::string FrontendGenerator::generateNodeFragment(std::shared_ptr<BaseNode> &n
             fmt::print(stderr, "Error: nodo identificado como component pero falla el cast.\n");
             return "";
         }
-        // Aquí podrías tener una función específica para componentes, o reutilizar processSectionToJson si aplica
         data = processComponentToJson(component);
-        // templatePath = ":/inja/frontend/component_fragment";
     } else {
         fmt::print(stderr,
                    "generateNodeFragment: Tipo de nodo no soportado para generación de "
                    "fragmento.\n");
         return "";
-    }
-
-    std::string templateString;
-    // Cargar el template desde recursos
-    if (templatePath.empty()) {
-        templateString = "{{ render_component(data, \"\") }}";
-    } else {
-        QFile file(QString::fromStdString(templatePath));
-        if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-            fmt::print(stderr, "Unable to open template file from resource: {}\n", templatePath);
-            return "";
-        }
-        QTextStream in(&file);
-        QString templateContent = in.readAll();
-        file.close();
-
-        templateString = templateContent.toStdString();
     }
 
     try {
