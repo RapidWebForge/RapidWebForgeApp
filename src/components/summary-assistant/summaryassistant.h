@@ -1,14 +1,14 @@
 #ifndef SUMMARYASSISTANT_H
 #define SUMMARYASSISTANT_H
 
-#include <QDialog>
+#include <QWidget>
 #include "../../models/project/project.h"
 
 namespace Ui {
 class SummaryAssistant;
 }
 
-class SummaryAssistant : public QDialog
+class SummaryAssistant : public QWidget
 {
     Q_OBJECT
 

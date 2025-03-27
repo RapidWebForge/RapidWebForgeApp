@@ -1,11 +1,13 @@
 #ifndef FRONTENDDASHBOARD_H
 #define FRONTENDDASHBOARD_H
 
-#include <QDialog>
+#include <QTableWidget>
 #include <QTreeWidget>
-#include "../../models/route/route.h"
-#include "../../models/view/view.h"
-#include "../create-view/createview.h"
+#include <QWidget>
+#include "../../core/logging/actionloggerjson.h" // Para manejar logs en formato .json
+#include "../../models/component/component.h"
+#include "../../models/section/section.h"
+#include "../create-section/createsection.h"
 #include "../custom-tree-widget/customtreewidget.h"
 #include <vector>
 
@@ -13,7 +15,7 @@ namespace Ui {
 class FrontendDashboard;
 }
 
-class FrontendDashboard : public QDialog
+class FrontendDashboard : public QWidget
 {
     Q_OBJECT
 
@@ -22,67 +24,87 @@ public:
     ~FrontendDashboard();
 
     // Getters
-    const std::vector<Route> &getRoutes() const;
-    std::vector<Route> &getRoutes();
-    const std::vector<View> &getViews() const;
-    std::vector<View> &getViews();
+    const std::shared_ptr<BaseNode> &getFrontendRoot() const;
     // Setters
-    void setRoutes(const std::vector<Route> &routes);
-    void setViews(const std::vector<View> &views);
-    void setCurrentView(View &view);
+    void setFrontendRoot(const std::shared_ptr<BaseNode> &frontendRoot);
+    void setCurrentSection(const std::shared_ptr<BaseNode> &section);
+    // ComboBox Section
+    void fillAvailableSections();
+    // Custom Components on Components Tree
+    void addCustomComponentsOnComponentsTree();
 
 public slots:
-    void onRouteSaved(const Route &route);
+    void onSectionSaved(const std::shared_ptr<Section> &section);
 
 private slots:
-    void showCreateViewDialog();
-
-    void on_saveButton_clicked();
-    void onCurrentViewTreeItemSelected(QTreeWidgetItem *item, int column);
+    void onCurrentSectionTreeItemSelected(QTreeWidgetItem *item, int column);
     void onItemDropped(QTreeWidgetItem *parentItem, QTreeWidgetItem *droppedItem, int dropIndex);
     void onPropertyValueChanged(int row, int column);
 
+    // void on_saveButton_clicked();
     void on_deleteButton_clicked();
+    void on_addSectionButton_clicked();
+    void on_sectionComboBox_currentIndexChanged(int index);
 
 private:
     Ui::FrontendDashboard *ui;
 
     void applyStylesFront();
-
     void configureTreeWidget(CustomTreeWidget *treeWidget,
                              bool acceptDrops,
                              QAbstractItemView::DragDropMode mode);
     void setUpTreeWidgets();
 
+    // Auxiliar functions
+    QTreeWidgetItem *createTreeItem(const QString &text,
+                                    CustomTreeWidget *treeWidget = nullptr,
+                                    QTreeWidgetItem *parentItem = nullptr);
+    std::string getComponentIdFromTree(QTreeWidgetItem *item) const;
+    void cleanPropertiesTable();
+
     void setDraggableFlags(QTreeWidgetItem *item, bool isDraggable);
     void setComponentsDraggable();
 
-    void populateCurrentViewTree();
-    void convertTreeToViews();
+    const std::shared_ptr<BaseNode> getMainNode(const std::string &nodeName) const;
+
+    // Populate
+    void populateCurrentSectionTree();
     void populateNestedItems(QTreeWidgetItem *parentItem,
-                             const std::vector<Component> &nestedComponents);
-    void populatePropertiesTable(const Component &component);
-    Component convertItemToComponent(QTreeWidgetItem *item);
-    Component *findComponentByHierarchy(std::vector<Component> &components,
-                                        const std::vector<QTreeWidgetItem *> &hierarchy,
-                                        int level);
-    Component *findComponentInTree(View &view, QTreeWidgetItem *item);
-    Component *findNestedComponent(Component &parent, QTreeWidgetItem *item);
+                             const std::vector<std::shared_ptr<BaseNode>> &nestedComponents);
+    void populatePropertiesTable(const std::shared_ptr<Component> &component);
+
+    std::shared_ptr<BaseNode> convertItemToBaseNode(QTreeWidgetItem *item);
+
+    std::shared_ptr<Component> findComponentInTree(const std::shared_ptr<BaseNode> &view,
+                                                   QTreeWidgetItem *item);
+    std::shared_ptr<Component> findComponentByHierarchy(
+        const std::vector<std::shared_ptr<BaseNode>> &components,
+        const std::vector<QTreeWidgetItem *> &hierarchy,
+        const std::string &id,
+        int level);
+    // Component *findNestedComponent(Component &parent, QTreeWidgetItem *item);
 
     // Auxiliar functions to onItemDropped
-    QTreeWidgetItem *createTreeItem(const QString &text);
-    void insertComponentInView(Component &newComponent, QTreeWidgetItem *parentItem, int dropIndex);
-    void insertNestedComponent(Component *parentComponent,
-                               Component &newComponent,
+    void insertComponentInSection(std::shared_ptr<BaseNode> &newComponent,
+                                  QTreeWidgetItem *parentItem,
+                                  int dropIndex);
+    void insertNestedComponent(std::shared_ptr<Component> &parentComponent,
+                               std::shared_ptr<BaseNode> &newComponent,
                                QTreeWidgetItem *parentItem,
                                int dropIndex);
-    bool isParentView(QTreeWidgetItem *item) const;
+    bool isView(QTreeWidgetItem *item) const;
+    bool isCustomComponent(QTreeWidgetItem *item) const;
 
-    CreateView *createViewDialog;
-    std::vector<Route> routes;
-    std::vector<View> views;
-    View currentView;
-    Component currentComponent;
+    // Funciones Auxiliares para on_deleteButton_clicked
+    void removeSubsectionsOnAST(std::shared_ptr<BaseNode> &node, const std::string &sectionName);
+    bool deleteComponentByHierarchy(const std::shared_ptr<BaseNode> &parent,
+                                    const std::vector<QTreeWidgetItem *> &hierarchy);
+
+    CreateSection *createSectionDialog;
+    std::shared_ptr<BaseNode> frontendRoot;
+    std::shared_ptr<Section> currentSection;
+    std::shared_ptr<Component> currentComponent;
+    ActionLoggerJson loggerJson; // Logs en formato .json
 };
 
 #endif // FRONTENDDASHBOARD_H

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>CreateView</class>
- <widget class="QWidget" name="CreateView">
+ <class>CreateSection</class>
+ <widget class="QDialog" name="CreateSection">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -11,8 +11,47 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Create Route</string>
+   <string>Create Section</string>
   </property>
+  <widget class="QCheckBox" name="isViewCheckBox">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>110</y>
+     <width>121</width>
+     <height>26</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Is it a view?</string>
+   </property>
+  </widget>
+  <widget class="QWidget" name="horizontalLayoutWidget_2">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>60</y>
+     <width>361</width>
+     <height>31</height>
+    </rect>
+   </property>
+   <layout class="QHBoxLayout" name="sectionNamehorizontalLayout">
+    <item>
+     <widget class="QLabel" name="sectionNameLabel">
+      <property name="text">
+       <string>Section Name</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QLineEdit" name="sectionNameLineEdit">
+      <property name="placeholderText">
+       <string>Section</string>
+      </property>
+     </widget>
+    </item>
+   </layout>
+  </widget>
   <widget class="QWidget" name="horizontalLayoutWidget">
    <property name="geometry">
     <rect>
@@ -52,53 +91,33 @@
     </item>
    </layout>
   </widget>
-  <widget class="QWidget" name="horizontalLayoutWidget_2">
-   <property name="geometry">
-    <rect>
-     <x>20</x>
-     <y>169</y>
-     <width>361</width>
-     <height>31</height>
-    </rect>
-   </property>
-   <layout class="QHBoxLayout" name="viewNamehorizontalLayout">
-    <item>
-     <widget class="QLabel" name="viewNameLabel">
-      <property name="text">
-       <string>View Name</string>
-      </property>
-     </widget>
-    </item>
-    <item>
-     <widget class="QLineEdit" name="viewNameLineEdit">
-      <property name="placeholderText">
-       <string>View</string>
-      </property>
-     </widget>
-    </item>
-   </layout>
-  </widget>
   <widget class="QWidget" name="horizontalLayoutWidget_3">
    <property name="geometry">
     <rect>
      <x>20</x>
-     <y>120</y>
+     <y>160</y>
      <width>361</width>
      <height>31</height>
     </rect>
    </property>
-   <layout class="QHBoxLayout" name="viewPathhorizontalLayout">
+   <layout class="QHBoxLayout" name="viewRoutehorizontalLayout">
     <item>
-     <widget class="QLabel" name="viewPathLabel">
+     <widget class="QLabel" name="viewRouteLabel">
+      <property name="enabled">
+       <bool>false</bool>
+      </property>
       <property name="text">
        <string>View Path</string>
       </property>
      </widget>
     </item>
     <item>
-     <widget class="QLineEdit" name="viewPathLineEdit">
+     <widget class="QLineEdit" name="viewRouteLineEdit">
+      <property name="enabled">
+       <bool>false</bool>
+      </property>
       <property name="placeholderText">
-       <string>path</string>
+       <string>/route</string>
       </property>
      </widget>
     </item>

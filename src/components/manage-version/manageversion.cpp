@@ -14,6 +14,10 @@ ManageVersion::ManageVersion(VersionManager *versionManager, QWidget *parent)
 
     // Conectar el botón "Change to" para aceptar el diálogo
     connect(ui->acceptButton, &QPushButton::clicked, this, &QDialog::accept);
+    connect(ui->cancelButton,
+            &QPushButton::clicked,
+            this,
+            &ManageVersion::reject); // Cerrar el diálogo al cancelar
 
     // Cargar ramas en el QListView
     std::vector<std::string> branches = versionManager->listVersions();

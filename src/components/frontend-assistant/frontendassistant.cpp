@@ -2,7 +2,7 @@
 #include "src/components/frontend-assistant/ui_frontendassistant.h"
 
 FrontendAssistant::FrontendAssistant(QWidget *parent)
-    : QDialog(parent)
+    : QWidget(parent)
     , ui(new Ui::FrontendAssistant)
 {
     ui->setupUi(this);

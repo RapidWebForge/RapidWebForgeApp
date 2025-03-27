@@ -1,8 +1,8 @@
 #include "backendassistant.h"
-#include "src/components/backend-assistant/ui_backendassistant.h"
+#include "ui_backendassistant.h"
 
 BackendAssistant::BackendAssistant(QWidget *parent)
-    : QDialog(parent)
+    : QWidget(parent)
     , ui(new Ui::BackendAssistant)
 {
     ui->setupUi(this);
@@ -29,6 +29,7 @@ std::string BackendAssistant::isValid(Project &project)
     }
     return "";
 }
+
 void BackendAssistant::applyStylesBack()
 {
     // Estilo para el GroupBox que contiene el formulario (formGroupBox)

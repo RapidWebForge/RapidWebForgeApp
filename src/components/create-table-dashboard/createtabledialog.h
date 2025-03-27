@@ -2,6 +2,7 @@
 #define CREATETABLEDIALOG_H
 
 #include <QDialog>
+#include "../../core/logging/actionloggerjson.h" // Para manejar logs en formato .json
 #include "../../models/transaction/transaction.h"
 #include "../addfield-dashboard/addfielddialog.h"
 
@@ -32,6 +33,7 @@ private:
     Ui::CreateTableDialog *ui;
     AddFieldDialog *addFieldDialog;
     Transaction transaction;
+    ActionLoggerJson loggerJson; // Logs en formato .json
 
     void applyStyles();
 };

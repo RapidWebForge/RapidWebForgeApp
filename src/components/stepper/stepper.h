@@ -3,8 +3,6 @@
 
 #include <QKeyEvent>
 #include <QWidget>
-#include "../../core/project-manager/projectmanager.h"
-#include "../../core/version-manager/versionmanager.h"
 #include "../../models/project/project.h"
 #include "../backend-assistant/backendassistant.h"
 #include "../creation-assistant/creationassistant.h"
@@ -41,7 +39,6 @@ private:
     SummaryAssistant *summaryAssistant;
 
     Project newProject;
-    ProjectManager projectManager;
 };
 
 #endif // STEPPER_H

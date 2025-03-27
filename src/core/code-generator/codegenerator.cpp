@@ -1,6 +1,9 @@
 #include "codegenerator.h"
+#include <QDebug>
 #include <QFile>
+#include "../../models/time-chrono/timechrono.h"
 #include "../../utils/ziphelper/ziphelper.h"
+#include <boost/uuid/uuid_io.hpp>
 #include <filesystem>
 #include <fmt/core.h>
 #include <fstream>
@@ -109,26 +112,24 @@ bool CodeGenerator::createBaseFrontendProject()
 
     // Crear el frontend.json
     nlohmann::json frontendJson;
-    frontendJson["routes"] = nlohmann::json::array();
     frontendJson["views"] = nlohmann::json::array();
+    frontendJson["custom"] = nlohmann::json::array();
 
     // Rutas iniciales
-    nlohmann::json homeRouteJson;
-    homeRouteJson["path"] = "/";
-    homeRouteJson["component"] = "Home";
-    frontendJson["routes"].push_back(homeRouteJson);
 
     // Vista inicial
     nlohmann::json homeViewJson;
-    nlohmann::json homeComponentsJson;
-    nlohmann::json homeH1Json;
-    nlohmann::json homePropsJson;
-    homeComponentsJson["components"] = nlohmann::json::array();
-    homeH1Json["type"] = "Header H1";
-    homePropsJson["text"] = "Home View";
-    homeH1Json["props"] = homePropsJson;
-    homeComponentsJson["components"].push_back(homeH1Json);
-    homeViewJson["Home"] = homeComponentsJson;
+    // Components vacio
+    homeViewJson["components"] = nlohmann::json::array();
+
+    Section homeView("Home", "/");
+
+    homeViewJson["path"] = homeView.getPath();
+    homeViewJson["name"] = homeView.getName();
+    homeViewJson["id"] = boost::uuids::to_string(homeView.getId());
+    homeViewJson["createdOn"] = timePointToString(homeView.getCreatedOn());
+    homeViewJson["updatedOn"] = timePointToString(homeView.getUpdatedOn());
+
     frontendJson["views"].push_back(homeViewJson);
 
     if (!createJsonFile(this->project.getPath() + "/frontend.json", frontendJson)) {

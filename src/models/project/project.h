@@ -18,6 +18,7 @@ private:
     std::chrono::system_clock::time_point createdAt;
     std::chrono::system_clock::time_point updatedAt;
     bool versions; // Nueva propiedad para el control de versiones
+    bool tutorialsEnabled = true; // Cambia según la lógica de tu proyecto.
 
 public:
     // Constructors
@@ -58,6 +59,8 @@ public:
     void setFrontendPort(const std::string &frontendPort);
     void setBackendPort(const std::string &backendPort);
     void setUpdatedAt();
+
+    bool isTutorialEnabled() const { return tutorialsEnabled; }
 
     bool getVersions() const;
     void setVersions(bool newVersions);

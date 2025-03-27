@@ -40,7 +40,7 @@
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
-      <widget class="QGroupBox" name="databaseTablesGroup">
+      <widget class="QGroupBox" name="tableGroup">
        <property name="styleSheet">
         <string notr="true">border: none;</string>
        </property>
@@ -57,7 +57,7 @@
            <number>0</number>
           </property>
           <item>
-           <widget class="QLabel" name="databaseLabel">
+           <widget class="QLabel" name="tableLabel">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
               <horstretch>0</horstretch>
@@ -70,7 +70,7 @@
              </font>
             </property>
             <property name="text">
-             <string>Database</string>
+             <string>Tables</string>
             </property>
             <property name="alignment">
              <set>Qt::AlignmentFlag::AlignCenter</set>
@@ -91,7 +91,7 @@
            </spacer>
           </item>
           <item>
-           <widget class="QPushButton" name="editDB">
+           <widget class="QPushButton" name="editTable">
             <property name="text">
              <string/>
             </property>
@@ -101,7 +101,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QPushButton" name="createTableButton">
+           <widget class="QPushButton" name="createTable">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
               <horstretch>0</horstretch>
@@ -123,7 +123,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QPushButton" name="deleteDB">
+           <widget class="QPushButton" name="deleteTable">
             <property name="text">
              <string/>
             </property>
@@ -135,7 +135,7 @@
          </layout>
         </item>
         <item>
-         <widget class="QTreeWidget" name="databaseTreeWidget">
+         <widget class="QTreeWidget" name="tablesTreeWidget">
           <property name="headerHidden">
            <bool>true</bool>
           </property>
@@ -157,7 +157,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QGroupBox" name="tasksTableGroup">
+      <widget class="QGroupBox" name="fieldsGroup">
        <property name="styleSheet">
         <string notr="true">border: none;</string>
        </property>
@@ -168,7 +168,7 @@
         <item>
          <layout class="QHBoxLayout" name="horizontalLayoutButtons">
           <item>
-           <widget class="QLabel" name="labelTable">
+           <widget class="QLabel" name="fieldLabel">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
               <horstretch>0</horstretch>
@@ -181,7 +181,7 @@
              </font>
             </property>
             <property name="text">
-             <string>Table</string>
+             <string>Fields</string>
             </property>
            </widget>
           </item>
@@ -199,7 +199,7 @@
            </spacer>
           </item>
           <item>
-           <widget class="QPushButton" name="editButton">
+           <widget class="QPushButton" name="editField">
             <property name="text">
              <string/>
             </property>
@@ -209,7 +209,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QPushButton" name="addButton">
+           <widget class="QPushButton" name="addField">
             <property name="text">
              <string/>
             </property>
@@ -219,7 +219,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QPushButton" name="deleteButton">
+           <widget class="QPushButton" name="deleteField">
             <property name="text">
              <string/>
             </property>
@@ -231,7 +231,7 @@
          </layout>
         </item>
         <item>
-         <widget class="QTableWidget" name="tasksTableWidget">
+         <widget class="QTableWidget" name="fieldsTableWidget">
           <property name="textElideMode">
            <enum>Qt::TextElideMode::ElideRight</enum>
           </property>
@@ -248,7 +248,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QGroupBox" name="tasksMethodsGroup">
+      <widget class="QGroupBox" name="methodsGroup">
        <property name="styleSheet">
         <string notr="true">border: none;</string>
        </property>

@@ -1,36 +1,54 @@
 #ifndef COMPONENT_H
 #define COMPONENT_H
 
-#include "../../models/component-type/componenttype.h"
+#include "../base-node/basenode.h"
+#include "../component-type/componenttype.h"
+#include <boost/uuid/uuid.hpp>
+#include <chrono>
 #include <map>
+#include <memory>
 #include <string>
 #include <vector>
 
-class Component
+class Component : public BaseNode
 {
 private:
     ComponentType type;
     std::map<std::string, std::string> props;
-    std::vector<Component> nestedComponents;
     bool allowItems;
+
+    void initializeDefaultProps();
 
 public:
     Component();
-    Component(ComponentType type);
+    Component(boost::uuids::uuid id,
+              std::chrono::system_clock::time_point createdOn,
+              std::chrono::system_clock::time_point updatedOn);
+    explicit Component(ComponentType type);
+    Component(ComponentType type,
+              boost::uuids::uuid id,
+              std::chrono::system_clock::time_point createdOn,
+              std::chrono::system_clock::time_point updatedOn);
+    Component(ComponentType type,
+              const std::map<std::string, std::string> &props,
+              bool allowItems,
+              boost::uuids::uuid id,
+              std::chrono::system_clock::time_point createdOn,
+              std::chrono::system_clock::time_point updatedOn);
     Component(ComponentType type, const std::map<std::string, std::string> &props, bool allowItems);
+
+    // From BaseNode
+    void generateCode(inja::Environment &env) const override;
+    void updateFromJson(const nlohmann::json &json) override;
+    std::shared_ptr<BaseNode> clone() const override;
+    bool isDifferentFrom(const std::shared_ptr<BaseNode> &other) const override;
 
     ComponentType getType() const;
     const std::map<std::string, std::string> &getProps() const;
-    std::map<std::string, std::string> &getProps();
-    const std::vector<Component> &getNestedComponents() const;
-    std::vector<Component> &getNestedComponents();
     bool isAllowingItems() const;
 
     void setType(ComponentType type);
     void setProps(const std::map<std::string, std::string> &props);
-    void addNestedComponent(const Component &component);
-    void setNestedComponents(const std::vector<Component> &components);
-    void initializeDefaultProps();
     void setAllowItems(bool allow);
 };
 

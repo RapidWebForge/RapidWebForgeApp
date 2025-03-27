@@ -1,0 +1,53 @@
+[
+    {
+      "title": "1. Base de datos: Creando nuestros modelos",
+      "description": "La gran mayoría de aplicación web utiliza información en su contenido y para poder gestionar ese contenido eficientemente es necesario definir los modelos que se emplearán. Estos modelos estarán compuestos por un nombre que los definirá y sus campos correspondientes. Además, de las relaciones que tendrán con otros modelos.",
+      "steps": [
+        {
+          "goal": "Definir cuales serán tus modelos",
+          "comment": "Para poder crear tus modelos utiliza el botón 'New model' y define el nombre que llevará. Es común que los nombres de las tablas sean en plural ya que definirán el conjunto de tus elementos.",
+          "help": "En caso hayas cometido algún error podrás modificar o eliminar dicha tabla.",
+          "reference": "https://database.guide/what-is-a-table/",
+          "log": "",
+          "completed": "false"
+        },
+        {
+          "goal": "Agregar campos a los modelos",
+          "comment": "Para poder añadir campos a tus modelos, en primer lugar, selecciona algún modelo. Luego, utiliza el botón 'Add field' y completa los datos necesarios, el tipo de dato, si posee algún constraint y si es alguna llave foránea. En primera instancia, tus campos no deberían llevar llaves foráneas, eso lo veremos en el siguiente tutorial!",
+          "help": "Recuerda que cada tipo de dato es adecuado según el contexto de tu campo a crear. Ten en cuenta como se usarán o a que hacen referencia tus campos para designarles tipos de datos adecuados.",
+          "reference": "https://www.geeksforgeeks.org/components-of-table-in-database/",
+          "log": "",
+          "completed": "false"
+        }
+      ]
+    },
+    {
+      "title": "2. Base de Datos: Relaciones SQL",
+      "description": "En el tutorial anterior vimos como crear modelos. Sin embargo, en las aplicaciones web reales normalmento hay al menos dos modelos que se relacionan de algún modo y hoy vamos a reflejar ese comportamiento en nuestra aplicación.",
+      "steps": [
+        {
+          "goal": "Crear modelos que se relacionen",
+          "comment": "Para crear una relación entre nuestros modelos solo tenemos que agregar un campo que tenga como constraint ser una llave foránea e indicar a que modelo referencia. Por ejemplo, si tengo un modelo llamado Alumnos, podemos crear un campo llamado aulaId el cual haga referencia al ID del modelo llamado Aula y tendríamos la siguiente relación: 'Cada Alumno tiene un Aula y un Aula tiene muchos Alumnos'",
+          "help": "Las relaciones pueden ser un poco complicadas de entender, así que tomate tu tiempo definiendolas antes de implementarlas en la aplicación.",
+          "reference": "https://code.tutsplus.com/es/sql-for-beginners-part-3-database-relationships--net-8561a",
+          "log": "",
+          "completed": "false"
+        }
+      ]
+    },
+    {
+      "title": "3. ORM: Entendiendo el ORM",
+      "description": "Los ORMs son herramientas que permiten emplear objetos y modelos para manejar Bases de Datos Relacionales en lugar de manejar consultas SQL directamente. RapidWebForge emplea un ORM en el backend generado, si bien como usuario no manejarás directamente la herramienta, es importante que conozcas como es que tu proyecto lo emplea.",
+      "steps": [
+        {
+          "goal": "Modelos generados para el ORM",
+          "comment": "Crea tus modelos y define sus campos y relaciones según gustes. Posteriormente despliega la aplicación y observa los cambios que se han realizado en el código. Los principales serán los modelos generados para generar las tablas SQL.",
+          "help": "Los tipos de datos empleados por el ORM pueden ser un poco distintos a los que se usan realmente en las consultas SQL. Por ello, es importante repasar para entender a cuales hacen referencia al momento de crear nuestra aplicación web.",
+          "reference": "https://sequelize.org/docs/v6/",
+          "log": "",
+          "completed": "false"
+        }
+      ]
+    }
+  ]
+  

@@ -1,12 +1,18 @@
 #include "addfielddialog.h"
 #include <QFile>
 #include <QMessageBox>
+#include "../../core/logging/actionloggerjson.h"
 #include "ui_addfielddialog.h"
+#include <algorithm>
+#include <cctype>
+#include <string>
 
 AddFieldDialog::AddFieldDialog(QWidget *parent)
     : QDialog(parent)
     , ui(new Ui::AddFieldDialog)
     , currentTransaction(nullptr)
+    , loggerJson("resources/logs/user_actions.json") // Cambiar la ruta al archivo JSON
+
 {
     ui->setupUi(this);
 
@@ -20,9 +26,10 @@ AddFieldDialog::AddFieldDialog(QWidget *parent)
 
     connect(ui->cancelButton, &QPushButton::clicked, this, &QDialog::close);
 
-    //Ocultar defaul language
     ui->primaryKeyLabel->hide();
     ui->primaryKeyCheckBox->hide();
+    ui->checkCheckBox->setHidden(true);
+    ui->defaultCheckBox->setHidden(true);
 
     applyStyles();
 }
@@ -81,6 +88,25 @@ void AddFieldDialog::setAvailableTables(const std::vector<QString> &tables,
     }
 }
 
+std::string normalizeString(const std::string &input)
+{
+    std::string result;
+
+    // Convertir a minúsculas y eliminar espacios
+    for (char c : input) {
+        if (!std::isspace(static_cast<unsigned char>(c))) {        // Ignorar espacios
+            result += std::tolower(static_cast<unsigned char>(c)); // Convertir a minúsculas
+        }
+    }
+
+    return result;
+}
+
+bool areStringsEqual(const std::string &a, const std::string &b)
+{
+    return normalizeString(a) == normalizeString(b);
+}
+
 void AddFieldDialog::on_addButton_clicked()
 {
     if (currentTransaction == nullptr) {
@@ -109,40 +135,78 @@ void AddFieldDialog::on_addButton_clicked()
     // Crear el nuevo campo
     Field field;
     std::string fieldName = ui->fieldNameLineEdit->text().toStdString();
-    field.setName(fieldName);
 
-    std::string fieldType = ui->fieldTypeComboBox->currentText().toStdString();
-    field.setType(fieldType);
+    bool isCreatedBefore = false;
 
-    // Verificar las restricciones de NULL y UNIQUE
-    bool isNull = ui->nullCheckBox->isChecked();
-    bool isUnique = ui->uniqueCheckBox->isChecked();
-    bool hasCheck = ui->checkCheckBox->isChecked();
-    bool hasDefault = ui->defaultCheckBox->isChecked();
-
-    field.setIsPrimaryKey(ui->primaryKeyCheckBox->isChecked());
-    field.setIsNull(isNull);
-    field.setIsUnique(isUnique);
-    field.setHasCheck(hasCheck);
-    field.setHasDefault(hasDefault);
-
-    if (ui->foreignKeyCheckBox->isChecked()) {
-        std::string foreignKeyTable = ui->foreignKeyTableComboBox->currentText().toStdString();
-        field.setIsForeignKey(true);
-        field.setForeignKeyTable(foreignKeyTable); // Establecer la tabla relacionada
+    for (auto field : currentTransaction->getFields()) {
+        isCreatedBefore = areStringsEqual(field.getName(), fieldName);
+        if (isCreatedBefore)
+            break;
     }
-    emit fieldSaved(field);
 
-    // Limpiar el formulario
-    ui->fieldNameLineEdit->clear();
-    ui->fieldTypeComboBox->setCurrentIndex(0);
-    ui->primaryKeyCheckBox->setChecked(false);
-    ui->foreignKeyCheckBox->setChecked(false);
-    ui->nullCheckBox->setChecked(false);
-    ui->uniqueCheckBox->setChecked(false);
-    ui->checkCheckBox->setChecked(false);
-    ui->defaultCheckBox->setChecked(false);
-    accept();
+    if (isCreatedBefore) {
+        QMessageBox::critical(this,
+                              "Warning",
+                              "Try with another name, that was used in another field");
+    } else {
+        field.setName(fieldName);
+
+        std::string fieldType = ui->fieldTypeComboBox->currentText().toStdString();
+        field.setType(fieldType);
+
+        // Verificar las restricciones de NULL y UNIQUE
+        bool isNull = ui->nullCheckBox->isChecked();
+        bool isUnique = ui->uniqueCheckBox->isChecked();
+        // bool hasCheck = ui->checkCheckBox->isChecked();
+        // bool hasDefault = ui->defaultCheckBox->isChecked();
+
+        // field.setIsPrimaryKey(ui->primaryKeyCheckBox->isChecked());
+        field.setIsPrimaryKey(false);
+        field.setIsNull(isNull);
+        field.setIsUnique(isUnique);
+        // field.setHasCheck(hasCheck);
+        // field.setHasDefault(hasDefault);
+
+        std::string logMessage = "fieldName=" + fieldName + ", fieldType=" + fieldType
+                                 + ", isPrimaryKey=" + (field.isPrimaryKey() ? "true" : "false")
+                                 + ", isNull=" + (isNull ? "true" : "false")
+                                 + ", isUnique=" + (isUnique ? "true" : "false");
+        if (ui->foreignKeyCheckBox->isChecked()) {
+            std::string foreignKeyTable = ui->foreignKeyTableComboBox->currentText().toStdString();
+            field.setIsForeignKey(true);
+            field.setForeignKeyTable(foreignKeyTable); // Establecer la tabla relacionada
+
+            // Log de creación de relación entre modelos
+            std::string relationshipLog = "sourceModel=" + currentTransaction->getName()
+                                          + ", targetModel=" + foreignKeyTable
+                                          + ", fieldName=" + fieldName;
+
+            loggerJson.logAction("create-relationship-between-models", relationshipLog);
+
+            logMessage += ", foreignKeyTable=" + foreignKeyTable;
+        }
+
+        if (fieldName.empty()) {
+            QMessageBox::warning(this, "Warning", "Field name cannot be empty.");
+            return;
+        }
+
+        // Log de la creación del nuevo field
+        loggerJson.logAction("add-field-to-model", logMessage);
+        emit fieldSaved(field);
+
+        // Limpiar el formulario
+        ui->fieldNameLineEdit->clear();
+        ui->fieldTypeComboBox->setCurrentIndex(0);
+        ui->primaryKeyCheckBox->setChecked(false);
+        ui->foreignKeyCheckBox->setChecked(false);
+        ui->nullCheckBox->setChecked(false);
+        ui->uniqueCheckBox->setChecked(false);
+        // ui->checkCheckBox->setChecked(false);
+        // ui->defaultCheckBox->setChecked(false);
+
+        accept();
+    }
 }
 
 void AddFieldDialog::on_foreignKeyCheckBox_stateChanged(int state)

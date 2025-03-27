@@ -59,6 +59,7 @@ void CreateVersion::onRegisterButtonClicked()
     // Cerrar el diálogo
     accept();
 }
+
 // Método para obtener el nombre de la versión ingresado por el usuario
 QString CreateVersion::getVersionName() const
 {
