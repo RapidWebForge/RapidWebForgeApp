@@ -119,23 +119,11 @@ bool CodeGenerator::createBaseFrontendProject()
 
     // Vista inicial
     nlohmann::json homeViewJson;
-    nlohmann::json homeH1Json;
-    nlohmann::json homeH1PropsJson;
+    // Components vacio
     homeViewJson["components"] = nlohmann::json::array();
 
     Section homeView("Home", "/");
-    Component newHeaderH1(ComponentType::HeaderH1);
-    // homeView.addChild(newHeaderH1);
 
-    homeH1Json["type"] = componentTypeToString(newHeaderH1.getType());
-    homeH1Json["id"] = boost::uuids::to_string(newHeaderH1.getId());
-    homeH1Json["createdOn"] = timePointToString(newHeaderH1.getCreatedOn());
-    homeH1Json["updatedOn"] = timePointToString(newHeaderH1.getUpdatedOn());
-    homeH1PropsJson["text"] = "Home View";
-    homeH1PropsJson["class"] = "";
-    homeH1Json["props"] = homeH1PropsJson;
-
-    homeViewJson["components"].push_back(homeH1Json);
     homeViewJson["path"] = homeView.getPath();
     homeViewJson["name"] = homeView.getName();
     homeViewJson["id"] = boost::uuids::to_string(homeView.getId());
