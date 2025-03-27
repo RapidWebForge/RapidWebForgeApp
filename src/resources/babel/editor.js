@@ -1,8 +1,8 @@
 const fs = require("fs");
+const { execSync } = require("child_process");
 const parser = require("@babel/parser");
 const generate = require("@babel/generator").default;
 const traverse = require("@babel/traverse").default;
-const prettier = require("prettier");
 
 const [, , filePath, operation, referenceId, ...rest] = process.argv;
 
@@ -170,15 +170,12 @@ const [, , filePath, operation, referenceId, ...rest] = process.argv;
 
     const output = generate(ast, { retainLines: true }, sourceCode);
 
-    const formattedCode = await prettier.format(output.code, {
-      parser: "babel-ts",
-      semi: true,
-      singleQuote: false,
-      trailingComma: "es5",
-      tabWidth: 2,
-    });
+    // Guardar el código antes de formatear
+    fs.writeFileSync(filePath, output.code);
 
-    fs.writeFileSync(filePath, formattedCode);
+    // Formatear con Biome (requiere que esté en node_modules/.bin o accesible desde bun)
+    execSync(`bunx biome format ${filePath}`, { stdio: "inherit" });
+
     console.log("✅ Code successfully modified and formatted.");
   } catch (err) {
     console.error("❌ Unexpected error:", err.message);
