@@ -867,13 +867,20 @@ void FrontendDashboard::on_deleteButton_clicked()
                                });
 
     if (viewIt != viewsPtr->getChildren().end()) {
-        viewsPtr->removeChild(viewIt);
+        // Remover del customTreeWidget
         delete selectedItem;
-        qDebug() << "View deleted:" << QString::fromStdString(selectedItemName);
+
+        // Remover del AST
+        viewsPtr->removeChild(viewIt);
+
         // Limpiar para evitar editar algo inexistente
         cleanPropertiesTable();
 
+        // Remover del comboBox
         ui->sectionComboBox->removeItem(ui->sectionComboBox->currentIndex());
+
+        qDebug() << "View deleted:" << QString::fromStdString(selectedItemName);
+
         return;
     }
 

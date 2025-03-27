@@ -48,7 +48,8 @@ private:
 public:
     FrontendGenerator(const std::string &projectPath);
     // AST
-    const std::shared_ptr<BaseNode> getMainNode(const std::string &nodeName);
+    std::shared_ptr<BaseNode> getChildByType(const std::shared_ptr<BaseNode> &root,
+                                             const std::string &type);
     // Schema
     bool loadSchema();
     bool updateSchema();

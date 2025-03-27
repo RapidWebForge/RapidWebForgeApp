@@ -225,7 +225,7 @@ void StepperDashboard::onFrontendSchemaLoaded()
     frontendDashboard->fillAvailableSections();
     frontendDashboard->addCustomComponentsOnComponentsTree();
 
-    auto viewsNode = codeGenerator->frontendGenerator.getMainNode("Views");
+    auto viewsNode = codeGenerator->frontendGenerator.getChildByType(frontendRoot, "Views");
 
     if (viewsNode) {
         // Verificar si tiene vistas disponibles
@@ -686,6 +686,15 @@ void StepperDashboard::onDeployProject()
                                     "You have unsaved progress. Do you want to continue?")) {
             return;
         }
+    }
+
+    auto frontendRoot = codeGenerator->frontendGenerator.getFrontendRoot();
+
+    auto viewsNode = codeGenerator->frontendGenerator.getChildByType(frontendRoot, "Views");
+
+    if (viewsNode->getChildren().empty()) {
+        QMessageBox::critical(this, "Critical", "You cannot deploy without a single view");
+        return;
     }
 
     std::vector<Transaction> transactions = codeGenerator->backendGenerator.getTransactions();

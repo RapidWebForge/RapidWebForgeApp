@@ -24,10 +24,12 @@ const [, , filePath, operation, referenceId, ...rest] = process.argv;
     } else if (operation === "insert") {
       position = rest[0] || "";
       payloadPath = rest[1] || "";
+    } else if (operation === "refactor-delete") {
+      position = rest[0] || "";
     }
 
     let fragmentAst = null;
-    if (operation !== "delete")
+    if (operation !== "delete" && operation !== "refactor-delete")
       try {
         const raw = fs.readFileSync(payloadPath, "utf-8");
         fragmentAst = parser.parseExpression(JSON.parse(raw), { plugins: ["jsx"] });
@@ -72,16 +74,26 @@ const [, , filePath, operation, referenceId, ...rest] = process.argv;
             }
           },
           CallExpression(path) {
-            // Eliminar React.lazy(() => import("./views/ViewName"))
+            const isLazy = path.node.callee.type === "MemberExpression" &&
+                           path.node.callee.object.name === "React" &&
+                           path.node.callee.property.name === "lazy";
+
+            if (!isLazy) return;
+
+            const arg = path.node.arguments[0];
             if (
-              path.node.callee.type === "MemberExpression" &&
-              path.node.callee.property.name === "lazy" &&
-              path.node.arguments[0]?.body?.body[0]?.argument?.value?.includes(
-                importName,
-              )
+              arg.type === "ArrowFunctionExpression" &&
+              arg.body.type === "CallExpression" &&
+              arg.body.callee.type === "Import"
             ) {
-              path.remove();
-              modified = true;
+              const parentVarDecl = path.findParent(p => p.isVariableDeclaration());
+              if (parentVarDecl) {
+                parentVarDecl.remove(); // Eliminar toda la declaración: const View = React.lazy(...)
+                modified = true;
+              } else {
+                path.remove(); // fallback por si no encuentra el contenedor
+                modified = true;
+              }
             }
           },
           JSXElement(path) {
@@ -174,7 +186,8 @@ const [, , filePath, operation, referenceId, ...rest] = process.argv;
     fs.writeFileSync(filePath, output.code);
 
     // Formatear con Biome (requiere que esté en node_modules/.bin o accesible desde bun)
-    execSync(`bunx biome format ${filePath}`, { stdio: "inherit" });
+    process.env.PATH = `${process.cwd()}/node_modules/.bin:${process.env.PATH}`;
+    execSync(`biome format ${filePath} --write`, { stdio: "inherit" });
 
     console.log("✅ Code successfully modified and formatted.");
   } catch (err) {

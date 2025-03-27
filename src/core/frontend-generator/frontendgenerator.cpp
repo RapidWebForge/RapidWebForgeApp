@@ -48,7 +48,7 @@ void FrontendGenerator::initializeCustomComponentsCache()
     RenderCallback::customComponentsCache.clear();
 
     // Encontrar el nodo 'CustomComponents' en el AST
-    auto customComponentsNode = getMainNode("CustomComponents");
+    auto customComponentsNode = getChildByType(frontendRoot, "CustomComponents");
 
     if (!customComponentsNode) {
         fmt::print(stderr, "Error: No 'CustomComponents' node found in the AST.\n");
@@ -354,29 +354,13 @@ nlohmann::json processSectionToJson(const std::shared_ptr<Section> &section)
     return sectionJson;
 }
 
-// AST
-const std::shared_ptr<BaseNode> FrontendGenerator::getMainNode(const std::string &nodeName)
-{
-    auto it = std::find_if(frontendRoot->getChildren().begin(),
-                           frontendRoot->getChildren().end(),
-                           [&nodeName](const std::shared_ptr<BaseNode> &node) {
-                               return node->getNodeType() == nodeName;
-                           });
-
-    if (it != frontendRoot->getChildren().end()) {
-        return *it; // Devuelve el nodo encontrado
-    }
-
-    return nullptr; // No se encontró el nodo
-}
-
 // Updating
 
 bool FrontendGenerator::updateSchema()
 {
     nlohmann::json jsonSchema;
 
-    auto viewsNode = getMainNode("Views");
+    auto viewsNode = getChildByType(frontendRoot, "Views");
 
     // Create the views
     if (viewsNode) {
@@ -401,7 +385,7 @@ bool FrontendGenerator::updateSchema()
         fmt::print(stderr, "Error: 'Views' node not found in the AST.\n");
     }
 
-    auto customComponentsNode = getMainNode("CustomComponents");
+    auto customComponentsNode = getChildByType(frontendRoot, "CustomComponents");
 
     if (customComponentsNode) {
         // Convert to section to use getChildren()
@@ -442,7 +426,7 @@ bool FrontendGenerator::updateSchema()
 std::shared_ptr<Section> FrontendGenerator::findViewByName(const std::string &viewName)
 {
     // Encontrar el nodo "Views" en el AST
-    auto viewsNode = getMainNode("Views");
+    auto viewsNode = getChildByType(frontendRoot, "Views");
     if (!viewsNode) {
         fmt::print(stderr, "Error: 'Views' node not found in the AST.\n");
         return nullptr;
@@ -474,7 +458,7 @@ std::shared_ptr<Section> FrontendGenerator::findViewByName(const std::string &vi
 std::shared_ptr<Section> FrontendGenerator::findCustomComponentByName(const std::string &viewName)
 {
     // Encontrar el nodo "CustomComponents" en el AST
-    auto custCompNode = getMainNode("CustomComponents");
+    auto custCompNode = getChildByType(frontendRoot, "CustomComponents");
     if (!custCompNode) {
         fmt::print(stderr, "Error: 'CustomComponents' node not found in the AST.\n");
         return nullptr;
@@ -614,7 +598,7 @@ bool FrontendGenerator::generateFrontendCode()
     nlohmann::json data;
     data["routes"] = nlohmann::json::array();
 
-    auto viewsNode = getMainNode("Views");
+    auto viewsNode = getChildByType(frontendRoot, "Views");
 
     auto viewsPtr = std::dynamic_pointer_cast<GenericNode>(viewsNode);
 
@@ -633,7 +617,7 @@ bool FrontendGenerator::generateFrontendCode()
         }
     }
 
-    auto customComponentsNode = getMainNode("CustomComponents");
+    auto customComponentsNode = getChildByType(frontendRoot, "CustomComponents");
 
     auto customComponentPtr = std::dynamic_pointer_cast<GenericNode>(customComponentsNode);
 
@@ -681,40 +665,11 @@ std::vector<NodeOperation> FrontendGenerator::diffTrees(std::shared_ptr<BaseNode
 {
     std::vector<NodeOperation> ops;
 
-    // Si el nodo es uno de los contenedores de alto nivel, ignóralo y recorre sus hijos secuencialmente.
     std::string type = newNode->getNodeType();
-    if (type == "FrontendRoot" || type == "Views" || type == "CustomComponents") {
-        auto oldChildren = oldNode->getChildren();
-        auto newChildren = newNode->getChildren();
+    // Si tienen el mismo ID y difieren en contenido, se marca como modificación.
 
-        // Recorrer hijos en orden
-        for (size_t i = 0; i < newChildren.size(); ++i) {
-            if (i < oldChildren.size()) {
-                auto childOps = diffTrees(oldChildren[i], newChildren[i]);
-                ops.insert(ops.end(), childOps.begin(), childOps.end());
-            } else {
-                ops.push_back(NodeOperation(OperationType::Insert, newChildren[i]));
-            }
-        }
-        // Si hay más hijos en el antiguo que en el nuevo, se consideran eliminaciones.
-        if (oldChildren.size() > newChildren.size()) {
-            for (size_t i = newChildren.size(); i < oldChildren.size(); ++i) {
-                // NO contar los custom components `importados` que no tengan el custom component
-                // en el nodo `CustomComponents` porque seria sumar operaciones Delete innecesarias
-                auto subSection = std::dynamic_pointer_cast<Section>(oldChildren[i]);
-                if (subSection
-                    && RenderCallback::customComponentsCache.find(subSection->getName())
-                           == RenderCallback::customComponentsCache.end()) {
-                    continue;
-                }
-                ops.push_back(NodeOperation(OperationType::Delete, oldChildren[i]));
-            }
-        }
-        return ops;
-    }
-
-    // Para los demás nodos, si tienen el mismo ID y difieren en contenido, se marca como modificación.
-    if (oldNode->getId() == newNode->getId() && oldNode->isDifferentFrom(newNode)) {
+    if (oldNode->getId() == newNode->getId() && oldNode->isDifferentFrom(newNode)
+        && type != "FrontendRoot" && type != "Views" && type != "CustomComponents") {
         ops.push_back(NodeOperation(OperationType::Modify, newNode));
     }
 
@@ -741,8 +696,9 @@ std::vector<NodeOperation> FrontendGenerator::diffTrees(std::shared_ptr<BaseNode
     for (auto &pair : oldChildrenMap) {
         // NO contar los custom components `importados` que no tengan el custom component
         // en el nodo `CustomComponents` porque seria sumar operaciones Delete innecesarias
+        // El script de Babel ya elimina las importaciones
         auto subSection = std::dynamic_pointer_cast<Section>(pair.second);
-        if (subSection
+        if (subSection && subSection->getPath().empty()
             && RenderCallback::customComponentsCache.find(subSection->getName())
                    == RenderCallback::customComponentsCache.end()) {
             continue;
@@ -753,9 +709,26 @@ std::vector<NodeOperation> FrontendGenerator::diffTrees(std::shared_ptr<BaseNode
     return ops;
 }
 
+std::shared_ptr<BaseNode> FrontendGenerator::getChildByType(const std::shared_ptr<BaseNode> &root,
+                                                            const std::string &type)
+{
+    for (const auto &child : root->getChildren()) {
+        if (child->getNodeType() == type)
+            return child;
+    }
+    return nullptr;
+}
+
 bool FrontendGenerator::updateFrontendCode()
 {
-    std::vector<NodeOperation> operations = diffTrees(oldRoot, frontendRoot);
+    auto oldViews = getChildByType(oldRoot, "Views");
+    auto newViews = getChildByType(frontendRoot, "Views");
+    auto oldCustom = getChildByType(oldRoot, "CustomComponents");
+    auto newCustom = getChildByType(frontendRoot, "CustomComponents");
+
+    std::vector<NodeOperation> operations = diffTrees(oldViews, newViews);
+    auto customOps = diffTrees(oldCustom, newCustom);
+    operations.insert(operations.end(), customOps.begin(), customOps.end());
 
     if (operations.empty()) {
         qDebug() << "No changes detected, skipping frontend generation.";
@@ -1089,56 +1062,28 @@ void FrontendGenerator::applyRefactorForDeletedSection(const std::string &sectio
     // Siempre revisar App.tsx si es una vista
     if (sectionType == "View") {
         filesToCheck.push_back(projectPath + "/frontend/src/App.tsx");
-    }
+    } else {
+        // Revisar todos los archivos de views y components
+        std::vector<std::string> folders = {
+            projectPath + "/frontend/src/views",
+            projectPath + "/frontend/src/components",
+        };
 
-    // Revisar todos los archivos de views y components
-    std::vector<std::string> folders = {
-        projectPath + "/frontend/src/views",
-        projectPath + "/frontend/src/components",
-    };
-
-    for (const auto &folder : folders) {
-        for (const auto &entry : fs::recursive_directory_iterator(folder)) {
-            if (entry.is_regular_file() && entry.path().extension() == ".tsx") {
-                filesToCheck.push_back(entry.path().string());
+        for (const auto &folder : folders) {
+            for (const auto &entry : fs::recursive_directory_iterator(folder)) {
+                if (entry.is_regular_file() && entry.path().extension() == ".tsx") {
+                    filesToCheck.push_back(entry.path().string());
+                }
             }
         }
     }
 
     // Ejecutar refactor-delete en todos los archivos afectados
     for (const auto &filePath : filesToCheck) {
-        QString resourcePath = ":/babel/editor";
-        QFile resourceFile(resourcePath);
-        if (!resourceFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
-            fmt::print(stderr, "❌ Unable to open resource: {}\n", resourcePath.toStdString());
-            continue;
-        }
+        std::vector<std::string> args = {filePath, "refactor-delete", sectionName, sectionType};
 
-        QString tempPath = QStandardPaths::writableLocation(QStandardPaths::TempLocation);
-        QString tempFilePath = tempPath + "/editor.js";
-
-        QFile tempFile(tempFilePath);
-        if (tempFile.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text)) {
-            tempFile.write(resourceFile.readAll());
-            tempFile.close();
-        } else {
-            fmt::print(stderr, "❌ Unable to write temporary editor.js\n");
-            continue;
-        }
-
-        namespace bp = boost::process;
-        bp::environment env = boost::this_process::environment();
-        env["NODE_PATH"] = "/usr/local/lib/node_modules";
-
-        bp::child c("/usr/local/bin/node",
-                    tempFilePath.toStdString(),
-                    filePath,
-                    "refactor-delete",
-                    sectionName,
-                    sectionType,
-                    "", // payload
-                    env);
-        c.wait();
+        // Run script
+        runEditorScript(args);
     }
 }
 
