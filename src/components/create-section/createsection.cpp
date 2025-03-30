@@ -51,27 +51,31 @@ void CreateSection::on_createButton_clicked()
     if (isView) {
         std::string path = ui->viewRouteLineEdit->text().toStdString();
 
-        // TODO: Ensure capitalize
-        route.setComponent(sectionName);
-        route.setPath(boost::to_lower_copy(path));
-
-        emit routeSaved(route);
-
         if (!sectionName.empty() && !path.empty() && isView) {
+            const std::shared_ptr<Section> view = std::make_shared<Section>(sectionName,
+                                                                            boost::to_lower_copy(
+                                                                                path));
+
+            emit onSectionSaved(view);
+
             // Log para crear una nueva vista React
             loggerJson.logAction("create-react-view",
                                  "sectionName=" + sectionName + ", path=" + path);
+
+            resetFields();
             accept();
         } else
             QMessageBox::warning(this, "Warning", "Fill all the fields to create");
     } else {
-        const std::shared_ptr<Section> customComponent = std::make_shared<Section>(sectionName);
-
-        emit customComponentSaved(customComponent);
-
         if (!sectionName.empty() && !isView) {
+            const std::shared_ptr<Section> customComponent = std::make_shared<Section>(sectionName);
+
+            emit onSectionSaved(customComponent);
+
             // Log para crear un nuevo componente React
             loggerJson.logAction("create-react-component", "sectionName=" + sectionName);
+
+            resetFields();
             accept();
         } else
             QMessageBox::warning(this, "Warning", "Fill all the fields to create");
@@ -89,4 +93,11 @@ void CreateSection::on_isViewCheckBox_checkStateChanged(const Qt::CheckState &ar
 
     ui->viewRouteLabel->setEnabled(isView);
     ui->viewRouteLineEdit->setEnabled(isView);
+}
+
+void CreateSection::resetFields()
+{
+    ui->isViewCheckBox->setChecked(false);
+    ui->viewRouteLineEdit->setText("");
+    ui->sectionNameLineEdit->setText("");
 }

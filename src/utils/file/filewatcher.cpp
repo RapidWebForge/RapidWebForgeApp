@@ -8,8 +8,9 @@ FileWatcher::FileWatcher(QObject *parent) : QObject(parent) {
 
     connect(watcher, &QFileSystemWatcher::fileChanged, this, [=](const QString &path) {
         qDebug() << "Archivo modificado: " << path;
-        std::string filePath = path.toStdString();  // ✅ Convertir QString a std::string
-        FileOpener::openInVSCode(filePath);
+        std::string filePath = path.toStdString(); // Convertir QString a std::string
+        if (filePath.find(".json") == std::string::npos)
+            FileOpener::openInVSCode(filePath);
     });
 }
 
@@ -43,12 +44,12 @@ std::string FileWatcher::getLastModifiedFileInFolder(const std::string &folderPa
         return "";
     }
 
-    // ✅ Filtrar solo archivos dentro de la carpeta (excluir backend.json y frontend.json)
+    // Filtrar solo archivos dentro de la carpeta (excluir backend.json y frontend.json)
     QFileInfoList files = dir.entryInfoList(QDir::Files, QDir::Time | QDir::Reversed);
 
     for (const QFileInfo &file : files) {
         if (file.fileName() != "backend.json" && file.fileName() != "frontend.json") {
-            qDebug() << "✅ Último archivo encontrado en carpeta: " << file.absoluteFilePath();
+            qDebug() << "Último archivo encontrado en carpeta: " << file.absoluteFilePath();
             return file.absoluteFilePath().toStdString();
         }
     }

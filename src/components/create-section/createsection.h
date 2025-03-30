@@ -2,8 +2,7 @@
 #define CREATESECTION_H
 
 #include <QDialog>
-#include "../../core/logging/actionloggerjson.h" // Para manejar logs en formato .json
-#include "../../models/route/route.h"
+#include "../../core/logging/actionloggerjson.h"
 #include "../../models/section/section.h"
 
 namespace Ui {
@@ -19,8 +18,7 @@ public:
     ~CreateSection();
 
 signals:
-    void routeSaved(const Route &route);
-    void customComponentSaved(const std::shared_ptr<Section> &custComponent);
+    void onSectionSaved(const std::shared_ptr<Section> &newSection);
 
 private slots:
     void on_createButton_clicked();
@@ -31,11 +29,10 @@ private slots:
 
 private:
     Ui::CreateSection *ui;
-    Route route;
-    Section custComponent;
     ActionLoggerJson loggerJson; // Logs en formato .json
 
     void applyStyles();
+    void resetFields();
 };
 
 #endif // CREATESECTION_H

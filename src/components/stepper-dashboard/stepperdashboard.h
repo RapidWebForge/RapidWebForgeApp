@@ -3,10 +3,14 @@
 
 #include <QAction>
 #include <QDialog>
+#include <QEnterEvent>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QMenu>
+#include <QPropertyAnimation>
+#include <QPushButton>
+#include <QResizeEvent>
 #include <QString>
 #include <QTimer>
 #include <QWidget>
@@ -15,19 +19,13 @@
 #include "../../core/logging/stepvalidator.h"
 #include "../../core/version-manager/versionmanager.h"
 #include "../../models/project/project.h"
+#include "../../utils/file/filewatcher.h"  // Detectar archivos modificados
+#include "../../utils/vscode/fileopener.h" // Abrir VS Code
 #include "../backend-dashboard/backenddashboard.h"
 #include "../custom-tree-widget/customtreewidget.h"
 #include "../frontend-dashboard/frontenddashboard.h"
 #include <nlohmann/json.hpp>
-#include <variant> // 📌 Incluir std::variant
-#include <QResizeEvent>
-#include <QPushButton> // 📌 Importar QPushButton
-#include <QEnterEvent>  // 📌 Importar QEnterEvent
-#include <QPropertyAnimation>  // ✅ Para animaciones
-
-#include <QPushButton>  // Agregar botón
-#include "../../utils/file/FileWatcher.h"  // Detectar archivos modificados
-#include "../../utils/vscode/FileOpener.h" // Abrir VS Code
+#include <variant>
 
 namespace Ui {
 class StepperDashboard;
@@ -38,20 +36,22 @@ class StepperDashboard : public QWidget
     Q_OBJECT
 
 public:
-    // 📌 Constructor para proyectos normales
     explicit StepperDashboard(QWidget *parent = nullptr,
                               const Project &project = Project(),
                               const QString &tutorialPath = "");
     ~StepperDashboard();
 
-    void loadTutorialData(); // 📌 Ahora `loadData()` maneja proyectos y tutoriales en un solo método
-public slots:
-    void validateCurrentStep(const QString &logAction);
+    void loadTutorialData();
+    bool showConfirmationDialog(QWidget *parent, const QString &title, const QString &message);
 
 protected:
     void showEvent(QShowEvent *event) override;
-    void resizeEvent(QResizeEvent *event) override; // 📌 Sobreescribir resizeEvent
-    void contextMenuEvent(QContextMenuEvent *event) override;  // 📌 Detectar clic derecho
+    void closeEvent(QCloseEvent *event) override;
+    void resizeEvent(QResizeEvent *event) override;
+    void contextMenuEvent(QContextMenuEvent *event) override;
+
+public slots:
+    void validateCurrentStep(const QString &logAction);
 
 signals:
     void backendSchemaLoaded();
@@ -75,9 +75,9 @@ private slots:
     void onProjectChange();
     void onCreateProject();
     // Slots relacionados con los tutoriales
-    void showTutorialComment();  // Muestra el comentario del tutorial
-    void showTutorialHelp();     // Muestra la ayuda del tutorial
-    void goToNextTutorialStep(); // Avanza al siguiente paso del tutorial
+    void showTutorialComment();
+    void showTutorialHelp();
+    void goToNextTutorialStep();
     void showTutorialIntro();
     void onUserActionPerformed(const std::string &action, const std::string &componentID);
 
@@ -87,22 +87,21 @@ private:
     BackendDashboard *backendDashboard;
     FrontendDashboard *frontendDashboard;
     StepValidator *stepValidator;
-    CustomTreeWidget *customTreeWidget; // 🆕 Se declara un puntero a CustomTreeWidget
-    QPushButton *floatingButton;  // 📌 Declarar el botón flotante
-    QPushButton *backendButton;   // 📌 Botón para abrir backend
-    QPushButton *frontendButton;  // 📌 Botón para abrir frontend
-    QPushButton *lastFileButton;  // 📌 Botón para abrir el último archivo modificado
+    CustomTreeWidget *customTreeWidget;
+    QPushButton *floatingButton;
+    QPushButton *backendButton;
+    QPushButton *frontendButton;
+    QPushButton *lastFileButton;
 
-    QPropertyAnimation *backendAnimation;   // ✅ Animación para backend
-    QPropertyAnimation *frontendAnimation;  // ✅ Animación para frontend
-    QPropertyAnimation *lastFileAnimation;  // ✅ Animación para último archivo
+    QPropertyAnimation *backendAnimation;
+    QPropertyAnimation *frontendAnimation;
+    QPropertyAnimation *lastFileAnimation;
 
     // Tutorial bar methods
-    void initializeTutorialBar();    // Método para inicializar la barra de tutoriales
-    void setupTutorialConnections(); // Conecta los botones de tutorial a sus funciones
-    // 📌 Nueva función para el botón flotante
+    void initializeTutorialBar();
+    void setupTutorialConnections();
     void setupFloatingButton();
-    void toggleExtraButtons();    // 📌 Mostrar/Ocultar botones desplegables
+    void toggleExtraButtons();
     void createAnimations();
 
     void openBackendInVSCode();
@@ -113,7 +112,6 @@ private:
     QMenu *projectMenu;
     QMenu *versionsMenu;
 
-    // 📌 Variable unificada para manejar tutoriales o proyectos
     std::variant<Project, QString> dataVariant;
     bool isTutorialMode = false;
 
@@ -145,20 +143,18 @@ private:
     Project project;
     int currentStepIndex = 0; // Inicializa el índice en 0
 
-    // 📌 Nuevo parámetro para almacenar la ruta del tutorial JSON
     QString tutorialPath;
-    QString tutorialFilePath; // Ruta del tutorial JSON
+    QString tutorialFilePath;
 
-    QJsonArray tutorialSteps; // Array para almacenar los pasos del tutorial
+    QJsonArray tutorialSteps;
 
-    void showStep(int index); // Función para mostrar un paso
+    void showStep(int index);
     QTimer *stepCheckTimer;
     QString tutorialTitle;
     QString tutorialDescription;
     QString currentReference;
 
-    //    QPushButton *btnOpenVSCode;  // 📌 Botón para abrir VS Code
-    FileWatcher *fileWatcher; // 📌 Instancia para monitorear archivos
+    FileWatcher *fileWatcher;
 };
 
 #endif // STEPPERDASHBOARD_H

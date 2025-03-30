@@ -117,7 +117,7 @@
        <bool>false</bool>
       </property>
       <property name="placeholderText">
-       <string>Route</string>
+       <string>/route</string>
       </property>
      </widget>
     </item>

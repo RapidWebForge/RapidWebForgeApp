@@ -2,7 +2,7 @@
 #define FRONTENDGENERATOR_H
 
 #include "../../models/component/component.h"
-#include "../../models/route/route.h"
+#include "../../models/node-operation/nodeoperation.h"
 #include "../../models/section/section.h"
 #include <inja/inja.hpp>
 #include <nlohmann/json.hpp>
@@ -11,42 +11,55 @@
 
 class FrontendGenerator
 {
-public:
-    FrontendGenerator(const std::string &projectPath);
-    bool loadSchema();
-    bool updateSchema();
-    bool generateFrontendCode();
-    bool updateFrontendCode();
-    // Getters
-    const std::vector<Route> &getRoutes() const;
-    const std::vector<std::shared_ptr<Section>> &getViews() const;
-    const std::vector<std::shared_ptr<Section>> &getCustomComponents() const;
-    // Setters
-    void setRoutes(const std::vector<Route> &routes);
-    void setViews(const std::vector<std::shared_ptr<Section>> &views);
-    void setCustomComponents(const std::vector<std::shared_ptr<Section>> &custComponents);
-
-    // Process functions
-    void processSection(const std::shared_ptr<Section> &section, nlohmann::json &jsonArray);
-    nlohmann::json processSectionToJson(const std::shared_ptr<Section> &section);
-
 private:
     std::string projectPath;
-    std::vector<Route> routes;
-    std::vector<std::shared_ptr<Section>> views;
-    std::vector<std::shared_ptr<Section>> custComponents;
+    std::shared_ptr<BaseNode> frontendRoot;
+    std::shared_ptr<BaseNode> oldRoot;
     inja::Environment env;
 
+    void initializeCustomComponentsCache();
+
+    void generateCodeForNode(const std::shared_ptr<BaseNode> &node);
+    // Schema
     std::shared_ptr<BaseNode> parseComponent(const nlohmann::json &componentJson);
     std::vector<std::shared_ptr<BaseNode>> parseNestedComponents(
         const nlohmann::json &nestedJsonArray);
     void parseJson(const nlohmann::json &jsonSchema);
-
-    void initializeCustomComponentsCache();
-
+    // Funciones Auxiliares de búsqueda
+    std::shared_ptr<Section> findViewByName(const std::string &viewName);
+    std::shared_ptr<Section> findCustomComponentByName(const std::string &viewName);
     bool generateView(const std::string &viewName);
-    bool generateCustomComponent(const std::string &viewName);
-    bool generateApp();
+    bool generateCustomComponent(const std::string &custComponentName);
+    // Funciones Auxiliares para modificaciones
+    std::vector<NodeOperation> diffTrees(std::shared_ptr<BaseNode> &oldNode,
+                                         std::shared_ptr<BaseNode> &newNode);
+    void runEditorScript(const std::vector<std::string> args);
+    void applyInsertion(std::shared_ptr<BaseNode> &node);
+    void applyModification(std::shared_ptr<BaseNode> &node);
+    void applyDeletion(std::shared_ptr<BaseNode> &node);
+    std::string getFilePathForNode(std::shared_ptr<BaseNode> &node);
+    std::string generateNodeFragment(std::shared_ptr<BaseNode> &node);
+    void getReferenceForInsertion(std::string &referenceId,
+                                  std::string &position,
+                                  std::shared_ptr<BaseNode> &node);
+    void applyRefactorForDeletedSection(const std::string &sectionName,
+                                        const std::string &sectionType);
+
+public:
+    FrontendGenerator(const std::string &projectPath);
+    // AST
+    std::shared_ptr<BaseNode> getChildByType(const std::shared_ptr<BaseNode> &root,
+                                             const std::string &type);
+    // Schema
+    bool loadSchema();
+    bool updateSchema();
+    // Code
+    bool generateFrontendCode();
+    bool updateFrontendCode();
+    // Getters
+    const std::shared_ptr<BaseNode> &getFrontendRoot() const;
+    // Prevent lost nodes
+    bool isProgressSaved();
 };
 
 #endif // FRONTENDGENERATOR_H

@@ -1,7 +1,6 @@
 #ifndef OVERVIEWPANEL_H
 #define OVERVIEWPANEL_H
 
-#include <QDialog>
 #include <QGridLayout>
 #include <QLabel>
 #include <QPushButton>
@@ -15,7 +14,7 @@ namespace Ui {
 class OverviewPanel;
 }
 
-class OverviewPanel : public QDialog
+class OverviewPanel : public QWidget
 {
     Q_OBJECT
 
@@ -23,7 +22,7 @@ public:
     explicit OverviewPanel(QWidget *parent = nullptr);
     ~OverviewPanel();
 
-    void setupProjects(const std::vector<Project> &projects); // 🚀 Agregamos esta función
+    void setupProjects(const std::vector<Project> &projects);
 
 private:
     Ui::OverviewPanel *ui;

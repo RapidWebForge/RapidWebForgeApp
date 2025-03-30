@@ -23,7 +23,7 @@ void ProjectPreview::mousePressEvent(QMouseEvent *event)
     if (event->button() == Qt::LeftButton) {
         emit projectClicked(project);
     } else {
-        // Deja que el clic derecho se maneje por el menú contextual
+        // Deja que el click derecho se maneje por el menú contextual
         QWidget::mousePressEvent(event);
     }
 }

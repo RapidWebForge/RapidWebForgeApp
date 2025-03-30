@@ -133,6 +133,9 @@
          </item>
          <item>
           <widget class="QCheckBox" name="checkCheckBox">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
            <property name="text">
             <string>CHECK</string>
            </property>
@@ -140,6 +143,9 @@
          </item>
          <item>
           <widget class="QCheckBox" name="defaultCheckBox">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
            <property name="text">
             <string>DEFAULT</string>
            </property>

@@ -30,6 +30,7 @@ endif()
 find_package(boost_algorithm REQUIRED CONFIG)
 find_package(boost_process REQUIRED CONFIG)
 find_package(boost_uuid REQUIRED CONFIG)
+find_package(boost_filesystem REQUIRED CONFIG)
 find_package(OpenSSL REQUIRED)
 find_package(fmt CONFIG REQUIRED)
 find_package(inja CONFIG REQUIRED)
@@ -108,6 +109,18 @@ set(PROJECT_SOURCES
         src/components/delete-version/deleteversion.h
         src/components/delete-version/deleteversion.cpp
         src/components/delete-version/deleteversion.ui
+        src/components/overview-panel/overviewpanel.h
+        src/components/overview-panel/overviewpanel.cpp
+        src/components/overview-panel/overviewpanel.ui
+        src/components/tutorials-panel/tutorialspanel.h
+        src/components/tutorials-panel/tutorialspanel.cpp
+        src/components/tutorials-panel/tutorialspanel.ui
+        src/components/pro-panel/propanel.h
+        src/components/pro-panel/propanel.cpp
+        src/components/pro-panel/propanel.ui
+        src/components/overview-panel/overviewpanel.h
+        src/components/overview-panel/overviewpanel.cpp
+        src/components/overview-panel/overviewpanel.ui
         # Core
         src/core/project-manager/projectmanager.h
         src/core/project-manager/projectmanager.cpp
@@ -125,6 +138,10 @@ set(PROJECT_SOURCES
         src/core/deploy-manager/deploymanager.cpp
         src/core/project-worker/projectworker.h
         src/core/project-worker/projectworker.cpp
+        src/core/logging/actionloggerjson.h
+        src/core/logging/actionloggerjson.cpp
+        src/core/logging/stepvalidator.h
+        src/core/logging/stepvalidator.cpp
         # Models
         src/models/project/project.h
         src/models/project/project.cpp
@@ -134,8 +151,6 @@ set(PROJECT_SOURCES
         src/models/transaction/transaction.cpp
         src/models/field/field.h
         src/models/field/field.cpp
-        src/models/route/route.h
-        src/models/route/route.cpp
         src/models/component/component.h
         src/models/component/component.cpp
         src/models/section/section.h
@@ -144,6 +159,9 @@ set(PROJECT_SOURCES
         src/models/configuration/configuration.cpp
         src/models/base-node/basenode.h
         src/models/base-node/basenode.cpp
+        src/models/generic-node/genericnode.h
+        src/models/generic-node/genericnode.cpp
+        src/models/node-operation/nodeoperation.h
         # Utils
         src/utils/database/database.h
         src/utils/database/database.cpp
@@ -153,6 +171,12 @@ set(PROJECT_SOURCES
         src/utils/file/fileutiils.cpp
         src/utils/render_callback/rendercallback.h
         src/utils/render_callback/rendercallback.cpp
+        src/utils/file/filewatcher.h
+        src/utils/file/filewatcher.cpp
+        src/utils/vscode/fileopener.h
+        src/utils/vscode/fileopener.cpp
+        src/utils/ui/codeviewer.h
+        src/utils/ui/codeviewer.cpp
         # Resources
         src/resources/resources.qrc
 )
@@ -166,15 +190,6 @@ if(QT_VERSION_MAJOR GREATER_EQUAL 6)
     )
 else()
     add_executable(RapidWebForgeApp ${PROJECT_SOURCES}
-        src/core/logging/actionloggerjson.h src/core/logging/actionloggerjson.cpp
-        src/core/logging/stepvalidator.h src/core/logging/stepvalidator.cpp
-        src/components/overview-panel/overviewpanel.h src/components/overview-panel/overviewpanel.cpp src/components/overview-panel/overviewpanel.ui
-        src/components/tutorials-panel/tutorialspanel.h src/components/tutorials-panel/tutorialspanel.cpp src/components/tutorials-panel/tutorialspanel.ui
-        src/components/pro-panel/propanel.h src/components/pro-panel/propanel.cpp src/components/pro-panel/propanel.ui
-        src/components/overview-panel/overviewpanel.h src/components/overview-panel/overviewpanel.cpp src/components/overview-panel/overviewpanel.ui
-        src/utils/file/filewatcher.h src/utils/file/filewatcher.cpp
-        src/utils/vscode/fileopener.h src/utils/vscode/fileopener.cpp
-        src/utils/ui/codeviewer.h src/utils/ui/codeviewer.cpp
     )
 endif()
 
@@ -185,6 +200,7 @@ target_link_libraries(RapidWebForgeApp PRIVATE
     Boost::algorithm
     Boost::process
     Boost::uuid
+    Boost::filesystem
     OpenSSL::SSL
     fmt::fmt
     pantor::inja

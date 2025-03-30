@@ -15,7 +15,7 @@ std::string toLower(const std::string &str)
 
 namespace RenderCallback {
 
-std::unordered_map<std::string, nlohmann::json> customComponentsCache;
+std::unordered_set<std::string> customComponentsCache;
 
 std::string renderCustomComponent(const nlohmann::json componentJson)
 {
@@ -24,9 +24,11 @@ std::string renderCustomComponent(const nlohmann::json componentJson)
     if (!componentJson.contains("name"))
         return output;
 
+    std::string id = componentJson["id"];
+
     std::string componentName = componentJson["name"];
     if (customComponentsCache.find(componentName) != customComponentsCache.end()) {
-        output = "<" + componentName + "/>";
+        output = "<" + componentName + " data-id=\"" + id + "\" />";
     } else {
         fmt::print(stderr, "Unsupported custom component: {}\n", componentName);
         output = "<!-- Unsupported custom component: " + componentName + " -->";
@@ -42,7 +44,7 @@ std::string renderComponent(inja::Environment &env,
     std::string output = "";
 
     if (!parentType.empty()) {
-        output = "\n";
+        // output = "\n";
     }
 
     const auto &props = componentJson["props"];
@@ -51,31 +53,42 @@ std::string renderComponent(inja::Environment &env,
         return "<!-- Invalid props format -->";
     }
 
-    if (type == "Header H1") {
-        std::string className = props.value("class", "");
-        std::string value = props.value("text", "Default Header");
+    std::string id, className, value;
+    id = componentJson["id"];
+    className = props.value("class", "");
 
-        output += "<h1 className=\"" + className + "\">" + value + "</h1>";
-    } else if (type == "Header H2") {
-        std::string className = props.value("class", "");
-        std::string value = props.value("text", "Default Header 2");
+    if (type.find("Header") != std::string::npos) {
+        char numberChar = type[type.length() - 1];
 
-        output += "<h2 className=\"" + className + "\">" + value + "</h2>";
-    } else if (type == "Header H3") {
-        std::string className = props.value("class", "");
-        std::string value = props.value("text", "Default Header 3");
+        if (std::isdigit(numberChar)) {
+            std::string number(1, numberChar);
 
-        output += "<h3 className=\"" + className + "\">" + value + "</h3>";
+            value = props.value("text", "Default Header H" + number);
+
+            output += "<h" + number;
+
+            if (!className.empty())
+                output += " className=\"" + className + "\"";
+
+            output += " data-id=\"" + id + "\">" + value + "</h" + number + ">";
+
+        } else {
+            fmt::print(stderr, "Unsupported component type: {}\n", type);
+            output = "<!-- Unsupported component type: " + type + " -->";
+        }
     } else if (type == "Paragraph") {
-        std::string className = props.value("class", "");
-        std::string value = props.value("text", "Default Header");
+        value = props.value("text", "Default Header");
 
-        output += "<p className=\"" + className + "\">" + value + "</p>";
+        output += "<p";
+
+        if (!className.empty())
+            output += " className=\"" + className + "\"";
+
+        output += " data-id=\"" + id + "\">" + value + "</p>";
+
     } else if (type == "Input") {
-        std::string className = props.value("class", "");
         std::string placeholder = props.value("placeholder", "");
         std::string type = props.value("type", "text");
-        std::string value = props.value("value", "");
         std::string inputValue = "value=";
 
         if (value[0] == '{') {
@@ -84,23 +97,45 @@ std::string renderComponent(inja::Environment &env,
             inputValue += "\"" + value + "\" ";
         }
 
-        output += "<input className=\"" + className + "\" type=\"" + type + "\" placeholder=\""
-                  + placeholder + "\" " + inputValue
-                  + (parentType == "Form" ? "onChange={handleChange}" : "") + " /> ";
+        output += "<input";
+
+        if (!className.empty())
+            output += " className=\"" + className + "\"";
+
+        if (!placeholder.empty())
+            placeholder += " placeholder=\"" + placeholder + "\"";
+
+        if (!type.empty())
+            output += " type=\"" + type + "\"";
+
+        output += inputValue + (parentType == "Form" ? "onChange={handleChange}" : "")
+                  + " data-id=\"" + id + "\"/>";
 
     } else if (type == "Text Area") {
-        std::string className = props.value("class", "");
         std::string placeholder = props.value("placeholder", "");
 
-        output += "<textarea className=\"" + className + "\" placeholder=\"" + placeholder
-                  + "\"></textarea>";
+        output += "<textarea";
+
+        if (!className.empty())
+            output += " className=\"" + className + "\"";
+
+        if (!placeholder.empty())
+            placeholder += " placeholder=\"" + placeholder + "\"";
+
+        output += " data-id=\"" + id + "\" />";
     } else if (type == "Button") {
-        std::string className = props.value("class", "");
-        std::string value = props.value("text", "Default Button");
+        value = props.value("text", "Default Button");
         std::string type = props.value("type", "button");
 
-        output += "<button className=\"" + className + "\" type=\"" + type + "\" >" + value
-                  + "</button>";
+        output += "<button";
+
+        if (!className.empty())
+            output += " className=\"" + className + "\"";
+
+        if (!type.empty())
+            type += " type=\"" + type + "\"";
+
+        output += " data-id=\"" + id + "\">" + value + "</button>";
     } else if (type == "Horizontal Layout" || type == "Vertical Layout" || type == "Model Layout") {
         std::string layoutClass;
 
@@ -113,7 +148,12 @@ std::string renderComponent(inja::Environment &env,
                 layoutClass += " " + props["class"].get<std::string>();
             }
         }
-        output += "<div className=\"" + layoutClass + "\">";
+        output += "<div data-id=\"" + id + "\"";
+
+        // if (!className.empty())
+        output += " className=\"" + layoutClass + "\"";
+
+        output += ">";
 
         if (type == "Model Layout") {
             // Add map to iterate only if 'model' is valid
@@ -121,6 +161,7 @@ std::string renderComponent(inja::Environment &env,
             if (!model.empty() && model != "Model") {
                 std::string lowerModel = toLower(model);
                 output += "{" + lowerModel + ".map((obj, index) => (";
+                output += "<div index={index}>";
             }
         }
 
@@ -138,20 +179,19 @@ std::string renderComponent(inja::Environment &env,
                     output += "<!-- Error rendering nested component -->";
                 }
             }
-        } else {
-            fmt::print(stderr, "Invalid or missing nestedComponents array.\n");
         }
 
         if (type == "Model Layout") {
             std::string model = props.value("model", "Model");
             if (!model.empty() && model != "Model") {
+                output += "</div>";
                 output += "))}";
             }
         }
 
         output += "</div>";
     } else if (type == "Form") {
-        std::string className = props.value("class", "");
+        className = props.value("class", "");
         std::string onSubmit = "";
 
         std::string method = props.value("method", "Method");
@@ -160,7 +200,15 @@ std::string renderComponent(inja::Environment &env,
                 onSubmit += "handleSubmit";
         }
 
-        output += "<form className=\"" + className + "\" onSubmit={" + onSubmit + "} >";
+        output += "<form data-id=\"" + id + "\"";
+
+        if (!className.empty())
+            output += " className=\"" + className + "\"";
+
+        if (!onSubmit.empty())
+            output += " onSubmit={" + onSubmit + "}";
+
+        output += ">";
 
         if (componentJson.contains("nestedComponents")
             && componentJson["nestedComponents"].is_array()) {
@@ -171,17 +219,17 @@ std::string renderComponent(inja::Environment &env,
                     output += env.render("{{ render_component(nestedComponent, \"" + type + "\") }}",
                                          contextWithNested);
                 } catch (const std::exception &e) {
-                    fmt::print(stderr, "Error rendering nested component: {}\n", e.what());
+                    fmt::print(stderr, "Error rendering nested component: {}", e.what());
                     output += "<!-- Error rendering nested component -->";
                 }
             }
         } else {
-            fmt::print(stderr, "Invalid or missing nestedComponents array.\n");
+            fmt::print(stderr, "Invalid or missing nestedComponents array.");
         }
 
         output += "</form>";
     } else {
-        fmt::print(stderr, "Unsupported component type: {}\n", type);
+        fmt::print(stderr, "Unsupported component type: {}", type);
         output = "<!-- Unsupported component type: " + type + " -->";
     }
 

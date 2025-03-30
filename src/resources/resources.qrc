@@ -74,4 +74,7 @@
         <file>log_tutorials/intermedium/intermediate-tutorial-2.json</file>
         <file>log_tutorials/intermedium/intermediate-tutorial-3.json</file>
     </qresource>
+    <qresource prefix="/babel">
+        <file alias="editor">babel/editor.js</file>
+    </qresource>
 </RCC>

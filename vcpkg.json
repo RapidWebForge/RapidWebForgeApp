@@ -8,8 +8,9 @@
     "libgit2",
     "libzip",
     "mysql-connector-cpp",
+    "openssl",
     "pkgconf",
     "sqlite3",
-    "openssl"
+    "boost-filesystem"
   ]
 }

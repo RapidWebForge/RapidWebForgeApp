@@ -1,12 +1,11 @@
 #ifndef FRONTENDDASHBOARD_H
 #define FRONTENDDASHBOARD_H
 
-#include <QWidget>
 #include <QTableWidget>
 #include <QTreeWidget>
+#include <QWidget>
 #include "../../core/logging/actionloggerjson.h" // Para manejar logs en formato .json
 #include "../../models/component/component.h"
-#include "../../models/route/route.h"
 #include "../../models/section/section.h"
 #include "../create-section/createsection.h"
 #include "../custom-tree-widget/customtreewidget.h"
@@ -25,29 +24,24 @@ public:
     ~FrontendDashboard();
 
     // Getters
-    const std::vector<Route> &getRoutes() const;
-    const std::vector<std::shared_ptr<Section>> &getViews() const;
-    const std::vector<std::shared_ptr<Section>> &getCustomComponents() const;
+    const std::shared_ptr<BaseNode> &getFrontendRoot() const;
     // Setters
-    void setRoutes(const std::vector<Route> &routes);
-    void setViews(const std::vector<std::shared_ptr<Section>> &views);
-    void setCustomComponents(const std::vector<std::shared_ptr<Section>> &custComponents);
-    void setCurrentSection(const std::shared_ptr<Section> &section);
+    void setFrontendRoot(const std::shared_ptr<BaseNode> &frontendRoot);
+    void setCurrentSection(const std::shared_ptr<BaseNode> &section);
     // ComboBox Section
     void fillAvailableSections();
     // Custom Components on Components Tree
     void addCustomComponentsOnComponentsTree();
 
 public slots:
-    void onRouteSaved(const Route &route);
-    void onCustomComponentSaved(const std::shared_ptr<Section> &component);
+    void onSectionSaved(const std::shared_ptr<Section> &section);
 
 private slots:
     void onCurrentSectionTreeItemSelected(QTreeWidgetItem *item, int column);
     void onItemDropped(QTreeWidgetItem *parentItem, QTreeWidgetItem *droppedItem, int dropIndex);
     void onPropertyValueChanged(int row, int column);
 
-    void on_saveButton_clicked();
+    // void on_saveButton_clicked();
     void on_deleteButton_clicked();
     void on_addSectionButton_clicked();
     void on_sectionComboBox_currentIndexChanged(int index);
@@ -70,6 +64,8 @@ private:
 
     void setDraggableFlags(QTreeWidgetItem *item, bool isDraggable);
     void setComponentsDraggable();
+
+    const std::shared_ptr<BaseNode> getMainNode(const std::string &nodeName) const;
 
     // Populate
     void populateCurrentSectionTree();
@@ -99,13 +95,13 @@ private:
     bool isView(QTreeWidgetItem *item) const;
     bool isCustomComponent(QTreeWidgetItem *item) const;
 
-    bool deleteComponentByHierarchy(const std::shared_ptr<Section> &section,
+    // Funciones Auxiliares para on_deleteButton_clicked
+    void removeSubsectionsOnAST(std::shared_ptr<BaseNode> &node, const std::string &sectionName);
+    bool deleteComponentByHierarchy(const std::shared_ptr<BaseNode> &parent,
                                     const std::vector<QTreeWidgetItem *> &hierarchy);
 
     CreateSection *createSectionDialog;
-    std::vector<Route> routes;
-    std::vector<std::shared_ptr<Section>> custComponents;
-    std::vector<std::shared_ptr<Section>> views;
+    std::shared_ptr<BaseNode> frontendRoot;
     std::shared_ptr<Section> currentSection;
     std::shared_ptr<Component> currentComponent;
     ActionLoggerJson loggerJson; // Logs en formato .json

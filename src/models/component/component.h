@@ -15,42 +15,40 @@ class Component : public BaseNode
 private:
     ComponentType type;
     std::map<std::string, std::string> props;
-    std::vector<std::shared_ptr<BaseNode>> nestedComponents;
     bool allowItems;
-    std::chrono::system_clock::time_point createdOn;
-    std::chrono::system_clock::time_point updatedOn;
-    boost::uuids::uuid id;
 
     void initializeDefaultProps();
-    void generateUniqueId();
 
 public:
     Component();
     Component(boost::uuids::uuid id,
               std::chrono::system_clock::time_point createdOn,
               std::chrono::system_clock::time_point updatedOn);
-    Component(ComponentType type);
+    explicit Component(ComponentType type);
     Component(ComponentType type,
+              boost::uuids::uuid id,
+              std::chrono::system_clock::time_point createdOn,
+              std::chrono::system_clock::time_point updatedOn);
+    Component(ComponentType type,
+              const std::map<std::string, std::string> &props,
+              bool allowItems,
               boost::uuids::uuid id,
               std::chrono::system_clock::time_point createdOn,
               std::chrono::system_clock::time_point updatedOn);
     Component(ComponentType type, const std::map<std::string, std::string> &props, bool allowItems);
 
+    // From BaseNode
+    void generateCode(inja::Environment &env) const override;
+    void updateFromJson(const nlohmann::json &json) override;
+    std::shared_ptr<BaseNode> clone() const override;
+    bool isDifferentFrom(const std::shared_ptr<BaseNode> &other) const override;
+
     ComponentType getType() const;
     const std::map<std::string, std::string> &getProps() const;
-    const std::vector<std::shared_ptr<BaseNode>> &getNestedComponents() const;
     bool isAllowingItems() const;
-    std::chrono::system_clock::time_point getCreatedOn() const;
-    std::chrono::system_clock::time_point getUpdatedOn() const;
-    boost::uuids::uuid getId() const;
-
-    void update();
-    void addNestedComponent(const std::shared_ptr<BaseNode> &component);
-    void insertNestedComponent(int index, const std::shared_ptr<BaseNode> &component);
 
     void setType(ComponentType type);
     void setProps(const std::map<std::string, std::string> &props);
-    void setNestedComponents(const std::vector<std::shared_ptr<BaseNode>> &components);
     void setAllowItems(bool allow);
 };
 

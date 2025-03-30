@@ -1,16 +1,8 @@
 #include "component.h"
-#include <boost/uuid/uuid_generators.hpp>
-#include <boost/uuid/uuid_io.hpp>
-#include <iomanip>
-#include <openssl/evp.h> // Para la API de EVP
-#include <openssl/sha.h> // Para SHA256_DIGEST_LENGTH
-#include <sstream>
 
 Component::Component()
-    : type(ComponentType::Undefined)
-    , nestedComponents()
-    , createdOn(std::chrono::system_clock::now())
-    , updatedOn(createdOn)
+    : BaseNode("Component", std::chrono::system_clock::now(), std::chrono::system_clock::now())
+    , type(ComponentType::Undefined)
 {
     initializeDefaultProps();
 }
@@ -18,113 +10,119 @@ Component::Component()
 Component::Component(boost::uuids::uuid id,
                      std::chrono::system_clock::time_point createdOn,
                      std::chrono::system_clock::time_point updatedOn)
-    : type(ComponentType::Undefined)
-    , nestedComponents()
-    , createdOn(createdOn)
-    , updatedOn(updatedOn)
-    , id(id)
+    : BaseNode("Component", id, createdOn, updatedOn)
+    , type(ComponentType::Undefined)
 {
     initializeDefaultProps();
 }
 
 Component::Component(ComponentType type)
-    : type(type)
-    , nestedComponents()
-    , createdOn(std::chrono::system_clock::now())
-    , updatedOn(createdOn)
+    : BaseNode("Component", std::chrono::system_clock::now(), std::chrono::system_clock::now())
+    , type(type)
 {
     initializeDefaultProps();
-    generateUniqueId();
+    generateUniqueId(componentTypeToString(type), allowItems, props);
 }
 
 Component::Component(ComponentType type,
                      boost::uuids::uuid id,
                      std::chrono::system_clock::time_point createdOn,
                      std::chrono::system_clock::time_point updatedOn)
-    : type(type)
-    , nestedComponents()
-    , createdOn(createdOn)
-    , updatedOn(updatedOn)
-    , id(id)
+    : BaseNode("Component", id, createdOn, updatedOn)
+    , type(type)
 {
     initializeDefaultProps();
 }
 
 Component::Component(ComponentType type,
                      const std::map<std::string, std::string> &props,
-                     bool allowItems)
-    : type(type)
+                     bool allowItems,
+                     boost::uuids::uuid id,
+                     std::chrono::system_clock::time_point createdOn,
+                     std::chrono::system_clock::time_point updatedOn)
+    : BaseNode("Component", id, createdOn, updatedOn)
+    , type(type)
     , props(props)
-    , nestedComponents()
     , allowItems(allowItems)
-    , createdOn(std::chrono::system_clock::now())
-    , updatedOn(createdOn)
+{}
+
+Component::Component(ComponentType type,
+                     const std::map<std::string, std::string> &props,
+                     bool allowItems)
+    : BaseNode("Component", std::chrono::system_clock::now(), std::chrono::system_clock::now())
+    , type(type)
+    , props(props)
+    , allowItems(allowItems)
 {
-    initializeDefaultProps();
-    generateUniqueId();
+    // initializeDefaultProps();
+    generateUniqueId(componentTypeToString(type), allowItems, props);
 }
 
-// Función para generar un hash SHA-256
-std::string generateSHA256(const std::string &input)
+// Methods from BaseNode
+
+void Component::generateCode(inja::Environment &env) const
 {
-    EVP_MD_CTX *context = EVP_MD_CTX_new(); // Crear un contexto para el hash
-    if (!context) {
-        throw std::runtime_error("Failed to create EVP_MD_CTX");
-    }
-
-    // Inicializar el contexto para usar SHA-256
-    if (EVP_DigestInit_ex(context, EVP_sha256(), nullptr) != 1) {
-        EVP_MD_CTX_free(context);
-        throw std::runtime_error("Failed to initialize SHA-256");
-    }
-
-    // Procesar los datos de entrada
-    if (EVP_DigestUpdate(context, input.c_str(), input.size()) != 1) {
-        EVP_MD_CTX_free(context);
-        throw std::runtime_error("Failed to update SHA-256");
-    }
-
-    // Obtener el hash resultante
-    unsigned char hash[SHA256_DIGEST_LENGTH];
-    unsigned int lengthOfHash = 0;
-    if (EVP_DigestFinal_ex(context, hash, &lengthOfHash) != 1) {
-        EVP_MD_CTX_free(context);
-        throw std::runtime_error("Failed to finalize SHA-256");
-    }
-
-    // Liberar el contexto
-    EVP_MD_CTX_free(context);
-
-    // Convertir el hash a una cadena hexadecimal
-    std::stringstream ss;
-    for (int i = 0; i < SHA256_DIGEST_LENGTH; i++) {
-        ss << std::hex << std::setw(2) << std::setfill('0') << (int) hash[i];
-    }
-    return ss.str();
+    // nlohmann::json data = {{"type", "Component"},
+    //                        {"componentType", componentTypeToString(type)},
+    //                        {"props", props}};
+    // std::string result = env.render("Componente: {{ type }} {{ componentType }}", data);
+    // Usar el resultado como necesites
 }
 
-// Función para convertir un hash en un UUID
-boost::uuids::uuid hashToUUID(const std::string &hash)
+void Component::updateFromJson(const nlohmann::json &json)
 {
-    boost::uuids::uuid uuid;
-    std::memcpy(&uuid, hash.data(), 16); // Copia los primeros 16 bytes del hash
-    return uuid;
+    if (json.contains("type")) {
+        setType(stringToComponentType(json["type"]));
+    }
+    if (json.contains("props")) {
+        setProps(json["props"].get<std::map<std::string, std::string>>());
+    }
 }
 
-void Component::generateUniqueId()
+std::shared_ptr<BaseNode> Component::clone() const
 {
-    std::stringstream dataStream;
-    dataStream << componentTypeToString(type) << allowItems
-               << std::chrono::system_clock::to_time_t(createdOn)
-               << std::chrono::system_clock::to_time_t(updatedOn);
+    auto clonedComponent = std::make_shared<Component>(this->type,
+                                                       this->props,
+                                                       this->allowItems,
+                                                       this->id,
+                                                       this->createdOn,
+                                                       this->updatedOn);
 
-    for (const auto &[key, value] : props) {
-        dataStream << key << value;
+    clonedComponent->getChildren().clear();
+
+    for (const auto &child : this->children) {
+        clonedComponent->addChild(child->clone());
     }
 
-    std::string data = dataStream.str();
-    std::string hash = generateSHA256(data);
-    id = hashToUUID(hash);
+    return clonedComponent;
+}
+
+bool Component::isDifferentFrom(const std::shared_ptr<BaseNode> &other) const
+{
+    auto otherComponent = std::dynamic_pointer_cast<Component>(other);
+
+    if (!otherComponent)
+        return true;
+
+    // Comparar el tipo del componente
+    if (this->getType() != otherComponent->getType())
+        return true;
+
+    // Comparar propiedades
+    if (this->getProps() != otherComponent->getProps())
+        return true;
+
+    // Comparar cantidad de hijos
+    if (this->getChildren().size() != otherComponent->getChildren().size())
+        return true;
+
+    // Comparar cada hijo
+    // for (size_t i = 0; i < this->getChildren().size(); ++i) {
+    //     if (this->getChildren()[i]->isDifferentFrom(otherComponent->getChildren()[i]))
+    //         return true;
+    // }
+
+    return false;
 }
 
 void Component::initializeDefaultProps()
@@ -147,21 +145,6 @@ void Component::initializeDefaultProps()
     }
 }
 
-void Component::addNestedComponent(const std::shared_ptr<BaseNode> &component)
-{
-    nestedComponents.push_back(component);
-}
-
-void Component::insertNestedComponent(int index, const std::shared_ptr<BaseNode> &component)
-{
-    nestedComponents.insert(nestedComponents.begin() + index, component);
-}
-
-void Component::update()
-{
-    updatedOn = std::chrono::system_clock::now();
-}
-
 // Getters
 
 ComponentType Component::getType() const
@@ -174,29 +157,9 @@ const std::map<std::string, std::string> &Component::getProps() const
     return props;
 }
 
-const std::vector<std::shared_ptr<BaseNode>> &Component::getNestedComponents() const
-{
-    return nestedComponents;
-}
-
 bool Component::isAllowingItems() const
 {
     return this->allowItems;
-}
-
-std::chrono::system_clock::time_point Component::getCreatedOn() const
-{
-    return createdOn;
-}
-
-std::chrono::system_clock::time_point Component::getUpdatedOn() const
-{
-    return updatedOn;
-}
-
-boost::uuids::uuid Component::getId() const
-{
-    return id;
 }
 
 // Setters
@@ -208,7 +171,7 @@ void Component::setType(ComponentType type)
 
     initializeDefaultProps();
     if (id.is_nil())
-        generateUniqueId();
+        generateUniqueId(componentTypeToString(type), allowItems, props);
 }
 
 void Component::setProps(const std::map<std::string, std::string> &props)
@@ -220,11 +183,5 @@ void Component::setProps(const std::map<std::string, std::string> &props)
 void Component::setAllowItems(bool allow)
 {
     this->allowItems = allow;
-    update();
-}
-
-void Component::setNestedComponents(const std::vector<std::shared_ptr<BaseNode>> &components)
-{
-    this->nestedComponents = components;
     update();
 }
