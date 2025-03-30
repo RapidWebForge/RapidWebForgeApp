@@ -52,7 +52,66 @@ const [, , filePath, operation, referenceId, ...rest] = process.argv;
           if (operation === "modify" && fragmentAst) {
             path.replaceWith(fragmentAst);
           } else if (operation === "delete") {
-            path.remove();
+            let deletedComponentName = null;
+
+            traverse(ast, {
+              JSXElement(path) {
+                const attr = path.node.openingElement.attributes.find(
+                  (a) => a.type === "JSXAttribute" && a.name.name === "data-id",
+                );
+
+                if (!attr || attr.value.value !== referenceId) return;
+
+                if (path.node.openingElement.name.type === "JSXIdentifier") {
+                  deletedComponentName = path.node.openingElement.name.name;
+                }
+
+                path.remove();
+                modified = true;
+                path.stop();
+              },
+            });
+
+            // Ahora, si era un custom component, verificamos si quedan instancias
+            if (deletedComponentName) {
+              let found = false;
+
+              traverse(ast, {
+                JSXElement(path) {
+                  if (
+                    path.node.openingElement.name.type === "JSXIdentifier" &&
+                    path.node.openingElement.name.name === deletedComponentName
+                  ) {
+                    found = true;
+                    path.stop();
+                  }
+                },
+              });
+
+              if (!found) {
+                // Si ya no queda ninguna instancia, eliminamos el import
+                traverse(ast, {
+                  ImportDeclaration(path) {
+                    const importPath = path.node.source.value;
+                    const isTargetImport = path.node.specifiers.some(
+                      (spec) =>
+                        spec.type === "ImportDefaultSpecifier" &&
+                        spec.local.name === deletedComponentName,
+                    );
+
+                    if (
+                      importPath.includes(
+                        `../components/${deletedComponentName}`,
+                      ) &&
+                      isTargetImport
+                    ) {
+                      path.remove();
+                      modified = true;
+                    }
+                  },
+                });
+              }
+            }
           }
 
           modified = true;
