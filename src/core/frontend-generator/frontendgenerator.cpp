@@ -279,6 +279,8 @@ bool FrontendGenerator::loadSchema()
     }
 
     parseJson(jsonSchema); // JSON to AST
+    initializeCustomComponentsCache();
+
     return true;
 }
 

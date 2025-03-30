@@ -15,7 +15,6 @@ const [, , filePath, operation, referenceId, ...rest] = process.argv;
       plugins: ["jsx", "typescript"],
     });
 
-
     let position = "";
     let payloadPath = "";
 
@@ -32,7 +31,9 @@ const [, , filePath, operation, referenceId, ...rest] = process.argv;
     if (operation !== "delete" && operation !== "refactor-delete")
       try {
         const raw = fs.readFileSync(payloadPath, "utf-8");
-        fragmentAst = parser.parseExpression(JSON.parse(raw), { plugins: ["jsx"] });
+        fragmentAst = parser.parseExpression(JSON.parse(raw), {
+          plugins: ["jsx"],
+        });
       } catch (e) {
         console.error("❌ Error parsing payload:", e.message);
         fragmentAst = null;
@@ -74,9 +75,10 @@ const [, , filePath, operation, referenceId, ...rest] = process.argv;
             }
           },
           CallExpression(path) {
-            const isLazy = path.node.callee.type === "MemberExpression" &&
-                           path.node.callee.object.name === "React" &&
-                           path.node.callee.property.name === "lazy";
+            const isLazy =
+              path.node.callee.type === "MemberExpression" &&
+              path.node.callee.object.name === "React" &&
+              path.node.callee.property.name === "lazy";
 
             if (!isLazy) return;
 
@@ -86,7 +88,9 @@ const [, , filePath, operation, referenceId, ...rest] = process.argv;
               arg.body.type === "CallExpression" &&
               arg.body.callee.type === "Import"
             ) {
-              const parentVarDecl = path.findParent(p => p.isVariableDeclaration());
+              const parentVarDecl = path.findParent((p) =>
+                p.isVariableDeclaration(),
+              );
               if (parentVarDecl) {
                 parentVarDecl.remove(); // Eliminar toda la declaración: const View = React.lazy(...)
                 modified = true;
@@ -140,6 +144,48 @@ const [, , filePath, operation, referenceId, ...rest] = process.argv;
     }
 
     if (operation === "insert" && fragmentAst) {
+      // Detectar si se trata de un componente personalizado
+      const insertedComponentName =
+        fragmentAst.type === "JSXElement" &&
+        fragmentAst.openingElement.name.type === "JSXIdentifier"
+          ? fragmentAst.openingElement.name.name
+          : null;
+
+      const alreadyImported = insertedComponentName
+        ? ast.program.body.some(
+            (node) =>
+              node.type === "ImportDeclaration" &&
+              node.specifiers.some(
+                (spec) =>
+                  spec.type === "ImportDefaultSpecifier" &&
+                  spec.local.name === insertedComponentName,
+              ),
+          )
+        : false;
+
+      if (insertedComponentName && !alreadyImported) {
+        const importDeclaration = {
+          type: "ImportDeclaration",
+          specifiers: [
+            {
+              type: "ImportDefaultSpecifier",
+              local: {
+                type: "Identifier",
+                name: insertedComponentName,
+              },
+            },
+          ],
+          source: {
+            type: "StringLiteral",
+            value: `../components/${insertedComponentName}`,
+          },
+        };
+
+        ast.program.body.unshift(importDeclaration);
+        modified = true;
+      }
+
+      // Inserción normal
       if (referenceId === "none" && position === "inner") {
         traverse(ast, {
           JSXElement(path) {
