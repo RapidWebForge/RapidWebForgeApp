@@ -137,10 +137,11 @@ std::string renderComponent(inja::Environment &env,
 
         output += " data-id=\"" + id + "\">" + value + "</button>";
     } else if (type == "Horizontal Layout" || type == "Vertical Layout" || type == "Model Layout") {
-        std::string layoutClass;
+        std::string layoutClass, model;
 
         if (type == "Model Layout") {
             layoutClass = props.value("class", "");
+            model = props.value("model", "Model");
         } else {
             layoutClass = (type == "Horizontal Layout") ? "flex flex-row" : "flex flex-col";
 
@@ -150,15 +151,19 @@ std::string renderComponent(inja::Environment &env,
         }
         output += "<div data-id=\"" + id + "\"";
 
-        // if (!className.empty())
-        output += " className=\"" + layoutClass + "\"";
+        bool modelIsValid = !model.empty() && model != "Model";
+
+        if (!layoutClass.empty())
+            output += " className=\"" + layoutClass + "\"";
+
+        if (modelIsValid)
+            output += " data-rwf-model=\"" + model + "\"";
 
         output += ">";
 
         if (type == "Model Layout") {
             // Add map to iterate only if 'model' is valid
-            std::string model = props.value("model", "Model");
-            if (!model.empty() && model != "Model") {
+            if (modelIsValid) {
                 std::string lowerModel = toLower(model);
                 output += "{" + lowerModel + ".map((obj, index) => (";
                 output += "<div index={index}>";
@@ -182,8 +187,7 @@ std::string renderComponent(inja::Environment &env,
         }
 
         if (type == "Model Layout") {
-            std::string model = props.value("model", "Model");
-            if (!model.empty() && model != "Model") {
+            if (modelIsValid) {
                 output += "</div>";
                 output += "))}";
             }
@@ -193,8 +197,8 @@ std::string renderComponent(inja::Environment &env,
     } else if (type == "Form") {
         className = props.value("class", "");
         std::string onSubmit = "";
-
         std::string method = props.value("method", "Method");
+
         if (!method.empty() && method != "Method") {
             if (method == "POST" || method == "PUT")
                 onSubmit += "handleSubmit";
@@ -205,8 +209,10 @@ std::string renderComponent(inja::Environment &env,
         if (!className.empty())
             output += " className=\"" + className + "\"";
 
-        if (!onSubmit.empty())
+        if (!onSubmit.empty()) {
             output += " onSubmit={" + onSubmit + "}";
+            output += " data-rwf-method=\"" + method + "\"";
+        }
 
         output += ">";
 

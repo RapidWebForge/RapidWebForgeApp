@@ -3,8 +3,18 @@ const { execSync } = require("child_process");
 const parser = require("@babel/parser");
 const generate = require("@babel/generator").default;
 const traverse = require("@babel/traverse").default;
+const t = require("@babel/types");
+const template = require("@babel/template").default;
 
 const [, , filePath, operation, referenceId, ...rest] = process.argv;
+
+const getAttrValue = (node, attrName) => {
+  const attr = node.openingElement.attributes.find(
+    (a) => a.type === "JSXAttribute" && a.name.name === attrName,
+  );
+  return attr && attr.value && attr.value.value;
+};
+const toLower = (s) => s.charAt(0).toLowerCase() + s.slice(1);
 
 (async () => {
   try {
@@ -50,27 +60,16 @@ const [, , filePath, operation, referenceId, ...rest] = process.argv;
           if (!attr || attr.value.value !== referenceId) return;
 
           if (operation === "modify" && fragmentAst) {
-            path.replaceWith(fragmentAst);
+            path.replaceWith(t.cloneNode(fragmentAst, true));
           } else if (operation === "delete") {
             let deletedComponentName = null;
 
-            traverse(ast, {
-              JSXElement(path) {
-                const attr = path.node.openingElement.attributes.find(
-                  (a) => a.type === "JSXAttribute" && a.name.name === "data-id",
-                );
+            if (path.node.openingElement.name.type === "JSXIdentifier") {
+              deletedComponentName = path.node.openingElement.name.name;
+            }
 
-                if (!attr || attr.value.value !== referenceId) return;
-
-                if (path.node.openingElement.name.type === "JSXIdentifier") {
-                  deletedComponentName = path.node.openingElement.name.name;
-                }
-
-                path.remove();
-                modified = true;
-                path.stop();
-              },
-            });
+            path.remove();
+            modified = true;
 
             // Ahora, si era un custom component, verificamos si quedan instancias
             if (deletedComponentName) {
@@ -210,6 +209,35 @@ const [, , filePath, operation, referenceId, ...rest] = process.argv;
           ? fragmentAst.openingElement.name.name
           : null;
 
+      const nativeElements = new Set([
+        "div",
+        "form",
+        "input",
+        "span",
+        "button",
+        "label",
+        "select",
+        "option",
+        "textarea",
+        "ul",
+        "li",
+        "p",
+        "h1",
+        "h2",
+        "h3",
+        "h4",
+        "h5",
+        "h6",
+      ]);
+
+      const isCustomComponent =
+        insertedComponentName &&
+        /^[A-Z]/.test(insertedComponentName) &&
+        !nativeElements.has(insertedComponentName);
+
+      const model = getAttrValue(fragmentAst, "data-rwf-model");
+      const method = getAttrValue(fragmentAst, "data-rwf-method");
+
       const alreadyImported = insertedComponentName
         ? ast.program.body.some(
             (node) =>
@@ -222,25 +250,116 @@ const [, , filePath, operation, referenceId, ...rest] = process.argv;
           )
         : false;
 
-      if (insertedComponentName && !alreadyImported) {
-        const importDeclaration = {
+      if (isCustomComponent && !alreadyImported) {
+        ast.program.body.unshift({
           type: "ImportDeclaration",
           specifiers: [
             {
               type: "ImportDefaultSpecifier",
-              local: {
-                type: "Identifier",
-                name: insertedComponentName,
-              },
+              local: { type: "Identifier", name: insertedComponentName },
             },
           ],
           source: {
             type: "StringLiteral",
             value: `../components/${insertedComponentName}`,
           },
-        };
+        });
+        modified = true;
+      }
 
-        ast.program.body.unshift(importDeclaration);
+      if (model) {
+        const lowerModel = toLower(model);
+
+        ast.program.body.unshift(
+          {
+            type: "ImportDeclaration",
+            specifiers: [
+              {
+                type: "ImportDefaultSpecifier",
+                local: { type: "Identifier", name: model + "Service" },
+              },
+            ],
+            source: {
+              type: "StringLiteral",
+              value: `../services/${model}Service`,
+            },
+          },
+          {
+            type: "ImportDeclaration",
+            specifiers: [
+              {
+                type: "ImportDefaultSpecifier",
+                local: { type: "Identifier", name: model },
+              },
+            ],
+            source: {
+              type: "StringLiteral",
+              value: `../models/${model}`,
+            },
+          },
+        );
+
+        const fileName = filePath
+          .split("/")
+          .pop()
+          .replace(/\.[jt]sx?$/, "");
+
+        const stateCode = `const [${lowerModel}, set${model}] = useState<${model}[]>([]);`;
+        const effectCode = `useEffect(() => {
+           ${model}Service.getAll${model}()
+             .then((response) => {
+               set${model}(response);
+             })
+             .catch((error) => {
+               console.error("Error fetching ${model} data:", error);
+             });
+         }, []);`;
+
+        let stateNode = null;
+        let effectNode = null;
+
+        try {
+          stateNode = template.ast(stateCode, {
+            plugins: ["jsx", "typescript"],
+          });
+        } catch (e) {
+          console.error(
+            "❌ Error generando stateNode con template:",
+            e.message,
+          );
+        }
+
+        try {
+          effectNode = template.ast(effectCode, {
+            plugins: ["jsx", "typescript"],
+          });
+        } catch (e) {
+          console.error(
+            "❌ Error generando effectNode con template:",
+            e.message,
+          );
+        }
+
+        if (stateCode && effectCode) {
+          traverse(ast, {
+            FunctionDeclaration(path) {
+              if (path.node.id?.name && filePath.includes(path.node.id.name)) {
+                // Generar los nodos dentro del callback para que tengan el contexto
+                const stateNodeNew = template.ast(stateCode, {
+                  plugins: ["jsx", "typescript"],
+                });
+                const effectNodeNew = template.ast(effectCode, {
+                  plugins: ["jsx", "typescript"],
+                });
+                // Insertar directamente los nuevos nodos
+                path.node.body.body.unshift(effectNodeNew);
+                path.node.body.body.unshift(stateNodeNew);
+                modified = true;
+              }
+            }
+          });
+        }
+
         modified = true;
       }
 
@@ -249,7 +368,7 @@ const [, , filePath, operation, referenceId, ...rest] = process.argv;
         traverse(ast, {
           JSXElement(path) {
             if (path.node.openingElement.name.name === "div" && !modified) {
-              path.node.children.push(fragmentAst);
+              path.node.children.push(t.cloneNode(fragmentAst, true));
               modified = true;
               path.stop();
             }
@@ -262,16 +381,20 @@ const [, , filePath, operation, referenceId, ...rest] = process.argv;
               (a) => a.type === "JSXAttribute" && a.name.name === "data-id",
             );
             if (!attr || attr.value.value !== referenceId) return;
+            console.log(
+              "Procesando JSXElement para inserción, data-id:",
+              attr.value.value,
+            );
 
             switch (position) {
               case "before":
-                path.insertBefore(fragmentAst);
+                path.insertBefore(t.cloneNode(fragmentAst, true));
                 break;
               case "after":
-                path.insertAfter(fragmentAst);
+                path.insertAfter(t.cloneNode(fragmentAst, true));
                 break;
               case "inner":
-                path.node.children.push(fragmentAst);
+                path.node.children.push(t.cloneNode(fragmentAst, true));
                 break;
               default:
                 console.error("❌ Unknown insert position:", position);

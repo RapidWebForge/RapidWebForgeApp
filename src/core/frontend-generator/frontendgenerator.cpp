@@ -1097,7 +1097,14 @@ const std::shared_ptr<BaseNode> &FrontendGenerator::getFrontendRoot() const
 
 bool FrontendGenerator::isProgressSaved()
 {
-    std::vector<NodeOperation> operations = diffTrees(oldRoot, frontendRoot);
+    auto oldViews = getChildByType(oldRoot, "Views");
+    auto newViews = getChildByType(frontendRoot, "Views");
+    auto oldCustom = getChildByType(oldRoot, "CustomComponents");
+    auto newCustom = getChildByType(frontendRoot, "CustomComponents");
+
+    std::vector<NodeOperation> operations = diffTrees(oldViews, newViews);
+    auto customOps = diffTrees(oldCustom, newCustom);
+    operations.insert(operations.end(), customOps.begin(), customOps.end());
 
     if (operations.empty()) {
         qDebug() << "No changes detected.";
