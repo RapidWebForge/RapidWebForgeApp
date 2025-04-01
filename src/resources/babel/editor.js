@@ -16,6 +16,11 @@ const getAttrValue = (node, attrName) => {
 };
 const toLower = (s) => s.charAt(0).toLowerCase() + s.slice(1);
 
+const toCapitalize = (str) => {
+  if (!str) return "";
+  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+};
+
 (async () => {
   try {
     const sourceCode = fs.readFileSync(filePath, "utf-8");
@@ -267,24 +272,23 @@ const toLower = (s) => s.charAt(0).toLowerCase() + s.slice(1);
         modified = true;
       }
 
-      if (model) {
-        const lowerModel = toLower(model);
+      const fileName = filePath.split("/").pop().split(".")[0];
 
-        ast.program.body.unshift(
-          {
-            type: "ImportDeclaration",
-            specifiers: [
-              {
-                type: "ImportDefaultSpecifier",
-                local: { type: "Identifier", name: model + "Service" },
-              },
-            ],
-            source: {
-              type: "StringLiteral",
-              value: `../services/${model}Service`,
-            },
-          },
-          {
+      const checkMissingImports = () => {
+        const serviceImportExists = ast.program.body.some(
+          (node) =>
+            node.type === "ImportDeclaration" &&
+            node.source.value === `../services/${model}Service`,
+        );
+
+        const modelImportExists = ast.program.body.some(
+          (node) =>
+            node.type === "ImportDeclaration" &&
+            node.source.value === `../models/${model}`,
+        );
+
+        if (!modelImportExists)
+          ast.program.body.unshift({
             type: "ImportDeclaration",
             specifiers: [
               {
@@ -296,13 +300,28 @@ const toLower = (s) => s.charAt(0).toLowerCase() + s.slice(1);
               type: "StringLiteral",
               value: `../models/${model}`,
             },
-          },
-        );
+          });
 
-        const fileName = filePath
-          .split("/")
-          .pop()
-          .replace(/\.[jt]sx?$/, "");
+        if (!serviceImportExists)
+          ast.program.body.unshift({
+            type: "ImportDeclaration",
+            specifiers: [
+              {
+                type: "ImportDefaultSpecifier",
+                local: { type: "Identifier", name: model + "Service" },
+              },
+            ],
+            source: {
+              type: "StringLiteral",
+              value: `../services/${model}Service`,
+            },
+          });
+      };
+
+      if (model && !method && insertedComponentName === "div") {
+        checkMissingImports();
+
+        const lowerModel = toLower(model);
 
         const stateCode = `const [${lowerModel}, set${model}] = useState<${model}[]>([]);`;
         const effectCode = `useEffect(() => {
@@ -343,7 +362,7 @@ const toLower = (s) => s.charAt(0).toLowerCase() + s.slice(1);
         if (stateCode && effectCode) {
           traverse(ast, {
             FunctionDeclaration(path) {
-              if (path.node.id?.name && filePath.includes(path.node.id.name)) {
+              if (path.node.id?.name === fileName) {
                 // Generar los nodos dentro del callback para que tengan el contexto
                 const stateNodeNew = template.ast(stateCode, {
                   plugins: ["jsx", "typescript"],
@@ -356,11 +375,104 @@ const toLower = (s) => s.charAt(0).toLowerCase() + s.slice(1);
                 path.node.body.body.unshift(stateNodeNew);
                 modified = true;
               }
-            }
+            },
           });
         }
 
         modified = true;
+      }
+
+      if (method && model && insertedComponentName === "form") {
+        checkMissingImports();
+
+        const lowerMethod = method.toLowerCase();
+        const capitalizeMethod = toCapitalize(method);
+        const lowerModel = toLower(model);
+
+        let methodService = null;
+
+        if (method === "PUT") methodService = "update";
+        else if (method === "POST") methodService = "create";
+
+        const formStateCode = `const [${lowerMethod}${model}, set${capitalizeMethod}${model}] = useState<${model}>();`;
+        const handleChangeCode = `const handleChange = (e: any) => {
+                 const { name, value } = e.target;
+                 set${capitalizeMethod}${model}((prevData) => ({
+                   ...prevData,
+                   [name]: value,
+                 }));
+               };`;
+        const handleSubmitCode = `const handleSubmit = async (e: React.FormEvent) => {
+                 e.preventDefault();
+                 if (!${lowerMethod}${model}) {
+                   console.error("Data is undefined");
+                   return;
+                 }
+                 try {
+                   const response = await ${model}Service.${methodService}${model}(${lowerMethod}${model});
+                   console.log("Form submitted successfully:", response);
+                 } catch (error) {
+                   console.error("Error submitting form:", error);
+                 }
+               };`;
+
+        let stateNode = null;
+        let changeNode = null;
+        let submitNode = null;
+
+        try {
+          stateNode = template.ast(formStateCode, {
+            plugins: ["jsx", "typescript"],
+          });
+        } catch (e) {
+          console.error(
+            "❌ Error generando stateNode con template:",
+            e.message,
+          );
+        }
+
+        try {
+          changeNode = template.ast(handleChangeCode, {
+            plugins: ["jsx", "typescript"],
+          });
+        } catch (e) {
+          console.error(
+            "❌ Error generando changeNode con template:",
+            e.message,
+          );
+        }
+
+        try {
+          submitNode = template.ast(handleSubmitCode, {
+            plugins: ["jsx", "typescript"],
+          });
+        } catch (e) {
+          console.error(
+            "❌ Error generando submitNode con template:",
+            e.message,
+          );
+        }
+
+        if (stateNode && changeNode && submitNode)
+          traverse(ast, {
+            FunctionDeclaration(path) {
+              if (path.node.id?.name === fileName) {
+                const stateNodeNew = template.ast(formStateCode, {
+                  plugins: ["jsx", "typescript"],
+                });
+                const changeNodeNew = template.ast(handleChangeCode, {
+                  plugins: ["jsx", "typescript"],
+                });
+                const submitNodeNew = template.ast(handleSubmitCode, {
+                  plugins: ["jsx", "typescript"],
+                });
+                path.node.body.body.unshift(stateNodeNew);
+                path.node.body.body.unshift(changeNodeNew);
+                path.node.body.body.unshift(submitNodeNew);
+                modified = true;
+              }
+            },
+          });
       }
 
       // Inserción normal

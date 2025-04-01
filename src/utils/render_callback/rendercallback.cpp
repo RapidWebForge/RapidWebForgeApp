@@ -197,7 +197,10 @@ std::string renderComponent(inja::Environment &env,
     } else if (type == "Form") {
         className = props.value("class", "");
         std::string onSubmit = "";
+        std::string model = props.value("model", "Model");
         std::string method = props.value("method", "Method");
+
+        bool modelIsValid = !model.empty() && model != "Model";
 
         if (!method.empty() && method != "Method") {
             if (method == "POST" || method == "PUT")
@@ -213,6 +216,9 @@ std::string renderComponent(inja::Environment &env,
             output += " onSubmit={" + onSubmit + "}";
             output += " data-rwf-method=\"" + method + "\"";
         }
+
+        if (modelIsValid)
+            output += " data-rwf-model=\"" + model + "\"";
 
         output += ">";
 
@@ -421,6 +427,13 @@ std::string renderHandleFoosCallback(inja::Environment &env, inja::Arguments &ar
                 std::string lowerModel = toLower(modelName);
                 std::string lowerMethod = toLower(method);
 
+                std::string methodService;
+
+                if (modelName == "PUT")
+                    methodService = "update";
+                else if (modelName == "POST")
+                    methodService = "create";
+
                 // Agregar código para handleChange
                 handleChange += "  set" + lowerMethod + modelName + "((prevData) => ({\n";
                 handleChange += "    ...prevData,\n";
@@ -433,7 +446,7 @@ std::string renderHandleFoosCallback(inja::Environment &env, inja::Arguments &ar
                 handleSubmit += "  return;\n";
                 handleSubmit += "  }\n\n";
                 handleSubmit += "  try {\n";
-                handleSubmit += "    const response = await " + modelName + "Service.create"
+                handleSubmit += "    const response = await " + methodService + "Service.create"
                                 + modelName + "(" + lowerMethod + modelName + ");\n";
                 handleSubmit += "    console.log(\"Form submitted successfully:\", response);\n";
             }
