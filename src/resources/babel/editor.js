@@ -21,6 +21,8 @@ const toCapitalize = (str) => {
   return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
 };
 
+const fileName = filePath.split("/").pop().split(".")[0];
+
 (async () => {
   try {
     const sourceCode = fs.readFileSync(filePath, "utf-8");
@@ -41,6 +43,97 @@ const toCapitalize = (str) => {
     } else if (operation === "refactor-delete") {
       position = rest[0] || "";
     }
+
+    const checkMissingImports = (model) => {
+      const serviceImportExists = ast.program.body.some(
+        (node) =>
+          node.type === "ImportDeclaration" &&
+          node.source.value === `../services/${model}Service`,
+      );
+
+      const modelImportExists = ast.program.body.some(
+        (node) =>
+          node.type === "ImportDeclaration" &&
+          node.source.value === `../models/${model}`,
+      );
+
+      if (!modelImportExists)
+        ast.program.body.unshift({
+          type: "ImportDeclaration",
+          specifiers: [
+            {
+              type: "ImportDefaultSpecifier",
+              local: { type: "Identifier", name: model },
+            },
+          ],
+          source: {
+            type: "StringLiteral",
+            value: `../models/${model}`,
+          },
+        });
+
+      if (!serviceImportExists)
+        ast.program.body.unshift({
+          type: "ImportDeclaration",
+          specifiers: [
+            {
+              type: "ImportDefaultSpecifier",
+              local: { type: "Identifier", name: model + "Service" },
+            },
+          ],
+          source: {
+            type: "StringLiteral",
+            value: `../services/${model}Service`,
+          },
+        });
+    };
+
+    const ensureReactHooksImport = (ast, hooks = []) => {
+      const reactImport = ast.program.body.find(
+        (node) =>
+          node.type === "ImportDeclaration" && node.source.value === "react",
+      );
+
+      if (reactImport) {
+        const existingSpecifiers = new Set(
+          reactImport.specifiers.map((s) =>
+            s.type === "ImportSpecifier" ? s.imported.name : null,
+          ),
+        );
+
+        const missingHooks = hooks.filter(
+          (hook) => !existingSpecifiers.has(hook),
+        );
+
+        // Agregar los hooks faltantes como importaciones con nombre
+        if (missingHooks.length > 0) {
+          reactImport.specifiers.push(
+            ...missingHooks.map((hook) => ({
+              type: "ImportSpecifier",
+              imported: { type: "Identifier", name: hook },
+              local: { type: "Identifier", name: hook },
+            })),
+          );
+        }
+      } else {
+        // No hay importación de React, se agrega todo desde cero
+        ast.program.body.unshift({
+          type: "ImportDeclaration",
+          source: { type: "StringLiteral", value: "react" },
+          specifiers: [
+            {
+              type: "ImportDefaultSpecifier",
+              local: { type: "Identifier", name: "React" },
+            },
+            ...hooks.map((hook) => ({
+              type: "ImportSpecifier",
+              imported: { type: "Identifier", name: hook },
+              local: { type: "Identifier", name: hook },
+            })),
+          ],
+        });
+      }
+    };
 
     let fragmentAst = null;
     if (operation !== "delete" && operation !== "refactor-delete")
@@ -65,7 +158,240 @@ const toCapitalize = (str) => {
           if (!attr || attr.value.value !== referenceId) return;
 
           if (operation === "modify" && fragmentAst) {
+            const oldModel = getAttrValue(path.node, "data-rwf-model");
+            const newModel = getAttrValue(fragmentAst, "data-rwf-model");
+            const oldMethod = getAttrValue(path.node, "data-rwf-method");
+            const newMethod = getAttrValue(fragmentAst, "data-rwf-method");
+            const isDiv = path.node.openingElement.name.name === "div";
+            const isForm = path.node.openingElement.name.name === "form";
+
+            const modelWasReplaced =
+              oldModel && newModel && oldModel !== newModel;
+            const modelWasRemoved = oldModel && !newModel;
+            const modelWasAdded = newModel && !oldModel;
+
+            const methodWasReplaced =
+              oldMethod && newMethod && oldMethod !== newMethod;
+            const methodWasRemoved = oldMethod && !newMethod;
+            const methodWasAdded = newMethod && !oldMethod;
+
+            if (isDiv) {
+              // Eliminar useState y useEffect antiguos del oldModel
+              if (modelWasReplaced || modelWasRemoved)
+                traverse(ast, {
+                  VariableDeclaration(path) {
+                    const code = generate(path.node).code;
+                    if (
+                      code.includes(
+                        `const [${toLower(oldModel)}, set${oldModel}]`,
+                      ) &&
+                      code.includes(`useState<${oldModel}[]>`)
+                    ) {
+                      path.remove();
+                      modified = true;
+                    }
+                  },
+                  ExpressionStatement(path) {
+                    const code = generate(path.node).code;
+                    if (
+                      code.includes("useEffect") &&
+                      code.includes(`${oldModel}Service.getAll${oldModel}()`)
+                    ) {
+                      path.remove();
+                      modified = true;
+                    }
+                  },
+                });
+
+              // Agregar nuevas definiciones
+              if (modelWasReplaced || modelWasAdded) {
+                const lowerNewModel = toLower(newModel);
+                const stateCode = `const [${lowerNewModel}, set${newModel}] = useState<${newModel}[]>([]);`;
+                const effectCode = `useEffect(() => {
+                    ${newModel}Service.getAll${newModel}()
+                    .then((response) => {
+                      set${newModel}(response);
+                    })
+                    .catch((error) => {
+                      console.error("Error fetching ${newModel} data:", error);
+                    });
+                  }, []);`;
+
+                traverse(ast, {
+                  FunctionDeclaration(path) {
+                    if (path.node.id?.name === fileName) {
+                      const stateNodeNew = template.ast(stateCode, {
+                        plugins: ["jsx", "typescript"],
+                      });
+                      const effectNodeNew = template.ast(effectCode, {
+                        plugins: ["jsx", "typescript"],
+                      });
+                      path.node.body.body.unshift(stateNodeNew);
+                      path.node.body.body.unshift(effectNodeNew);
+                      modified = true;
+                    }
+                  },
+                });
+              }
+            }
+            if (isForm) {
+              // Eliminar useState, handleChange y handleSubmit del oldModel
+              if (
+                modelWasReplaced ||
+                modelWasRemoved ||
+                methodWasReplaced ||
+                methodWasRemoved
+              ) {
+                const capitalizeOldMethod = toCapitalize(oldMethod);
+                const lowerMethod = oldMethod.toLowerCase();
+
+                traverse(ast, {
+                  VariableDeclaration(path) {
+                    const code = generate(path.node).code;
+                    if (
+                      code.includes(
+                        `const [${lowerMethod}${oldModel}, set${capitalizeOldMethod}${oldModel}]`,
+                      ) &&
+                      code.includes(`useState<${oldModel}>()`)
+                    ) {
+                      path.remove();
+                      modified = true;
+                    }
+                    if (
+                      code.includes("const handleChange") &&
+                      code.includes(`set${capitalizeOldMethod}${oldModel}`) &&
+                      code.includes("[name]: value")
+                    ) {
+                      path.remove();
+                      modified = true;
+                    }
+                    if (
+                      code.includes("const handleSubmit") &&
+                      code.includes(`${oldModel}Service.`)
+                    ) {
+                      path.remove();
+                      modified = true;
+                    }
+                  },
+                });
+              }
+
+              // Agregar nuevas definiciones
+              if (
+                modelWasReplaced ||
+                modelWasAdded ||
+                methodWasReplaced ||
+                methodWasAdded
+              ) {
+                const capitalizeNewMethod = toCapitalize(newMethod);
+                const lowerNewMethod = newMethod.toLowerCase();
+
+                let methodService = null;
+
+                if (newMethod === "PUT") methodService = "update";
+                else if (newMethod === "POST") methodService = "create";
+
+                const stateCode = `const [${lowerNewMethod}${newModel}, set${capitalizeNewMethod}${newModel}] = useState<${newModel}>();`;
+                const handleChangeCode = `const handleChange = (e: any) => {
+                   const { name, value } = e.target;
+                   set${capitalizeNewMethod}${newModel}((prevData) => ({
+                     ...prevData,
+                     [name]: value,
+                   }));
+                 };`;
+                const handleSubmitCode = `const handleSubmit = async (e: React.FormEvent) => {
+                   e.preventDefault();
+                   if (!${lowerNewMethod}${newModel}) {
+                     console.error("Data is undefined");
+                     return;
+                   }
+                   try {
+                     const response = await ${newModel}Service.${methodService}${newModel}(${lowerNewMethod}${newModel});
+                     console.log("Form submitted successfully:", response);
+                   } catch (error) {
+                     console.error("Error submitting form:", error);
+                   }
+                 };`;
+
+                traverse(ast, {
+                  FunctionDeclaration(path) {
+                    if (path.node.id?.name === fileName) {
+                      const stateNodeNew = template.ast(stateCode, {
+                        plugins: ["jsx", "typescript"],
+                      });
+                      const changeNodeNew = template.ast(handleChangeCode, {
+                        plugins: ["jsx", "typescript"],
+                      });
+                      const submitNodeNew = template.ast(handleSubmitCode, {
+                        plugins: ["jsx", "typescript"],
+                      });
+                      path.node.body.body.unshift(stateNodeNew);
+                      path.node.body.body.unshift(changeNodeNew);
+                      path.node.body.body.unshift(submitNodeNew);
+                      modified = true;
+                    }
+                  },
+                });
+              }
+            }
+
             path.replaceWith(t.cloneNode(fragmentAst, true));
+
+            if (modelWasReplaced || modelWasAdded || modelWasRemoved) {
+              const newAst = parser.parse(generate(ast).code, {
+                sourceType: "module",
+                plugins: ["jsx", "typescript"],
+              });
+
+              let usesOldModel = false;
+              let usesOldModelService = false;
+
+              traverse(newAst, {
+                Identifier(path) {
+                  // Ignorar si viene de un import
+                  if (path.findParent((p) => p.isImportDeclaration())) return;
+
+                  if (path.node.name === oldModel) usesOldModel = true;
+                  if (path.node.name === `${oldModel}Service`)
+                    usesOldModelService = true;
+
+                  // Si ya sabemos que se usan ambos, detenemos el análisis
+                  if (usesOldModel && usesOldModelService) {
+                    path.stop();
+                  }
+                },
+              });
+
+              let deletedOldModelImports = false;
+
+              traverse(ast, {
+                ImportDeclaration(importPath) {
+                  const importSource = importPath.node.source.value;
+
+                  const isModelImport =
+                    importSource === `../models/${oldModel}`;
+                  const isServiceImport =
+                    importSource === `../services/${oldModel}Service`;
+
+                  if (
+                    (isModelImport && !usesOldModel) ||
+                    (isServiceImport && !usesOldModelService)
+                  ) {
+                    importPath.remove();
+                    deletedOldModelImports = true;
+                    modified = true;
+                  }
+                },
+              });
+
+              // Solo después de eliminar, agrega si hace falta
+              if (deletedOldModelImports) {
+                checkMissingImports(newModel);
+              }
+            }
+
+            if (modelWasAdded)
+              ensureReactHooksImport(ast, ["useState", "useEffect"]);
           } else if (operation === "delete") {
             let deletedComponentName = null;
 
@@ -272,57 +598,11 @@ const toCapitalize = (str) => {
         modified = true;
       }
 
-      const fileName = filePath.split("/").pop().split(".")[0];
-
-      const checkMissingImports = () => {
-        const serviceImportExists = ast.program.body.some(
-          (node) =>
-            node.type === "ImportDeclaration" &&
-            node.source.value === `../services/${model}Service`,
-        );
-
-        const modelImportExists = ast.program.body.some(
-          (node) =>
-            node.type === "ImportDeclaration" &&
-            node.source.value === `../models/${model}`,
-        );
-
-        if (!modelImportExists)
-          ast.program.body.unshift({
-            type: "ImportDeclaration",
-            specifiers: [
-              {
-                type: "ImportDefaultSpecifier",
-                local: { type: "Identifier", name: model },
-              },
-            ],
-            source: {
-              type: "StringLiteral",
-              value: `../models/${model}`,
-            },
-          });
-
-        if (!serviceImportExists)
-          ast.program.body.unshift({
-            type: "ImportDeclaration",
-            specifiers: [
-              {
-                type: "ImportDefaultSpecifier",
-                local: { type: "Identifier", name: model + "Service" },
-              },
-            ],
-            source: {
-              type: "StringLiteral",
-              value: `../services/${model}Service`,
-            },
-          });
-      };
-
-      if (model && !method && insertedComponentName === "div") {
-        checkMissingImports();
+      // Model Layout
+      if (model && insertedComponentName === "div") {
+        checkMissingImports(model);
 
         const lowerModel = toLower(model);
-
         const stateCode = `const [${lowerModel}, set${model}] = useState<${model}[]>([]);`;
         const effectCode = `useEffect(() => {
            ${model}Service.getAll${model}()
@@ -334,60 +614,37 @@ const toCapitalize = (str) => {
              });
          }, []);`;
 
-        let stateNode = null;
-        let effectNode = null;
-
-        try {
-          stateNode = template.ast(stateCode, {
-            plugins: ["jsx", "typescript"],
-          });
-        } catch (e) {
-          console.error(
-            "❌ Error generando stateNode con template:",
-            e.message,
-          );
-        }
-
-        try {
-          effectNode = template.ast(effectCode, {
-            plugins: ["jsx", "typescript"],
-          });
-        } catch (e) {
-          console.error(
-            "❌ Error generando effectNode con template:",
-            e.message,
-          );
-        }
-
-        if (stateCode && effectCode) {
-          traverse(ast, {
-            FunctionDeclaration(path) {
-              if (path.node.id?.name === fileName) {
-                // Generar los nodos dentro del callback para que tengan el contexto
-                const stateNodeNew = template.ast(stateCode, {
-                  plugins: ["jsx", "typescript"],
-                });
-                const effectNodeNew = template.ast(effectCode, {
-                  plugins: ["jsx", "typescript"],
-                });
-                // Insertar directamente los nuevos nodos
-                path.node.body.body.unshift(effectNodeNew);
-                path.node.body.body.unshift(stateNodeNew);
-                modified = true;
-              }
-            },
-          });
-        }
+        traverse(ast, {
+          FunctionDeclaration(path) {
+            if (path.node.id?.name === fileName) {
+              // Generar los nodos dentro del callback para que tengan el contexto
+              const stateNodeNew = template.ast(stateCode, {
+                plugins: ["jsx", "typescript"],
+              });
+              const effectNodeNew = template.ast(effectCode, {
+                plugins: ["jsx", "typescript"],
+              });
+              // Insertar directamente los nuevos nodos
+              path.node.body.body.unshift(stateNodeNew);
+              path.node.body.body.unshift(effectNodeNew);
+              modified = true;
+            }
+          },
+        });
 
         modified = true;
+
+        ensureReactHooksImport(ast, ["useState", "useEffect"]);
       }
 
-      if (method && model && insertedComponentName === "form") {
-        checkMissingImports();
-
+      // Form
+      if (model && insertedComponentName === "form") {
+        checkMissingImports(model);
+        ensureReactHooksImport(ast, ["useState", "useEffect"]);
+      }
+      if (method && insertedComponentName === "form") {
         const lowerMethod = method.toLowerCase();
         const capitalizeMethod = toCapitalize(method);
-        const lowerModel = toLower(model);
 
         let methodService = null;
 
@@ -416,63 +673,27 @@ const toCapitalize = (str) => {
                  }
                };`;
 
-        let stateNode = null;
-        let changeNode = null;
-        let submitNode = null;
+        traverse(ast, {
+          FunctionDeclaration(path) {
+            if (path.node.id?.name === fileName) {
+              const stateNodeNew = template.ast(formStateCode, {
+                plugins: ["jsx", "typescript"],
+              });
+              const changeNodeNew = template.ast(handleChangeCode, {
+                plugins: ["jsx", "typescript"],
+              });
+              const submitNodeNew = template.ast(handleSubmitCode, {
+                plugins: ["jsx", "typescript"],
+              });
+              path.node.body.body.unshift(stateNodeNew);
+              path.node.body.body.unshift(changeNodeNew);
+              path.node.body.body.unshift(submitNodeNew);
+              modified = true;
+            }
+          },
+        });
 
-        try {
-          stateNode = template.ast(formStateCode, {
-            plugins: ["jsx", "typescript"],
-          });
-        } catch (e) {
-          console.error(
-            "❌ Error generando stateNode con template:",
-            e.message,
-          );
-        }
-
-        try {
-          changeNode = template.ast(handleChangeCode, {
-            plugins: ["jsx", "typescript"],
-          });
-        } catch (e) {
-          console.error(
-            "❌ Error generando changeNode con template:",
-            e.message,
-          );
-        }
-
-        try {
-          submitNode = template.ast(handleSubmitCode, {
-            plugins: ["jsx", "typescript"],
-          });
-        } catch (e) {
-          console.error(
-            "❌ Error generando submitNode con template:",
-            e.message,
-          );
-        }
-
-        if (stateNode && changeNode && submitNode)
-          traverse(ast, {
-            FunctionDeclaration(path) {
-              if (path.node.id?.name === fileName) {
-                const stateNodeNew = template.ast(formStateCode, {
-                  plugins: ["jsx", "typescript"],
-                });
-                const changeNodeNew = template.ast(handleChangeCode, {
-                  plugins: ["jsx", "typescript"],
-                });
-                const submitNodeNew = template.ast(handleSubmitCode, {
-                  plugins: ["jsx", "typescript"],
-                });
-                path.node.body.body.unshift(stateNodeNew);
-                path.node.body.body.unshift(changeNodeNew);
-                path.node.body.body.unshift(submitNodeNew);
-                modified = true;
-              }
-            },
-          });
+        ensureReactHooksImport(ast, ["useState", "useEffect"]);
       }
 
       // Inserción normal
