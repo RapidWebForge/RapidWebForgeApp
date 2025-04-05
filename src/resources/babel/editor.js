@@ -243,14 +243,14 @@ const fileName = filePath.split("/").pop().split(".")[0];
                 methodWasRemoved
               ) {
                 const capitalizeOldMethod = toCapitalize(oldMethod);
-                const lowerMethod = oldMethod.toLowerCase();
+                const lowerOldMethod = oldMethod.toLowerCase();
 
                 traverse(ast, {
                   VariableDeclaration(path) {
                     const code = generate(path.node).code;
                     if (
                       code.includes(
-                        `const [${lowerMethod}${oldModel}, set${capitalizeOldMethod}${oldModel}]`,
+                        `const [${lowerOldMethod}${oldModel}, set${capitalizeOldMethod}${oldModel}]`,
                       ) &&
                       code.includes(`useState<${oldModel}>()`)
                     ) {
@@ -399,8 +399,116 @@ const fileName = filePath.split("/").pop().split(".")[0];
               deletedComponentName = path.node.openingElement.name.name;
             }
 
+            const model = getAttrValue(path.node, "data-rwf-model");
+            const method = getAttrValue(path.node, "data-rwf-method");
+            const isDiv = path.node.openingElement.name.name === "div";
+            const isForm = path.node.openingElement.name.name === "form";
+
+            if (isDiv && model) {
+              traverse(ast, {
+                VariableDeclaration(path) {
+                  const code = generate(path.node).code;
+                  if (
+                    code.includes(`const [${toLower(model)}, set${model}]`) &&
+                    code.includes(`useState<${model}[]>`)
+                  ) {
+                    path.remove();
+                    modified = true;
+                  }
+                },
+                ExpressionStatement(path) {
+                  const code = generate(path.node).code;
+                  if (
+                    code.includes("useEffect") &&
+                    code.includes(`${model}Service.getAll${model}()`)
+                  ) {
+                    path.remove();
+                    modified = true;
+                  }
+                },
+              });
+            }
+            if (isForm && method && model) {
+              const capitalizeMethod = toCapitalize(method);
+              const lowerMethod = method.toLowerCase();
+
+              traverse(ast, {
+                VariableDeclaration(path) {
+                  const code = generate(path.node).code;
+                  if (
+                    code.includes(
+                      `const [${lowerMethod}${model}, set${capitalizeMethod}${model}]`,
+                    ) &&
+                    code.includes(`useState<${model}>()`)
+                  ) {
+                    path.remove();
+                    modified = true;
+                  }
+                  if (
+                    code.includes("const handleChange") &&
+                    code.includes(`set${capitalizeMethod}${model}`) &&
+                    code.includes("[name]: value")
+                  ) {
+                    path.remove();
+                    modified = true;
+                  }
+                  if (
+                    code.includes("const handleSubmit") &&
+                    code.includes(`${model}Service.`)
+                  ) {
+                    path.remove();
+                    modified = true;
+                  }
+                },
+              });
+            }
+
             path.remove();
             modified = true;
+
+            if (isDiv || isForm) {
+              const newAst = parser.parse(generate(ast).code, {
+                sourceType: "module",
+                plugins: ["jsx", "typescript"],
+              });
+
+              let usesOldModel = false;
+              let usesOldModelService = false;
+
+              traverse(newAst, {
+                Identifier(path) {
+                  // Ignorar si viene de un import
+                  if (path.findParent((p) => p.isImportDeclaration())) return;
+
+                  if (path.node.name === model) usesOldModel = true;
+                  if (path.node.name === `${model}Service`)
+                    usesOldModelService = true;
+
+                  // Si ya sabemos que se usan ambos, detenemos el análisis
+                  if (usesOldModel && usesOldModelService) {
+                    path.stop();
+                  }
+                },
+              });
+
+              traverse(ast, {
+                ImportDeclaration(importPath) {
+                  const importSource = importPath.node.source.value;
+
+                  const isModelImport = importSource === `../models/${model}`;
+                  const isServiceImport =
+                    importSource === `../services/${model}Service`;
+
+                  if (
+                    (isModelImport && !usesOldModel) ||
+                    (isServiceImport && !usesOldModelService)
+                  ) {
+                    importPath.remove();
+                    modified = true;
+                  }
+                },
+              });
+            }
 
             // Ahora, si era un custom component, verificamos si quedan instancias
             if (deletedComponentName) {
