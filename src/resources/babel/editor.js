@@ -816,6 +816,8 @@ const fileName = filePath.split("/").pop().split(".")[0];
           },
         });
       } else {
+        let inserted = false;
+
         traverse(ast, {
           JSXElement(path) {
             const attr = path.node.openingElement.attributes.find(
@@ -842,10 +844,47 @@ const fileName = filePath.split("/").pop().split(".")[0];
                 return;
             }
 
+            inserted = true;
             modified = true;
             path.stop();
           },
         });
+
+        // Fallback: si no se encontró el referenceId
+        if (!inserted) {
+          console.warn(
+            `! referenceId "${referenceId}" no encontrado. Verificando fallback en <div> raíz.`,
+          );
+
+          traverse(ast, {
+            ReturnStatement(path) {
+              const root = path.node.argument;
+              if (
+                root?.type === "JSXElement" &&
+                root.openingElement.name.name === "div"
+              ) {
+                const childCount = root.children.filter(
+                  (child) =>
+                    child.type !== "JSXText" || child.value.trim() !== "",
+                ).length;
+
+                if (childCount <= 1) {
+                  root.children.push(t.cloneNode(fragmentAst, true));
+                  modified = true;
+                  console.log(
+                    "✅ Fragment insertado en <div> raíz como fallback.",
+                  );
+                } else {
+                  console.warn(
+                    "⛔ <div> raíz no está vacío. No se insertó como fallback.",
+                  );
+                }
+
+                path.stop();
+              }
+            },
+          });
+        }
       }
     }
 
