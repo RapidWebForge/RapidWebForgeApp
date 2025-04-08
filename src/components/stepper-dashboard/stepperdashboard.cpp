@@ -1,10 +1,18 @@
 #include "stepperdashboard.h"
+#include <QCoreApplication>
 #include <QDebug>
+#include <QDir>
 #include <QFile>
+#include <QIcon>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QMessageBox>
+#include <QPushButton>
+#include <QResizeEvent>
+#include <QStandardPaths>
+#include <QStandardPaths> // ✅ AÑADE ESTA LÍNEA
 #include <QTimer>
+#include <QVBoxLayout>
 #include "../../components/create-version/createversion.h"
 #include "../../components/delete-version/deleteversion.h"
 #include "../../components/manage-version/manageversion.h"
@@ -16,15 +24,7 @@
 #include "../../core/version-manager/versionmanager.h"
 #include "ui_stepperdashboard.h"
 #include <fmt/core.h>
-#include <fstream>
-#include <memory>
 #include <nlohmann/json.hpp>
-#include <QResizeEvent>
-
-#include <QPushButton>
-#include <QDebug>
-#include <QIcon>
-#include <QVBoxLayout>
 
 nlohmann::json tutorialData;
 
@@ -55,9 +55,18 @@ StepperDashboard::StepperDashboard(QWidget *parent,
 
 {
     ui->setupUi(this);
+    QCoreApplication::setOrganizationName("RapidWebForge");
+    QCoreApplication::setApplicationName("RapidWebForge");
+    // Crear ruta segura en AppData para guardar logs dinámicos
+    QString appDataPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+    QDir logDir(appDataPath);
+    if (!logDir.exists()) {
+        logDir.mkpath("."); // Crea la carpeta si no existe
+    }
+    QString logsPath = appDataPath + "/user_actions.json";
+    qDebug() << "📄 Logs Path (AppData):" << logsPath;
 
-    stepValidator = new StepValidator(tutorialFilePath.toStdString(),
-                                      "resources/logs/user_actions.json");
+    stepValidator = new StepValidator(tutorialFilePath.toStdString(), logsPath.toStdString());
 
     // Crear un temporizador para verificar el estado de los pasos cada 2 segundos
     QTimer *stepCheckTimer = new QTimer(this);
@@ -987,10 +996,20 @@ void StepperDashboard::loadTutorialData()
 
 void StepperDashboard::showTutorialIntro()
 {
+    qDebug() << "Aqui se cae ";
+    QString safeTitle = tutorialTitle.isNull() ? "Tutorial" : tutorialTitle;
+    QString safeDescription = tutorialDescription.isNull() ? "" : tutorialDescription;
     QString message = QString("<b>%1</b><br><br>%2").arg(tutorialTitle, tutorialDescription);
+    qDebug() << "Aqui se cae 2";
 
-    QMessageBox::information(this, "Tutorial Introduction", message);
-
+    qDebug() << "Tutorial intro message: " << message;
+    QMessageBox *msgBox = new QMessageBox(nullptr); // <- sin parent
+    msgBox->setIcon(QMessageBox::Information);
+    msgBox->setWindowTitle("Tutorial Introduction");
+    msgBox->setTextFormat(Qt::RichText);
+    msgBox->setText(message);
+    msgBox->exec();
+    qDebug() << "Aqui se cae 3";
     // Luego de mostrar la introducción, mostrar el primer paso
     if (!tutorialSteps.isEmpty()) {
         showStep(0);
