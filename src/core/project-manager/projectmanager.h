@@ -19,6 +19,7 @@ public:
                     const std::function<void(sqlite3_stmt *)> &processResults = nullptr);
     void createProject(const Project &project);
     std::optional<Project> getProjectById(int projectId);
+    std::optional<Project> getProjectByName(std::string name);
     std::vector<Project> getAllProjects();
     void updateProject(const Project &project);
     void deleteProjectById(int id);

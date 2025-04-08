@@ -212,6 +212,44 @@ std::optional<Project> ProjectManager::getProjectById(int projectId)
     return projectOpt;
 }
 
+std::optional<Project> ProjectManager::getProjectByName(std::string name)
+{
+    sqlite3 *db = Database::getInstance().getConnection();
+    std::optional<Project> projectOpt;
+
+    std::string sql = "SELECT id, name, description, path, frontendPort, backendPort, database_id, "
+                      "created_at, updated_at, versions FROM projects WHERE name = ?;";
+    executeSQL(
+        db,
+        sql,
+        [&](sqlite3_stmt *stmt) { sqlite3_bind_text(stmt, 1, name.c_str(), -1, SQLITE_TRANSIENT); },
+        [&](sqlite3_stmt *stmt) {
+            int id = sqlite3_column_int(stmt, 0);
+            std::string pName = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 1));
+            std::string description = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 2));
+            std::string path = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 3));
+            std::string frontendPort = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 4));
+            std::string backendPort = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 5));
+            int databaseId = sqlite3_column_int(stmt, 6);
+            bool versions = sqlite3_column_int(stmt, 9)
+                            == 1; // Obteniendo valor de versions como bool
+
+            auto dbDataOpt = getDatabaseById(databaseId);
+            if (dbDataOpt) {
+                projectOpt = Project(id,
+                                     pName,
+                                     description,
+                                     path,
+                                     dbDataOpt.value(),
+                                     frontendPort,
+                                     backendPort,
+                                     versions);
+            }
+        });
+
+    return projectOpt;
+}
+
 std::vector<Project> ProjectManager::getAllProjects()
 {
     sqlite3 *db = Database::getInstance().getConnection();
