@@ -229,10 +229,18 @@ void TutorialsPanel::onTutorialClicked(const QString &tutorialPath)
     std::optional<Project> projectOpt = projectManager.getProjectByName("Tutorial");
 
     if (!projectOpt.has_value()) {
-        QMessageBox::critical(
-            this,
-            "Error",
-            "Tutorial project wasn't found. Tutorials works with every project named 'Tutorial'.");
+        QMessageBox msgBox;
+        msgBox.setIcon(QMessageBox::Critical);
+        msgBox.setWindowTitle("Error");
+        msgBox.setText("Tutorial project not found");
+        msgBox.setInformativeText(
+            "To use tutorials, please ensure you have a project named 'Tutorial'.");
+        msgBox.setDetailedText(
+            "The application couldn't find a project with the required name. "
+            "Create a new project named 'Tutorial' or check your project settings.");
+        msgBox.setStandardButtons(QMessageBox::Ok);
+        msgBox.exec();
+
         projectsPanel->show();
         return;
     }
