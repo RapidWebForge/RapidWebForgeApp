@@ -635,3 +635,49 @@ bool BackendGenerator::updateTransactionName(const std::string &currentName,
     fmt::print("Transaction updated successfully: name={}, nameConst={}\n", newName, newNameConst);
     return true;
 }
+
+std::vector<TransactionOperation> BackendGenerator::diffVecs()
+{
+    std::vector<TransactionOperation> ops;
+
+    for (const Transaction &newTx : transactions) {
+        auto it = std::find_if(oldTransactions.begin(),
+                               oldTransactions.end(),
+                               [&](const Transaction &existingTx) {
+                                   return existingTx.getName() == newTx.getName();
+                               });
+
+        if (it == oldTransactions.end()) {
+            ops.emplace_back(OperationType::Insert, newTx);
+        } else if (newTx.isDifferentFrom(*it)) {
+            ops.emplace_back(OperationType::Modify, newTx);
+        }
+    }
+
+    for (const Transaction &oldTx : oldTransactions) {
+        auto it = std::find_if(transactions.begin(),
+                               transactions.end(),
+                               [&](const Transaction &newTx) {
+                                   return newTx.getName() == oldTx.getName();
+                               });
+
+        if (it == transactions.end()) {
+            ops.emplace_back(OperationType::Delete, oldTx);
+        }
+    }
+
+    return ops;
+}
+
+bool BackendGenerator::isProgressSaved()
+{
+    std::vector<TransactionOperation> operations = diffVecs();
+
+    if (operations.empty()) {
+        qDebug() << "No changes detected.";
+        return true;
+    } else {
+        qDebug() << "Changes detected.";
+        return false;
+    }
+}

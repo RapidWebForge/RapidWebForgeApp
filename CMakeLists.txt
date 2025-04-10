@@ -34,7 +34,6 @@ find_package(boost_filesystem REQUIRED CONFIG)
 find_package(OpenSSL REQUIRED)
 find_package(fmt CONFIG REQUIRED)
 find_package(inja CONFIG REQUIRED)
-find_package(unofficial-mysql-connector-cpp CONFIG REQUIRED)
 find_package(unofficial-sqlite3 CONFIG REQUIRED)
 find_package(libzip CONFIG REQUIRED)
 find_package(PkgConfig REQUIRED)
@@ -162,6 +161,7 @@ set(PROJECT_SOURCES
         src/models/generic-node/genericnode.h
         src/models/generic-node/genericnode.cpp
         src/models/node-operation/nodeoperation.h
+        src/models/transaction-operation/transactionoperation.h
         # Utils
         src/utils/database/database.h
         src/utils/database/database.cpp
@@ -204,7 +204,6 @@ target_link_libraries(RapidWebForgeApp PRIVATE
     OpenSSL::SSL
     fmt::fmt
     pantor::inja
-    unofficial::mysql-connector-cpp::connector
     unofficial::sqlite3::sqlite3
     libzip::zip
     PkgConfig::LIBGIT2

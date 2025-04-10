@@ -1,6 +1,8 @@
 #ifndef NODEOPERATION_H
 #define NODEOPERATION_H
 
+#include "../base-node/basenode.h"
+
 enum class OperationType { Insert, Modify, Delete };
 
 struct NodeOperation

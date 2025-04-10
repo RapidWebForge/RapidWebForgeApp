@@ -10,7 +10,6 @@
 #include <QPushButton>
 #include <QResizeEvent>
 #include <QStandardPaths>
-#include <QStandardPaths> // ✅ AÑADE ESTA LÍNEA
 #include <QTimer>
 #include <QVBoxLayout>
 #include "../../components/create-version/createversion.h"
@@ -561,6 +560,12 @@ bool StepperDashboard::showConfirmationDialog(QWidget *parent,
     return (reply == QMessageBox::Yes);
 }
 
+bool StepperDashboard::isProgressSaved()
+{
+    return codeGenerator->backendGenerator.isProgressSaved()
+           && codeGenerator->frontendGenerator.isProgressSaved();
+}
+
 void StepperDashboard::onSaveChanges()
 {
     codeGenerator->backendGenerator.setTransactions(backendDashboard->getTransactions());
@@ -578,7 +583,7 @@ void StepperDashboard::onSaveChanges()
 
 void StepperDashboard::onCreateVersion()
 {
-    if (!codeGenerator->frontendGenerator.isProgressSaved()) {
+    if (!isProgressSaved()) {
         if (!showConfirmationDialog(this,
                                     "Unsaved Progress",
                                     "You have unsaved progress. Do you want to continue?")) {
@@ -608,7 +613,7 @@ void StepperDashboard::onCreateVersion()
 
 void StepperDashboard::onChangeVersion()
 {
-    if (!codeGenerator->frontendGenerator.isProgressSaved()) {
+    if (!isProgressSaved()) {
         if (!showConfirmationDialog(this,
                                     "Unsaved Progress",
                                     "You have unsaved progress. Do you want to continue?")) {
@@ -689,7 +694,7 @@ void StepperDashboard::onVersionHistory()
 
 void StepperDashboard::onDeployProject()
 {
-    if (!codeGenerator->frontendGenerator.isProgressSaved()) {
+    if (!isProgressSaved()) {
         if (!showConfirmationDialog(this,
                                     "Unsaved Progress",
                                     "You have unsaved progress. Do you want to continue?")) {
@@ -739,7 +744,7 @@ void StepperDashboard::onDeployProject()
 
 void StepperDashboard::onProjectChange()
 {
-    if (!codeGenerator->frontendGenerator.isProgressSaved()) {
+    if (!isProgressSaved()) {
         if (!showConfirmationDialog(this,
                                     "Unsaved Progress",
                                     "You have unsaved progress. Do you want to continue?")) {
@@ -770,7 +775,7 @@ void StepperDashboard::onProjectChange()
 
 void StepperDashboard::onCreateProject()
 {
-    if (!codeGenerator->frontendGenerator.isProgressSaved()) {
+    if (!isProgressSaved()) {
         if (!showConfirmationDialog(this,
                                     "Unsaved Progress",
                                     "You have unsaved progress. Do you want to continue?")) {
@@ -1112,7 +1117,7 @@ void StepperDashboard::onUserActionPerformed(const std::string &action,
 
 void StepperDashboard::closeEvent(QCloseEvent *event)
 {
-    if (!codeGenerator->frontendGenerator.isProgressSaved()) {
+    if (!isProgressSaved()) {
         if (!showConfirmationDialog(this,
                                     "Unsaved Progress",
                                     "You have unsaved progress. Do you want to exit?")) {

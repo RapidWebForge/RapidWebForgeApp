@@ -1,7 +1,6 @@
 #include "field.h"
-#include <algorithm> // Incluye esta línea para usar std::transform
+#include <algorithm>
 
-// Constructor with parameters
 Field::Field(std::string &name,
              std::string &type,
              bool isNull,
@@ -11,21 +10,20 @@ Field::Field(std::string &name,
     , type(type)
     , isNull(isNull)
     , isUnique(isUnique)
-    , primaryKey(false)                     // Inicializar como false por defecto
-    , foreignKey(false)                     // Inicializar como false por defecto
-    , hasCheck(false)                       // Inicializar como false por defecto
-    , hasDefault(false)                     // Inicializar como false por defecto
-    , foreignKeyTable(foreignKeyTable)      // Inicializa con el nombre de la tabla de Foreign Key
-    , foreignKeyTableLower(foreignKeyTable) // Inicializa también la tabla en minúsculas
+    , primaryKey(false)
+    , foreignKey(false)
+    , hasCheck(false)
+    , hasDefault(false)
+    , foreignKeyTable(foreignKeyTable)
+    , foreignKeyTableLower(foreignKeyTable)
 
 {
-    // Convertir foreignKeyTableLower a minúsculas
     std::transform(foreignKeyTableLower.begin(),
                    foreignKeyTableLower.end(),
                    foreignKeyTableLower.begin(),
                    ::tolower);
 }
-// Copy constructor
+
 Field::Field(const Field &field)
     : name(field.name)
     , type(field.type)
@@ -35,9 +33,8 @@ Field::Field(const Field &field)
     , foreignKey(field.foreignKey)
     , hasCheck(field.hasCheck)
     , hasDefault(field.hasDefault)
-    , foreignKeyTable(field.foreignKeyTable) // Asegurarse de copiar la tabla de Foreign Key
-    , foreignKeyTableLower(
-          field.foreignKeyTableLower) // Asegurarse de copiar la tabla en minúsculas también
+    , foreignKeyTable(field.foreignKeyTable)
+    , foreignKeyTableLower(field.foreignKeyTableLower)
 
 {}
 
@@ -82,7 +79,7 @@ bool Field::isPrimaryKey() const
 }
 
 bool Field::isForeignKey() const
-{ // Getter para FK
+{
     return foreignKey;
 }
 bool Field::getHasCheck() const
@@ -101,7 +98,7 @@ std::string Field::getForeignKeyTable() const
 }
 std::string Field::getForeignKeyTableLower() const
 {
-    return foreignKeyTableLower; // Nuevo getter para el nombre en minúsculas
+    return foreignKeyTableLower;
 }
 
 // Setters
@@ -131,7 +128,7 @@ void Field::setIsPrimaryKey(bool value)
 }
 
 void Field::setIsForeignKey(bool value)
-{ // Setter para FK
+{
     foreignKey = value;
 }
 void Field::setHasCheck(bool value)
@@ -146,9 +143,18 @@ void Field::setHasDefault(bool value)
 void Field::setForeignKeyTable(const std::string &tableName)
 {
     foreignKeyTable = tableName;
-    foreignKey = !tableName.empty(); // Si la tabla relacionada no está vacía, es una FK
+    foreignKey = !tableName.empty();
 }
 void Field::setForeignKeyTableLower(const std::string &tableNameLower)
 {
     foreignKeyTableLower = tableNameLower;
+}
+
+const bool Field::isDifferentFrom(const Field &other) const
+{
+    return name == other.getName() && type == other.getType() && isNull == other.getIsNull()
+           && isUnique == other.getIsUnique() && primaryKey == other.isPrimaryKey()
+           && foreignKey == other.isForeignKey() && hasCheck == other.getHasCheck()
+           && hasDefault == other.getHasDefault() && foreignKeyTable == other.getForeignKeyTable()
+           && foreignKeyTableLower == other.getForeignKeyTableLower();
 }

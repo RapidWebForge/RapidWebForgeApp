@@ -80,7 +80,7 @@ private slots:
     void goToNextTutorialStep();
     void showTutorialIntro();
     void onUserActionPerformed(const std::string &action, const std::string &componentID);
-
+    bool isProgressSaved();
 
 private:
     Ui::StepperDashboard *ui;

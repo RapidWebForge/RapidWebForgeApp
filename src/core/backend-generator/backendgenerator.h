@@ -3,6 +3,7 @@
 
 #include <QString>
 #include "../../models/database-data/databasedata.h"
+#include "../../models/transaction-operation/transactionoperation.h"
 #include "../../models/transaction/transaction.h"
 #include <nlohmann/json.hpp>
 #include <string>
@@ -25,6 +26,9 @@ public:
                                const std::string &newName,
                                const std::string &newNameConst);
 
+    // Prevent changes
+    bool isProgressSaved();
+
 private:
     void generateFileAll(
         const Transaction &transaction,
@@ -45,7 +49,10 @@ private:
     void writeFile(const std::string &filePath, const std::string &content);
     void parseJson(const nlohmann::json &jsonSchema);
 
+    std::vector<TransactionOperation> diffVecs();
+
     std::vector<Transaction> transactions;
+    std::vector<Transaction> oldTransactions;
     std::string projectPath;
     DatabaseData databaseData;
 };
