@@ -135,8 +135,10 @@ void BackendGenerator::parseJson(const nlohmann::json &jsonSchema)
         }
         transaction.setFields(fields);
 
-        transactions.push_back(transaction);
+        this->transactions.push_back(transaction);
     }
+
+    this->oldTransactions = this->transactions;
 }
 
 bool BackendGenerator::updateSchema()
