@@ -755,9 +755,6 @@ bool FrontendGenerator::updateFrontendCode()
         }
     }
 
-    // Actualizar archivos que dependen de cambios a nivel de Section (ej. App.tsx, etc.)
-    // updateDependentFiles();
-
     if (!updateSchema()) {
         qDebug() << "Error on Updating Schema";
         return false;

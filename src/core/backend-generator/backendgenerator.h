@@ -18,8 +18,7 @@ public:
     bool updateSchema();
     bool updateBackendCode();
     // Getters
-    const std::vector<Transaction> &getTransactions() const;
-    std::vector<Transaction> &getTransactions();
+    std::vector<Transaction> *getTransactions();
     // Setters
     void setTransactions(const std::vector<Transaction> &transactions);
     bool updateTransactionName(const std::string &currentName,
@@ -30,6 +29,11 @@ public:
     bool isProgressSaved();
 
 private:
+    std::vector<Transaction> transactions;
+    std::vector<Transaction> oldTransactions;
+    std::string projectPath;
+    DatabaseData databaseData;
+
     void generateFileAll(
         const Transaction &transaction,
         const std::string &templatePath,
@@ -48,13 +52,11 @@ private:
     bool generateFrontendServices();
     void writeFile(const std::string &filePath, const std::string &content);
     void parseJson(const nlohmann::json &jsonSchema);
-
+    // Funciones Auxiliares para modificaciones
     std::vector<TransactionOperation> diffVecs();
-
-    std::vector<Transaction> transactions;
-    std::vector<Transaction> oldTransactions;
-    std::string projectPath;
-    DatabaseData databaseData;
+    void applyInsertion(Transaction &transaction);
+    void applyModification(Transaction &transaction);
+    void applyDeletion(Transaction &transaction);
 };
 
 #endif // BACKENDGENERATOR_H

@@ -213,11 +213,12 @@ void StepperDashboard::showEvent(QShowEvent *event)
 
 void StepperDashboard::onBackendSchemaLoaded()
 {
-    std::vector<Transaction> transactions = codeGenerator->backendGenerator.getTransactions();
-    backendDashboard->setTransactions(transactions);
+    std::vector<Transaction> *transactionsRef = codeGenerator->backendGenerator.getTransactions();
 
-    if (!transactions.empty()) {
-        backendDashboard->setCurrentTransaction(transactions.at(0));
+    backendDashboard->setTransactions(transactionsRef);
+
+    if (!transactionsRef->empty()) {
+        backendDashboard->setCurrentTransaction(transactionsRef->at(0));
     }
 
     backendDashboard->setDatabaseLabel(project.getDatabaseData().getDatabaseName());
@@ -568,8 +569,6 @@ bool StepperDashboard::isProgressSaved()
 
 void StepperDashboard::onSaveChanges()
 {
-    codeGenerator->backendGenerator.setTransactions(backendDashboard->getTransactions());
-
     codeGenerator->backendGenerator.updateBackendCode();
 
     // TODO: PASS AST UPDATE
@@ -711,9 +710,9 @@ void StepperDashboard::onDeployProject()
         return;
     }
 
-    std::vector<Transaction> transactions = codeGenerator->backendGenerator.getTransactions();
+    auto transactions = codeGenerator->backendGenerator.getTransactions();
 
-    if (transactions.empty()) {
+    if (transactions->empty()) {
         QMessageBox::critical(this, "Critical", "You cannot deploy without generate transactions");
         return;
     }
@@ -1229,6 +1228,7 @@ void StepperDashboard::openLastModifiedFile() {
         FileOpener::openInVSCode(projectPath);
     }
 }
+
 void StepperDashboard::setupFloatingButton() {
     // Crear el botón flotante
     floatingButton = new QPushButton(this);

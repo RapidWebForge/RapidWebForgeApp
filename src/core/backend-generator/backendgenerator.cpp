@@ -1,8 +1,10 @@
 #include "backendgenerator.h"
 #include <QDebug>
+#include <QDir>
 #include <QFile>
 #include <QTextStream>
 #include "../../utils/render_callback/rendercallback.h"
+#include <boost/algorithm/string.hpp>
 #include <fmt/core.h>
 #include <fstream>
 #include <inja/inja.hpp>
@@ -226,22 +228,99 @@ bool BackendGenerator::generateBackendCode()
 // Regenerate backend with new information
 bool BackendGenerator::updateBackendCode()
 {
-    // Actualizar el esquema del backend
-    if (updateSchema()) {
-        // Generar el código del backend
-        if (!generateBackendCode()) {
-            return false;
-        }
+    std::vector<TransactionOperation> operations = diffVecs();
 
-        // Generar modelos y servicios para el frontend
-        if (!generateFrontendModels() || !generateFrontendServices()) {
-            fmt::print(stderr, "Error generating frontend code.\n");
-            return false;
-        }
-
+    if (operations.empty()) {
+        qDebug() << "No changes detected, skipping backend generation.";
         return true;
     }
-    return false;
+
+    // Aplicar cada operación de forma incremental
+    for (auto op : operations) {
+        switch (op.type) {
+        case OperationType::Insert:
+            applyInsertion(op.transaction);
+            break;
+        case OperationType::Modify:
+            applyModification(op.transaction);
+            break;
+        case OperationType::Delete:
+            applyDeletion(op.transaction);
+            break;
+        }
+    }
+
+    // if (!generateBackendCode()) {
+    //     return false;
+    // }
+
+    // // Generar modelos y servicios para el frontend
+    // if (!generateFrontendModels() || !generateFrontendServices()) {
+    //     fmt::print(stderr, "Error generating frontend code.\n");
+    //     return false;
+    // }
+
+    if (!updateSchema()) {
+        qDebug() << "Error on Updating Schema";
+        return false;
+    }
+
+    this->oldTransactions = this->transactions;
+    return true;
+}
+
+void BackendGenerator::applyInsertion(Transaction &transaction) {}
+
+void BackendGenerator::applyModification(Transaction &transaction) {}
+
+void deleteFile(const QString &path)
+{
+    QFile file(path);
+    if (file.exists()) {
+        file.remove();
+    }
+}
+
+void BackendGenerator::applyDeletion(Transaction &transaction)
+{
+    // Para una transaction eliminada solo hay que borrar los archivos e imports
+    std::string transactionName = transaction.getName();
+    std::string transactionLowerName = boost::to_lower_copy(transactionName);
+    QString fullPath;
+    QString backendPath = QDir(QString::fromStdString(projectPath))
+                              .filePath(QString::fromStdString("backend"));
+    QString frontendPath = QDir(QString::fromStdString(projectPath))
+                               .filePath(QString::fromStdString("frontend"));
+    QString frontendSrc = QDir(frontendPath).filePath("src");
+
+    // Backend
+    // controllers
+    QString controllerFile = QString::fromStdString(transactionLowerName + "Controller.js");
+    QString controllerDir = "controllers";
+    fullPath = QDir(QDir(backendPath).filePath(controllerDir)).filePath(controllerFile);
+    deleteFile(fullPath);
+    // models
+    QString modelFile = QString::fromStdString(transactionLowerName + ".js");
+    QString modelDir = "models";
+    fullPath = QDir(QDir(backendPath).filePath(modelDir)).filePath(modelFile);
+    deleteFile(fullPath);
+    // TODO: Queda pendiente el remover el import del index.js
+    // routes
+    QString routeFile = QString::fromStdString(transactionLowerName + "Routes.js");
+    QString routeDir = "routes";
+    fullPath = QDir(QDir(backendPath).filePath(routeDir)).filePath(routeFile);
+    deleteFile(fullPath);
+    // TODO: Queda pendiente el remover el import del index.js
+    // Frontend
+    // models
+    QString modelFrontFile = QString::fromStdString(transactionName + ".ts");
+    fullPath = QDir(QDir(frontendSrc).filePath(modelDir)).filePath(modelFrontFile);
+    deleteFile(fullPath);
+    // services
+    QString serviceFile = QString::fromStdString(transactionName + "Service.ts");
+    QString serviceDir = "services";
+    fullPath = QDir(QDir(frontendSrc).filePath(serviceDir)).filePath(serviceFile);
+    deleteFile(fullPath);
 }
 
 void BackendGenerator::generateFileAll(const Transaction &transaction,
@@ -569,14 +648,10 @@ bool BackendGenerator::generateFrontendServices()
 }
 
 // Getter
-const std::vector<Transaction> &BackendGenerator::getTransactions() const
-{
-    return transactions;
-}
 
-std::vector<Transaction> &BackendGenerator::getTransactions()
+std::vector<Transaction> *BackendGenerator::getTransactions()
 {
-    return transactions;
+    return &transactions;
 }
 
 // Setter
