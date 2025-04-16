@@ -10,7 +10,6 @@
 #include "../../models/time-chrono/timechrono.h"
 #include "../../utils/file/fileutiils.h"
 #include "../../utils/render_callback/rendercallback.h"
-#include <boost/filesystem.hpp>
 #include <boost/process.hpp>
 #include <boost/uuid/string_generator.hpp>
 #include <boost/uuid/uuid_generators.hpp>
@@ -899,14 +898,6 @@ void FrontendGenerator::applyModification(std::shared_ptr<BaseNode> &node)
     runEditorScript(args);
 }
 
-void deleteFile(const std::string &path)
-{
-    boost::filesystem::path filePath(path);
-    if (boost::filesystem::exists(filePath)) {
-        boost::filesystem::remove(filePath);
-    }
-}
-
 void FrontendGenerator::applyDeletion(std::shared_ptr<BaseNode> &node)
 {
     // Si la modificación es un section
@@ -915,13 +906,13 @@ void FrontendGenerator::applyDeletion(std::shared_ptr<BaseNode> &node)
         && (node->getParent()->getNodeType() == "Views"
             || node->getParent()->getNodeType() == "CustomComponents")) {
         std::string sectionName = std::dynamic_pointer_cast<Section>(node)->getName();
-        std::string filePath;
 
-        filePath = projectPath + "/frontend/src/"
-                   + (node->getParent()->getNodeType() == "Views" ? "views/" : "components/")
-                   + sectionName + ".tsx";
+        QString folder = node->getParent()->getNodeType() == "Views" ? "views/" : "components/";
+        QString filePath = QDir(QString::fromStdString(projectPath))
+                               .filePath("frontend/src/" + folder
+                                         + QString::fromStdString(sectionName) + ".tsx");
 
-        deleteFile(filePath);
+        FileUtils::deleteFile(filePath);
         applyRefactorForDeletedSection(sectionName,
                                        node->getParent()->getNodeType() == "Views"
                                            ? "View"

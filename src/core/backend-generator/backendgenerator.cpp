@@ -3,6 +3,7 @@
 #include <QDir>
 #include <QFile>
 #include <QTextStream>
+#include "../../utils/file/fileutiils.h"
 #include "../../utils/render_callback/rendercallback.h"
 #include <boost/algorithm/string.hpp>
 #include <fmt/core.h>
@@ -273,54 +274,37 @@ void BackendGenerator::applyInsertion(Transaction &transaction) {}
 
 void BackendGenerator::applyModification(Transaction &transaction) {}
 
-void deleteFile(const QString &path)
-{
-    QFile file(path);
-    if (file.exists()) {
-        file.remove();
-    }
-}
-
 void BackendGenerator::applyDeletion(Transaction &transaction)
 {
+    auto toQString = [](const std::string &s) { return QString::fromStdString(s); };
+    auto buildPath = [](const QString &base, const QString &subdir, const QString &file) {
+        return QDir(QDir(base).filePath(subdir)).filePath(file);
+    };
+
     // Para una transaction eliminada solo hay que borrar los archivos e imports
-    std::string transactionName = transaction.getName();
-    std::string transactionLowerName = boost::to_lower_copy(transactionName);
-    QString fullPath;
-    QString backendPath = QDir(QString::fromStdString(projectPath))
-                              .filePath(QString::fromStdString("backend"));
-    QString frontendPath = QDir(QString::fromStdString(projectPath))
-                               .filePath(QString::fromStdString("frontend"));
+    QString transactionNameQString = toQString(transaction.getName());
+    QString transactionLowerNameQString = toQString(boost::to_lower_copy(transaction.getName()));
+
+    QString backendPath = QDir(toQString(projectPath)).filePath("backend");
+    QString frontendPath = QDir(toQString(projectPath)).filePath("frontend");
     QString frontendSrc = QDir(frontendPath).filePath("src");
 
     // Backend
     // controllers
-    QString controllerFile = QString::fromStdString(transactionLowerName + "Controller.js");
-    QString controllerDir = "controllers";
-    fullPath = QDir(QDir(backendPath).filePath(controllerDir)).filePath(controllerFile);
-    deleteFile(fullPath);
+    FileUtils::deleteFile(
+        buildPath(backendPath, "controllers", transactionLowerNameQString + "Controller.js"));
     // models
-    QString modelFile = QString::fromStdString(transactionLowerName + ".js");
-    QString modelDir = "models";
-    fullPath = QDir(QDir(backendPath).filePath(modelDir)).filePath(modelFile);
-    deleteFile(fullPath);
+    FileUtils::deleteFile(buildPath(backendPath, "models", transactionLowerNameQString + ".js"));
     // TODO: Queda pendiente el remover el import del index.js
     // routes
-    QString routeFile = QString::fromStdString(transactionLowerName + "Routes.js");
-    QString routeDir = "routes";
-    fullPath = QDir(QDir(backendPath).filePath(routeDir)).filePath(routeFile);
-    deleteFile(fullPath);
+    FileUtils::deleteFile(
+        buildPath(backendPath, "routes", transactionLowerNameQString + "Routes.js"));
     // TODO: Queda pendiente el remover el import del index.js
     // Frontend
     // models
-    QString modelFrontFile = QString::fromStdString(transactionName + ".ts");
-    fullPath = QDir(QDir(frontendSrc).filePath(modelDir)).filePath(modelFrontFile);
-    deleteFile(fullPath);
+    FileUtils::deleteFile(buildPath(frontendSrc, "models", transactionNameQString + ".ts"));
     // services
-    QString serviceFile = QString::fromStdString(transactionName + "Service.ts");
-    QString serviceDir = "services";
-    fullPath = QDir(QDir(frontendSrc).filePath(serviceDir)).filePath(serviceFile);
-    deleteFile(fullPath);
+    FileUtils::deleteFile(buildPath(frontendSrc, "services", transactionNameQString + "Service.ts"));
 }
 
 void BackendGenerator::generateFileAll(const Transaction &transaction,
