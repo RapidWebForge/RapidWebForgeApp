@@ -767,7 +767,7 @@ bool FrontendGenerator::updateFrontendCode()
 
 void FrontendGenerator::runEditorScript(const std::vector<std::string> args)
 {
-    QString resourcePath = ":/babel/editor";
+    QString resourcePath = ":/babel/editorFrontend";
     QFile resourceFile(resourcePath);
     if (!resourceFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
         fmt::print(stderr, "❌ Unable to open resource: {}\n", resourcePath.toStdString());
@@ -775,14 +775,14 @@ void FrontendGenerator::runEditorScript(const std::vector<std::string> args)
     }
 
     QString tempPath = QStandardPaths::writableLocation(QStandardPaths::TempLocation);
-    QString tempFilePath = tempPath + "/editor.js";
+    QString tempFilePath = tempPath + "/editorFront.js";
 
     QFile tempFile(tempFilePath);
     if (tempFile.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text)) {
         tempFile.write(resourceFile.readAll());
         tempFile.close();
     } else {
-        fmt::print(stderr, "❌ Unable to write temporary editor.js\n");
+        fmt::print(stderr, "❌ Unable to write temporary editorFront.js\n");
         return;
     }
 

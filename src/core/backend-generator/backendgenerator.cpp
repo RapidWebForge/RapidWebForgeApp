@@ -236,34 +236,34 @@ bool BackendGenerator::updateBackendCode()
     }
 
     // Aplicar cada operación de forma incremental
-    for (auto op : operations) {
-        switch (op.type) {
-        case OperationType::Insert:
-            applyInsertion(op.transaction);
-            break;
-        case OperationType::Modify:
-            applyModification(op.transaction);
-            break;
-        case OperationType::Delete:
-            applyDeletion(op.transaction);
-            break;
-        }
-    }
-
-    // if (!generateBackendCode()) {
-    //     return false;
+    // for (auto op : operations) {
+    //     switch (op.type) {
+    //     case OperationType::Insert:
+    //         applyInsertion(op.transaction);
+    //         break;
+    //     case OperationType::Modify:
+    //         applyModification(op.transaction);
+    //         break;
+    //     case OperationType::Delete:
+    //         applyDeletion(op.transaction);
+    //         break;
+    //     }
     // }
 
-    // // Generar modelos y servicios para el frontend
+    if (!generateBackendCode()) {
+        return false;
+    }
+
+    // Generar modelos y servicios para el frontend
     // if (!generateFrontendModels() || !generateFrontendServices()) {
     //     fmt::print(stderr, "Error generating frontend code.\n");
     //     return false;
     // }
 
-    if (!updateSchema()) {
-        qDebug() << "Error on Updating Schema";
-        return false;
-    }
+    // if (!updateSchema()) {
+    //     qDebug() << "Error on Updating Schema";
+    //     return false;
+    // }
 
     this->oldTransactions = this->transactions;
     return true;
