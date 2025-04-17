@@ -54,6 +54,7 @@ private:
     void parseJson(const nlohmann::json &jsonSchema);
     // Funciones Auxiliares para modificaciones
     std::vector<TransactionOperation> diffVecs();
+    void runEditorScript(const std::vector<std::string> args);
     void applyInsertion(Transaction &transaction);
     void applyModification(Transaction &transaction);
     void applyDeletion(Transaction &transaction);

@@ -2,10 +2,13 @@
 #include <QDebug>
 #include <QDir>
 #include <QFile>
+#include <QStandardPaths>
 #include <QTextStream>
+#include "../../core/configuration-manager/configurationmanager.h"
 #include "../../utils/file/fileutiils.h"
 #include "../../utils/render_callback/rendercallback.h"
 #include <boost/algorithm/string.hpp>
+#include <boost/process.hpp>
 #include <fmt/core.h>
 #include <fstream>
 #include <inja/inja.hpp>
@@ -237,23 +240,23 @@ bool BackendGenerator::updateBackendCode()
     }
 
     // Aplicar cada operación de forma incremental
-    // for (auto op : operations) {
-    //     switch (op.type) {
-    //     case OperationType::Insert:
-    //         applyInsertion(op.transaction);
-    //         break;
-    //     case OperationType::Modify:
-    //         applyModification(op.transaction);
-    //         break;
-    //     case OperationType::Delete:
-    //         applyDeletion(op.transaction);
-    //         break;
-    //     }
-    // }
-
-    if (!generateBackendCode()) {
-        return false;
+    for (auto op : operations) {
+        switch (op.type) {
+        case OperationType::Insert:
+            applyInsertion(op.transaction);
+            break;
+        case OperationType::Modify:
+            applyModification(op.transaction);
+            break;
+        case OperationType::Delete:
+            applyDeletion(op.transaction);
+            break;
+        }
     }
+
+    // if (!generateBackendCode()) {
+    //     return false;
+    // }
 
     // Generar modelos y servicios para el frontend
     // if (!generateFrontendModels() || !generateFrontendServices()) {
@@ -268,6 +271,50 @@ bool BackendGenerator::updateBackendCode()
 
     this->oldTransactions = this->transactions;
     return true;
+}
+
+void BackendGenerator::runEditorScript(const std::vector<std::string> args)
+{
+    QString resourcePath = ":/babel/editorBackend";
+    QFile resourceFile(resourcePath);
+    if (!resourceFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        fmt::print(stderr, "❌ Unable to open resource: {}\n", resourcePath.toStdString());
+        return;
+    }
+
+    QString tempPath = QStandardPaths::writableLocation(QStandardPaths::TempLocation);
+    QString tempFilePath = tempPath + "/editorBack.js";
+
+    QFile tempFile(tempFilePath);
+    if (tempFile.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text)) {
+        tempFile.write(resourceFile.readAll());
+        tempFile.close();
+    } else {
+        fmt::print(stderr, "❌ Unable to write temporary editorBack.js\n");
+        return;
+    }
+
+    // Correr el comando externo con Node.js
+
+    namespace bp = boost::process;
+
+    ConfigurationManager configurationManager;
+
+    std::string bunPath = configurationManager.getConfiguration().getBunPath();
+
+    std::string backendDir
+        = QDir::toNativeSeparators(QString::fromStdString(projectPath) + "/backend").toStdString();
+
+    std::vector<std::string> fullArgs = {"run", "edit", "--", tempFilePath.toStdString()};
+    fullArgs.insert(fullArgs.end(), args.begin(), args.end());
+
+    bp::child c(bunPath,
+                bp::args = fullArgs,
+                bp::start_dir = backendDir,
+                bp::std_out > stdout,
+                bp::std_err > stderr);
+
+    c.wait();
 }
 
 void BackendGenerator::applyInsertion(Transaction &transaction) {}
@@ -295,16 +342,21 @@ void BackendGenerator::applyDeletion(Transaction &transaction)
         buildPath(backendPath, "controllers", transactionLowerNameQString + "Controller.js"));
     // models
     FileUtils::deleteFile(buildPath(backendPath, "models", transactionLowerNameQString + ".js"));
-    // TODO: Queda pendiente el remover el import del index.js
     // routes
     FileUtils::deleteFile(
         buildPath(backendPath, "routes", transactionLowerNameQString + "Routes.js"));
-    // TODO: Queda pendiente el remover el import del index.js
+
     // Frontend
     // models
     FileUtils::deleteFile(buildPath(frontendSrc, "models", transactionNameQString + ".ts"));
     // services
     FileUtils::deleteFile(buildPath(frontendSrc, "services", transactionNameQString + "Service.ts"));
+
+    // Editor.js
+    std::vector<std::string> args = {backendPath.toStdString(), "delete", transaction.getName()};
+
+    // Run script
+    runEditorScript(args);
 }
 
 void BackendGenerator::generateFileAll(const Transaction &transaction,

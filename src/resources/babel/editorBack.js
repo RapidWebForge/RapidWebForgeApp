@@ -1,80 +1,104 @@
 const fs = require("fs");
+const path = require("path");
 const { execSync } = require("child_process");
 const parser = require("@babel/parser");
 const generate = require("@babel/generator").default;
 const traverse = require("@babel/traverse").default;
 const t = require("@babel/types");
-const template = require("@babel/template").default;
 
-const [, , filePath, operation, referenceId, ...rest] = process.argv;
-
-const fileName = filePath.split("/").pop().split(".")[0];
+const [, , basePath, operation, transactionName] = process.argv;
 
 (async () => {
   try {
-    const sourceCode = fs.readFileSync(filePath, "utf-8");
-
-    const ast = parser.parse(sourceCode, {
-      sourceType: "module",
-      plugins: ["jsx", "typescript"],
-    });
-
-    let position = "";
-    let payloadPath = "";
-
-    if (operation === "modify") {
-      payloadPath = rest[0] || "";
-    } else if (operation === "insert") {
-      position = rest[0] || "";
-      payloadPath = rest[1] || "";
-    } else if (operation === "refactor-delete") {
-      position = rest[0] || "";
-    }
-
-    let fragmentAst = null;
-    if (operation !== "delete" && operation !== "refactor-delete")
-      try {
-        const raw = fs.readFileSync(payloadPath, "utf-8");
-        fragmentAst = parser.parseExpression(JSON.parse(raw), {
-          plugins: ["jsx"],
-        });
-      } catch (e) {
-        console.error("❌ Error parsing payload:", e.message);
-        fragmentAst = null;
-      }
-
     let modified = false;
 
-    if (operation === "modify" || operation === "delete") {
-      traverse(ast, {
-        JSXElement(path) {
-
-          if (operation === "modify" && fragmentAst) {
-            // MODIFY
-            path.replaceWith(t.cloneNode(fragmentAst, true));
-          } else if (operation === "delete") {
-            // DELETE
-          }
-
-          modified = true;
-          path.stop();
-        },
-      });
+    if (operation === "modify") {
+     //modify
     }
 
-    if (operation === "insert" && fragmentAst) {
-      // INSERT
-    }
+     if (operation === "delete" && transactionName) {
+       const capitalized = transactionName.charAt(0).toUpperCase() + transactionName.slice(1);
+       const lower = transactionName.charAt(0).toLowerCase() + transactionName.slice(1);
+       const modelImportName = capitalized;
+       const modelImportPath = `./${capitalized}`;
+       const routeImportName = `${lower}Routes`;
+       const routeImportPath = `./${lower}Routes`;
 
-    const output = generate(ast, { retainLines: true }, sourceCode);
+       const filesToModify = [
+         path.join(basePath, "routes", "index.js"),
+         path.join(basePath, "models", "index.js"),
+       ];
 
-    // Guardar el código antes de formatear
-    fs.writeFileSync(filePath, output.code);
+       for (const filePath of filesToModify) {
+         const sourceCode = fs.readFileSync(filePath, "utf-8");
 
-    // Formatear con Biome (requiere que esté en node_modules/.bin o accesible desde bun)
-    process.env.PATH = `${process.cwd()}/node_modules/.bin:${process.env.PATH}`;
-    execSync(`biome format ${filePath} --write`, { stdio: "inherit" });
+         const ast = parser.parse(sourceCode, {
+           sourceType: "module",
+           plugins: ["jsx", "typescript"],
+         });
 
+         let modified = false;
+
+         traverse(ast, {
+           VariableDeclaration(path) {
+             const declarationCode = generate(path.node).code;
+
+             // Eliminar importación de modelo
+             if (filePath.includes("models/index.js")) {
+               if (declarationCode.includes(`require("./${capitalized}")`)) {
+                 path.remove();
+                 modified = true;
+               }
+             }
+
+             // Eliminar importación de rutas
+             if (filePath.includes("routes/index.js")) {
+               if (declarationCode.includes(`require('./${lower}Routes')`)) {
+                 path.remove();
+                 modified = true;
+               }
+             }
+           },
+
+           ExpressionStatement(path) {
+             const code = generate(path.node).code;
+
+             // Eliminar router.use(...) que contenga el nombre de las rutas
+             if (filePath.includes("routes/index.js")) {
+               if (code.includes(`router.use(${routeImportName})`)) {
+                 path.remove();
+                 modified = true;
+               }
+             }
+           },
+
+           ObjectExpression(path) {
+             // Eliminar propiedad exportada (como Task,) del export de models
+             if (filePath.includes("models/index.js")) {
+               path.node.properties = path.node.properties.filter((prop) => {
+                 if (
+                   prop.type === "ObjectProperty" &&
+                   prop.key.name === modelImportName
+                 ) {
+                   modified = true;
+                   return false;
+                 }
+                 return true;
+               });
+             }
+           },
+         });
+
+         if (modified) {
+           const output = generate(ast, { retainLines: true }, sourceCode);
+           fs.writeFileSync(filePath, output.code);
+           execSync(`biome format ${filePath} --write`, { stdio: "inherit" });
+           console.log(`✅ ${filePath} modificado y formateado.`);
+         } else {
+           console.log(`ℹ️ No se hicieron cambios en ${filePath}`);
+         }
+       }
+     }
     console.log("✅ Code successfully modified and formatted.");
   } catch (err) {
     console.error("❌ Unexpected error:", err.message);
