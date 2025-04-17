@@ -36,8 +36,10 @@
         <file alias="modelsIndex">inja_templates/backend/modelsIndex.inja</file>
         <file alias="routes">inja_templates/backend/routes.inja</file>
         <file alias="routesIndex">inja_templates/backend/routesIndex.inja</file>
+        <file alias="env">inja_templates/backend/env.inja</file>
     </qresource>
     <qresource prefix="/project_templates">
+        <file alias="runEditor">project_templates/runEditor.js</file>
         <file alias="backend">project_templates/backend_template.zip</file>
         <file alias="frontend">project_templates/frontend_template.zip</file>
     </qresource>

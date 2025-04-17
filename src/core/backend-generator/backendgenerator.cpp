@@ -243,10 +243,10 @@ bool BackendGenerator::updateBackendCode()
         }
     }
 
-    // if (!updateSchema()) {
-    //     qDebug() << "Error on Updating Schema";
-    //     return false;
-    // }
+    if (!updateSchema()) {
+        qDebug() << "Error on Updating Schema";
+        return false;
+    }
 
     this->oldTransactions = this->transactions;
     return true;
@@ -305,7 +305,6 @@ void BackendGenerator::applyInsertion(Transaction &transaction)
     // Generar modelos y servicios para el frontend
     generateFrontendModel(transaction);
     generateFrontendService(transaction);
-    generateIndexFiles();
     // Editor.js
     QString backendPath = QDir(QString::fromStdString(projectPath)).filePath("backend");
     std::vector<std::string> args = {backendPath.toStdString(), "insert", transaction.getName()};
@@ -490,15 +489,6 @@ void BackendGenerator::generateController(const Transaction &transaction)
     std::string templatePath = ":/inja/backend/controllers";
     std::string outputPath = projectPath + "/backend/controllers/" + transaction.getNameConst()
                              + "Controller.js";
-
-    // Crear un JSON con todas las transacciones
-    nlohmann::json allTransactionsData = nlohmann::json::array();
-    for (const auto &otherTransaction : transactions) {
-        nlohmann::json transactionJson;
-        transactionJson["name"] = otherTransaction.getName();
-        transactionJson["nameConst"] = otherTransaction.getNameConst();
-        allTransactionsData.push_back(transactionJson);
-    }
     generateFile(transaction, templatePath, outputPath);
 }
 
@@ -515,67 +505,6 @@ void BackendGenerator::generateRoute(const Transaction &transaction)
     std::string outputPath = projectPath + "/backend/routes/" + transaction.getNameConst()
                              + "Routes.js";
     generateFile(transaction, templatePath, outputPath);
-}
-
-void BackendGenerator::generateIndexFiles()
-{
-    inja::Environment env;
-
-    // Crear un JSON para almacenar los nombres de las transacciones
-    nlohmann::json transactionsNames = nlohmann::json::array();
-    for (const auto &transaction : transactions) {
-        nlohmann::json name;
-        name["name"] = transaction.getName();
-        name["nameConst"] = transaction.getNameConst();
-        transactionsNames.push_back(name); // Añadir cada nombre de transacción al array
-    }
-
-    // Crear el contexto de datos para inja
-    nlohmann::json context;
-    context["transactions"] = transactionsNames; // Añadir transacciones al contexto
-
-    // Ruta al template de modelsIndex
-    QString modelsIndexTemplatePath = ":/inja/backend/modelsIndex";
-    QFile modelsIndexFile(modelsIndexTemplatePath);
-    if (!modelsIndexFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        fmt::print(stderr,
-                   "Unable to open template file from resource: {}\n",
-                   modelsIndexTemplatePath.toStdString());
-        return;
-    }
-
-    QTextStream modelsIndexStream(&modelsIndexFile);
-    QString modelsIndexTemplateContent = modelsIndexStream.readAll();
-    modelsIndexFile.close();
-
-    // Añadir credenciales a `context` para usar en el template de rutas
-    nlohmann::json credentials = {{"dbname", databaseData.getDatabaseName()},
-                                  {"user", databaseData.getUser()},
-                                  {"password", databaseData.getPassword()},
-                                  {"host", databaseData.getServer()}};
-    context["credentials"] = credentials;
-
-    // Renderizar el template de modelsIndex con el contexto
-    std::string modelsIndexResult = env.render(modelsIndexTemplateContent.toStdString(), context);
-    writeFile(projectPath + "/backend/models/index.js", modelsIndexResult);
-
-    // Ruta al template de routesIndex
-    QString routesIndexTemplatePath = ":/inja/backend/routesIndex";
-    QFile routesIndexFile(routesIndexTemplatePath);
-    if (!routesIndexFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        fmt::print(stderr,
-                   "Unable to open template file from resource: {}\n",
-                   routesIndexTemplatePath.toStdString());
-        return;
-    }
-
-    QTextStream routesIndexStream(&routesIndexFile);
-    QString routesIndexTemplateContent = routesIndexStream.readAll();
-    routesIndexFile.close();
-
-    // Renderizar el template de routesIndex con el contexto
-    std::string routesIndexResult = env.render(routesIndexTemplateContent.toStdString(), context);
-    writeFile(projectPath + "/backend/routes/index.js", routesIndexResult);
 }
 
 void BackendGenerator::generateFrontendModel(const Transaction &transaction)

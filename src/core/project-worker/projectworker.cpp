@@ -17,8 +17,10 @@ void ProjectWorker::process()
     projectManager.createProject(newProject);
 
     CodeGenerator codeGenerator(newProject);
-    codeGenerator.createBaseBackendProject();
-    codeGenerator.createBaseFrontendProject();
+    if (codeGenerator.createRunEditor()) {
+        codeGenerator.createBaseBackendProject();
+        codeGenerator.createBaseFrontendProject();
+    }
 
     // Inicializar repositorio Git si versions está habilitado
     if (newProject.getVersions()) {

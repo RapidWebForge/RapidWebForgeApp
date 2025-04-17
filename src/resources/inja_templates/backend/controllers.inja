@@ -8,10 +8,6 @@ exports.create{{ name }} = async (req, res) => {
   try {
     const { {% for field in fields %} {{ field.name }} {% if loop.is_last %}{% else %},{% endif %} {% endfor %} } = req.body;
 
-    const {{ nameConst }} = await {{ name }}.create(
-      { {% for field in fields %} {{ field.name }} {% if loop.is_last %} {% else %}, {% endif %} {% endfor %} },
-    );
-
     {% for field in fields %}
     {% if field.isForeignKey %}
     // Verificar si la transacción relacionada {{ field.foreignKeyTable }} existe
