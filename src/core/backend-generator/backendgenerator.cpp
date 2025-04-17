@@ -93,6 +93,8 @@ void BackendGenerator::writeFile(const std::string &filePath, const std::string 
 // Parse the JSON file and convert it to a vector of transactions and fields
 void BackendGenerator::parseJson(const nlohmann::json &jsonSchema)
 {
+    this->transactions.clear();
+
     for (const auto &transactionJson : jsonSchema["transactions"]) {
         Transaction transaction;
         transaction.setName(transactionJson["name"].get<std::string>());
@@ -216,19 +218,6 @@ bool BackendGenerator::updateSchema()
     return true;
 }
 
-// Generate the backend code using Inja templates
-bool BackendGenerator::generateBackendCode()
-{
-    for (const auto &transaction : transactions) {
-        generateController(transaction);
-        generateModel(transaction);
-        generateRoute(transaction);
-        generateIndexFiles();
-    }
-
-    return true;
-}
-
 // Regenerate backend with new information
 bool BackendGenerator::updateBackendCode()
 {
@@ -253,16 +242,6 @@ bool BackendGenerator::updateBackendCode()
             break;
         }
     }
-
-    // if (!generateBackendCode()) {
-    //     return false;
-    // }
-
-    // Generar modelos y servicios para el frontend
-    // if (!generateFrontendModels() || !generateFrontendServices()) {
-    //     fmt::print(stderr, "Error generating frontend code.\n");
-    //     return false;
-    // }
 
     // if (!updateSchema()) {
     //     qDebug() << "Error on Updating Schema";
@@ -317,7 +296,23 @@ void BackendGenerator::runEditorScript(const std::vector<std::string> args)
     c.wait();
 }
 
-void BackendGenerator::applyInsertion(Transaction &transaction) {}
+void BackendGenerator::applyInsertion(Transaction &transaction)
+{
+    // Generar controlador, modelo y ruta para el backend
+    generateController(transaction);
+    generateModel(transaction);
+    generateRoute(transaction);
+    // Generar modelos y servicios para el frontend
+    generateFrontendModel(transaction);
+    generateFrontendService(transaction);
+    generateIndexFiles();
+    // Editor.js
+    QString backendPath = QDir(QString::fromStdString(projectPath)).filePath("backend");
+    std::vector<std::string> args = {backendPath.toStdString(), "insert", transaction.getName()};
+
+    // Run script
+    runEditorScript(args);
+}
 
 void BackendGenerator::applyModification(Transaction &transaction) {}
 
@@ -583,7 +578,7 @@ void BackendGenerator::generateIndexFiles()
     writeFile(projectPath + "/backend/routes/index.js", routesIndexResult);
 }
 
-bool BackendGenerator::generateFrontendModels()
+void BackendGenerator::generateFrontendModel(const Transaction &transaction)
 {
     inja::Environment env;
 
@@ -603,7 +598,7 @@ bool BackendGenerator::generateFrontendModels()
         fmt::print(stderr,
                    "Unable to open model template file from resource: {}\n",
                    modelTemplatePath);
-        return false;
+        return;
     }
 
     QTextStream in(&file);
@@ -611,37 +606,28 @@ bool BackendGenerator::generateFrontendModels()
     file.close();
     std::string templateString = templateContent.toStdString();
 
-    // Iterar sobre las transacciones para generar modelos
-    for (const auto &transaction : transactions) {
-        nlohmann::json data;
-        data["model_name"] = transaction.getName();
-        data["fields"] = nlohmann::json::array();
+    nlohmann::json data;
+    data["model_name"] = transaction.getName();
+    data["fields"] = nlohmann::json::array();
 
-        for (const auto &field : transaction.getFields()) {
-            nlohmann::json fieldJson;
-            fieldJson["name"] = field.getName();
-            fieldJson["type"] = field.getType();
-            data["fields"].push_back(fieldJson);
-        }
-
-        // Crear el archivo de modelo en el frontend
-        std::string outputPath = projectPath + "/frontend/src/models/" + transaction.getName()
-                                 + ".ts";
-        try {
-            std::string result = env.render(templateString, data);
-            writeFile(outputPath, result);
-        } catch (const std::exception &e) {
-            fmt::print(stderr,
-                       "Error generating model for {}: {}\n",
-                       transaction.getName(),
-                       e.what());
-            return false;
-        }
+    for (const auto &field : transaction.getFields()) {
+        nlohmann::json fieldJson;
+        fieldJson["name"] = field.getName();
+        fieldJson["type"] = field.getType();
+        data["fields"].push_back(fieldJson);
     }
-    return true;
+
+    // Crear el archivo de modelo en el frontend
+    std::string outputPath = projectPath + "/frontend/src/models/" + transaction.getName() + ".ts";
+    try {
+        std::string result = env.render(templateString, data);
+        writeFile(outputPath, result);
+    } catch (const std::exception &e) {
+        fmt::print(stderr, "Error generating model for {}: {}\n", transaction.getName(), e.what());
+    }
 }
 
-bool BackendGenerator::generateFrontendServices()
+void BackendGenerator::generateFrontendService(const Transaction &transaction)
 {
     inja::Environment env;
     std::string serviceTemplatePath = ":/inja/frontend/service";
@@ -652,7 +638,7 @@ bool BackendGenerator::generateFrontendServices()
         fmt::print(stderr,
                    "Unable to open service template file from resource: {}\n",
                    serviceTemplatePath);
-        return false;
+        return;
     }
 
     QTextStream in(&file);
@@ -660,27 +646,19 @@ bool BackendGenerator::generateFrontendServices()
     file.close();
     std::string templateString = templateContent.toStdString();
 
-    // Iterar sobre las transacciones para generar servicios
-    for (const auto &transaction : transactions) {
-        nlohmann::json data;
-        data["model_name"] = transaction.getName();
-        data["model_name_lower"] = transaction.getNameConst(); // Nombre en minúsculas
+    nlohmann::json data;
+    data["model_name"] = transaction.getName();
+    data["model_name_lower"] = transaction.getNameConst(); // Nombre en minúsculas
 
-        // Crear el archivo de servicio en el frontend
-        std::string outputPath = projectPath + "/frontend/src/services/" + transaction.getName()
-                                 + "Service.ts";
-        try {
-            std::string result = env.render(templateString, data);
-            writeFile(outputPath, result);
-        } catch (const std::exception &e) {
-            fmt::print(stderr,
-                       "Error generating service for {}: {}\n",
-                       transaction.getName(),
-                       e.what());
-            return false;
-        }
+    // Crear el archivo de servicio en el frontend
+    std::string outputPath = projectPath + "/frontend/src/services/" + transaction.getName()
+                             + "Service.ts";
+    try {
+        std::string result = env.render(templateString, data);
+        writeFile(outputPath, result);
+    } catch (const std::exception &e) {
+        fmt::print(stderr, "Error generating service for {}: {}\n", transaction.getName(), e.what());
     }
-    return true;
 }
 
 // Getter
@@ -741,8 +719,8 @@ bool BackendGenerator::updateTransactionName(const std::string &currentName,
         return false;
     }
 
-    jsonFile << jsonSchema.dump(
-        2); // Guardar con una indentación de 2 espacios para mejor legibilidad
+    jsonFile << jsonSchema.dump(2);
+    // Guardar con una indentación de 2 espacios para mejor legibilidad
     jsonFile.close();
 
     fmt::print("Transaction updated successfully: name={}, nameConst={}\n", newName, newNameConst);

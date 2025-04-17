@@ -187,12 +187,15 @@ void StepperDashboard::showEvent(QShowEvent *event)
         if (codeGenerator->backendGenerator.loadSchema()) {
             // QMessageBox::information(this, "Successful", "Information loaded");
             backendOk = true;
-
-            emit backendSchemaLoaded();
         } else {
             qDebug() << "There is no backend content";
             // QMessageBox::warning(this, "Warning", "There is no information, add data");
         }
+        // A diferencia de frontend que siempre se tendra una ruta base (Home)
+        // el backend puede tener 0 transactions, lo que genera que si no se referencia
+        // el vector de Transaction, se tenga un nullptr
+        emit backendSchemaLoaded();
+
         // Frontend
         if (codeGenerator->frontendGenerator.loadSchema()) {
             // QMessageBox::information(this, "Successful", "Views loaded");

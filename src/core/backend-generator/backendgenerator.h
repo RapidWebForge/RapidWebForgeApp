@@ -14,7 +14,6 @@ class BackendGenerator
 public:
     BackendGenerator(const std::string &projectPath, const DatabaseData &databaseData);
     bool loadSchema();
-    bool generateBackendCode();
     bool updateSchema();
     bool updateBackendCode();
     // Getters
@@ -48,8 +47,8 @@ private:
     void generateModel(const Transaction &transaction);
     void generateRoute(const Transaction &transaction);
     void generateIndexFiles();
-    bool generateFrontendModels();
-    bool generateFrontendServices();
+    void generateFrontendModel(const Transaction &transaction);
+    void generateFrontendService(const Transaction &transaction);
     void writeFile(const std::string &filePath, const std::string &content);
     void parseJson(const nlohmann::json &jsonSchema);
     // Funciones Auxiliares para modificaciones
