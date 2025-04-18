@@ -20,9 +20,6 @@ public:
     std::vector<Transaction> *getTransactions();
     // Setters
     void setTransactions(const std::vector<Transaction> &transactions);
-    bool updateTransactionName(const std::string &currentName,
-                               const std::string &newName,
-                               const std::string &newNameConst);
 
     // Prevent changes
     bool isProgressSaved();
@@ -33,12 +30,6 @@ private:
     std::string projectPath;
     DatabaseData databaseData;
 
-    void generateFileAll(
-        const Transaction &transaction,
-        const std::string &templatePath,
-        const std::string &outputPath,
-        bool includeFields,
-        const nlohmann::json &allTransactions = nlohmann::json::array()); // Valor por defecto
     void generateFile(const Transaction &transaction,
                       const std::string &templatePath,
                       const std::string &outputPath,

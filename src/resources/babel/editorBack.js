@@ -14,7 +14,160 @@ const [, , basePath, operation, transactionName] = process.argv;
     let modified = false;
 
     if (operation === "modify") {
-      //modify
+      // Obtenemos la ruta absoluta
+      const payloadPath = path.isAbsolute(transactionName)
+        ? transactionName
+        : path.resolve(process.cwd(), transactionName);
+      const payload = JSON.parse(fs.readFileSync(payloadPath, "utf-8"));
+      const modelName = payload.name;
+      const lowerModelName =
+        modelName.charAt(0).toLowerCase() + modelName.slice(1);
+      const fields = payload.fields;
+
+      const filesToModify = [
+        path.join(
+          basePath,
+          "backend",
+          "controllers",
+          modelName + "Controller.js",
+        ),
+        path.join(basePath, "backend", "models", modelName + ".js"),
+        path.join(
+          basePath,
+          "frontend",
+          "src",
+          "models",
+          lowerModelName + ".ts",
+        ),
+      ];
+
+      for (const filePath of filesToModify) {
+        const source = fs.readFileSync(filePath, "utf-8");
+        let fileModified = false;
+        let errorMessage = "",
+          successMessage = "";
+
+        if (filePath.includes("models") && filePath.includes("backend")) {
+          const ast = parser.parse(source, {
+            sourceType: "module",
+            plugins: ["jsx", "javascript"],
+          });
+
+          traverse(ast, {
+            CallExpression(path) {
+              // Detectar sequelize.define("Tasks", ATTRS, OPTIONS)
+              if (
+                t.isMemberExpression(path.node.callee) &&
+                t.isIdentifier(path.node.callee.object, {
+                  name: "sequelize",
+                }) &&
+                t.isIdentifier(path.node.callee.property, { name: "define" }) &&
+                path.node.arguments.length >= 2 &&
+                t.isStringLiteral(path.node.arguments[0], { value: modelName })
+              ) {
+                // 1. Construir las propiedades de atributos desde payload.fields
+                const attrProps = fields.map((field) => {
+                  const props = [];
+
+                  // type: DataTypes.<TYPE>
+                  props.push(
+                    t.objectProperty(
+                      t.identifier("type"),
+                      t.memberExpression(
+                        t.identifier("DataTypes"),
+                        t.identifier(field.type),
+                      ),
+                    ),
+                  );
+
+                  // allowNull: <boolean invertido de isNull>
+                  props.push(
+                    t.objectProperty(
+                      t.identifier("allowNull"),
+                      t.booleanLiteral(field.isNull),
+                    ),
+                  );
+
+                  // defaultValue: false si no hay default
+                  if (field.hasDefault === false) {
+                    props.push(
+                      t.objectProperty(
+                        t.identifier("defaultValue"),
+                        t.booleanLiteral(false),
+                      ),
+                    );
+                  }
+
+                  return t.objectProperty(
+                    t.identifier(field.name),
+                    t.objectExpression(props),
+                  );
+                });
+
+                // 2. Reemplazar el objeto de atributos completo
+                path.node.arguments[1] = t.objectExpression(attrProps);
+
+                fileModified = true;
+                path.stop();
+              }
+            },
+          });
+
+          successMessage = `✅ ${filePath} actualizado con nuevos campos.`;
+          errorMessage = `i No se modificó ${filePath}: no se encontró sequelize.define("${modelName}")`;
+        }
+        if (filePath.includes("models") && filePath.includes("frontend")) {
+          // Leer y parsear el archivo TS
+          const ast = parser.parse(source, {
+            sourceType: "module",
+            plugins: ["typescript", "jsx"],
+          });
+
+          traverse(ast, {
+            TSInterfaceDeclaration(path) {
+              // Solo nos interesa la interfaz Tasks (payload.name)
+              if (path.node.id.name === modelName) {
+                // Reconstruir los miembros de la interfaz con payload.fields
+                const members = payload.fields.map((field) => {
+                  // Mapear el tipo de Sequelize a TS
+                  let tsTypeNode;
+                  switch (field.type) {
+                    case "STRING":
+                      tsTypeNode = t.tsStringKeyword();
+                      break;
+                    case "BOOLEAN":
+                      tsTypeNode = t.tsBooleanKeyword();
+                      break;
+                    default:
+                      tsTypeNode = t.tsAnyKeyword();
+                  }
+                  return t.tsPropertySignature(
+                    t.identifier(field.name),
+                    t.tsTypeAnnotation(tsTypeNode),
+                  );
+                });
+
+                // Reemplazar el array de miembros
+                path.node.body.body = members;
+                fileModified = true;
+                path.stop();
+              }
+            },
+          });
+
+          successMessage = `✅ Interfaz actualizada en ${filePath}`;
+          errorMessage = `i No se encontró la interfaz ${modelName} en ${filePath}`;
+        }
+
+        if (fileModified) {
+          const output = generate(ast, { retainLines: true }, source);
+          fs.writeFileSync(filePath, output.code);
+          execSync(`biome format ${filePath} --write`, { stdio: "inherit" });
+          console.log(successMessage);
+        } else {
+          console.log(errorMessage);
+        }
+      }
     }
     if ((operation === "insert" || operation === "delete") && transactionName) {
       const capitalized =
@@ -244,7 +397,7 @@ const [, , basePath, operation, transactionName] = process.argv;
           execSync(`biome format ${filePath} --write`, { stdio: "inherit" });
           console.log(`✅ ${filePath} actualizado.`);
         } else {
-          console.log(`ℹ️ No se hicieron cambios en ${filePath}`);
+          console.log(`i No se hicieron cambios en ${filePath}`);
         }
       }
     }
