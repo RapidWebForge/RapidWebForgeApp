@@ -25,13 +25,13 @@ const [, , basePath, operation, transactionName] = process.argv;
       const fields = payload.fields;
 
       const filesToModify = [
+        path.join(basePath, "backend", "models", modelName + ".js"),
         path.join(
           basePath,
           "backend",
           "controllers",
           modelName + "Controller.js",
         ),
-        path.join(basePath, "backend", "models", modelName + ".js"),
         path.join(
           basePath,
           "frontend",
@@ -39,6 +39,7 @@ const [, , basePath, operation, transactionName] = process.argv;
           "models",
           lowerModelName + ".ts",
         ),
+        path.join(basePath, "backend", "routes", lowerModelName + "Routes.js"),
       ];
 
       for (const filePath of filesToModify) {
@@ -46,9 +47,10 @@ const [, , basePath, operation, transactionName] = process.argv;
         let fileModified = false;
         let errorMessage = "",
           successMessage = "";
+        let ast;
 
         if (filePath.includes("models") && filePath.includes("backend")) {
-          const ast = parser.parse(source, {
+          ast = parser.parse(source, {
             sourceType: "module",
             plugins: ["jsx", "javascript"],
           });
@@ -80,22 +82,52 @@ const [, , basePath, operation, transactionName] = process.argv;
                     ),
                   );
 
-                  // allowNull: <boolean invertido de isNull>
-                  props.push(
-                    t.objectProperty(
-                      t.identifier("allowNull"),
-                      t.booleanLiteral(field.isNull),
-                    ),
-                  );
-
-                  // defaultValue: false si no hay default
-                  if (field.hasDefault === false) {
+                  if (field.isForeignKey) {
+                    // si es foreignKey, injectar references: { model: 'tabla', key: 'id' }
+                    const foreignKeyTableLower =
+                      field.foreignKeyTable.charAt(0).toLowerCase() +
+                      field.foreignKeyTable.slice(1);
                     props.push(
                       t.objectProperty(
-                        t.identifier("defaultValue"),
-                        t.booleanLiteral(false),
+                        t.identifier("references"),
+                        t.objectExpression([
+                          t.objectProperty(
+                            t.identifier("model"),
+                            t.stringLiteral(foreignKeyTableLower),
+                          ),
+                          t.objectProperty(
+                            t.identifier("key"),
+                            t.stringLiteral("id"),
+                          ),
+                        ]),
                       ),
                     );
+                  } else {
+                    // allowNull: <boolean invertido de isNull>
+                    if (field.isNull)
+                      props.push(
+                        t.objectProperty(
+                          t.identifier("allowNull"),
+                          t.booleanLiteral(field.isNull),
+                        ),
+                      );
+
+                    if (field.isUnique)
+                      props.push(
+                        t.objectProperty(
+                          t.identifier("unique"),
+                          t.booleanLiteral(field.isUnique),
+                        ),
+                      );
+
+                    // NOT SUPPORTED YET
+                    /* if (field.hasDefault)
+                      props.push(
+                        t.objectProperty(
+                          t.identifier("defaultValue"),
+                          t.booleanLiteral(field.hasDefault),
+                        ),
+                      ); */
                   }
 
                   return t.objectProperty(
@@ -106,19 +138,39 @@ const [, , basePath, operation, transactionName] = process.argv;
 
                 // 2. Reemplazar el objeto de atributos completo
                 path.node.arguments[1] = t.objectExpression(attrProps);
+              }
+            },
+            ReturnStatement(path) {
+              // Detectar `return <ModelName>;`
+              if (t.isIdentifier(path.node.argument, { name: modelName })) {
+                // Para cada campo marcado como isForeignKey, generar el bloque de associate
+                payload.fields
+                  .filter((field) => field.isForeignKey)
+                  .forEach((field) => {
+                    const assocNode = template.statement.ast(`
+                    ${modelName}.associate = (models) => {
+                      ${modelName}.belongsTo(models.${field.foreignKeyTable}, {
+                        foreignKey: '${field.name}', // LLave foránea
+                        onDelete: 'SET NULL',
+                        onUpdate: 'CASCADE',
+                      });
+                    };
+                  `);
+                    path.insertBefore(assocNode);
+                  });
 
-                fileModified = true;
-                path.stop();
+                path.stop(); // no insertar más veces
               }
             },
           });
 
+          fileModified = true;
           successMessage = `✅ ${filePath} actualizado con nuevos campos.`;
           errorMessage = `i No se modificó ${filePath}: no se encontró sequelize.define("${modelName}")`;
         }
         if (filePath.includes("models") && filePath.includes("frontend")) {
           // Leer y parsear el archivo TS
-          const ast = parser.parse(source, {
+          ast = parser.parse(source, {
             sourceType: "module",
             plugins: ["typescript", "jsx"],
           });
@@ -157,6 +209,301 @@ const [, , basePath, operation, transactionName] = process.argv;
 
           successMessage = `✅ Interfaz actualizada en ${filePath}`;
           errorMessage = `i No se encontró la interfaz ${modelName} en ${filePath}`;
+        }
+        if (filePath.includes("controllers")) {
+          ast = parser.parse(source, {
+            sourceType: "module",
+            plugins: ["jsx", "javascript"],
+          });
+
+          // 0) Eliminar asignaciones antiguas: lowerModelName.<field> = <field>;
+          traverse(ast, {
+            ExpressionStatement(path) {
+              const expr = path.node.expression;
+              if (
+                t.isAssignmentExpression(expr) &&
+                t.isMemberExpression(expr.left) &&
+                t.isIdentifier(expr.left.object, { name: lowerModelName }) &&
+                payload.fields.some((f) => expr.left.property.name === f.name)
+              ) {
+                path.remove();
+                fileModified = true;
+              }
+            },
+          });
+
+          traverse(ast, {
+            // 1) Actualizar `const { … } = req.body;`
+            VariableDeclarator(path) {
+              if (
+                t.isObjectPattern(path.node.id) &&
+                t.isCallExpression(path.node.init) &&
+                t.isIdentifier(path.node.init.callee, { name: "require" }) &&
+                path.node.init.arguments.length === 1 &&
+                t.isStringLiteral(path.node.init.arguments[0], {
+                  value: "../models",
+                })
+              ) {
+                const props = path.node.id.properties;
+
+                // Asegurar el modelo principal
+                if (!props.some((p) => p.key.name === modelName)) {
+                  props.push(
+                    t.objectProperty(
+                      t.identifier(modelName),
+                      t.identifier(modelName),
+                      false,
+                      true,
+                    ),
+                  );
+                }
+
+                // Agregar cada tabla foránea
+                payload.fields
+                  .filter((f) => f.isForeignKey)
+                  .forEach((field) => {
+                    const fk = field.foreignKeyTable;
+                    if (!props.some((p) => p.key.name === fk)) {
+                      props.push(
+                        t.objectProperty(
+                          t.identifier(fk),
+                          t.identifier(fk),
+                          false,
+                          true,
+                        ),
+                      );
+                      fileModified = true;
+                    }
+                  });
+              }
+
+              if (
+                t.isObjectPattern(path.node.id) &&
+                t.isMemberExpression(path.node.init) &&
+                t.isIdentifier(path.node.init.object, { name: "req" }) &&
+                t.isIdentifier(path.node.init.property, { name: "body" })
+              ) {
+                path.node.id.properties = payload.fields.map((f) =>
+                  t.objectProperty(
+                    t.identifier(f.name),
+                    t.identifier(f.name),
+                    false,
+                    true,
+                  ),
+                );
+              }
+            },
+
+            // 2) Reemplazar el argumento de `.create({ … })`
+            CallExpression(path) {
+              const callee = path.node.callee;
+              if (
+                t.isMemberExpression(callee) &&
+                t.isIdentifier(callee.object, { name: modelName }) &&
+                t.isIdentifier(callee.property, { name: "create" })
+              ) {
+                path.node.arguments = [
+                  t.objectExpression(
+                    payload.fields.map((f) =>
+                      t.objectProperty(
+                        t.identifier(f.name),
+                        t.identifier(f.name),
+                        false,
+                        true,
+                      ),
+                    ),
+                  ),
+                ];
+              }
+            },
+
+            // 3) Ajustar las asignaciones en update: lowerModelName.<field> = <field>;
+            ExpressionStatement(path) {
+              // Detectamos la llamada `await lowerModelName.save()`
+              if (
+                t.isAwaitExpression(path.node.expression) &&
+                t.isCallExpression(path.node.expression.argument) &&
+                t.isMemberExpression(path.node.expression.argument.callee) &&
+                t.isIdentifier(path.node.expression.argument.callee.object, {
+                  name: lowerModelName,
+                }) &&
+                t.isIdentifier(path.node.expression.argument.callee.property, {
+                  name: "save",
+                })
+              ) {
+                // Por cada campo del payload, creamos y metemos la asignación
+                payload.fields.forEach((field) => {
+                  const assign = t.expressionStatement(
+                    t.assignmentExpression(
+                      "=",
+                      t.memberExpression(
+                        t.identifier(lowerModelName),
+                        t.identifier(field.name),
+                      ),
+                      t.identifier(field.name),
+                    ),
+                  );
+                  path.insertBefore(assign);
+                });
+                fileModified = true;
+              }
+            },
+
+            AssignmentExpression(path) {
+              const isCreate =
+                t.isMemberExpression(path.node.left) &&
+                t.isIdentifier(path.node.left.object, { name: "exports" }) &&
+                t.isIdentifier(path.node.left.property, {
+                  name: `create${modelName}`,
+                });
+
+              const isDelete =
+                t.isMemberExpression(path.node.left) &&
+                t.isIdentifier(path.node.left.object, { name: "exports" }) &&
+                t.isIdentifier(path.node.left.property, {
+                  name: `delete${modelName}ById`,
+                });
+
+              // 4) FK checks in create<Model>
+              if (isCreate) {
+                const fn = path.node.right;
+                if (
+                  t.isFunctionExpression(fn) ||
+                  t.isArrowFunctionExpression(fn)
+                ) {
+                  const tryStmt = fn.body.body.find((stmt) =>
+                    t.isTryStatement(stmt),
+                  );
+                  if (tryStmt) {
+                    const innerBody = tryStmt.block.body;
+                    const idx = innerBody.findIndex(
+                      (stmt) =>
+                        t.isVariableDeclaration(stmt) &&
+                        stmt.declarations.some(
+                          (d) =>
+                            t.isObjectPattern(d.id) &&
+                            t.isMemberExpression(d.init) &&
+                            t.isIdentifier(d.init.object, { name: "req" }) &&
+                            t.isIdentifier(d.init.property, { name: "body" }),
+                        ),
+                    );
+
+                    if (idx !== -1) {
+                      payload.fields
+                        .filter((f) => f.isForeignKey)
+                        .forEach((field) => {
+                          const fkLower =
+                            field.foreignKeyTable.charAt(0).toLowerCase() +
+                            field.foreignKeyTable.slice(1);
+
+                          const alreadyExists = innerBody.some(
+                            (stmt) =>
+                              t.isVariableDeclaration(stmt) &&
+                              generate(stmt).code.includes(
+                                `await ${field.foreignKeyTable}.findByPk`,
+                              ),
+                          );
+
+                          if (!alreadyExists) {
+                            const stmts = template.ast(`
+                              // Verificar si la transacción relacionada ${field.foreignKeyTable} existe
+                              const ${fkLower} = await ${field.foreignKeyTable}.findByPk(${field.name});
+                              if (!${fkLower}) {
+                                return res.status(404).json({ error: '${field.foreignKeyTable} not found' });
+                              }
+                            `);
+                            innerBody.splice(idx + 1, 0, ...stmts);
+                            fileModified = true;
+                          }
+                        });
+                    }
+                  }
+                }
+              }
+
+              // 5) Insertar export getAll<Model>For<ForeignTable>
+              if (isDelete) {
+                payload.fields
+                  .filter((f) => f.isForeignKey)
+                  .forEach((field) => {
+                    const funcName = `getAll${modelName}For${field.foreignKeyTable}`;
+                    const already = ast.program.body.some(
+                      (node) =>
+                        t.isExpressionStatement(node) &&
+                        generate(node).code.includes(`exports.${funcName}`),
+                    );
+                    if (!already) {
+                      const fkLower =
+                        field.foreignKeyTable.charAt(0).toLowerCase() +
+                        field.foreignKeyTable.slice(1);
+                      const stmt = template.statement.ast(`
+                        exports.${funcName} = async (req, res) => {
+                          try {
+                            const ${fkLower} = await ${field.foreignKeyTable}.findByPk(req.params.id, {
+                              include: [${modelName}]
+                            });
+                            if (${fkLower}) {
+                              res.json(${fkLower}.${modelName}s);
+                            } else {
+                              res.status(404).json({ error: '${field.foreignKeyTable} not found' });
+                            }
+                          } catch (error) {
+                            res.status(500).json({ error: error.message });
+                          }
+                        };
+                      `);
+                      path.parentPath.insertAfter(stmt);
+                      fileModified = true;
+                    }
+                  });
+
+                path.stop(); // Solo detener si era el bloque de delete
+              }
+            },
+          });
+
+          fileModified = true;
+          successMessage = `✅ ${filePath} actualizado con nuevos campos.`;
+          errorMessage = `i No se modificó ${filePath}`;
+        }
+        if (filePath.includes("routes")) {
+          ast = parser.parse(source, {
+            sourceType: "module",
+            plugins: ["jsx", "javascript"],
+          });
+
+          traverse(ast, {
+            AssignmentExpression(path) {
+              if (
+                t.isMemberExpression(path.node.left) &&
+                t.isIdentifier(path.node.left.object, { name: "module" }) &&
+                t.isIdentifier(path.node.left.property, { name: "exports" }) &&
+                t.isIdentifier(path.node.right, { name: "router" })
+              ) {
+                // Por cada campo FK, añadimos una ruta
+                payload.fields
+                  .filter((field) => field.isForeignKey)
+                  .forEach((field) => {
+                    const fkTableLower =
+                      field.foreignKeyTable.charAt(0).toLowerCase() +
+                      field.foreignKeyTable.slice(1);
+                    const routeStmt = template.statement.ast(`
+                    router.get(
+                      '/${fkTableLower}/:id/${lowerModelName}s',
+                      ${lowerModelName}Controller.getAll${modelName}For${field.foreignKeyTable}
+                    );
+                    `);
+                    path.insertBefore(routeStmt);
+                  });
+
+                path.stop(); // dejamos de buscar más
+              }
+            },
+          });
+
+          fileModified = true;
+          successMessage = `✅ ${filePath} actualizado con rutas para llaves foráneas.`;
+          errorMessage = `i No se modificó ${filePath}`;
         }
 
         if (fileModified) {
