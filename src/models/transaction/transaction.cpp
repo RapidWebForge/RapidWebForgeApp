@@ -76,18 +76,13 @@ bool Transaction::isDifferentFrom(const Transaction &other) const
         return true;
 
     for (const auto &fieldA : this->getFields()) {
-        bool foundMatch = false;
         for (const auto &fieldB : other.getFields()) {
             if (fieldA.getName() == fieldB.getName()) {
-                foundMatch = true;
                 if (fieldA.isDifferentFrom(fieldB)) {
                     return true;
                 }
-                break;
             }
         }
-        if (!foundMatch)
-            return true;
     }
 
     return false;

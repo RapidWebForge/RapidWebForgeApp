@@ -582,28 +582,28 @@ std::vector<TransactionOperation> BackendGenerator::diffVecs()
 {
     std::vector<TransactionOperation> ops;
 
-    for (const Transaction &newTx : transactions) {
-        auto it = std::find_if(oldTransactions.begin(),
-                               oldTransactions.end(),
+    for (const Transaction &newTx : this->transactions) {
+        auto it = std::find_if(this->oldTransactions.begin(),
+                               this->oldTransactions.end(),
                                [&](const Transaction &existingTx) {
                                    return existingTx.getName() == newTx.getName();
                                });
 
-        if (it == oldTransactions.end()) {
+        if (it == this->oldTransactions.end()) {
             ops.emplace_back(OperationType::Insert, newTx);
         } else if (newTx.isDifferentFrom(*it)) {
             ops.emplace_back(OperationType::Modify, newTx);
         }
     }
 
-    for (const Transaction &oldTx : oldTransactions) {
+    for (const Transaction &oldTx : this->oldTransactions) {
         auto it = std::find_if(transactions.begin(),
                                transactions.end(),
                                [&](const Transaction &newTx) {
                                    return newTx.getName() == oldTx.getName();
                                });
 
-        if (it == transactions.end()) {
+        if (it == this->transactions.end()) {
             ops.emplace_back(OperationType::Delete, oldTx);
         }
     }

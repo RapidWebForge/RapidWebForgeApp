@@ -82,6 +82,7 @@ bool Field::isForeignKey() const
 {
     return foreignKey;
 }
+
 bool Field::getHasCheck() const
 {
     return hasCheck;
@@ -96,6 +97,7 @@ std::string Field::getForeignKeyTable() const
 {
     return foreignKeyTable;
 }
+
 std::string Field::getForeignKeyTableLower() const
 {
     return foreignKeyTableLower;
@@ -140,11 +142,13 @@ void Field::setHasDefault(bool value)
 {
     hasDefault = value;
 }
+
 void Field::setForeignKeyTable(const std::string &tableName)
 {
     foreignKeyTable = tableName;
-    foreignKey = !tableName.empty();
+    foreignKey = true;
 }
+
 void Field::setForeignKeyTableLower(const std::string &tableNameLower)
 {
     foreignKeyTableLower = tableNameLower;
@@ -152,9 +156,9 @@ void Field::setForeignKeyTableLower(const std::string &tableNameLower)
 
 const bool Field::isDifferentFrom(const Field &other) const
 {
-    return name == other.getName() && type == other.getType() && isNull == other.getIsNull()
-           && isUnique == other.getIsUnique() && primaryKey == other.isPrimaryKey()
-           && foreignKey == other.isForeignKey() && hasCheck == other.getHasCheck()
-           && hasDefault == other.getHasDefault() && foreignKeyTable == other.getForeignKeyTable()
-           && foreignKeyTableLower == other.getForeignKeyTableLower();
+    return !(name == other.getName() && type == other.getType() && isNull == other.getIsNull()
+             && isUnique == other.getIsUnique() && primaryKey == other.isPrimaryKey()
+             && foreignKey == other.isForeignKey() && hasCheck == other.getHasCheck()
+             && hasDefault == other.getHasDefault() && foreignKeyTable == other.getForeignKeyTable()
+             && foreignKeyTableLower == other.getForeignKeyTableLower());
 }
