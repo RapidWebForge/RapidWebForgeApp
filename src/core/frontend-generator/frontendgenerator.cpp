@@ -10,7 +10,6 @@
 #include "../../models/time-chrono/timechrono.h"
 #include "../../utils/file/fileutiils.h"
 #include "../../utils/render_callback/rendercallback.h"
-#include <boost/filesystem.hpp>
 #include <boost/process.hpp>
 #include <boost/uuid/string_generator.hpp>
 #include <boost/uuid/uuid_generators.hpp>
@@ -279,6 +278,8 @@ bool FrontendGenerator::loadSchema()
     }
 
     parseJson(jsonSchema); // JSON to AST
+    initializeCustomComponentsCache();
+
     return true;
 }
 
@@ -753,9 +754,6 @@ bool FrontendGenerator::updateFrontendCode()
         }
     }
 
-    // Actualizar archivos que dependen de cambios a nivel de Section (ej. App.tsx, etc.)
-    // updateDependentFiles();
-
     if (!updateSchema()) {
         qDebug() << "Error on Updating Schema";
         return false;
@@ -768,7 +766,7 @@ bool FrontendGenerator::updateFrontendCode()
 
 void FrontendGenerator::runEditorScript(const std::vector<std::string> args)
 {
-    QString resourcePath = ":/babel/editor";
+    QString resourcePath = ":/babel/editorFrontend";
     QFile resourceFile(resourcePath);
     if (!resourceFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
         fmt::print(stderr, "❌ Unable to open resource: {}\n", resourcePath.toStdString());
@@ -776,14 +774,14 @@ void FrontendGenerator::runEditorScript(const std::vector<std::string> args)
     }
 
     QString tempPath = QStandardPaths::writableLocation(QStandardPaths::TempLocation);
-    QString tempFilePath = tempPath + "/editor.js";
+    QString tempFilePath = tempPath + "/editorFront.js";
 
     QFile tempFile(tempFilePath);
     if (tempFile.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text)) {
         tempFile.write(resourceFile.readAll());
         tempFile.close();
     } else {
-        fmt::print(stderr, "❌ Unable to write temporary editor.js\n");
+        fmt::print(stderr, "❌ Unable to write temporary editorFront.js\n");
         return;
     }
 
@@ -900,14 +898,6 @@ void FrontendGenerator::applyModification(std::shared_ptr<BaseNode> &node)
     runEditorScript(args);
 }
 
-void deleteFile(const std::string &path)
-{
-    boost::filesystem::path filePath(path);
-    if (boost::filesystem::exists(filePath)) {
-        boost::filesystem::remove(filePath);
-    }
-}
-
 void FrontendGenerator::applyDeletion(std::shared_ptr<BaseNode> &node)
 {
     // Si la modificación es un section
@@ -916,13 +906,13 @@ void FrontendGenerator::applyDeletion(std::shared_ptr<BaseNode> &node)
         && (node->getParent()->getNodeType() == "Views"
             || node->getParent()->getNodeType() == "CustomComponents")) {
         std::string sectionName = std::dynamic_pointer_cast<Section>(node)->getName();
-        std::string filePath;
 
-        filePath = projectPath + "/frontend/src/"
-                   + (node->getParent()->getNodeType() == "Views" ? "views/" : "components/")
-                   + sectionName + ".tsx";
+        QString folder = node->getParent()->getNodeType() == "Views" ? "views/" : "components/";
+        QString filePath = QDir(QString::fromStdString(projectPath))
+                               .filePath("frontend/src/" + folder
+                                         + QString::fromStdString(sectionName) + ".tsx");
 
-        deleteFile(filePath);
+        FileUtils::deleteFile(filePath);
         applyRefactorForDeletedSection(sectionName,
                                        node->getParent()->getNodeType() == "Views"
                                            ? "View"
@@ -1095,7 +1085,14 @@ const std::shared_ptr<BaseNode> &FrontendGenerator::getFrontendRoot() const
 
 bool FrontendGenerator::isProgressSaved()
 {
-    std::vector<NodeOperation> operations = diffTrees(oldRoot, frontendRoot);
+    auto oldViews = getChildByType(oldRoot, "Views");
+    auto newViews = getChildByType(frontendRoot, "Views");
+    auto oldCustom = getChildByType(oldRoot, "CustomComponents");
+    auto newCustom = getChildByType(frontendRoot, "CustomComponents");
+
+    std::vector<NodeOperation> operations = diffTrees(oldViews, newViews);
+    auto customOps = diffTrees(oldCustom, newCustom);
+    operations.insert(operations.end(), customOps.begin(), customOps.end());
 
     if (operations.empty()) {
         qDebug() << "No changes detected.";

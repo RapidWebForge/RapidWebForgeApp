@@ -34,8 +34,8 @@
         void onAddProjectClicked();
         void onProjectPreviewClicked(const QString &tutorialPath, int projectId);
         void onDeleteProjectRequested(int projectId);
-        // 📌 Nuevo slot para manejar cuando se hace clic en un tutorial
-        void onTutorialClicked(const QString &tutorialPath, int projectId);
+        // Nuevo slot para manejar cuando se hace clic en un tutorial
+        void onTutorialClicked(const QString &tutorialPath);
 
     signals:
         void projectCreationRequested();

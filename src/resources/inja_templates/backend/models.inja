@@ -14,31 +14,25 @@ module.exports = (sequelize) => {
       allowNull: {{ field.isNull }},
       unique: {{ field.isUnique }}
       {% endif %}
-
     }{% if loop.is_last %}{% else %},{% endif %}
 
     {% endfor %}
   },{
   tableName: '{{ nameConst }}',
-  timestamps: true,});
-
+  timestamps: true,
+});
 
 {% for field in fields %}
 {% if field.isForeignKey %}
-// Definir la relación con el modelo `Person`
 {{ name }}.associate = (models) => {
-  // Una orden pertenece a una persona
   {{ name }}.belongsTo(models.{{ field.foreignKeyTable }}, {
-    foreignKey: '{{ field.name }}', // Clave foránea en la tabla `{{ name }}s`
-    onDelete: 'SET NULL', // Qué hacer al eliminar la persona (puedes ajustar esto)
+    foreignKey: '{{ field.name }}', // LLave foránea
+    onDelete: 'SET NULL', // Qué hacer al eliminar la tabla (puedes ajustar esto)
     onUpdate: 'CASCADE',
   });
 };
 {% endif %}
 {% endfor %}
 
-
-
-  // Retornar el modelo {{ name }}
   return {{ name }};
 }

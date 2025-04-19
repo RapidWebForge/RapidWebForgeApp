@@ -13,6 +13,7 @@ public:
     BackendGenerator backendGenerator;
     FrontendGenerator frontendGenerator;
 
+    bool createRunEditor();
     bool createBaseBackendProject();  // Create backend project
     bool createBaseFrontendProject(); // Create frontend project
 

@@ -30,7 +30,6 @@ endif()
 find_package(boost_algorithm REQUIRED CONFIG)
 find_package(boost_process REQUIRED CONFIG)
 find_package(boost_uuid REQUIRED CONFIG)
-find_package(boost_filesystem REQUIRED CONFIG)
 find_package(OpenSSL REQUIRED)
 find_package(fmt CONFIG REQUIRED)
 find_package(inja CONFIG REQUIRED)
@@ -162,6 +161,7 @@ set(PROJECT_SOURCES
         src/models/generic-node/genericnode.h
         src/models/generic-node/genericnode.cpp
         src/models/node-operation/nodeoperation.h
+        src/models/transaction-operation/transactionoperation.h
         # Utils
         src/utils/database/database.h
         src/utils/database/database.cpp
@@ -200,7 +200,6 @@ target_link_libraries(RapidWebForgeApp PRIVATE
     Boost::algorithm
     Boost::process
     Boost::uuid
-    Boost::filesystem
     OpenSSL::SSL
     fmt::fmt
     pantor::inja

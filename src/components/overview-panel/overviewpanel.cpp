@@ -102,12 +102,10 @@ void OverviewPanel::setupProjects(const std::vector<Project> &projects)
         layout->setAlignment(Qt::AlignCenter);
 
         QString tutorialPath = it.value();
-        int projectId
-            = 1; // Aquí puedes definir un ID de proyecto por defecto o seleccionar uno dinámicamente
 
         // Conectar el botón con la señal `openTutorial()`
-        connect(tutorialButton, &QPushButton::clicked, this, [this, tutorialPath, projectId]() {
-            onTutorialClicked(tutorialPath, projectId);
+        connect(tutorialButton, &QPushButton::clicked, this, [this, tutorialPath]() {
+            onTutorialClicked(tutorialPath);
         });
 
         tutorialLayout->addWidget(tutorialButton);
@@ -283,7 +281,7 @@ void OverviewPanel::onProjectPreviewClicked(const Project &project)
     });
 }
 
-void OverviewPanel::onTutorialClicked(const QString &tutorialPath, int projectId)
+void OverviewPanel::onTutorialClicked(const QString &tutorialPath)
 {
     // Buscar la ventana principal (ProjectsPanel) desde `TutorialsPanel`
     QWidget *projectsPanel = this;
@@ -296,10 +294,21 @@ void OverviewPanel::onTutorialClicked(const QString &tutorialPath, int projectId
 
     // Verificar si `projectId` es válido antes de proceder
     ProjectManager projectManager;
-    std::optional<Project> projectOpt = projectManager.getProjectById(projectId);
+    std::optional<Project> projectOpt = projectManager.getProjectByName("Tutorial");
 
     if (!projectOpt.has_value()) {
-        QMessageBox::critical(this, "Error", "Invalid project ID.");
+        QMessageBox msgBox;
+        msgBox.setIcon(QMessageBox::Critical);
+        msgBox.setWindowTitle("Error");
+        msgBox.setText("Tutorial project not found");
+        msgBox.setInformativeText(
+            "To use tutorials, please ensure you have a project named 'Tutorial'.");
+        msgBox.setDetailedText(
+            "The application couldn't find a project with the required name. "
+            "Create a new project named 'Tutorial' or check your project settings.");
+        msgBox.setStandardButtons(QMessageBox::Ok);
+        msgBox.exec();
+
         projectsPanel->show();
         return;
     }

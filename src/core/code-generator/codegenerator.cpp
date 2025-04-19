@@ -1,5 +1,6 @@
 #include "codegenerator.h"
 #include <QDebug>
+#include <QDir>
 #include <QFile>
 #include "../../models/time-chrono/timechrono.h"
 #include "../../utils/ziphelper/ziphelper.h"
@@ -29,6 +30,7 @@ bool CodeGenerator::createDirectory(const std::string &path)
             return false;
         }
     }
+
     return true; // El directorio ya existe
 }
 
@@ -72,6 +74,32 @@ bool CodeGenerator::createJsonFile(const std::string &filePath, const nlohmann::
     return true;
 }
 
+bool CodeGenerator::createRunEditor()
+{
+    // Create runEditor.js
+    QString resourcePath = ":/project_templates/runEditor";
+    QString destinationPath = QDir(QString::fromStdString(this->project.getPath()))
+                                  .filePath("runEditor.js");
+
+    QFile file(resourcePath);
+    if (file.open(QIODevice::ReadOnly)) {
+        QFile outFile(destinationPath);
+        if (outFile.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+            outFile.write(file.readAll());
+            outFile.close();
+        } else {
+            qWarning() << "❌ Could not open output file:" << destinationPath;
+            return false;
+        }
+        file.close();
+    } else {
+        qWarning() << "❌ Could not open resource file:" << resourcePath;
+        return false;
+    }
+
+    return true;
+}
+
 // Creación del proyecto base de backend
 bool CodeGenerator::createBaseBackendProject()
 {
@@ -83,6 +111,56 @@ bool CodeGenerator::createBaseBackendProject()
     // Unzip backend template
     if (!unzipFile(":/project_templates/backend", extractPath)) {
         return false;
+    }
+
+    // Crear el .env
+    std::string templatePath = ":/inja/backend/env";
+    std::string outputPath = this->project.getPath() + "/backend/.env";
+
+    inja::Environment env;
+    nlohmann::json data;
+
+    data["database"] = this->project.getDatabaseData().getDatabaseName();
+    data["user"] = this->project.getDatabaseData().getUser();
+    data["password"] = this->project.getDatabaseData().getPassword();
+    data["port"] = this->project.getBackendPort();
+
+    QFile file(QString::fromStdString(templatePath));
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        fmt::print(stderr, "Unable to open template file from resource: {}\n", templatePath);
+        return false;
+    }
+
+    QTextStream in(&file);
+    QString templateContent = in.readAll();
+    file.close();
+
+    // Convertir el contenido a std::string para usarlo con Inja
+    std::string templateString = templateContent.toStdString();
+
+    try {
+        // Renderizar con Inja usando el contenido del archivo como una cadena
+        std::string result = env.render(templateString, data);
+        // Open file in write mode
+        std::ofstream file(outputPath);
+
+        // Check open file
+        if (!file.is_open()) {
+            fmt::print(stderr, "Unable to open file for writing: {}\n", outputPath);
+            return false;
+        }
+
+        // Write content
+        file << result;
+
+        file.close();
+
+        // Optional verification
+        if (file.fail()) {
+            fmt::print(stderr, "Error while writing and closing the file: {}\n", outputPath);
+        }
+    } catch (const std::exception &e) {
+        fmt::print(stderr, "Error generating file {}: {}\n", ".env", e.what());
     }
 
     // Crear el backend.json

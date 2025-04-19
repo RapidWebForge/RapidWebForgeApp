@@ -11,7 +11,7 @@ class FileWatcher : public QObject {
 public:
     explicit FileWatcher(QObject *parent = nullptr);
     void watchProjectFiles(const QString &projectPath);
-    QString getLastModifiedFile(); // 📌 Nuevo método
+    QString getLastModifiedFile(); // Nuevo método
     std::string getLastModifiedFileInFolder(const std::string &folderPath);
 
 signals:

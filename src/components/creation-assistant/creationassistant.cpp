@@ -46,13 +46,20 @@ std::string CreationAssistant::isValid(Project &project)
 
 void CreationAssistant::on_browseButton_clicked()
 {
-    QString dir = QFileDialog::getExistingDirectory(this,
-                                                    tr("Select Project Location"),
-                                                    QDir::homePath(),
-                                                    QFileDialog::ShowDirsOnly
-                                                        | QFileDialog::DontResolveSymlinks);
-    if (!dir.isEmpty()) {
-        ui->browseButton->setText(dir);
+    QFileDialog dialog(this);
+    dialog.setWindowTitle(tr("Select Project Location"));
+    dialog.setFileMode(QFileDialog::Directory);
+    dialog.setOption(QFileDialog::ShowDirsOnly, true);
+    dialog.setOption(QFileDialog::DontResolveSymlinks, true);
+    dialog.setOption(QFileDialog::DontUseNativeDialog, true);
+
+    dialog.setDirectory(QDir::homePath());
+
+    if (dialog.exec() == QDialog::Accepted) {
+        QString dir = dialog.selectedFiles().first();
+        if (!dir.isEmpty()) {
+            ui->browseButton->setText(dir);
+        }
     }
 }
 

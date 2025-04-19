@@ -15,7 +15,7 @@ TutorialsPanel::TutorialsPanel(QWidget *parent)
     , ui(new Ui::TutorialsPanel)
 {
     ui->setupUi(this);
-    setupTutorials(); // ✅ Llamar a setupTutorials() en lugar de setupProjects()
+    setupTutorials(); // Llamar a setupTutorials() en lugar de setupProjects()
 }
 void TutorialsPanel::setupTutorials()
 {
@@ -96,8 +96,8 @@ void TutorialsPanel::setupTutorials()
 
             // Crear QLabel para el texto del botón
             QLabel *buttonLabel = new QLabel(tutorialTitle, tutorialButton);
-            buttonLabel->setWordWrap(true); // ✅ Permitir saltos de línea si es necesario
-            buttonLabel->setAlignment(Qt::AlignCenter); // ✅ Centrar el texto
+            buttonLabel->setWordWrap(true);             // Permitir saltos de línea si es necesario
+            buttonLabel->setAlignment(Qt::AlignCenter); // Centrar el texto
             buttonLabel->setStyleSheet("font-size: 14px; color: black; background-color: transparent;");
 
             // Crear un layout para el botón y agregar el QLabel dentro
@@ -107,8 +107,9 @@ void TutorialsPanel::setupTutorials()
             buttonLayout->setContentsMargins(5, 5, 5, 5);
             tutorialButton->setLayout(buttonLayout);
 
-            connect(tutorialButton, &QPushButton::clicked, this,
-                    [this, tutorialPath]() { onTutorialClicked(tutorialPath, 1); });
+            connect(tutorialButton, &QPushButton::clicked, this, [this, tutorialPath]() {
+                onTutorialClicked(tutorialPath);
+            });
 
             grid->addWidget(tutorialButton, row, col);
 
@@ -180,16 +181,16 @@ void TutorialsPanel::onProjectPreviewClicked(const QString &tutorialPath, int pr
 {
     qDebug() << "Opening tutorial with path: " << tutorialPath << " for project ID: " << projectId;
 
-    // 📌 Buscar la ventana principal (ProjectsPanel) desde `TutorialsPanel`
+    // Buscar la ventana principal (ProjectsPanel) desde `TutorialsPanel`
     QWidget *projectsPanel = this;
     while (projectsPanel->parentWidget() != nullptr) {
         projectsPanel = projectsPanel->parentWidget();
     }
 
-    // 📌 OCULTAR `ProjectsPanel` completamente
+    // OCULTAR `ProjectsPanel` completamente
     projectsPanel->hide();
 
-    // 📌 Verificar si `projectId` es válido antes de proceder
+    // Verificar si `projectId` es válido antes de proceder
     ProjectManager projectManager;
     std::optional<Project> projectOpt = projectManager.getProjectById(projectId);
 
@@ -199,51 +200,62 @@ void TutorialsPanel::onProjectPreviewClicked(const QString &tutorialPath, int pr
         return;
     }
 
-    // 📌 Extraer el valor del `std::optional<Project>`
+    // Extraer el valor del `std::optional<Project>`
     Project project = projectOpt.value();
 
-    // 📌 Crear instancia de `StepperDashboard`, pasando el tutorialPath si es un tutorial
+    // Crear instancia de `StepperDashboard`, pasando el tutorialPath si es un tutorial
     StepperDashboard *stprDashboard = new StepperDashboard(nullptr, project, tutorialPath);
     stprDashboard->showMaximized();
 
-    // 📌 Restaurar `ProjectsPanel` cuando `StepperDashboard` se cierre
+    // Restaurar `ProjectsPanel` cuando `StepperDashboard` se cierre
     connect(stprDashboard, &StepperDashboard::destroyed, projectsPanel, [projectsPanel]() {
         projectsPanel->show();
     });
 }
 
-void TutorialsPanel::onTutorialClicked(const QString &tutorialPath, int projectId)
+void TutorialsPanel::onTutorialClicked(const QString &tutorialPath)
 {
-    // 📌 Buscar la ventana principal (ProjectsPanel) desde `TutorialsPanel`
+    // Buscar la ventana principal (ProjectsPanel) desde `TutorialsPanel`
     QWidget *projectsPanel = this;
     while (projectsPanel->parentWidget() != nullptr) {
         projectsPanel = projectsPanel->parentWidget();
     }
 
-    // 📌 OCULTAR `ProjectsPanel` completamente
+    // OCULTAR `ProjectsPanel` completamente
     projectsPanel->hide();
 
-    // 📌 Verificar si `projectId` es válido antes de proceder
+    // Verificar si `projectId` es válido antes de proceder
     ProjectManager projectManager;
-    std::optional<Project> projectOpt = projectManager.getProjectById(projectId);
+    std::optional<Project> projectOpt = projectManager.getProjectByName("Tutorial");
 
     if (!projectOpt.has_value()) {
-        QMessageBox::critical(this, "Error", "Invalid project ID.");
+        QMessageBox msgBox;
+        msgBox.setIcon(QMessageBox::Critical);
+        msgBox.setWindowTitle("Error");
+        msgBox.setText("Tutorial project not found");
+        msgBox.setInformativeText(
+            "To use tutorials, please ensure you have a project named 'Tutorial'.");
+        msgBox.setDetailedText(
+            "The application couldn't find a project with the required name. "
+            "Create a new project named 'Tutorial' or check your project settings.");
+        msgBox.setStandardButtons(QMessageBox::Ok);
+        msgBox.exec();
+
         projectsPanel->show();
         return;
     }
-    // 📌 Extraer el valor del `std::optional<Project>`
+    // Extraer el valor del `std::optional<Project>`
     Project project = projectOpt.value();
 
-    // 📌 Crear instancia de `StepperDashboard`, pasando el `tutorialPath` como parámetro
+    // Crear instancia de `StepperDashboard`, pasando el `tutorialPath` como parámetro
     StepperDashboard *stprDashboard = new StepperDashboard(nullptr, project, tutorialPath);
     stprDashboard->showMaximized();
 
-    // 📌 Restaurar `ProjectsPanel` cuando `StepperDashboard` se cierre
+    // Restaurar `ProjectsPanel` cuando `StepperDashboard` se cierre
     connect(stprDashboard, &StepperDashboard::destroyed, projectsPanel, [projectsPanel]() {
         projectsPanel->show();
     });
-    qDebug() << "Opening tutorial with path: " << tutorialPath << " for project: " << projectId;
+    qDebug() << "Opening tutorial with path: " << tutorialPath;
 }
 TutorialsPanel::~TutorialsPanel()
 {

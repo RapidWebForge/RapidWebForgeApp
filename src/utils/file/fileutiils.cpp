@@ -1,5 +1,6 @@
 #include "fileutiils.h"
 
+#include <QFile>
 #include <fmt/core.h>
 #include <fstream>
 #include <sstream>
@@ -44,6 +45,14 @@ void writeFile(const std::string &filePath, const std::string &content)
 
     if (file.fail()) {
         fmt::print(stderr, "Error while closing the file: {}\n", filePath);
+    }
+}
+
+void deleteFile(const QString &path)
+{
+    QFile file(path);
+    if (file.exists()) {
+        file.remove();
     }
 }
 

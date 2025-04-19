@@ -21,11 +21,8 @@ class BackendDashboard : public QWidget
 public:
     explicit BackendDashboard(QWidget *parent = nullptr);
     ~BackendDashboard();
-    // Getters
-    const std::vector<Transaction> &getTransactions() const;
-    std::vector<Transaction> &getTransactions();
     // Setters
-    void setTransactions(const std::vector<Transaction> &newTransactions);
+    void setTransactions(std::vector<Transaction> *transactionsRef);
     void setCurrentTransaction(Transaction &transaction);
     void setDatabaseLabel(const std::string &dbName);
 
@@ -55,7 +52,7 @@ private:
     CreateTableDialog *createTableDialog;
     AddFieldDialog *addFieldDialog;
     QTreeWidgetItem *rootItem;
-    std::vector<Transaction> transactions;
+    std::vector<Transaction> *transactions;
     Transaction currentTransaction;
     EditFieldDialog *editFieldDialog;
 

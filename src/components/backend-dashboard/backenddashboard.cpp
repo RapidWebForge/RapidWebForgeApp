@@ -214,15 +214,15 @@ void BackendDashboard::setupMethodsList()
 }
 
 // Setters
-void BackendDashboard::setTransactions(const std::vector<Transaction> &newTransactions)
+void BackendDashboard::setTransactions(std::vector<Transaction> *transactionsRef)
 {
-    transactions = newTransactions;
+    transactions = transactionsRef;
 
     // Limpiar rootItem
     rootItem->takeChildren();
 
     // Añadir transactions como hijos
-    for (const auto &transaction : transactions) {
+    for (const auto &transaction : *transactions) {
         QTreeWidgetItem *item = new QTreeWidgetItem(rootItem);
         item->setText(0, QString::fromStdString(transaction.getName()));
     }
@@ -231,14 +231,14 @@ void BackendDashboard::setTransactions(const std::vector<Transaction> &newTransa
     ui->tablesTreeWidget->expandAll();
 
     // Si transactions están habilitados, configurar el primero como la transaction actual
-    if (!transactions.empty()) {
+    if (!transactions->empty()) {
         // Cargar el primer transaction automáticamente
-        setCurrentTransaction(transactions[0]);
-        updateFieldsTable(transactions[0]);
+        setCurrentTransaction((*transactions)[0]);
+        updateFieldsTable((*transactions)[0]);
 
         // Actualizar el UI de los labels para la primera transaction
-        ui->fieldLabel->setText(QString::fromStdString(transactions[0].getName()) + " Table");
-        ui->labelMethods->setText(QString::fromStdString(transactions[0].getName()) + " Methods");
+        ui->fieldLabel->setText(QString::fromStdString((*transactions)[0].getName()) + " Table");
+        ui->labelMethods->setText(QString::fromStdString((*transactions)[0].getName()) + " Methods");
     }
 }
 
@@ -266,7 +266,7 @@ void BackendDashboard::onFieldSaved(const Field &field)
     }
 
     // Actualizar la transacción en la lista de transacciones
-    for (auto &transaction : transactions) {
+    for (auto &transaction : *transactions) {
         if (transaction.getName() == currentTransaction.getName()) {
             transaction.setFields(currentTransaction.getFields());
             break;
@@ -277,7 +277,7 @@ void BackendDashboard::onFieldSaved(const Field &field)
 
 void BackendDashboard::onTransactionSaved(const Transaction &transaction)
 {
-    transactions.push_back(transaction);
+    transactions->push_back(transaction);
     setTransactions(transactions);
 }
 
@@ -294,7 +294,7 @@ void BackendDashboard::onTableSelected(QTreeWidgetItem *item, int column)
     qDebug() << "Table item selected: " << item->text(0);
 
     // Buscar la transacción correspondiente en `transactions`
-    for (const auto &transaction : transactions) {
+    for (const auto &transaction : *transactions) {
         if (transaction.getName() == item->text(0).toStdString()) {
             setCurrentTransaction(const_cast<Transaction &>(transaction));
 
@@ -377,17 +377,6 @@ void BackendDashboard::setDatabaseLabel(const std::string &dbName)
     ui->tableLabel->setText(QString::fromStdString(dbName));
 }
 
-// Getters
-std::vector<Transaction> &BackendDashboard::getTransactions()
-{
-    return transactions;
-}
-
-const std::vector<Transaction> &BackendDashboard::getTransactions() const
-{
-    return transactions;
-}
-
 // Setters
 std::string toLowerCase(const std::string &str)
 {
@@ -414,7 +403,7 @@ void BackendDashboard::onTableNameChanged(QTreeWidgetItem *item, int column)
     }
 
     // Actualizar la transacción correspondiente en la lista de transacciones
-    for (auto &transaction : transactions) {
+    for (auto &transaction : *transactions) {
         if (transaction.getName() == currentTransaction.getName()) {
             transaction.setName(newName.toStdString());
             break;
@@ -444,7 +433,7 @@ void BackendDashboard::onFieldUpdated(const Field &updatedField)
     }
 
     // Actualizar la transacción en el vector de transacciones
-    for (auto &transaction : transactions) {
+    for (auto &transaction : *transactions) {
         if (transaction.getName() == currentTransaction.getName()) {
             transaction.setFields(currentTransaction.getFields());
             break;
@@ -484,7 +473,7 @@ void BackendDashboard::on_deleteField_clicked()
             updateFieldsTable(currentTransaction);
 
             // Actualizar las transacciones en BackendGenerator
-            for (auto &transaction : transactions) {
+            for (auto &transaction : *transactions) {
                 if (transaction.getName() == currentTransaction.getName()) {
                     transaction.setFields(currentTransaction.getFields());
                     break;
@@ -505,16 +494,13 @@ void BackendDashboard::on_addField_clicked()
         connect(addFieldDialog, &AddFieldDialog::fieldSaved, this, &BackendDashboard::onFieldSaved);
     }
 
-    // Asegúrate de que `currentTransaction` esté asignado
     if (currentTransaction.getName().empty()) {
         QMessageBox::warning(this, "Error", "No transaction is currently selected.");
         return;
     }
 
-    // Supongamos que tienes una lista de transacciones disponibles
     std::vector<QString> tableNames;
-    for (const auto &transaction :
-         transactions) { // Suponiendo que 'transactions' es tu vector de transacciones
+    for (const auto &transaction : *transactions) {
         tableNames.push_back(QString::fromStdString(transaction.getName()));
     }
 
@@ -560,7 +546,7 @@ void BackendDashboard::on_editField_clicked()
         currentTransaction.getFields()[selectedRow] = updatedField;
 
         // Actualizar las transacciones en la lista general
-        for (auto &transaction : transactions) {
+        for (auto &transaction : *transactions) {
             if (transaction.getName() == currentTransaction.getName()) {
                 transaction.setFields(currentTransaction.getFields());
                 break;
@@ -578,10 +564,12 @@ void BackendDashboard::on_deleteTable_clicked()
 
     // Verificar que haya un elemento seleccionado y que no sea el rootItem
     if (!selectedItem || selectedItem == rootItem) {
-        return; // Si no hay un elemento seleccionado o es el nodo raíz, no hacer nada
+        return;
+        // Si no hay un elemento seleccionado o es el nodo raíz, no hacer nada
     }
 
-    QString tableName = selectedItem->text(0); // Nombre de la tabla seleccionada
+    // Nombre de la tabla seleccionada
+    QString tableName = selectedItem->text(0);
 
     // Mostrar un cuadro de diálogo para confirmar la eliminación
     // Crear y mostrar un cuadro de diálogo para confirmar la eliminación con estilos aplicados
@@ -602,12 +590,12 @@ void BackendDashboard::on_deleteTable_clicked()
         delete selectedItem;
 
         // Eliminar la transacción correspondiente en la lista de transacciones
-        auto it = std::remove_if(transactions.begin(),
-                                 transactions.end(),
+        auto it = std::remove_if(transactions->begin(),
+                                 transactions->end(),
                                  [&tableName](const Transaction &transaction) {
                                      return transaction.getName() == tableName.toStdString();
                                  });
-        transactions.erase(it, transactions.end());
+        transactions->erase(it, transactions->end());
 
         // Limpiar la tabla de tareas asociada
         ui->fieldsTableWidget->clearContents();
@@ -682,7 +670,7 @@ void BackendDashboard::on_editTable_clicked()
             selectedItem->setText(0, newName);
 
             // Actualizar el nombre en la lista de transacciones
-            for (auto &transaction : transactions) {
+            for (auto &transaction : *transactions) {
                 if (transaction.getName() == currentName.toStdString()) {
                     transaction.setName(newName.toStdString());
                     transaction.setNameConst(newName.toLower().toStdString());

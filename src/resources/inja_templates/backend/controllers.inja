@@ -8,10 +8,6 @@ exports.create{{ name }} = async (req, res) => {
   try {
     const { {% for field in fields %} {{ field.name }} {% if loop.is_last %}{% else %},{% endif %} {% endfor %} } = req.body;
 
-    const {{ nameConst }} = await {{ name }}.create(
-      { {% for field in fields %} {{ field.name }} {% if loop.is_last %} {% else %}, {% endif %} {% endfor %} },
-    );
-
     {% for field in fields %}
     {% if field.isForeignKey %}
     // Verificar si la transacción relacionada {{ field.foreignKeyTable }} existe
@@ -88,12 +84,8 @@ exports.delete{{ name }}ById = async (req, res) => {
   }
 };
 
-
-
 {% for field in fields %}
 {% if field.isForeignKey %}
-
-// Obtener todas las {{ field.isForeignKey }}s de un {{ field.foreignKeyTable }}
 exports.getAll{{ name }}For{{ field.foreignKeyTable }} = async (req, res) => {
   try {
     // Verificar si la transacción relacionada {{ field.foreignKeyTable }} existe
@@ -110,6 +102,5 @@ exports.getAll{{ name }}For{{ field.foreignKeyTable }} = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
-
 {% endif %}
 {% endfor %}

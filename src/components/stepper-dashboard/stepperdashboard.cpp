@@ -1,10 +1,17 @@
 #include "stepperdashboard.h"
+#include <QCoreApplication>
 #include <QDebug>
+#include <QDir>
 #include <QFile>
+#include <QIcon>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QMessageBox>
+#include <QPushButton>
+#include <QResizeEvent>
+#include <QStandardPaths>
 #include <QTimer>
+#include <QVBoxLayout>
 #include "../../components/create-version/createversion.h"
 #include "../../components/delete-version/deleteversion.h"
 #include "../../components/manage-version/manageversion.h"
@@ -16,15 +23,7 @@
 #include "../../core/version-manager/versionmanager.h"
 #include "ui_stepperdashboard.h"
 #include <fmt/core.h>
-#include <fstream>
-#include <memory>
 #include <nlohmann/json.hpp>
-#include <QResizeEvent>
-
-#include <QPushButton>
-#include <QDebug>
-#include <QIcon>
-#include <QVBoxLayout>
 
 nlohmann::json tutorialData;
 
@@ -55,9 +54,18 @@ StepperDashboard::StepperDashboard(QWidget *parent,
 
 {
     ui->setupUi(this);
+    QCoreApplication::setOrganizationName("RapidWebForge");
+    QCoreApplication::setApplicationName("RapidWebForge");
+    // Crear ruta segura en AppData para guardar logs dinámicos
+    QString appDataPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+    QDir logDir(appDataPath);
+    if (!logDir.exists()) {
+        logDir.mkpath("."); // Crea la carpeta si no existe
+    }
+    QString logsPath = appDataPath + "/user_actions.json";
+    qDebug() << "📄 Logs Path (AppData):" << logsPath;
 
-    stepValidator = new StepValidator(tutorialFilePath.toStdString(),
-                                      "resources/logs/user_actions.json");
+    stepValidator = new StepValidator(tutorialFilePath.toStdString(), logsPath.toStdString());
 
     // Crear un temporizador para verificar el estado de los pasos cada 2 segundos
     QTimer *stepCheckTimer = new QTimer(this);
@@ -179,12 +187,15 @@ void StepperDashboard::showEvent(QShowEvent *event)
         if (codeGenerator->backendGenerator.loadSchema()) {
             // QMessageBox::information(this, "Successful", "Information loaded");
             backendOk = true;
-
-            emit backendSchemaLoaded();
         } else {
             qDebug() << "There is no backend content";
             // QMessageBox::warning(this, "Warning", "There is no information, add data");
         }
+        // A diferencia de frontend que siempre se tendra una ruta base (Home)
+        // el backend puede tener 0 transactions, lo que genera que si no se referencia
+        // el vector de Transaction, se tenga un nullptr
+        emit backendSchemaLoaded();
+
         // Frontend
         if (codeGenerator->frontendGenerator.loadSchema()) {
             // QMessageBox::information(this, "Successful", "Views loaded");
@@ -205,11 +216,12 @@ void StepperDashboard::showEvent(QShowEvent *event)
 
 void StepperDashboard::onBackendSchemaLoaded()
 {
-    std::vector<Transaction> transactions = codeGenerator->backendGenerator.getTransactions();
-    backendDashboard->setTransactions(transactions);
+    std::vector<Transaction> *transactionsRef = codeGenerator->backendGenerator.getTransactions();
 
-    if (!transactions.empty()) {
-        backendDashboard->setCurrentTransaction(transactions.at(0));
+    backendDashboard->setTransactions(transactionsRef);
+
+    if (!transactionsRef->empty()) {
+        backendDashboard->setCurrentTransaction(transactionsRef->at(0));
     }
 
     backendDashboard->setDatabaseLabel(project.getDatabaseData().getDatabaseName());
@@ -552,10 +564,14 @@ bool StepperDashboard::showConfirmationDialog(QWidget *parent,
     return (reply == QMessageBox::Yes);
 }
 
+bool StepperDashboard::isProgressSaved()
+{
+    return codeGenerator->backendGenerator.isProgressSaved()
+           && codeGenerator->frontendGenerator.isProgressSaved();
+}
+
 void StepperDashboard::onSaveChanges()
 {
-    codeGenerator->backendGenerator.setTransactions(backendDashboard->getTransactions());
-
     codeGenerator->backendGenerator.updateBackendCode();
 
     // TODO: PASS AST UPDATE
@@ -569,7 +585,7 @@ void StepperDashboard::onSaveChanges()
 
 void StepperDashboard::onCreateVersion()
 {
-    if (!codeGenerator->frontendGenerator.isProgressSaved()) {
+    if (!isProgressSaved()) {
         if (!showConfirmationDialog(this,
                                     "Unsaved Progress",
                                     "You have unsaved progress. Do you want to continue?")) {
@@ -599,7 +615,7 @@ void StepperDashboard::onCreateVersion()
 
 void StepperDashboard::onChangeVersion()
 {
-    if (!codeGenerator->frontendGenerator.isProgressSaved()) {
+    if (!isProgressSaved()) {
         if (!showConfirmationDialog(this,
                                     "Unsaved Progress",
                                     "You have unsaved progress. Do you want to continue?")) {
@@ -680,7 +696,7 @@ void StepperDashboard::onVersionHistory()
 
 void StepperDashboard::onDeployProject()
 {
-    if (!codeGenerator->frontendGenerator.isProgressSaved()) {
+    if (!isProgressSaved()) {
         if (!showConfirmationDialog(this,
                                     "Unsaved Progress",
                                     "You have unsaved progress. Do you want to continue?")) {
@@ -697,9 +713,9 @@ void StepperDashboard::onDeployProject()
         return;
     }
 
-    std::vector<Transaction> transactions = codeGenerator->backendGenerator.getTransactions();
+    auto transactions = codeGenerator->backendGenerator.getTransactions();
 
-    if (transactions.empty()) {
+    if (transactions->empty()) {
         QMessageBox::critical(this, "Critical", "You cannot deploy without generate transactions");
         return;
     }
@@ -730,7 +746,7 @@ void StepperDashboard::onDeployProject()
 
 void StepperDashboard::onProjectChange()
 {
-    if (!codeGenerator->frontendGenerator.isProgressSaved()) {
+    if (!isProgressSaved()) {
         if (!showConfirmationDialog(this,
                                     "Unsaved Progress",
                                     "You have unsaved progress. Do you want to continue?")) {
@@ -761,7 +777,7 @@ void StepperDashboard::onProjectChange()
 
 void StepperDashboard::onCreateProject()
 {
-    if (!codeGenerator->frontendGenerator.isProgressSaved()) {
+    if (!isProgressSaved()) {
         if (!showConfirmationDialog(this,
                                     "Unsaved Progress",
                                     "You have unsaved progress. Do you want to continue?")) {
@@ -987,10 +1003,20 @@ void StepperDashboard::loadTutorialData()
 
 void StepperDashboard::showTutorialIntro()
 {
+    qDebug() << "Aqui se cae ";
+    QString safeTitle = tutorialTitle.isNull() ? "Tutorial" : tutorialTitle;
+    QString safeDescription = tutorialDescription.isNull() ? "" : tutorialDescription;
     QString message = QString("<b>%1</b><br><br>%2").arg(tutorialTitle, tutorialDescription);
+    qDebug() << "Aqui se cae 2";
 
-    QMessageBox::information(this, "Tutorial Introduction", message);
-
+    qDebug() << "Tutorial intro message: " << message;
+    QMessageBox *msgBox = new QMessageBox(nullptr); // <- sin parent
+    msgBox->setIcon(QMessageBox::Information);
+    msgBox->setWindowTitle("Tutorial Introduction");
+    msgBox->setTextFormat(Qt::RichText);
+    msgBox->setText(message);
+    msgBox->exec();
+    qDebug() << "Aqui se cae 3";
     // Luego de mostrar la introducción, mostrar el primer paso
     if (!tutorialSteps.isEmpty()) {
         showStep(0);
@@ -1093,7 +1119,7 @@ void StepperDashboard::onUserActionPerformed(const std::string &action,
 
 void StepperDashboard::closeEvent(QCloseEvent *event)
 {
-    if (!codeGenerator->frontendGenerator.isProgressSaved()) {
+    if (!isProgressSaved()) {
         if (!showConfirmationDialog(this,
                                     "Unsaved Progress",
                                     "You have unsaved progress. Do you want to exit?")) {
@@ -1205,6 +1231,7 @@ void StepperDashboard::openLastModifiedFile() {
         FileOpener::openInVSCode(projectPath);
     }
 }
+
 void StepperDashboard::setupFloatingButton() {
     // Crear el botón flotante
     floatingButton = new QPushButton(this);

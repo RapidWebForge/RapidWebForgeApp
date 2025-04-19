@@ -66,3 +66,24 @@ void Transaction::setFields(const std::vector<Field> &newFields)
 {
     fields = newFields;
 }
+
+bool Transaction::isDifferentFrom(const Transaction &other) const
+{
+    // if (this->getName() != other.getName())
+    //     return true;
+
+    if (this->getFields().size() != other.getFields().size())
+        return true;
+
+    for (const auto &fieldA : this->getFields()) {
+        for (const auto &fieldB : other.getFields()) {
+            if (fieldA.getName() == fieldB.getName()) {
+                if (fieldA.isDifferentFrom(fieldB)) {
+                    return true;
+                }
+            }
+        }
+    }
+
+    return false;
+}

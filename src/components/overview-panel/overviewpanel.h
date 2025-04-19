@@ -34,7 +34,7 @@ private slots:
     void onAddProjectClicked();
     void onProjectPreviewClicked(const Project &project);
     void onDeleteProjectRequested(int projectId);
-    void onTutorialClicked(const QString &tutorialPath, int projectId);
+    void onTutorialClicked(const QString &tutorialPath);
 
 signals:
     void projectCreationRequested();
