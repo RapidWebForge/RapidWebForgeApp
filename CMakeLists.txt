@@ -30,7 +30,6 @@ endif()
 find_package(boost_algorithm REQUIRED CONFIG)
 find_package(boost_process REQUIRED CONFIG)
 find_package(boost_uuid REQUIRED CONFIG)
-find_package(boost_filesystem REQUIRED CONFIG)
 find_package(OpenSSL REQUIRED)
 find_package(fmt CONFIG REQUIRED)
 find_package(inja CONFIG REQUIRED)
@@ -201,7 +200,6 @@ target_link_libraries(RapidWebForgeApp PRIVATE
     Boost::algorithm
     Boost::process
     Boost::uuid
-    Boost::filesystem
     OpenSSL::SSL
     fmt::fmt
     pantor::inja
