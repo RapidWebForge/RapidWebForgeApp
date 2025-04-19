@@ -11,8 +11,6 @@ const [, , basePath, operation, transactionName] = process.argv;
 
 (async () => {
   try {
-    let modified = false;
-
     if (operation === "modify") {
       // Obtenemos la ruta absoluta
       const payloadPath = path.isAbsolute(transactionName)
@@ -184,12 +182,40 @@ const [, , basePath, operation, transactionName] = process.argv;
                   // Mapear el tipo de Sequelize a TS
                   let tsTypeNode;
                   switch (field.type) {
+                    // Strings
                     case "STRING":
+                    case "TEXT":
+                    case "CHAR":
+                    case "DATE":
+                    case "DATEONLY":
+                    case "TIME":
                       tsTypeNode = t.tsStringKeyword();
                       break;
+                    // Booleans
                     case "BOOLEAN":
                       tsTypeNode = t.tsBooleanKeyword();
                       break;
+                    // Numbers
+                    case "INTEGER":
+                    case "BIGINT":
+                    case "FLOAT":
+                    case "DOUBLE":
+                    case "DECIMAL":
+                      tsTypeNode = t.tsNumberKeyword();
+                      break;
+                    // JSON
+                    case "JSON":
+                      tsTypeNode = t.tsAnyKeyword();
+                      break;
+                    // NOT SUPPORTED YET
+                    // ENUM
+                    // case "ENUM":
+                    //   tsTypeNode = t.tsUnionType(...);
+                    //   break;
+                    // Binary
+                    // case "BLOB":
+                    //   tsTypeNode = t.tsTypeReference(t.identifier("Buffer"));
+                    //   break;
                     default:
                       tsTypeNode = t.tsAnyKeyword();
                   }
@@ -201,12 +227,12 @@ const [, , basePath, operation, transactionName] = process.argv;
 
                 // Reemplazar el array de miembros
                 path.node.body.body = members;
-                fileModified = true;
                 path.stop();
               }
             },
           });
 
+          fileModified = true;
           successMessage = `✅ Interfaz actualizada en ${filePath}`;
           errorMessage = `i No se encontró la interfaz ${modelName} en ${filePath}`;
         }
@@ -227,7 +253,6 @@ const [, , basePath, operation, transactionName] = process.argv;
                 payload.fields.some((f) => expr.left.property.name === f.name)
               ) {
                 path.remove();
-                fileModified = true;
               }
             },
           });
@@ -272,7 +297,6 @@ const [, , basePath, operation, transactionName] = process.argv;
                           true,
                         ),
                       );
-                      fileModified = true;
                     }
                   });
               }
@@ -345,7 +369,6 @@ const [, , basePath, operation, transactionName] = process.argv;
                   );
                   path.insertBefore(assign);
                 });
-                fileModified = true;
               }
             },
 
@@ -413,7 +436,6 @@ const [, , basePath, operation, transactionName] = process.argv;
                               }
                             `);
                             innerBody.splice(idx + 1, 0, ...stmts);
-                            fileModified = true;
                           }
                         });
                     }
@@ -453,7 +475,6 @@ const [, , basePath, operation, transactionName] = process.argv;
                         };
                       `);
                       path.parentPath.insertAfter(stmt);
-                      fileModified = true;
                     }
                   });
 
@@ -533,13 +554,11 @@ const [, , basePath, operation, transactionName] = process.argv;
 
       for (const filePath of filesToModify) {
         const sourceCode = fs.readFileSync(filePath, "utf-8");
-
+        let modified = false;
         const ast = parser.parse(sourceCode, {
           sourceType: "module",
           plugins: ["jsx", "typescript"],
         });
-
-        let modified = false;
 
         if (filePath.includes("models/index.js")) {
           if (operation === "insert") {
@@ -599,7 +618,6 @@ const [, , basePath, operation, transactionName] = process.argv;
                       );
                     }
 
-                    modified = true;
                     path.stop();
                   }
                 },
@@ -622,7 +640,6 @@ const [, , basePath, operation, transactionName] = process.argv;
                     prop.type === "ObjectProperty" &&
                     prop.key.name === modelImportName
                   ) {
-                    modified = true;
                     return false;
                   }
                   return true;
@@ -630,6 +647,8 @@ const [, , basePath, operation, transactionName] = process.argv;
               },
             });
           }
+
+          modified = true;
         }
 
         if (filePath.includes("routes/index.js")) {
@@ -670,7 +689,6 @@ const [, , basePath, operation, transactionName] = process.argv;
                       `const ${routeImportName} = require("${routeImportPath}");`,
                     );
                     path.insertAfter(importNode);
-                    modified = true;
                     path.stop();
                   }
                 },
@@ -710,7 +728,6 @@ const [, , basePath, operation, transactionName] = process.argv;
                       `router.use(${routeImportName});`,
                     );
                     path.insertBefore(useNode);
-                    modified = true;
                     path.stop();
                   }
                 },
@@ -724,18 +741,18 @@ const [, , basePath, operation, transactionName] = process.argv;
                 const code = generate(path.node).code;
                 if (code.includes(`require("${routeImportPath}")`)) {
                   path.remove();
-                  modified = true;
                 }
               },
               ExpressionStatement(path) {
                 const code = generate(path.node).code;
                 if (code.includes(`router.use(${routeImportName})`)) {
                   path.remove();
-                  modified = true;
                 }
               },
             });
           }
+
+          modified = true;
         }
 
         if (modified) {

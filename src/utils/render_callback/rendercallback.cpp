@@ -5,6 +5,7 @@
 #include <cctype>
 #include <fmt/core.h>
 #include <nlohmann/json.hpp>
+#include <unordered_map>
 
 std::string toLower(const std::string &str)
 {
@@ -527,13 +528,27 @@ std::string renderTypeFrontendModel(inja::Environment &env, inja::Arguments &arg
 
     const nlohmann::json &type = *args[0];
 
-    if (type == "STRING")
-        output = "string";
-    else if (type == "INTEGER")
-        output = "number";
-    else if (type == "DATE")
-        output = "Date";
+    static const std::unordered_map<std::string, std::string> typeMap = {
+        {"STRING", "string"},
+        {"TEXT", "string"},
+        {"CHAR", "string"},
+        {"DATE", "string"},
+        {"DATEONLY", "string"},
+        {"TIME", "string"},
+        {"BOOLEAN", "boolean"},
+        {"INTEGER", "number"},
+        {"BIGINT", "number"},
+        {"FLOAT", "number"},
+        {"DOUBLE", "number"},
+        {"DECIMAL", "number"},
+    };
 
-    return output;
+    auto it = typeMap.find(type);
+    if (it != typeMap.end()) {
+        return it->second;
+    }
+
+    // Default type
+    return "any";
 }
 } // namespace RenderCallback
