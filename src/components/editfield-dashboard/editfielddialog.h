@@ -16,19 +16,21 @@ public:
     explicit EditFieldDialog(QWidget *parent = nullptr);
     ~EditFieldDialog();
 
-    void setField(const Field &field); // Para cargar los datos del field en el diálogo
-    Field getField() const;            // Para obtener el field actualizado del diálogo
+    // Dentro de EditFieldDialog
+    void setField(Field *field);
 
 signals:
-    // Señal que se emite cuando se guarda un campo
-    void fieldSaved(const Field &field); // Declaración de la señal
+    // Señal que se emite cuando se guarda un field
+    void fieldSaved();
 
 private slots:
     void on_acceptButton_clicked();
 
 private:
     Ui::EditFieldDialog *ui;
-    Field currentField; // El field que se está editando
+    Field *currentField = nullptr;
+
+    void setUpWidget();
 };
 
 #endif // EDITFIELDDIALOG_H

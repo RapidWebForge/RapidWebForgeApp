@@ -185,10 +185,6 @@ void StepperDashboard::onBackendSchemaLoaded()
 
     backendDashboard->setTransactions(transactionsRef);
 
-    if (!transactionsRef->empty()) {
-        backendDashboard->setCurrentTransaction(transactionsRef->at(0));
-    }
-
     backendDashboard->setDatabaseLabel(project.getDatabaseData().getDatabaseName());
 }
 
@@ -539,17 +535,17 @@ void StepperDashboard::onSaveChanges()
 {
     bool changesOk = true;
 
-    // if (!codeGenerator->backendGenerator.updateBackendCode()) {
-    //     changesOk = false;
-    //     QMessageBox::warning(this, "Failed", "Failed to update JSON and generate code.");
-    // }
+    if (!codeGenerator->backendGenerator.updateBackendCode()) {
+        changesOk = false;
+        QMessageBox::warning(this, "Failed", "Failed to update JSON and generate code.");
+    }
 
-    // if (!codeGenerator->frontendGenerator.updateFrontendCode()) {
-    //     changesOk = false;
-    //     QMessageBox::warning(this,
-    //                          "Failed",
-    //                          "Failed to update JSON and generate code for frontend code.");
-    // }
+    if (!codeGenerator->frontendGenerator.updateFrontendCode()) {
+        changesOk = false;
+        QMessageBox::warning(this,
+                             "Failed",
+                             "Failed to update JSON and generate code for frontend code.");
+    }
 
     if (changesOk) {
         QMessageBox::information(this, "Save Changes", "Changes have been saved successfully.");
@@ -872,12 +868,11 @@ void StepperDashboard::goToNextTutorialStep()
         QMessageBox::information(this, "Tutorial", "You have completed all steps.");
 
         // Cerrar el tutorial
-        this->close();
+        // this->close();
         // Abrir el ProjectsPanel después de cerrar el StepperDashboard
-        ProjectsPanel *projectsPanel = new ProjectsPanel();
-        projectsPanel->setAttribute(
-            Qt::WA_DeleteOnClose); // Liberar memoria automáticamente al cerrar
-        projectsPanel->show();
+        // ProjectsPanel *projectsPanel = new ProjectsPanel();
+        // projectsPanel->setAttribute(Qt::WA_DeleteOnClose);
+        // projectsPanel->show();
     }
 }
 

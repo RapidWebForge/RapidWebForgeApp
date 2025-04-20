@@ -19,7 +19,7 @@ AddFieldDialog::AddFieldDialog(QWidget *parent)
     ui->foreignKeyTableComboBox->setEnabled(false);
     // Conectar el evento del checkbox para habilitar o deshabilitar el combo box
     connect(ui->foreignKeyCheckBox,
-            &QCheckBox::checkStateChanged, // Cambiar stateChanged a checkStateChanged
+            &QCheckBox::checkStateChanged,
             this,
             &AddFieldDialog::on_foreignKeyCheckBox_stateChanged);
 
@@ -52,25 +52,25 @@ void AddFieldDialog::applyStyles()
     }
 }
 
-void AddFieldDialog::setTransaction(Transaction &transaction)
+void AddFieldDialog::setTransaction(Transaction *transaction)
 {
-    currentTransaction = &transaction; // Asigna la referencia al Transaction actual
+    currentTransaction = transaction; // Asigna la referencia al Transaction actual
 
     // Verificar si ya existe un campo con Primary Key
-    bool primaryKeyExists = false;
-    for (const Field &existingField : currentTransaction->getFields()) {
-        if (existingField.isPrimaryKey()) {
-            primaryKeyExists = true;
-            break;
-        }
-    }
+    // bool primaryKeyExists = false;
+    // for (const Field &existingField : currentTransaction->getFields()) {
+    //     if (existingField.isPrimaryKey()) {
+    //         primaryKeyExists = true;
+    //         break;
+    //     }
+    // }
 
-    // Si ya existe una Primary Key, deshabilitar el checkbox de Primary Key
-    if (primaryKeyExists) {
-        ui->primaryKeyCheckBox->setEnabled(false);
-    } else {
-        ui->primaryKeyCheckBox->setEnabled(true);
-    }
+    // // Si ya existe una Primary Key, deshabilitar el checkbox de Primary Key
+    // if (primaryKeyExists) {
+    //     ui->primaryKeyCheckBox->setEnabled(false);
+    // } else {
+    //     ui->primaryKeyCheckBox->setEnabled(true);
+    // }
 }
 
 void AddFieldDialog::setAvailableTables(const std::vector<QString> &tables,
@@ -113,23 +113,24 @@ void AddFieldDialog::on_addButton_clicked()
         return;
     }
     // Primero, comprobar si ya existe un campo marcado como Primary Key
-    bool primaryKeyExists = false;
+    // bool primaryKeyExists = false;
 
     // Comprobar si ya existe un campo marcado como Primary Key
-    for (const Field &existingField : currentTransaction->getFields()) {
-        if (existingField.isPrimaryKey()) {
-            primaryKeyExists = true;
-            break;
-        }
-    }
+    // for (const Field &existingField : currentTransaction->getFields()) {
+    //     if (existingField.isPrimaryKey()) {
+    //         primaryKeyExists = true;
+    //         break;
+    //     }
+    // }
 
-    // Si ya existe una Primary Key, y el campo actual también tiene el checkbox de Primary Key activado, mostrar un mensaje de advertencia
-    if (primaryKeyExists && ui->primaryKeyCheckBox->isChecked()) {
-        QMessageBox::warning(this,
-                             "Invalid Operation",
-                             "Only one Primary Key is allowed per table.");
-        return;
-    }
+    // Si ya existe una Primary Key, y el campo actual también tiene el checkbox de Primary Key activado,
+    // mostrar un mensaje de advertencia
+    // if (primaryKeyExists && ui->primaryKeyCheckBox->isChecked()) {
+    //     QMessageBox::warning(this,
+    //                          "Invalid Operation",
+    //                          "Only one Primary Key is allowed per table.");
+    //     return;
+    // }
 
     // Crear el nuevo campo
     Field field;
@@ -192,7 +193,8 @@ void AddFieldDialog::on_addButton_clicked()
 
         // Log de la creación del nuevo field
         loggerJson.logAction("add-field-to-model", logMessage);
-        emit fieldSaved(field);
+        currentTransaction->addField(field);
+        emit fieldSaved();
 
         // Limpiar el formulario
         ui->fieldNameLineEdit->clear();

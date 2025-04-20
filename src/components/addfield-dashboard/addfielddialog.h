@@ -22,12 +22,12 @@ public:
     explicit AddFieldDialog(QWidget *parent = nullptr);
     ~AddFieldDialog();
 
-    void setTransaction(Transaction &transaction);
+    void setTransaction(Transaction *transaction);
     void setAvailableTables(const std::vector<QString> &tables,
                             const QString &currentTableName); // Método para llenar el combo box
 
 signals:
-    void fieldSaved(const Field &field);
+    void fieldSaved();
 
 private slots:
     void on_addButton_clicked();

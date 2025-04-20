@@ -14,6 +14,8 @@ BackendDashboard::BackendDashboard(QWidget *parent)
     , addFieldDialog(nullptr)
     , editFieldDialog(nullptr)
     , rootItem(nullptr)
+    , currentTransaction(nullptr)
+    , currentField(nullptr)
 {
     ui->setupUi(this);
 
@@ -28,6 +30,10 @@ BackendDashboard::BackendDashboard(QWidget *parent)
             &QTreeWidget::itemClicked,
             this,
             &BackendDashboard::onTableSelected);
+    connect(ui->fieldsTableWidget,
+            &QTableWidget::cellClicked,
+            this,
+            &BackendDashboard::onFieldSelected);
 
     setupMethodsList();
     setupFieldsTable();
@@ -218,67 +224,28 @@ void BackendDashboard::setTransactions(std::vector<Transaction> *transactionsRef
 {
     transactions = transactionsRef;
 
-    // Limpiar rootItem
-    rootItem->takeChildren();
-
-    // Añadir transactions como hijos
-    for (const auto &transaction : *transactions) {
-        QTreeWidgetItem *item = new QTreeWidgetItem(rootItem);
-        item->setText(0, QString::fromStdString(transaction.getName()));
-    }
-
-    // Expandir todo el árbol para mostrar todas las tablas
-    ui->tablesTreeWidget->expandAll();
-
-    // Si transactions están habilitados, configurar el primero como la transaction actual
-    if (!transactions->empty()) {
-        // Cargar el primer transaction automáticamente
-        setCurrentTransaction((*transactions)[0]);
-        updateFieldsTable((*transactions)[0]);
-
-        // Actualizar el UI de los labels para la primera transaction
-        ui->fieldLabel->setText(QString::fromStdString((*transactions)[0].getName()) + " Table");
-        ui->labelMethods->setText(QString::fromStdString((*transactions)[0].getName()) + " Methods");
-    }
+    updateTablesTree();
 }
 
-void BackendDashboard::setCurrentTransaction(Transaction &transaction)
+void BackendDashboard::setCurrentTransaction(Transaction *transaction)
 {
     currentTransaction = transaction;
 }
 
-void BackendDashboard::onFieldSaved(const Field &field)
+void BackendDashboard::setCurrentField(Field &field)
 {
-    // Buscar el campo existente y actualizarlo
-    bool fieldUpdated = false;
-    for (auto &existingField : currentTransaction.getFields()) {
-        if (existingField.getName() == field.getName()) {
-            existingField = field; // Actualizar el campo existente
-            fieldUpdated = true;
-            break;
-        }
-    }
+    currentField = &field;
+}
 
-    // Si no se encontró el campo, lo agregamos (esto no debería suceder durante una edición)
-    if (!fieldUpdated) {
-        qDebug() << "Adding new field: " << QString::fromStdString(field.getName());
-        currentTransaction.getFields().push_back(field); // Agregar el nuevo campo
-    }
-
-    // Actualizar la transacción en la lista de transacciones
-    for (auto &transaction : *transactions) {
-        if (transaction.getName() == currentTransaction.getName()) {
-            transaction.setFields(currentTransaction.getFields());
-            break;
-        }
-    }
-    updateFieldsTable(currentTransaction);
+void BackendDashboard::onFieldSaved()
+{
+    updateFieldsTable();
 }
 
 void BackendDashboard::onTransactionSaved(const Transaction &transaction)
 {
     transactions->push_back(transaction);
-    setTransactions(transactions);
+    updateTablesTree();
 }
 
 void BackendDashboard::onTableSelected(QTreeWidgetItem *item, int column)
@@ -294,17 +261,16 @@ void BackendDashboard::onTableSelected(QTreeWidgetItem *item, int column)
     qDebug() << "Table item selected: " << item->text(0);
 
     // Buscar la transacción correspondiente en `transactions`
-    for (const auto &transaction : *transactions) {
-        if (transaction.getName() == item->text(0).toStdString()) {
-            setCurrentTransaction(const_cast<Transaction &>(transaction));
+    for (auto &transaction : *transactions) {
+        if (QString::fromStdString(transaction.getName()) == item->text(0)) {
+            setCurrentTransaction(&transaction);
 
-            // Actualizar el nombre del label para que muestre el nombre de la tabla seleccionada
-            ui->fieldLabel->setText(QString::fromStdString(transaction.getName()) + " Table");
+            const QString transactionName = item->text(0);
 
-            // Actualizar el nombre del label para que muestre el nombre de la tabla seleccionada
-            ui->labelMethods->setText(QString::fromStdString(transaction.getName()) + " Methods");
+            ui->fieldLabel->setText(transactionName + " Table");
+            ui->labelMethods->setText(transactionName + " Methods");
 
-            updateFieldsTable(transaction);
+            updateFieldsTable();
             break;
         }
     }
@@ -312,16 +278,29 @@ void BackendDashboard::onTableSelected(QTreeWidgetItem *item, int column)
     ui->tablesTreeWidget->blockSignals(false);
 }
 
-void BackendDashboard::updateFieldsTable(const Transaction &transaction)
+void BackendDashboard::onFieldSelected(int row, int column)
 {
-    // Limpiar el contenido de la tabla de tareas
+    QTableWidgetItem *item = ui->fieldsTableWidget->item(row, 0);
+    if (!item)
+        return;
+
+    QString fieldName = item->text();
+
+    currentField = &currentTransaction->getFieldByName(fieldName.toStdString());
+
+    qDebug() << "Selected field:" << currentField->getName();
+}
+
+void BackendDashboard::updateFieldsTable()
+{
+    // Limpiar el contenido de la tabla de fields
     ui->fieldsTableWidget->clearContents();
-    ui->fieldsTableWidget->setRowCount(transaction.getFields().size());
+    ui->fieldsTableWidget->setRowCount(currentTransaction->getFields().size());
     ui->fieldsTableWidget->setEditTriggers(QAbstractItemView::NoEditTriggers);
 
     // Agregar los datos de los campos a la tabla
-    for (int row = 0; row < transaction.getFields().size(); ++row) {
-        const Field &field = transaction.getFields()[row];
+    for (int row = 0; row < currentTransaction->getFields().size(); ++row) {
+        const Field &field = currentTransaction->getFields()[row];
         ui->fieldsTableWidget
             ->setItem(row, 0, new QTableWidgetItem(QString::fromStdString(field.getName())));
         ui->fieldsTableWidget
@@ -367,8 +346,34 @@ void BackendDashboard::updateFieldsTable(const Transaction &transaction)
 
     // Mantener un ancho mínimo para las columnas
     for (int column = 0; column < ui->fieldsTableWidget->columnCount(); ++column) {
-        ui->fieldsTableWidget->setColumnWidth(column,
-                                              30); // Definir el ancho mínimo para cada columna
+        // Definir el ancho mínimo para cada columna
+        ui->fieldsTableWidget->setColumnWidth(column, 30);
+    }
+}
+
+void BackendDashboard::updateTablesTree()
+{
+    // Limpiar rootItem
+    rootItem->takeChildren();
+
+    // Añadir transactions como hijos
+    for (const auto &transaction : *transactions) {
+        QTreeWidgetItem *item = new QTreeWidgetItem(rootItem);
+        item->setText(0, QString::fromStdString(transaction.getName()));
+    }
+
+    // Expandir todo el árbol para mostrar todas las tablas
+    ui->tablesTreeWidget->expandAll();
+
+    // Si transactions están habilitados, configurar el primero como la transaction actual
+    if (!transactions->empty()) {
+        // Cargar el primer transaction automáticamente
+        setCurrentTransaction(&(*transactions)[0]);
+        updateFieldsTable();
+
+        // Actualizar el UI de los labels para la primera transaction
+        ui->fieldLabel->setText(QString::fromStdString((*transactions)[0].getName()) + " Table");
+        ui->labelMethods->setText(QString::fromStdString((*transactions)[0].getName()) + " Methods");
     }
 }
 
@@ -377,7 +382,6 @@ void BackendDashboard::setDatabaseLabel(const std::string &dbName)
     ui->tableLabel->setText(QString::fromStdString(dbName));
 }
 
-// Setters
 std::string toLowerCase(const std::string &str)
 {
     std::string lowerCaseStr = str;
@@ -398,91 +402,52 @@ void BackendDashboard::onTableNameChanged(QTreeWidgetItem *item, int column)
     QString newName = item->text(0);
 
     // Solo continuar si el nombre realmente ha cambiado
-    if (newName == QString::fromStdString(currentTransaction.getName())) {
+    if (newName == QString::fromStdString(currentTransaction->getName())) {
         return; // Si el nombre es el mismo, no hacer nada
     }
 
     // Actualizar la transacción correspondiente en la lista de transacciones
     for (auto &transaction : *transactions) {
-        if (transaction.getName() == currentTransaction.getName()) {
+        if (transaction.getName() == currentTransaction->getName()) {
             transaction.setName(newName.toStdString());
             break;
         }
     }
 
     // Actualizar el nombre de la tabla actual
-    currentTransaction.setName(newName.toStdString());
+    currentTransaction->setName(newName.toStdString());
 
     // Actualizar los labels de la UI
     ui->fieldLabel->setText(newName + " Table");
     ui->labelMethods->setText(newName + " Methods");
 }
 
-void BackendDashboard::onFieldUpdated(const Field &updatedField)
-{
-    bool fieldUpdated = false;
-
-    // Recorrer los campos de la transacción actual
-    for (auto &existingField : currentTransaction.getFields()) {
-        if (existingField.getName() == updatedField.getName()) {
-            // Si encontramos un campo con el mismo nombre, actualizamos sus valores
-            existingField = updatedField;
-            fieldUpdated = true;
-            break;
-        }
-    }
-
-    // Actualizar la transacción en el vector de transacciones
-    for (auto &transaction : *transactions) {
-        if (transaction.getName() == currentTransaction.getName()) {
-            transaction.setFields(currentTransaction.getFields());
-            break;
-        }
-    }
-
-    updateFieldsTable(currentTransaction); // Actualizar la tabla visual
-}
-
 void BackendDashboard::on_deleteField_clicked()
 {
-    // Verificar si hay un campo seleccionado en la tabla de fields
-    int selectedRow = ui->fieldsTableWidget->currentRow();
-    // Verificar que haya una fila seleccionada
-    if (selectedRow >= 0) {
-        // Confirmar eliminación
-
-        // Cuadro de diálogo de confirmación con estilos aplicados
-        QMessageBox msgBox;
-        msgBox.setStyleSheet(
-            "QPushButton { background-color: #f0f0f0; color: black; padding: 5px 10px; }"
-            "QMessageBox { background-color: white; }");
-
-        msgBox.setWindowTitle("Delete Field");
-        msgBox.setText("Are you sure you want to delete the selected field?");
-        msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
-        msgBox.setDefaultButton(QMessageBox::No);
-
-        int reply = msgBox.exec();
-
-        if (reply == QMessageBox::Yes) {
-            // Eliminar el campo del currentTransaction
-            currentTransaction.getFields().erase(currentTransaction.getFields().begin()
-                                                 + selectedRow);
-
-            // Actualizar la tabla visual (QTableWidget)
-            updateFieldsTable(currentTransaction);
-
-            // Actualizar las transacciones en BackendGenerator
-            for (auto &transaction : *transactions) {
-                if (transaction.getName() == currentTransaction.getName()) {
-                    transaction.setFields(currentTransaction.getFields());
-                    break;
-                }
-            }
-        }
-    } else {
-        // Mostrar un mensaje de advertencia si no hay un campo seleccionado
+    if (!currentField) {
         QMessageBox::warning(this, "No Selection", "Please select a field to delete.");
+        return;
+    }
+
+    // Cuadro de diálogo de confirmación con estilos aplicados
+    QMessageBox msgBox;
+    msgBox.setStyleSheet(
+        "QPushButton { background-color: #f0f0f0; color: black; padding: 5px 10px; }"
+        "QMessageBox { background-color: white; }");
+
+    msgBox.setWindowTitle("Delete Field");
+    msgBox.setText("Are you sure you want to delete the selected field?");
+    msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
+    msgBox.setDefaultButton(QMessageBox::No);
+
+    int reply = msgBox.exec();
+
+    if (reply == QMessageBox::Yes) {
+        // Eliminar el campo del currentTransaction
+        currentTransaction->removeFieldByName(currentField->getName());
+
+        // Actualizar la tabla visual (QTableWidget)
+        updateFieldsTable();
     }
 }
 
@@ -494,37 +459,30 @@ void BackendDashboard::on_addField_clicked()
         connect(addFieldDialog, &AddFieldDialog::fieldSaved, this, &BackendDashboard::onFieldSaved);
     }
 
-    if (currentTransaction.getName().empty()) {
+    if (!currentTransaction) {
         QMessageBox::warning(this, "Error", "No transaction is currently selected.");
         return;
     }
+
+    addFieldDialog->setTransaction(currentTransaction);
 
     std::vector<QString> tableNames;
     for (const auto &transaction : *transactions) {
         tableNames.push_back(QString::fromStdString(transaction.getName()));
     }
 
-    QString currentTableName = QString::fromStdString(currentTransaction.getName());
+    QString currentTableName = QString::fromStdString(currentTransaction->getName());
     addFieldDialog->setAvailableTables(tableNames, currentTableName);
-
-    // Asignar el currentTransaction al AddFieldDialog
-    addFieldDialog->setTransaction(currentTransaction);
-
     addFieldDialog->exec();
 }
 
 void BackendDashboard::on_editField_clicked()
 {
-    int selectedRow = ui->fieldsTableWidget->currentRow(); // Obtener la fila seleccionada
-
     // Verificar que haya un campo seleccionado
-    if (selectedRow < 0 || selectedRow >= currentTransaction.getFields().size()) {
+    if (!currentField) {
         QMessageBox::warning(this, "No Selection", "Please select a field to edit.");
         return;
     }
-
-    // Obtener referencia al campo seleccionado
-    Field &selectedField = currentTransaction.getFields()[selectedRow];
 
     // Inicializar el diálogo si no está inicializado
     if (!editFieldDialog) {
@@ -535,41 +493,19 @@ void BackendDashboard::on_editField_clicked()
                 &BackendDashboard::onFieldSaved);
     }
 
-    // Establecer los datos actuales del campo seleccionado en el diálogo de edición
-    editFieldDialog->setField(selectedField);
-
-    // Ejecutar el diálogo
-    if (editFieldDialog->exec() == QDialog::Accepted) {
-        Field updatedField = editFieldDialog->getField();
-
-        // Actualizar el campo editado en la posición correspondiente
-        currentTransaction.getFields()[selectedRow] = updatedField;
-
-        // Actualizar las transacciones en la lista general
-        for (auto &transaction : *transactions) {
-            if (transaction.getName() == currentTransaction.getName()) {
-                transaction.setFields(currentTransaction.getFields());
-                break;
-            }
-        }
-        // Actualizar la tabla visual (QTableWidget)
-        updateFieldsTable(currentTransaction);
-    }
+    editFieldDialog->setField(currentField);
+    editFieldDialog->exec();
 }
 
 void BackendDashboard::on_deleteTable_clicked()
 {
-    // Obtener el elemento seleccionado en el árbol de tablas
-    QTreeWidgetItem *selectedItem = ui->tablesTreeWidget->currentItem();
-
-    // Verificar que haya un elemento seleccionado y que no sea el rootItem
-    if (!selectedItem || selectedItem == rootItem) {
+    if (!currentTransaction) {
+        QMessageBox::warning(this, "No Selection", "Please select a table to delete.");
         return;
-        // Si no hay un elemento seleccionado o es el nodo raíz, no hacer nada
     }
 
     // Nombre de la tabla seleccionada
-    QString tableName = selectedItem->text(0);
+    std::string tableName = currentTransaction->getName();
 
     // Mostrar un cuadro de diálogo para confirmar la eliminación
     // Crear y mostrar un cuadro de diálogo para confirmar la eliminación con estilos aplicados
@@ -579,13 +515,16 @@ void BackendDashboard::on_deleteTable_clicked()
         "QMessageBox { background-color: white; }");
 
     msgBox.setWindowTitle("Delete Table");
-    msgBox.setText("Are you sure you want to delete the table '" + tableName + "'?");
+    msgBox.setText("Are you sure you want to delete the table '" + QString::fromStdString(tableName)
+                   + "'?");
     msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
     msgBox.setDefaultButton(QMessageBox::No);
 
     int reply = msgBox.exec();
 
     if (reply == QMessageBox::Yes) {
+        // Obtener el elemento seleccionado en el árbol de tablas
+        QTreeWidgetItem *selectedItem = ui->tablesTreeWidget->currentItem();
         // Eliminar el elemento del árbol visual
         delete selectedItem;
 
@@ -593,9 +532,11 @@ void BackendDashboard::on_deleteTable_clicked()
         auto it = std::remove_if(transactions->begin(),
                                  transactions->end(),
                                  [&tableName](const Transaction &transaction) {
-                                     return transaction.getName() == tableName.toStdString();
+                                     return transaction.getName() == tableName;
                                  });
         transactions->erase(it, transactions->end());
+
+        setCurrentTransaction(nullptr);
 
         // Limpiar la tabla de tareas asociada
         ui->fieldsTableWidget->clearContents();
@@ -622,11 +563,12 @@ void BackendDashboard::on_createTable_clicked()
 
 void BackendDashboard::on_editTable_clicked()
 {
-    QTreeWidgetItem *selectedItem = ui->tablesTreeWidget->currentItem();
-    if (!selectedItem || selectedItem == rootItem)
-        return; // Si no hay nada seleccionado o es el nodo raíz, no hacer nada
+    if (!currentTransaction) {
+        QMessageBox::warning(this, "No Selection", "Please select a table to edit.");
+        return;
+    }
 
-    QString currentName = selectedItem->text(0);
+    std::string currentName = currentTransaction->getName();
 
     // Crear un diálogo personalizado
     QDialog dialog(this);
@@ -637,7 +579,7 @@ void BackendDashboard::on_editTable_clicked()
 
     // Crear un label y un line edit para el nuevo nombre
     QLabel *label = new QLabel("New table name:", &dialog);
-    QLineEdit *lineEdit = new QLineEdit(currentName, &dialog);
+    QLineEdit *lineEdit = new QLineEdit(QString::fromStdString(currentName), &dialog);
 
     // Crear botones OK y Cancel
     QPushButton *okButton = new QPushButton("Save", &dialog);
@@ -665,22 +607,12 @@ void BackendDashboard::on_editTable_clicked()
     if (dialog.exec() == QDialog::Accepted) {
         QString newName = lineEdit->text();
 
-        if (!newName.isEmpty() && newName != currentName) {
-            // Actualizar el nombre en la interfaz gráfica
+        if (!newName.isEmpty() && newName != QString::fromStdString(currentName)) {
+            QTreeWidgetItem *selectedItem = ui->tablesTreeWidget->currentItem();
             selectedItem->setText(0, newName);
-
-            // Actualizar el nombre en la lista de transacciones
-            for (auto &transaction : *transactions) {
-                if (transaction.getName() == currentName.toStdString()) {
-                    transaction.setName(newName.toStdString());
-                    transaction.setNameConst(newName.toLower().toStdString());
-                    // Actualizar los labels de la UI
-                    ui->fieldLabel->setText(newName + " Table");
-                    ui->labelMethods->setText(newName + " Methods");
-
-                    break;
-                }
-            }
+            ui->fieldLabel->setText(newName + " Table");
+            ui->labelMethods->setText(newName + " Methods");
+            currentTransaction->setName(newName.toStdString());
         }
     }
 }

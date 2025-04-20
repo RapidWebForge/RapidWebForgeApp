@@ -75,9 +75,12 @@ bool Transaction::isDifferentFrom(const Transaction &other) const
     if (this->getFields().size() != other.getFields().size())
         return true;
 
+    int comps = 0;
+
     for (const auto &fieldA : this->getFields()) {
         for (const auto &fieldB : other.getFields()) {
             if (fieldA.getName() == fieldB.getName()) {
+                comps++;
                 if (fieldA.isDifferentFrom(fieldB)) {
                     return true;
                 }
@@ -85,5 +88,32 @@ bool Transaction::isDifferentFrom(const Transaction &other) const
         }
     }
 
+    if (comps != other.getFields().size())
+        return true;
+
     return false;
+}
+
+// Field Operations
+
+Field &Transaction::getFieldByName(const std::string &fieldName)
+{
+    for (auto &field : this->fields) {
+        if (field.getName() == fieldName)
+            return field;
+    }
+    throw std::runtime_error("Field not found: " + fieldName);
+}
+
+void Transaction::removeFieldByName(const std::string &fieldName)
+{
+    fields.erase(std::remove_if(fields.begin(),
+                                fields.end(),
+                                [&](const Field &f) { return f.getName() == fieldName; }),
+                 fields.end());
+}
+
+void Transaction::addField(const Field field)
+{
+    fields.push_back(field);
 }
