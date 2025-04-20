@@ -55,10 +55,6 @@ private:
     std::vector<Transaction> *transactions;
     Transaction currentTransaction;
     EditFieldDialog *editFieldDialog;
-
-signals:
-    void transactionNameChanged(); // Señal emitida cuando se cambie el nombre de una transacción
-    void fieldEdited(const Field &field); // Señal que se emite cuando un campo es editado
 };
 
 #endif // BACKENDDASHBOARD_H

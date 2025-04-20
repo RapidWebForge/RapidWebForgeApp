@@ -12,11 +12,8 @@
 #include "../../models/component-type/componenttype.h"
 #include "../../models/component/component.h"
 
-ActionLoggerJson loggerJson("resources/logs/user_actions.json");
-
 CustomTreeWidget::CustomTreeWidget(QWidget *parent)
     : QTreeWidget(parent)
-    , loggerJson("resources/logs/user_actions.json") // Cambiar la ruta al archivo JSON
 
 {
     setDragEnabled(true);
@@ -107,7 +104,7 @@ void CustomTreeWidget::dropEvent(QDropEvent *event)
     // qDebug() << "isTopLevel" << isTopLevel;
     QString logAction;
 
-    // 🚨 Prevent a Custom Component from being added inside itself 🚨
+    // Prevent a Custom Component from being added inside itself
     if (sourceIsSection) {
         QTreeWidgetItem *rootParent = getRootParent(targetItem);
         if (rootParent && rootParent->text(0) == sourceItem->text(0)) {
@@ -130,7 +127,6 @@ void CustomTreeWidget::dropEvent(QDropEvent *event)
         loggerJson.logAction("nest-tag",
                              "Etiqueta " + sourceTagName.toStdString() + " anidada dentro de "
                                  + targetTagName.toStdString());
-        emit stepUpdated("nest-tag");
         logAction = "nest-tag";
 
     } else if (pos.y() < itemRect.top() + itemRect.height() / 3) {
@@ -157,16 +153,11 @@ void CustomTreeWidget::dropEvent(QDropEvent *event)
             loggerJson.logAction("add-new-tag",
                                  "Etiqueta añadida al árbol de componentes: "
                                      + tagName.toStdString());
-            emit stepUpdated("add-new-tag"); // 📢 Aquí se emite la señal después del log
             logAction = "add-new-tag";
         }
     }
     if (!logAction.isEmpty()) {
         loggerJson.logAction(logAction.toStdString(), "Componente movido");
-
-        // 🔍 Verificar si la señal realmente se emite
-        qDebug() << "🚀 Emitting stepUpdated with action:" << logAction;
-        emit stepUpdated(logAction);
     }
     // Oculta el indicador después del drop
     showDropIndicator = false;

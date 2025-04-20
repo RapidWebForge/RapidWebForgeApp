@@ -1,4 +1,7 @@
 #include "actionloggerjson.h"
+#include <QCoreApplication>
+#include <QDir>
+#include <QStandardPaths>
 #include <ctime>
 #include <filesystem>
 #include <fstream>
@@ -6,12 +9,19 @@
 
 using json = nlohmann::json;
 
-ActionLoggerJson::ActionLoggerJson(const std::string &logFilePath)
-    : logFilePath(logFilePath)
+ActionLoggerJson::ActionLoggerJson()
 {
+    QCoreApplication::setOrganizationName("RapidWebForge");
+    QCoreApplication::setApplicationName("RapidWebForge");
+
+    logFilePath = QDir(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation))
+                      .filePath("user_actions.json")
+                      .toStdString();
+
     ensureLogFileExists();
+
     // Reiniciar el archivo JSON al iniciar la aplicación
-    resetLogFile();
+    // resetLogFile();
 }
 
 void ActionLoggerJson::logAction(const std::string &action, const std::string &componentID)
@@ -43,6 +53,7 @@ json ActionLoggerJson::readLogFile()
 {
     // Leer el archivo JSON existente
     std::ifstream logFile(logFilePath);
+
     if (logFile.is_open()) {
         json logData;
         logFile >> logData;
@@ -85,6 +96,7 @@ void ActionLoggerJson::ensureLogFileExists()
         }
     }
 }
+
 void ActionLoggerJson::resetLogFile()
 {
     std::ofstream logFile(logFilePath, std::ios::trunc); // Sobrescribe el archivo

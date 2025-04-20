@@ -7,7 +7,6 @@ CreateTableDialog::CreateTableDialog(QWidget *parent)
     : QDialog(parent)
     , ui(new Ui::CreateTableDialog)
     , addFieldDialog(nullptr)
-    , loggerJson("resources/logs/user_actions.json") // Cambiar la ruta al archivo JSON
 
 {
     ui->setupUi(this);

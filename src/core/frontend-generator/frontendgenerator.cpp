@@ -137,6 +137,8 @@ std::shared_ptr<BaseNode> FrontendGenerator::parseComponent(const nlohmann::json
         auto section = std::make_shared<Section>(name, id, createdOn, updatedOn);
         return section;
     }
+
+    return nullptr;
 }
 
 std::vector<std::shared_ptr<BaseNode>> FrontendGenerator::parseNestedComponents(

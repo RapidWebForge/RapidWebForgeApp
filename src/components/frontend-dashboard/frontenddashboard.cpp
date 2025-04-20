@@ -16,7 +16,6 @@ FrontendDashboard::FrontendDashboard(QWidget *parent)
     : QWidget(parent)
     , ui(new Ui::FrontendDashboard)
     , createSectionDialog(nullptr)
-    , loggerJson("resources/logs/user_actions.json") // Cambiar la ruta al archivo JSON
 
 {
     ui->setupUi(this);

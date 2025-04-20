@@ -80,7 +80,6 @@ void OverviewPanel::setupProjects(const std::vector<Project> &projects)
                                       "   background-color: white;"
                                       "   border-radius: 10px;"
                                       "   border: 1px solid #ddd;"
-                                      "   box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);"
                                       "   padding: 5px;"
                                       "} "
                                       "QPushButton:hover {"

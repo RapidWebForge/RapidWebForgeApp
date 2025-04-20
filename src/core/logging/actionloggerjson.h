@@ -7,7 +7,7 @@
 class ActionLoggerJson
 {
 public:
-    explicit ActionLoggerJson(const std::string &logFilePath);
+    explicit ActionLoggerJson();
     void logAction(const std::string &action, const std::string &componentID);
 
 private:

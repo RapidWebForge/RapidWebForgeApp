@@ -1,4 +1,5 @@
 #include "stepvalidator.h"
+#include <QDebug>
 #include <fstream>
 #include <iostream>
 #include <nlohmann/json.hpp>
@@ -9,9 +10,9 @@ StepValidator::StepValidator(const std::string &stepsFilePath, const std::string
     : stepsFilePath(stepsFilePath)
     , logFilePath(logFilePath)
 {}
-bool StepValidator::isStepCompleted(const std::string &action, const std::string &component)
+
+bool StepValidator::isStepCompleted(const std::string &action)
 {
-    json steps = readStepsFile();
     json logs = readLogFile();
 
     if (logs.empty()) {

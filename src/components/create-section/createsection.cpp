@@ -9,7 +9,6 @@
 CreateSection::CreateSection(QWidget *parent)
     : QDialog(parent)
     , ui(new Ui::CreateSection)
-    , loggerJson("resources/logs/user_actions.json") // Cambiar la ruta al archivo JSON
 {
     ui->setupUi(this);
     applyStyles();

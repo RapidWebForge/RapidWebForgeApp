@@ -11,7 +11,6 @@ AddFieldDialog::AddFieldDialog(QWidget *parent)
     : QDialog(parent)
     , ui(new Ui::AddFieldDialog)
     , currentTransaction(nullptr)
-    , loggerJson("resources/logs/user_actions.json") // Cambiar la ruta al archivo JSON
 
 {
     ui->setupUi(this);

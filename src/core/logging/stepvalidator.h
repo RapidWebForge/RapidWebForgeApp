@@ -1,13 +1,13 @@
 #ifndef STEPVALIDATOR_H
 #define STEPVALIDATOR_H
-#include <nlohmann/json.hpp> // Biblioteca JSON
+#include <nlohmann/json.hpp>
 #include <string>
 
 class StepValidator
 {
 public:
     StepValidator(const std::string &stepsFilePath, const std::string &logFilePath);
-    bool isStepCompleted(const std::string &action, const std::string &component);
+    bool isStepCompleted(const std::string &action);
     int getCurrentStep();                     // Devuelve el paso actual
     std::string getStepDescription(int step); // Descripción del paso
 
