@@ -18,6 +18,7 @@ public:
 
     // Dentro de EditFieldDialog
     void setField(Field *field);
+    void setAvailableTables(const std::vector<QString> &tables, const QString &currentTableName);
 
 signals:
     // Señal que se emite cuando se guarda un field
@@ -25,6 +26,7 @@ signals:
 
 private slots:
     void on_acceptButton_clicked();
+    void on_foreignKeyCheckBox_stateChanged(int state);
 
 private:
     Ui::EditFieldDialog *ui;

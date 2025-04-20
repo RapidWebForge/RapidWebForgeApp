@@ -23,8 +23,6 @@ AddFieldDialog::AddFieldDialog(QWidget *parent)
             this,
             &AddFieldDialog::on_foreignKeyCheckBox_stateChanged);
 
-    connect(ui->cancelButton, &QPushButton::clicked, this, &QDialog::close);
-
     ui->primaryKeyLabel->hide();
     ui->primaryKeyCheckBox->hide();
     ui->checkCheckBox->setHidden(true);
@@ -106,6 +104,19 @@ bool areStringsEqual(const std::string &a, const std::string &b)
     return normalizeString(a) == normalizeString(b);
 }
 
+void AddFieldDialog::clearContent()
+{
+    // Limpiar el formulario
+    ui->fieldNameLineEdit->clear();
+    ui->fieldTypeComboBox->setCurrentIndex(0);
+    ui->primaryKeyCheckBox->setChecked(false);
+    ui->foreignKeyCheckBox->setChecked(false);
+    ui->nullCheckBox->setChecked(false);
+    ui->uniqueCheckBox->setChecked(false);
+    // ui->checkCheckBox->setChecked(false);
+    // ui->defaultCheckBox->setChecked(false);
+}
+
 void AddFieldDialog::on_addButton_clicked()
 {
     if (currentTransaction == nullptr) {
@@ -171,6 +182,7 @@ void AddFieldDialog::on_addButton_clicked()
                                  + ", isPrimaryKey=" + (field.isPrimaryKey() ? "true" : "false")
                                  + ", isNull=" + (isNull ? "true" : "false")
                                  + ", isUnique=" + (isUnique ? "true" : "false");
+
         if (ui->foreignKeyCheckBox->isChecked()) {
             std::string foreignKeyTable = ui->foreignKeyTableComboBox->currentText().toStdString();
             field.setIsForeignKey(true);
@@ -196,15 +208,7 @@ void AddFieldDialog::on_addButton_clicked()
         currentTransaction->addField(field);
         emit fieldSaved();
 
-        // Limpiar el formulario
-        ui->fieldNameLineEdit->clear();
-        ui->fieldTypeComboBox->setCurrentIndex(0);
-        ui->primaryKeyCheckBox->setChecked(false);
-        ui->foreignKeyCheckBox->setChecked(false);
-        ui->nullCheckBox->setChecked(false);
-        ui->uniqueCheckBox->setChecked(false);
-        // ui->checkCheckBox->setChecked(false);
-        // ui->defaultCheckBox->setChecked(false);
+        clearContent();
 
         accept();
     }
@@ -215,8 +219,30 @@ void AddFieldDialog::on_foreignKeyCheckBox_stateChanged(int state)
     if (state == Qt::Checked) {
         // Si el checkbox está marcado, habilitar el combo box
         ui->foreignKeyTableComboBox->setEnabled(true);
+        ui->nullCheckBox->setChecked(false);
+        ui->uniqueCheckBox->setChecked(false);
+        ui->nullCheckBox->setEnabled(false);
+        ui->uniqueCheckBox->setEnabled(false);
+        ui->fieldNameLineEdit->setText(ui->foreignKeyTableComboBox->currentText().toLower()
+                                       + QString::fromStdString("Id"));
+        ui->fieldTypeComboBox->setCurrentIndex(3); // INTEGER
+        ui->fieldTypeComboBox->setEnabled(false);
+        ui->fieldNameLineEdit->setEnabled(false);
     } else {
         // Si el checkbox no está marcado, deshabilitar el combo box
         ui->foreignKeyTableComboBox->setEnabled(false);
+        ui->nullCheckBox->setEnabled(true);
+        ui->uniqueCheckBox->setEnabled(true);
+        ui->fieldTypeComboBox->setCurrentIndex(0);
+        ui->fieldTypeComboBox->setEnabled(true);
+        ui->fieldNameLineEdit->setEnabled(true);
+        ui->fieldNameLineEdit->clear();
     }
+}
+
+void AddFieldDialog::on_cancelButton_clicked()
+{
+    clearContent();
+
+    this->close();
 }

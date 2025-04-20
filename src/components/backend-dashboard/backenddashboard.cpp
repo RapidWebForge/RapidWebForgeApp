@@ -494,6 +494,14 @@ void BackendDashboard::on_editField_clicked()
     }
 
     editFieldDialog->setField(currentField);
+
+    std::vector<QString> tableNames;
+    for (const auto &transaction : *transactions) {
+        tableNames.push_back(QString::fromStdString(transaction.getName()));
+    }
+
+    QString currentTableName = QString::fromStdString(currentTransaction->getName());
+    editFieldDialog->setAvailableTables(tableNames, currentTableName);
     editFieldDialog->exec();
 }
 

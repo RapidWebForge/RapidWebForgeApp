@@ -254,6 +254,31 @@ const [, , basePath, operation, transactionName] = process.argv;
               ) {
                 path.remove();
               }
+
+              if (
+                t.isAssignmentExpression(expr) &&
+                t.isMemberExpression(expr.left) &&
+                t.isIdentifier(expr.left.object, { name: "exports" }) &&
+                /^getAll[A-Z]\w+For[A-Z]\w+$/.test(expr.left.property.name)
+              ) {
+                const funcName = expr.left.property.name;
+
+                const match = funcName.match(/^getAll(.+)For(.+)$/);
+                if (match) {
+                  const [, targetModel, fkTable] = match;
+
+                  // Si el targetModel no coincide o la FK ya no existe, eliminar
+                  const isTargetCorrect = targetModel === modelName;
+                  const stillValid = payload.fields.some(
+                    (f) => f.isForeignKey && f.foreignKeyTable === fkTable,
+                  );
+
+                  if (!isTargetCorrect || !stillValid) {
+                    path.remove();
+                    fileModified = true;
+                  }
+                }
+              }
             },
           });
 
@@ -491,6 +516,36 @@ const [, , basePath, operation, transactionName] = process.argv;
           ast = parser.parse(source, {
             sourceType: "module",
             plugins: ["jsx", "javascript"],
+          });
+
+          // Eliminar rutas obsoletas getAll<ModelName>For<ForeignKeyTable> ---
+          traverse(ast, {
+            ExpressionStatement(path) {
+              const expr = path.node.expression;
+              if (
+                t.isCallExpression(expr) &&
+                t.isMemberExpression(expr.callee) &&
+                t.isIdentifier(expr.callee.object, { name: "router" }) &&
+                t.isIdentifier(expr.callee.property, { name: "get" }) &&
+                expr.arguments.length === 2 &&
+                t.isMemberExpression(expr.arguments[1])
+              ) {
+                // Extraer nombre de la función handler: getAllTasksForProyects
+                const funcName = expr.arguments[1].property.name;
+                const m = funcName.match(/^getAll(.+)For(.+)$/);
+                if (m && m[1] === modelName) {
+                  const fkTable = m[2];
+                  // ¿sigue presente ese FK en payload.fields?
+                  const stillValid = payload.fields.some(
+                    (f) => f.isForeignKey && f.foreignKeyTable === fkTable,
+                  );
+                  if (!stillValid) {
+                    path.remove();
+                    fileModified = true;
+                  }
+                }
+              }
+            },
           });
 
           traverse(ast, {

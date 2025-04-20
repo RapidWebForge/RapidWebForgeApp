@@ -23,6 +23,20 @@ void EditFieldDialog::setField(Field *field)
     setUpWidget(); // repoblar los widgets con el nuevo field
 }
 
+void EditFieldDialog::setAvailableTables(const std::vector<QString> &tables,
+                                         const QString &currentTableName)
+{
+    // Limpiar el combo box antes de añadir nuevas tablas
+    ui->foreignKeyTableComboBox->clear();
+
+    // Añadir los nombres de las tablas al combo box
+    for (const auto &table : tables) {
+        if (table != currentTableName) { // Filtrar la tabla actual
+            ui->foreignKeyTableComboBox->addItem(table);
+        }
+    }
+}
+
 void EditFieldDialog::setUpWidget()
 {
     // Cargar los datos del field en el diálogo
@@ -53,6 +67,32 @@ void EditFieldDialog::setUpWidget()
             QString::fromStdString(currentField->getForeignKeyTable()));
     } else {
         ui->foreignKeyTableComboBox->setEnabled(false);
+    }
+}
+
+void EditFieldDialog::on_foreignKeyCheckBox_stateChanged(int state)
+{
+    if (state == Qt::Checked) {
+        // Si el checkbox está marcado, habilitar el combo box
+        ui->foreignKeyTableComboBox->setEnabled(true);
+        ui->nullCheckBox->setChecked(false);
+        ui->uniqueCheckBox->setChecked(false);
+        ui->nullCheckBox->setEnabled(false);
+        ui->uniqueCheckBox->setEnabled(false);
+        ui->fieldNameLineEdit->setText(ui->foreignKeyTableComboBox->currentText().toLower()
+                                       + QString::fromStdString("Id"));
+        ui->fieldTypeComboBox->setCurrentIndex(3); // INTEGER
+        ui->fieldTypeComboBox->setEnabled(false);
+        ui->fieldNameLineEdit->setEnabled(false);
+    } else {
+        // Si el checkbox no está marcado, deshabilitar el combo box
+        ui->foreignKeyTableComboBox->setEnabled(false);
+        ui->nullCheckBox->setEnabled(true);
+        ui->uniqueCheckBox->setEnabled(true);
+        ui->fieldTypeComboBox->setCurrentIndex(0);
+        ui->fieldTypeComboBox->setEnabled(true);
+        ui->fieldNameLineEdit->setEnabled(true);
+        ui->fieldNameLineEdit->clear();
     }
 }
 

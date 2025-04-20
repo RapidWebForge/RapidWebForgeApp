@@ -23,16 +23,17 @@ public:
     ~AddFieldDialog();
 
     void setTransaction(Transaction *transaction);
-    void setAvailableTables(const std::vector<QString> &tables,
-                            const QString &currentTableName); // Método para llenar el combo box
+    // Método para llenar el combo box
+    void setAvailableTables(const std::vector<QString> &tables, const QString &currentTableName);
 
 signals:
     void fieldSaved();
 
 private slots:
+    void on_cancelButton_clicked();
     void on_addButton_clicked();
-    void on_foreignKeyCheckBox_stateChanged(
-        int state); // Maneja el cambio de estado del checkbox de clave foránea
+    // Maneja el cambio de estado del checkbox de clave foránea
+    void on_foreignKeyCheckBox_stateChanged(int state);
 
 private:
     Ui::AddFieldDialog *ui;
@@ -41,6 +42,7 @@ private:
     ActionLoggerJson loggerJson;     // Logs en formato .json
 
     void applyStyles();
+    void clearContent();
 };
 
 #endif // ADDFIELDDIALOG_H
