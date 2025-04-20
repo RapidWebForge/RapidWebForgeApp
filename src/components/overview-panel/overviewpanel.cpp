@@ -7,7 +7,6 @@
 #include "../project-preview/projectpreview.h"
 #include "../stepper-dashboard/stepperdashboard.h"
 #include "ui_overviewpanel.h"
-#include <boost/process.hpp>
 #include <string>
 
 OverviewPanel::OverviewPanel(QWidget *parent)

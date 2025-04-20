@@ -7,7 +7,6 @@
 #include "../project-preview/projectpreview.h"
 #include "../stepper-dashboard/stepperdashboard.h"
 #include "ui_tutorialspanel.h"
-#include <boost/process.hpp>
 #include <string>
 
 TutorialsPanel::TutorialsPanel(QWidget *parent)

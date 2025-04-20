@@ -1,8 +1,8 @@
 #include "configurationview.h"
 #include <QFileDialog>
 #include <QMessageBox>
+#include <QProcess>
 #include "ui_configurationview.h"
-#include <boost/process.hpp> // Incluir Boost.Process
 
 ConfigurationView::ConfigurationView(QWidget *parent)
     : QDialog(parent)
@@ -85,6 +85,7 @@ void ConfigurationView::on_ngInxPathButton_clicked()
         ui->ngInxPathLineEdit->setText(dir);
     }
 }
+
 void ConfigurationView::on_testButton_clicked()
 {
     ui->testButton->setEnabled(false); // Desactiva temporalmente el botón para evitar doble clic
@@ -94,10 +95,10 @@ void ConfigurationView::on_testButton_clicked()
                          ui->bunPathLineEdit->text(),
                          ui->mysqlPathLineEdit->text()};
     QStringList commands = {
-        " -version",  // para Nginx
-        " --version", // para Node.js
-        " --version", // para Bun
-        " --version"  // para MySQL
+        "-version",  // para Nginx
+        "--version", // para Node.js
+        "--version", // para Bun
+        "--version"  // para MySQL
     };
     QStringList names = {"Nginx", "Node.js", "Bun", "MySQL"};
     std::vector<std::string> invalidPaths;
@@ -137,6 +138,7 @@ void ConfigurationView::on_testButton_clicked()
 
     ui->testButton->setEnabled(true); // Vuelve a habilitar el botón de probar
 }
+
 void ConfigurationView::on_saveButton_clicked()
 {
     QString nginxPath = ui->ngInxPathLineEdit->text();
@@ -177,16 +179,11 @@ void ConfigurationView::on_saveButton_clicked()
 
 bool ConfigurationView::checkPathValid(const std::string &path, const std::string &versionFlag)
 {
-    namespace bp = boost::process;
-    try {
-        bp::ipstream is;
-        bp::child c(path + versionFlag,
-                    bp::std_out > is,
-                    bp::std_err > bp::null); // Redirigir errores a null
+    // Usamos QProcess::execute para simplificar
+    const QString program = QString::fromStdString(path);
+    const QStringList args = {QString::fromStdString(versionFlag)};
 
-        c.wait();
-        return c.exit_code() == 0;
-    } catch (...) {
-        return false; // Si ocurre una excepción, retornar falso
-    }
+    // QProcess::execute arranca el programa, espera a que termine y devuelve el código de salida
+    int exitCode = QProcess::execute(program, args);
+    return (exitCode == 0);
 }

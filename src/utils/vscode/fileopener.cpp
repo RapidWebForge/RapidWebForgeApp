@@ -1,38 +1,36 @@
-#include "FileOpener.h"
+#include "fileopener.h"
 #include <QDebug>
-#include <QFileInfo>               // Agrega esta línea
-#include <QOperatingSystemVersion> // Detectar sistema operativo
+#include <QFileInfo>
+#include <QOperatingSystemVersion>
 #include <QProcess>
-#include <boost/process.hpp> // Usar Boost.Process
-#include <iostream>
-
-namespace bp = boost::process;
 
 bool FileOpener::openInVSCode(const std::string &folderPath, const std::string &filePath)
 {
-    try {
-        std::string command;
-
-// Detectar sistema operativo y formar comando adecuado
-#ifdef _WIN32
-        command = "code \"" + folderPath + "\""; // Comando para Windows
-        if (!filePath.empty()) {
-            command += " -g \"" + filePath + "\""; // Abrir archivo específico
-        }
+    // Determinar el ejecutable de VSCode según el SO
+    QString program;
+#ifdef Q_OS_WIN
+    program = "code"; // Asume que 'code' está en PATH
+#elif defined(Q_OS_MAC)
+    program = "/usr/local/bin/code"; // Ruta típica en macOS
 #else
-        command = "/usr/local/bin/code \"" + folderPath + "\""; // Comando para Mac/Linux
-        if (!filePath.empty()) {
-            command += " -g \"" + filePath + "\""; // Abrir archivo específico
-        }
+    program = "code"; // Linux y otros UNIX
 #endif
-        qDebug() << "🖥 Ejecutando comando:" << QString::fromStdString(command);
 
-        // Ejecutar el comando como si fuera terminal completa
-        bp::child c(command, bp::shell, bp::std_out > bp::null, bp::std_err > bp::null);
-        c.wait(); // Esperar (opcional)
-        return c.exit_code() == 0;
-    } catch (const std::exception &e) {
-        std::cerr << "❌ Error al ejecutar VS Code: " << e.what() << std::endl;
-        return false;
+    // Construir argumentos
+    QStringList arguments;
+    if (!folderPath.empty()) {
+        arguments << QString::fromStdString(folderPath);
     }
+    if (!filePath.empty()) {
+        arguments << "-g" << QString::fromStdString(filePath);
+    }
+
+    qDebug() << "🖥 Ejecutando VSCode:" << program << arguments;
+
+    // Usar startDetached para no bloquear la aplicación
+    bool launched = QProcess::startDetached(program, arguments);
+    if (!launched) {
+        qWarning() << "❌ No se pudo iniciar VSCode en" << program;
+    }
+    return launched;
 }

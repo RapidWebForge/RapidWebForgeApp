@@ -33,7 +33,7 @@ private:
     // Funciones Auxiliares para modificaciones
     std::vector<NodeOperation> diffTrees(std::shared_ptr<BaseNode> &oldNode,
                                          std::shared_ptr<BaseNode> &newNode);
-    void runEditorScript(const std::vector<std::string> args);
+    void runEditorScript(const std::vector<std::string> stdArgs);
     void applyInsertion(std::shared_ptr<BaseNode> &node);
     void applyModification(std::shared_ptr<BaseNode> &node);
     void applyDeletion(std::shared_ptr<BaseNode> &node);

@@ -41,7 +41,6 @@ private:
     QWidget *projectsPage;
     ProjectManager projectManager;
     ConfigurationView *configView = nullptr;
-    bool checkCommand(const std::string &command, bool dobleQuote = true);
     void applyStylesProj();
     ConfigurationManager *confManager = nullptr;
     QStackedWidget *stackedWidget;

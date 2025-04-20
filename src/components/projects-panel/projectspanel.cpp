@@ -5,7 +5,6 @@
 #include "../stepper-dashboard/stepperdashboard.h"
 #include "../stepper/stepper.h"
 #include "ui_projectspanel.h"
-#include <boost/process.hpp>
 #include <string>
 
 ProjectsPanel::ProjectsPanel(QWidget *parent)
@@ -39,26 +38,6 @@ ProjectsPanel::ProjectsPanel(QWidget *parent)
     connect(ui->projectButton, &QPushButton::clicked, this, &ProjectsPanel::showProjects);
 
     applyStylesProj();
-}
-
-bool ProjectsPanel::checkCommand(const std::string &command, bool dobleQuote)
-{
-    namespace bp = boost::process;
-    try {
-        std::string version = dobleQuote ? " --version" : " -version";
-        bp::ipstream is; // Stream para capturar la salida
-
-        // Ejecutar el comando en segundo plano y redirigir la salida a null
-        bp::child c(command + version, bp::std_out > is, bp::std_err > bp::null);
-        std::string line;
-        while (std::getline(is, line) && !line.empty()) {
-            std::cout << line << std::endl; // Opcional: para registro interno
-        }
-        c.wait();
-        return c.exit_code() == 0;
-    } catch (...) {
-        return false;
-    }
 }
 
 ProjectsPanel::~ProjectsPanel()

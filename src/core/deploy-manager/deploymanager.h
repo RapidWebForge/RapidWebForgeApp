@@ -1,10 +1,8 @@
 #ifndef DEPLOYMANAGER_H
 #define DEPLOYMANAGER_H
 
-#include <boost/process.hpp>
+#include <QStringList>
 #include <string>
-
-namespace bp = boost::process;
 
 class DeployManager
 {
@@ -22,9 +20,6 @@ private:
     std::string ngInxDirectory;
     std::string configFilePath;
 
-    bp::child runBackend(const std::string bunPath);
-    bp::child runFrontend(const std::string bunPath);
-    bp::child runNgInx();
     void createNginxConfig(int frontendPort, int backendPort);
 };
 
