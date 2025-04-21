@@ -21,10 +21,11 @@ endif()
 
 # Packages
 # QtCreator
-find_package(Qt6 COMPONENTS Widgets CONFIG QUIET)
-if(NOT TARGET Qt6::Widgets)
-    find_package(Qt5 REQUIRED COMPONENTS Widgets CONFIG)
-endif()
+# find_package(Qt6 COMPONENTS Widgets CONFIG QUIET)
+# if(NOT TARGET Qt6::Widgets)
+#     find_package(Qt5 REQUIRED COMPONENTS Widgets CONFIG)
+# endif()
+find_package(Qt6 REQUIRED COMPONENTS Widgets Network CONFIG QUIET)
 
 # Vcpkg
 find_package(boost_algorithm REQUIRED CONFIG)
