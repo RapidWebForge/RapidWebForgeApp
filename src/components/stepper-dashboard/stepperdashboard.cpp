@@ -144,8 +144,6 @@ StepperDashboard::StepperDashboard(QWidget *parent,
     connect(floatingButton, &QPushButton::clicked, this, &StepperDashboard::openLastModifiedFile);
 
     // Configurar FileWatcher para monitorear cambios en archivos del proyecto
-    fileWatcher->watchProjectFiles(QString::fromStdString(project.getPath()));
-
     QString projectPath = QString::fromStdString(project.getPath());
     qDebug() << "📂 Ruta asignada para monitoreo: " << projectPath;
 
