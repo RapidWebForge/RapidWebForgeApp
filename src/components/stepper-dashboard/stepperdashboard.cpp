@@ -60,17 +60,26 @@ StepperDashboard::StepperDashboard(QWidget *parent,
     // Crear ruta segura en AppData para guardar logs dinámicos
     QString appDataPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
     QDir logDir(appDataPath);
+    QString logFilePath = logDir.filePath("user_actions.json");
 
     if (!logDir.exists()) {
         if (!logDir.mkpath(appDataPath)) {
             qWarning() << "❌ No se pudo crear la carpeta para logs:" << appDataPath;
         }
+    } else {
+        QFile logFile(logFilePath);
+        if (logFile.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text)) {
+            QTextStream out(&logFile);
+            out << "[]"; // JSON vacío
+            logFile.close();
+        } else {
+            qWarning() << "❌ No se pudo limpiar el archivo de log:" << logFilePath;
+        }
     }
-    QString logsPath = QDir(appDataPath).filePath("user_actions.json");
 
-    qDebug() << "📄 Logs Path (AppData):" << logsPath;
+    qDebug() << "📄 Logs Path (AppData):" << logFilePath;
 
-    stepValidator = new StepValidator(tutorialFilePath.toStdString(), logsPath.toStdString());
+    stepValidator = new StepValidator(tutorialFilePath.toStdString(), logFilePath.toStdString());
 
     // Crear un temporizador para verificar el estado de los pasos cada 2 segundos
     // QTimer *stepCheckTimer = new QTimer(this);
