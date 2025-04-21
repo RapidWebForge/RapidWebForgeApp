@@ -16,7 +16,6 @@ FrontendDashboard::FrontendDashboard(QWidget *parent)
     : QWidget(parent)
     , ui(new Ui::FrontendDashboard)
     , createSectionDialog(nullptr)
-    , loggerJson("resources/logs/user_actions.json") // Cambiar la ruta al archivo JSON
 
 {
     ui->setupUi(this);
@@ -615,17 +614,16 @@ void FrontendDashboard::onPropertyValueChanged(int row, int column)
             std::string classValue = newValue.toStdString();
 
             // Lista de logs y patrones de Tailwind a detectar
-            std::vector<std::pair<std::string, std::string>> tailwindLogs = {
-                {"apply-text-styling", "text-"}, // Texto rojo, tamaño, cursiva, etc.
-                {"use-flexbox-grid", "flex"},    // Flexbox
-                {"use-flexbox-grid", "grid"},    // Grid Layout
-                {"responsive-design", "sm:"},    // Diseño responsive
-                {"responsive-design", "md:"},
-                {"responsive-design", "lg:"},
-                {"responsive-design", "xl:"},
-                {"responsive-design", "2xl:"},
-                {"responsive-design", "bg-"} // Cambio de color de fondo
-            };
+            std::vector<std::pair<std::string, std::string>> tailwindLogs
+                = {{"apply-text-styling", "text-"},
+                   {"use-flexbox-grid", "flex"},
+                   {"use-flexbox-grid", "grid"},
+                   {"responsive-design", "sm:"},
+                   {"responsive-design", "md:"},
+                   {"responsive-design", "lg:"},
+                   {"responsive-design", "xl:"},
+                   {"responsive-design", "2xl:"},
+                   {"apply-bg-styling", "bg-"}};
 
             for (const auto &[logType, pattern] : tailwindLogs) {
                 if (classValue.find(pattern) != std::string::npos) {

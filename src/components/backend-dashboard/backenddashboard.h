@@ -23,15 +23,16 @@ public:
     ~BackendDashboard();
     // Setters
     void setTransactions(std::vector<Transaction> *transactionsRef);
-    void setCurrentTransaction(Transaction &transaction);
+    void setCurrentTransaction(Transaction *transaction);
+    void setCurrentField(Field &field);
     void setDatabaseLabel(const std::string &dbName);
 
 public slots:
-    void onFieldSaved(const Field &field);
+    void onFieldSaved();
     void onTransactionSaved(const Transaction &transaction);
     void onTableSelected(QTreeWidgetItem *item, int column);
+    void onFieldSelected(int row, int column);
     void onTableNameChanged(QTreeWidgetItem *item, int column);
-    void onFieldUpdated(const Field &updatedField);
 
 private slots:
     void on_deleteField_clicked();
@@ -47,18 +48,16 @@ private:
     void applyStylesBack();
     void setupFieldsTable();
     void setupMethodsList();
-    void updateFieldsTable(const Transaction &transaction);
+    void updateFieldsTable();
+    void updateTablesTree();
 
     CreateTableDialog *createTableDialog;
     AddFieldDialog *addFieldDialog;
     QTreeWidgetItem *rootItem;
     std::vector<Transaction> *transactions;
-    Transaction currentTransaction;
+    Transaction *currentTransaction = nullptr;
+    Field *currentField = nullptr;
     EditFieldDialog *editFieldDialog;
-
-signals:
-    void transactionNameChanged(); // Señal emitida cuando se cambie el nombre de una transacción
-    void fieldEdited(const Field &field); // Señal que se emite cuando un campo es editado
 };
 
 #endif // BACKENDDASHBOARD_H

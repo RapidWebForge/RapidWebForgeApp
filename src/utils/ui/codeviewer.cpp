@@ -1,7 +1,7 @@
-#include "CodeViewer.h"
-#include <QVBoxLayout>
+#include "codeviewer.h"
 #include <QFile>
 #include <QTextStream>
+#include <QVBoxLayout>
 
 CodeViewer::CodeViewer(QWidget *parent) : QDialog(parent) {
     setWindowTitle("Último Cambio en el Código");

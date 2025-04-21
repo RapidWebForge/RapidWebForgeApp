@@ -25,7 +25,6 @@ protected:
     void paintEvent(QPaintEvent *event) override;
 
 signals:
-    void itemDropped(QTreeWidgetItem* parent, QTreeWidgetItem* item, int index);
-    void stepUpdated(const QString &logAction);
+    void itemDropped(QTreeWidgetItem *parent, QTreeWidgetItem *item, int index);
 };
 #endif // CUSTOMTREEWIDGET_H

@@ -2,13 +2,13 @@
 #include <QDebug>
 #include <QDir>
 #include <QFile>
+#include <QProcess>
 #include <QStandardPaths>
 #include <QTextStream>
 #include "../../core/configuration-manager/configurationmanager.h"
 #include "../../utils/file/fileutiils.h"
 #include "../../utils/render_callback/rendercallback.h"
 #include <boost/algorithm/string.hpp>
-#include <boost/process.hpp>
 #include <fmt/core.h>
 #include <fstream>
 #include <inja/inja.hpp>
@@ -252,48 +252,53 @@ bool BackendGenerator::updateBackendCode()
     return true;
 }
 
-void BackendGenerator::runEditorScript(const std::vector<std::string> args)
+void BackendGenerator::runEditorScript(const std::vector<std::string> &stdArgs)
 {
-    QString resourcePath = ":/babel/editorBackend";
+    // 1. Volcar recurso interno a un archivo temporal
+    const QString resourcePath = ":/babel/editorBackend";
     QFile resourceFile(resourcePath);
     if (!resourceFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
         fmt::print(stderr, "❌ Unable to open resource: {}\n", resourcePath.toStdString());
         return;
     }
 
-    QString tempPath = QStandardPaths::writableLocation(QStandardPaths::TempLocation);
-    QString tempFilePath = tempPath + "/editorBack.js";
-
+    const QString tempDir = QStandardPaths::writableLocation(QStandardPaths::TempLocation);
+    const QString tempFilePath = tempDir + "/editorBack.js";
     QFile tempFile(tempFilePath);
-    if (tempFile.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text)) {
-        tempFile.write(resourceFile.readAll());
-        tempFile.close();
-    } else {
+    if (!tempFile.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text)) {
         fmt::print(stderr, "❌ Unable to write temporary editorBack.js\n");
         return;
     }
+    tempFile.write(resourceFile.readAll());
+    tempFile.close();
 
-    // Correr el comando externo con Node.js
-
-    namespace bp = boost::process;
-
+    // 2. Preparar QProcess
     ConfigurationManager configurationManager;
+    const QString bunPath = QString::fromStdString(
+        configurationManager.getConfiguration().getBunPath());
+    const QString backendDir = QDir::toNativeSeparators(QString::fromStdString(projectPath)
+                                                        + "/backend");
 
-    std::string bunPath = configurationManager.getConfiguration().getBunPath();
+    // 3. Construir lista de argumentos
+    QStringList qArgs;
+    qArgs << "run" << "edit" << "--" << tempFilePath;
+    for (const auto &s : stdArgs) {
+        qArgs << QString::fromStdString(s);
+    }
 
-    std::string backendDir
-        = QDir::toNativeSeparators(QString::fromStdString(projectPath) + "/backend").toStdString();
+    // 4. Configurar y lanzar el proceso, heredando stdout/stderr
+    QProcess proc;
+    proc.setProgram(bunPath);
+    proc.setArguments(qArgs);
+    proc.setWorkingDirectory(backendDir);
+    proc.setProcessChannelMode(QProcess::ForwardedChannels);
 
-    std::vector<std::string> fullArgs = {"run", "edit", "--", tempFilePath.toStdString()};
-    fullArgs.insert(fullArgs.end(), args.begin(), args.end());
-
-    bp::child c(bunPath,
-                bp::args = fullArgs,
-                bp::start_dir = backendDir,
-                bp::std_out > stdout,
-                bp::std_err > stderr);
-
-    c.wait();
+    proc.start();
+    if (!proc.waitForFinished(-1)) {
+        qWarning() << "El proceso no terminó correctamente.";
+    } else {
+        qDebug() << "Proceso backend terminado con código:" << proc.exitCode();
+    }
 }
 
 void BackendGenerator::applyInsertion(Transaction &transaction)

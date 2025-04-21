@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
-    <height>450</height>
+    <width>300</width>
+    <height>413</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -63,12 +63,57 @@
         </item>
         <item>
          <property name="text">
+          <string>TEXT</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>CHAR</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
           <string>INTEGER</string>
          </property>
         </item>
         <item>
          <property name="text">
+          <string>BIGINT</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>FLOAT</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>DOUBLE</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>DECIMAL</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>BOOLEAN</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
           <string>DATE</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>DATEONLY</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>TIME</string>
          </property>
         </item>
        </widget>

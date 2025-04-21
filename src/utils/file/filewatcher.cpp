@@ -1,7 +1,7 @@
-#include "FileWatcher.h"
-#include "../../utils/vscode/fileopener.h"
-#include <QDir>
+#include "filewatcher.h"
 #include <QDebug>
+#include <QDir>
+#include "../../utils/vscode/fileopener.h"
 
 FileWatcher::FileWatcher(QObject *parent) : QObject(parent) {
     watcher = new QFileSystemWatcher(this);

@@ -11,8 +11,6 @@ const [, , basePath, operation, transactionName] = process.argv;
 
 (async () => {
   try {
-    let modified = false;
-
     if (operation === "modify") {
       // Obtenemos la ruta absoluta
       const payloadPath = path.isAbsolute(transactionName)
@@ -184,12 +182,40 @@ const [, , basePath, operation, transactionName] = process.argv;
                   // Mapear el tipo de Sequelize a TS
                   let tsTypeNode;
                   switch (field.type) {
+                    // Strings
                     case "STRING":
+                    case "TEXT":
+                    case "CHAR":
+                    case "DATE":
+                    case "DATEONLY":
+                    case "TIME":
                       tsTypeNode = t.tsStringKeyword();
                       break;
+                    // Booleans
                     case "BOOLEAN":
                       tsTypeNode = t.tsBooleanKeyword();
                       break;
+                    // Numbers
+                    case "INTEGER":
+                    case "BIGINT":
+                    case "FLOAT":
+                    case "DOUBLE":
+                    case "DECIMAL":
+                      tsTypeNode = t.tsNumberKeyword();
+                      break;
+                    // JSON
+                    case "JSON":
+                      tsTypeNode = t.tsAnyKeyword();
+                      break;
+                    // NOT SUPPORTED YET
+                    // ENUM
+                    // case "ENUM":
+                    //   tsTypeNode = t.tsUnionType(...);
+                    //   break;
+                    // Binary
+                    // case "BLOB":
+                    //   tsTypeNode = t.tsTypeReference(t.identifier("Buffer"));
+                    //   break;
                     default:
                       tsTypeNode = t.tsAnyKeyword();
                   }
@@ -201,12 +227,12 @@ const [, , basePath, operation, transactionName] = process.argv;
 
                 // Reemplazar el array de miembros
                 path.node.body.body = members;
-                fileModified = true;
                 path.stop();
               }
             },
           });
 
+          fileModified = true;
           successMessage = `✅ Interfaz actualizada en ${filePath}`;
           errorMessage = `i No se encontró la interfaz ${modelName} en ${filePath}`;
         }
@@ -227,7 +253,31 @@ const [, , basePath, operation, transactionName] = process.argv;
                 payload.fields.some((f) => expr.left.property.name === f.name)
               ) {
                 path.remove();
-                fileModified = true;
+              }
+
+              if (
+                t.isAssignmentExpression(expr) &&
+                t.isMemberExpression(expr.left) &&
+                t.isIdentifier(expr.left.object, { name: "exports" }) &&
+                /^getAll[A-Z]\w+For[A-Z]\w+$/.test(expr.left.property.name)
+              ) {
+                const funcName = expr.left.property.name;
+
+                const match = funcName.match(/^getAll(.+)For(.+)$/);
+                if (match) {
+                  const [, targetModel, fkTable] = match;
+
+                  // Si el targetModel no coincide o la FK ya no existe, eliminar
+                  const isTargetCorrect = targetModel === modelName;
+                  const stillValid = payload.fields.some(
+                    (f) => f.isForeignKey && f.foreignKeyTable === fkTable,
+                  );
+
+                  if (!isTargetCorrect || !stillValid) {
+                    path.remove();
+                    fileModified = true;
+                  }
+                }
               }
             },
           });
@@ -272,7 +322,6 @@ const [, , basePath, operation, transactionName] = process.argv;
                           true,
                         ),
                       );
-                      fileModified = true;
                     }
                   });
               }
@@ -345,7 +394,6 @@ const [, , basePath, operation, transactionName] = process.argv;
                   );
                   path.insertBefore(assign);
                 });
-                fileModified = true;
               }
             },
 
@@ -413,7 +461,6 @@ const [, , basePath, operation, transactionName] = process.argv;
                               }
                             `);
                             innerBody.splice(idx + 1, 0, ...stmts);
-                            fileModified = true;
                           }
                         });
                     }
@@ -453,7 +500,6 @@ const [, , basePath, operation, transactionName] = process.argv;
                         };
                       `);
                       path.parentPath.insertAfter(stmt);
-                      fileModified = true;
                     }
                   });
 
@@ -470,6 +516,36 @@ const [, , basePath, operation, transactionName] = process.argv;
           ast = parser.parse(source, {
             sourceType: "module",
             plugins: ["jsx", "javascript"],
+          });
+
+          // Eliminar rutas obsoletas getAll<ModelName>For<ForeignKeyTable> ---
+          traverse(ast, {
+            ExpressionStatement(path) {
+              const expr = path.node.expression;
+              if (
+                t.isCallExpression(expr) &&
+                t.isMemberExpression(expr.callee) &&
+                t.isIdentifier(expr.callee.object, { name: "router" }) &&
+                t.isIdentifier(expr.callee.property, { name: "get" }) &&
+                expr.arguments.length === 2 &&
+                t.isMemberExpression(expr.arguments[1])
+              ) {
+                // Extraer nombre de la función handler: getAllTasksForProyects
+                const funcName = expr.arguments[1].property.name;
+                const m = funcName.match(/^getAll(.+)For(.+)$/);
+                if (m && m[1] === modelName) {
+                  const fkTable = m[2];
+                  // ¿sigue presente ese FK en payload.fields?
+                  const stillValid = payload.fields.some(
+                    (f) => f.isForeignKey && f.foreignKeyTable === fkTable,
+                  );
+                  if (!stillValid) {
+                    path.remove();
+                    fileModified = true;
+                  }
+                }
+              }
+            },
           });
 
           traverse(ast, {
@@ -533,13 +609,11 @@ const [, , basePath, operation, transactionName] = process.argv;
 
       for (const filePath of filesToModify) {
         const sourceCode = fs.readFileSync(filePath, "utf-8");
-
+        let modified = false;
         const ast = parser.parse(sourceCode, {
           sourceType: "module",
           plugins: ["jsx", "typescript"],
         });
-
-        let modified = false;
 
         if (filePath.includes("models/index.js")) {
           if (operation === "insert") {
@@ -599,7 +673,6 @@ const [, , basePath, operation, transactionName] = process.argv;
                       );
                     }
 
-                    modified = true;
                     path.stop();
                   }
                 },
@@ -622,7 +695,6 @@ const [, , basePath, operation, transactionName] = process.argv;
                     prop.type === "ObjectProperty" &&
                     prop.key.name === modelImportName
                   ) {
-                    modified = true;
                     return false;
                   }
                   return true;
@@ -630,6 +702,8 @@ const [, , basePath, operation, transactionName] = process.argv;
               },
             });
           }
+
+          modified = true;
         }
 
         if (filePath.includes("routes/index.js")) {
@@ -670,7 +744,6 @@ const [, , basePath, operation, transactionName] = process.argv;
                       `const ${routeImportName} = require("${routeImportPath}");`,
                     );
                     path.insertAfter(importNode);
-                    modified = true;
                     path.stop();
                   }
                 },
@@ -710,7 +783,6 @@ const [, , basePath, operation, transactionName] = process.argv;
                       `router.use(${routeImportName});`,
                     );
                     path.insertBefore(useNode);
-                    modified = true;
                     path.stop();
                   }
                 },
@@ -724,18 +796,18 @@ const [, , basePath, operation, transactionName] = process.argv;
                 const code = generate(path.node).code;
                 if (code.includes(`require("${routeImportPath}")`)) {
                   path.remove();
-                  modified = true;
                 }
               },
               ExpressionStatement(path) {
                 const code = generate(path.node).code;
                 if (code.includes(`router.use(${routeImportName})`)) {
                   path.remove();
-                  modified = true;
                 }
               },
             });
           }
+
+          modified = true;
         }
 
         if (modified) {

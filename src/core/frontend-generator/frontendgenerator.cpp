@@ -2,6 +2,8 @@
 #include <QDebug>
 #include <QDir>
 #include <QFile>
+#include <QList>
+#include <QProcess>
 #include <QStandardPaths>
 #include <QTextStream>
 #include "../../core/configuration-manager/configurationmanager.h"
@@ -10,7 +12,6 @@
 #include "../../models/time-chrono/timechrono.h"
 #include "../../utils/file/fileutiils.h"
 #include "../../utils/render_callback/rendercallback.h"
-#include <boost/process.hpp>
 #include <boost/uuid/string_generator.hpp>
 #include <boost/uuid/uuid_generators.hpp>
 #include <boost/uuid/uuid_io.hpp>
@@ -136,6 +137,8 @@ std::shared_ptr<BaseNode> FrontendGenerator::parseComponent(const nlohmann::json
         auto section = std::make_shared<Section>(name, id, createdOn, updatedOn);
         return section;
     }
+
+    return nullptr;
 }
 
 std::vector<std::shared_ptr<BaseNode>> FrontendGenerator::parseNestedComponents(
@@ -764,48 +767,55 @@ bool FrontendGenerator::updateFrontendCode()
     return true;
 }
 
-void FrontendGenerator::runEditorScript(const std::vector<std::string> args)
+void FrontendGenerator::runEditorScript(const std::vector<std::string> stdArgs)
 {
-    QString resourcePath = ":/babel/editorFrontend";
+    // 1. Volcar el recurso interno a un archivo temporal
+    const QString resourcePath = ":/babel/editorFrontend";
     QFile resourceFile(resourcePath);
     if (!resourceFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
         fmt::print(stderr, "❌ Unable to open resource: {}\n", resourcePath.toStdString());
         return;
     }
 
-    QString tempPath = QStandardPaths::writableLocation(QStandardPaths::TempLocation);
-    QString tempFilePath = tempPath + "/editorFront.js";
-
+    const QString tempDir = QStandardPaths::writableLocation(QStandardPaths::TempLocation);
+    const QString tempFilePath = tempDir + "/editorFront.js";
     QFile tempFile(tempFilePath);
-    if (tempFile.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text)) {
-        tempFile.write(resourceFile.readAll());
-        tempFile.close();
-    } else {
+    if (!tempFile.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text)) {
         fmt::print(stderr, "❌ Unable to write temporary editorFront.js\n");
         return;
     }
+    tempFile.write(resourceFile.readAll());
+    tempFile.close();
 
-    // Correr el comando externo con Node.js
-
-    namespace bp = boost::process;
-
+    // 2. Preparar QProcess
     ConfigurationManager configurationManager;
+    const QString bunPath = QString::fromStdString(
+        configurationManager.getConfiguration().getBunPath());
+    const QString frontendDir = QDir::toNativeSeparators(QString::fromStdString(projectPath)
+                                                         + "/frontend");
 
-    std::string bunPath = configurationManager.getConfiguration().getBunPath();
+    // 3. Construir lista de argumentos
+    QStringList qArgs;
+    qArgs << "run"
+          << "edit"
+          << "--" << tempFilePath;
+    for (const auto &s : stdArgs) {
+        qArgs << QString::fromStdString(s);
+    }
 
-    std::string frontendDir
-        = QDir::toNativeSeparators(QString::fromStdString(projectPath) + "/frontend").toStdString();
+    // 4. Configurar y lanzar el proceso, heredando stdout/stderr
+    QProcess proc;
+    proc.setProgram(bunPath);
+    proc.setArguments(qArgs);
+    proc.setWorkingDirectory(frontendDir);
+    proc.setProcessChannelMode(QProcess::ForwardedChannels);
 
-    std::vector<std::string> fullArgs = {"run", "edit", "--", tempFilePath.toStdString()};
-    fullArgs.insert(fullArgs.end(), args.begin(), args.end());
-
-    bp::child c(bunPath,
-                bp::args = fullArgs,
-                bp::start_dir = frontendDir,
-                bp::std_out > stdout,
-                bp::std_err > stderr);
-
-    c.wait();
+    proc.start();
+    if (!proc.waitForFinished(-1)) {
+        qWarning() << "El proceso no terminó correctamente.";
+    } else {
+        qDebug() << "Proceso terminado con código:" << proc.exitCode();
+    }
 }
 
 void FrontendGenerator::applyInsertion(std::shared_ptr<BaseNode> &node)

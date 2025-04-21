@@ -51,13 +51,12 @@ protected:
     void contextMenuEvent(QContextMenuEvent *event) override;
 
 public slots:
-    void validateCurrentStep(const QString &logAction);
+    void validateCurrentStep(int index);
 
 signals:
     void backendSchemaLoaded();
     void frontendSchemaLoaded();
     void projectDeleteRequested(const Project &project);
-    void stepUpdated(const QString &logAction);
 
 private slots:
     void showBackendPage();
@@ -78,8 +77,8 @@ private slots:
     void showTutorialComment();
     void showTutorialHelp();
     void goToNextTutorialStep();
-    void showTutorialIntro();
-    void onUserActionPerformed(const std::string &action, const std::string &componentID);
+    void showTutorialIntro(QString tutorialTitle, QString tutorialDescription);
+    void onUserActionPerformed();
     bool isProgressSaved();
 
 private:
@@ -150,8 +149,6 @@ private:
 
     void showStep(int index);
     QTimer *stepCheckTimer;
-    QString tutorialTitle;
-    QString tutorialDescription;
     QString currentReference;
 
     FileWatcher *fileWatcher;

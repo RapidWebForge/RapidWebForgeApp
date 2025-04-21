@@ -21,14 +21,14 @@ endif()
 
 # Packages
 # QtCreator
-find_package(Qt6 COMPONENTS Widgets CONFIG QUIET)
-if(NOT TARGET Qt6::Widgets)
-    find_package(Qt5 REQUIRED COMPONENTS Widgets CONFIG)
-endif()
+# find_package(Qt6 COMPONENTS Widgets CONFIG QUIET)
+# if(NOT TARGET Qt6::Widgets)
+#     find_package(Qt5 REQUIRED COMPONENTS Widgets CONFIG)
+# endif()
+find_package(Qt6 REQUIRED COMPONENTS Widgets Network CONFIG QUIET)
 
 # Vcpkg
 find_package(boost_algorithm REQUIRED CONFIG)
-find_package(boost_process REQUIRED CONFIG)
 find_package(boost_uuid REQUIRED CONFIG)
 find_package(OpenSSL REQUIRED)
 find_package(fmt CONFIG REQUIRED)
@@ -197,8 +197,8 @@ pkg_check_modules(LIBGIT2 REQUIRED IMPORTED_TARGET libgit2)
 
 target_link_libraries(RapidWebForgeApp PRIVATE
     Qt${QT_VERSION_MAJOR}::Widgets
+    Qt${QT_VERSION_MAJOR}::Network
     Boost::algorithm
-    Boost::process
     Boost::uuid
     OpenSSL::SSL
     fmt::fmt

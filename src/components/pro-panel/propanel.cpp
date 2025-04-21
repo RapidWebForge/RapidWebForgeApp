@@ -6,7 +6,6 @@
 #include "../project-preview/projectpreview.h"
 #include "../stepper-dashboard/stepperdashboard.h"
 #include "ui_propanel.h"
-#include <boost/process.hpp>
 #include <string>
 
 ProPanel::ProPanel(QWidget *parent)
