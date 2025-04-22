@@ -152,6 +152,8 @@ private:
     QString currentReference;
 
     FileWatcher *fileWatcher;
+
+    bool initialized = false;
 };
 
 #endif // STEPPERDASHBOARD_H

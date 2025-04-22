@@ -157,7 +157,7 @@ void Stepper::applyStyles()
     ui->nextButton->setStyleSheet(
         "border: 1px solid #cccccc; border-radius: 7px; margin-left: 0px; padding: 6px 20px; "
         "font-weight: semi-bold;"
-        "background-color: #0F66DE; color: #ffffff; font-size: 16px; margin-inline: 20px;");
+        "background-color: #0F66DE; color: #ffffff; font-size: 16px;");
     ui->backButton->setStyleSheet(
         "border: 1px solid #cccccc; border-radius: 7px; padding: 6px 20px; font-weight: semi-bold;"
         "background-color: #f5f5f5; color: #333333; font-size: 16px;");

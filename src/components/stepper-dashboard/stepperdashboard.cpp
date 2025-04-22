@@ -51,7 +51,7 @@ StepperDashboard::StepperDashboard(QWidget *parent,
     , tutorialFilePath(tutorialPath)
     , fileWatcher(new FileWatcher(this)) // Instancia de FileWatcher
     , floatingButton(nullptr)            // Inicializar como nullptr
-
+    , initialized(false)
 {
     ui->setupUi(this);
     QCoreApplication::setOrganizationName("RapidWebForge");
@@ -153,6 +153,11 @@ StepperDashboard::StepperDashboard(QWidget *parent,
 void StepperDashboard::showEvent(QShowEvent *event)
 {
     QWidget::showEvent(event);
+
+    if (initialized)
+        return;
+
+    initialized = true;
 
     QTimer::singleShot(0, this, [this]() {
         bool frontendOk = false, backendOk = false;
