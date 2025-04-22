@@ -7,16 +7,20 @@
 class DeployManager
 {
 public:
-    DeployManager(const std::string projectPath, const std::string ngInxPath);
+    DeployManager(const std::string &projectPath,
+                  const std::string &ngInxPath,
+                  const std::string &bunPath);
     ~DeployManager();
 
-    void start(const std::string bunPath);
+    void start();
     void kill();
     void reload();
 
 private:
     std::string projectPath;
     std::string ngInxPath;
+    std::string bunPath;
+
     std::string ngInxDirectory;
     std::string configFilePath;
 

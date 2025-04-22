@@ -16,11 +16,14 @@
 #include <iostream>
 #include <string>
 
-DeployManager::DeployManager(const std::string projectPath, const std::string ngInxPath)
+DeployManager::DeployManager(const std::string &projectPath,
+                             const std::string &ngInxPath,
+                             const std::string &bunPath)
     : projectPath(projectPath)
     , ngInxPath(ngInxPath)
     , ngInxDirectory(QFileInfo(QString::fromStdString(ngInxPath)).absolutePath().toStdString())
     , configFilePath(QDir(QString::fromStdString(projectPath)).filePath("nginx.conf").toStdString())
+    , bunPath(bunPath)
 {}
 
 DeployManager::~DeployManager()
@@ -80,7 +83,7 @@ void startInTerminal(const QString &dir, const QString &cmd)
 #endif
 }
 
-void DeployManager::start(const std::string bunPath)
+void DeployManager::start()
 {
     createNginxConfig(9000, 3000);
 

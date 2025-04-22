@@ -10,16 +10,20 @@
 #include <QPushButton>
 #include <QResizeEvent>
 #include <QStandardPaths>
+#include <QThread>
 #include <QTimer>
 #include <QVBoxLayout>
 #include "../../components/create-version/createversion.h"
+#include "../../components/customprogress-dialog/customprogressdialog.h"
 #include "../../components/delete-version/deleteversion.h"
 #include "../../components/manage-version/manageversion.h"
 #include "../../components/projects-panel/projectspanel.h"
 #include "../../components/stepper/stepper.h"
 #include "../../components/version-history/versionhistory.h"
+#include "../../core/code-worker/codeworker.h"
 #include "../../core/configuration-manager/configurationmanager.h"
 #include "../../core/deploy-manager/deploymanager.h"
+#include "../../core/deploy-worker/deployworker.h"
 #include "../../core/version-manager/versionmanager.h"
 #include "ui_stepperdashboard.h"
 #include <fmt/core.h>
@@ -543,26 +547,51 @@ bool StepperDashboard::isProgressSaved()
            && codeGenerator->frontendGenerator.isProgressSaved();
 }
 
+void StepperDashboard::toggleMenuButtons(bool active)
+{
+    ui->projectButton->setEnabled(active);
+    ui->versionsButton->setEnabled(active);
+}
+
 void StepperDashboard::onSaveChanges()
 {
-    bool changesOk = true;
+    // Bloquear menus
+    toggleMenuButtons(false);
 
-    if (!codeGenerator->backendGenerator.updateBackendCode()) {
-        changesOk = false;
-        QMessageBox::warning(this, "Failed", "Failed to update JSON and generate code.");
-    }
+    // Crear y mostrar el diálogo personalizado
+    QString saveMessage = "Saving project, please wait...";
+    CustomProgressDialog *progressDialog = new CustomProgressDialog(saveMessage, this);
+    progressDialog->show();
 
-    if (!codeGenerator->frontendGenerator.updateFrontendCode()) {
-        changesOk = false;
-        QMessageBox::warning(this,
-                             "Failed",
-                             "Failed to update JSON and generate code for frontend code.");
-    }
+    // New thread to execute the project creation
+    QThread *codeThread = new QThread;
+    CodeWorker *worker = new CodeWorker(this->codeGenerator);
 
-    if (changesOk) {
-        QMessageBox::information(this, "Save Changes", "Changes have been saved successfully.");
-        validateCurrentStep(currentStepIndex); // Revisar el estado del paso actual
-    }
+    worker->moveToThread(codeThread);
+
+    connect(codeThread, &QThread::started, worker, &CodeWorker::process);
+
+    connect(worker, &CodeWorker::finished, this, [=](bool success) {
+        progressDialog->close();
+
+        if (success) {
+            QMessageBox::information(this, "Success", "Changes saved successfully.");
+            validateCurrentStep(currentStepIndex);
+        } else {
+            QMessageBox::warning(this, "Error", "Failed to update some components.");
+        }
+
+        codeThread->quit();
+        codeThread->wait();
+
+        worker->deleteLater();
+        codeThread->deleteLater();
+
+        // Activar menus
+        toggleMenuButtons(true);
+    });
+
+    codeThread->start();
 }
 
 void StepperDashboard::onCreateVersion()
@@ -678,6 +707,9 @@ void StepperDashboard::onVersionHistory()
 
 void StepperDashboard::onDeployProject()
 {
+    // Bloquear menus
+    toggleMenuButtons(false);
+
     if (!isProgressSaved()) {
         if (!showConfirmationDialog(this,
                                     "Unsaved Progress",
@@ -716,14 +748,38 @@ void StepperDashboard::onDeployProject()
         return;
     }
 
-    try {
-        DeployManager deployManager(project.getPath(), ngInxPath);
-        // Iniciar el despliegue
-        deployManager.start(bunPath);
-    } catch (const std::exception &e) {
-        QMessageBox::critical(this, "Critical Error", e.what());
-        return;
-    }
+    // Crear y mostrar el diálogo personalizado
+    QString deployMessage = "Deploying project, please wait...";
+    CustomProgressDialog *progressDialog = new CustomProgressDialog(deployMessage, this);
+    progressDialog->show();
+
+    DeployWorker *worker = new DeployWorker(project.getPath(), ngInxPath, bunPath);
+
+    QThread *deployThread = new QThread;
+
+    worker->moveToThread(deployThread);
+
+    connect(deployThread, &QThread::started, worker, &DeployWorker::process);
+
+    connect(worker, &DeployWorker::finished, this, [=](const QString &errorMsg) {
+        progressDialog->close();
+
+        if (errorMsg.isEmpty())
+            QMessageBox::information(this, "Success", "Application deployed successfully.");
+        else {
+            QMessageBox::critical(this, "Critical Error", errorMsg);
+        }
+
+        deployThread->quit();
+        deployThread->wait();
+        deployThread->deleteLater();
+        worker->deleteLater();
+
+        // Activar menus
+        toggleMenuButtons(true);
+    });
+
+    deployThread->start();
 }
 
 void StepperDashboard::onProjectChange()
@@ -740,7 +796,8 @@ void StepperDashboard::onProjectChange()
     // Detener Nginx al cerrar el proyecto
     try {
         DeployManager deployManager(project.getPath(),
-                                    configurationManager.getConfiguration().getNgInxPath());
+                                    configurationManager.getConfiguration().getNgInxPath(),
+                                    configurationManager.getConfiguration().getBunPath());
         deployManager.kill();
     } catch (const std::exception &e) {
         QMessageBox::warning(this,

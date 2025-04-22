@@ -87,7 +87,8 @@ void Stepper::on_nextButton_clicked()
     // Create Project before Summary
     if (currentIndex == ui->stepsWidget->count() - 2) {
         // Crear y mostrar el diálogo personalizado
-        CustomProgressDialog* progressDialog = new CustomProgressDialog(this);
+        QString createProject = "Creating project, please wait...";
+        CustomProgressDialog *progressDialog = new CustomProgressDialog(createProject, this);
         progressDialog->show();
 
         // New thread to execute the project creation

@@ -80,6 +80,7 @@ private slots:
     void showTutorialIntro(QString tutorialTitle, QString tutorialDescription);
     void onUserActionPerformed();
     bool isProgressSaved();
+    void toggleMenuButtons(bool active);
 
 private:
     Ui::StepperDashboard *ui;
