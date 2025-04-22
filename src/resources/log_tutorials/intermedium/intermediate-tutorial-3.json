@@ -1,13 +1,37 @@
 {
   "title": "ORM: Entendiendo el ORM",
-  "description": "Los ORMs son herramientas que permiten emplear objetos y modelos para manejar Bases de Datos Relacionales en lugar de manejar consultas SQL directamente. RapidWebForge emplea un ORM en el backend generado, si bien como usuario no manejarás directamente la herramienta, es importante que conozcas como es que tu proyecto lo emplea.",
+  "description": "Un ORM permite trabajar con bases de datos usando objetos en lugar de SQL. En este tutorial aprenderás cómo RapidWebForge genera el código del backend usando un ORM como Sequelize.",
   "steps": [
     {
       "goal": "Modelos generados para el ORM",
-      "comment": "Crea tus modelos y define sus campos y relaciones según gustes. Posteriormente despliega la aplicación y observa los cambios que se han realizado en el código. Los principales serán los modelos generados para generar las tablas SQL.",
-      "help": "Los tipos de datos empleados por el ORM pueden ser un poco distintos a los que se usan realmente en las consultas SQL. Por ello, es importante repasar para entender a cuales hacen referencia al momento de crear nuestra aplicación web.",
+      "comment": "Crea uno o más modelos y observa cómo se generan los archivos relacionados con estos modelos en el backend.",
+      "help": "Cada modelo que creas es representado como un archivo `.js` o `.ts` que describe su estructura.",
       "reference": "https://sequelize.org/docs/v6/",
       "log": "generate-orm-models",
+      "completed": "false"
+    },
+    {
+      "goal": "Observar los archivos del ORM",
+      "comment": "Ingresa al entorno de código generado y navega a la carpeta del backend donde se encuentran los modelos generados por el ORM.",
+      "help": "Busca nombres de archivos similares al nombre de tu modelo, por ejemplo `Usuario.js`.",
+      "reference": "",
+      "log": "inspect-orm-files",
+      "completed": "false"
+    },
+    {
+      "goal": "Entender las equivalencias de tipos",
+      "comment": "Compara los tipos de datos que elegiste en RapidWebForge con los que aparecen en el archivo generado (por ejemplo, `STRING`, `INTEGER`).",
+      "help": "Esto te ayudará a entender cómo se traducen tus elecciones visuales a código real.",
+      "reference": "",
+      "log": "map-orm-types",
+      "completed": "false"
+    },
+    {
+      "goal": "Relacionar el ORM con la base de datos",
+      "comment": "Despliega el proyecto y analiza cómo el ORM crea las tablas y relaciones reales en la base de datos.",
+      "help": "Esto es clave para entender cómo se sincroniza el frontend visual con el backend real.",
+      "reference": "",
+      "log": "orm-db-sync",
       "completed": "false"
     }
   ]

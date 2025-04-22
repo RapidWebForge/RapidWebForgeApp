@@ -1,0 +1,23 @@
+{
+    "title": "HTML: Creando formularios",
+    "description": "Los formularios son una parte importante del desarrollo web, puesto que permiten ingresar la información solicitada por la página web. Por ejemplo, al momento de realizar registros de cuentas, métodos de pago, ingreso de entidades o modelos, etc. Comúnmente estos formularios están relacionados con el uso de solicitudes HTTP, es decir, conectados con el uso de APIs del backend.",
+    "steps": [
+      {
+        "goal": "Ingresar una etiqueta Form y sus componentes",
+        "comment": "La etiqueta Form se encuentra en el Árbol de Componentes y sirve para representar el <form> de HTML. Para que funcione correctamente, debes añadirlo en tu Árbol de la Vista Actual y agregarle componentes como Inputs y un botón que servirá para enviar la información.",
+        "help": "El Form es un componente que permite anidación, ya que por sí solo no funciona completamente. No te olvides de añadir los componentes necesarios como inputs y botones.",
+        "reference": "https://www.w3schools.com/html/html_forms.asp",
+        "log": "insert-form",
+        "completed": "false"
+      },
+      {
+        "goal": "Completar las propiedades necesarias",
+        "comment": "RapidWebForge ha simplificado el uso de formularios añadiendo propiedades clave. Usa 'model' para indicar a qué modelo del backend se conecta, 'method' para definir si el envío será por POST o PUT, y 'value' en los inputs para referenciar los campos del modelo.",
+        "help": "Asegúrate de establecer correctamente estas propiedades. Además, cambia el botón a type='submit' para que el formulario se envíe correctamente.",
+        "reference": "https://www.w3schools.com/html/html_forms.asp",
+        "log": "configure-form-properties",
+        "completed": "false"
+      }
+    ]
+  }
+  

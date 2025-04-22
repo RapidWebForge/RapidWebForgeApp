@@ -1,0 +1,23 @@
+{
+    "title": "React: Recuperando información",
+    "description": "Anteriormente usamos formularios para ingresar datos. Pero también es fundamental recuperar la información del backend. RapidWebForge facilita este proceso gracias al componente 'ModelLayout', que permite hacer peticiones GET al backend automáticamente.",
+    "steps": [
+      {
+        "goal": "Ingresar una etiqueta ModelLayout",
+        "comment": "La etiqueta ModelLayout está en la categoría de Containers. Esta etiqueta hace automáticamente la petición al backend y recupera los datos del modelo indicado. Solo debes colocarla en tu vista y definir el modelo al que se conectará.",
+        "help": "El campo 'model' es obligatorio para que se realice correctamente la petición. Sin él, no se puede saber qué datos recuperar.",
+        "reference": "https://reactjsguru.com/how-to-use-http-get-method-in-react-js/",
+        "log": "insert-model-layout",
+        "completed": "false"
+      },
+      {
+        "goal": "Anidar un componente en ModelLayout y mostrar los valores del Modelo",
+        "comment": "ModelLayout necesita componentes anidados para poder mostrar los datos recuperados. Puedes empezar usando un párrafo, y mostrar un campo del modelo con doble llave: {{campo}}. Esto representa interpolación en RapidWebForge.",
+        "help": "Consulta los campos del modelo en el dashboard del Backend para saber qué nombres usar dentro de las llaves.",
+        "reference": "https://reactjsguru.com/how-to-use-http-get-method-in-react-js/",
+        "log": "display-model-values",
+        "completed": "false"
+      }
+    ]
+  }
+  

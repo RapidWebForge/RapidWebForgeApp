@@ -1,21 +1,37 @@
 {
   "title": "Base de datos: Creando nuestros modelos",
-  "description": "La gran mayoría de aplicación web utiliza información en su contenido y para poder gestionar ese contenido eficientemente es necesario definir los modelos que se emplearán. Estos modelos estarán compuestos por un nombre que los definirá y sus campos correspondientes. Además, de las relaciones que tendrán con otros modelos.",
+  "description": "La mayoría de aplicaciones web utilizan modelos para estructurar la información. En este tutorial aprenderás a crear tus modelos, definir sus campos y prepararlos para futuras relaciones.",
   "steps": [
     {
-      "goal": "Definir cuales serán tus modelos",
-      "comment": "Para poder crear tus modelos utiliza el botón 'New model' y define el nombre que llevará. Es común que los nombres de las tablas sean en plural ya que definirán el conjunto de tus elementos.",
-      "help": "En caso hayas cometido algún error podrás modificar o eliminar dicha tabla.",
+      "goal": "Definir cuáles serán tus modelos",
+      "comment": "Haz clic en 'New model', asigna un nombre y crea las estructuras base. Recuerda que es común usar nombres en plural como 'Usuarios' o 'Productos'.",
+      "help": "Si necesitas corregir algo, puedes editar o eliminar el modelo sin problema.",
       "reference": "https://database.guide/what-is-a-table/",
       "log": "create-new-model",
       "completed": "false"
     },
     {
       "goal": "Agregar campos a los modelos",
-      "comment": "Para poder añadir campos a tus modelos, en primer lugar, selecciona algún modelo. Luego, utiliza el botón 'Add field' y completa los datos necesarios, el tipo de dato, si posee algún constraint y si es alguna llave foránea. En primera instancia, tus campos no deberían llevar llaves foráneas, eso lo veremos en el siguiente tutorial!",
-      "help": "Recuerda que cada tipo de dato es adecuado según el contexto de tu campo a crear. Ten en cuenta como se usarán o a que hacen referencia tus campos para designarles tipos de datos adecuados.",
+      "comment": "Selecciona el modelo creado, presiona 'Add field' y completa los datos requeridos: nombre del campo, tipo de dato, restricciones, etc.",
+      "help": "Aún no añadas llaves foráneas. Eso lo verás en el siguiente tutorial.",
       "reference": "https://www.geeksforgeeks.org/components-of-table-in-database/",
       "log": "add-field-to-model",
+      "completed": "false"
+    },
+    {
+      "goal": "Editar o eliminar campos existentes",
+      "comment": "Para mantener tu modelo actualizado, puedes modificar o eliminar cualquier campo con los botones de acción junto a cada uno.",
+      "help": "No olvides guardar los cambios para mantener la estructura de datos sincronizada.",
+      "reference": "",
+      "log": "edit-delete-field",
+      "completed": "false"
+    },
+    {
+      "goal": "Visualizar el resumen del modelo",
+      "comment": "Una vez creado tu modelo y campos, observa el resumen de la estructura y cómo se representará en la base de datos.",
+      "help": "Esto te ayudará a tener una visión clara antes de pasar a relaciones o despliegue.",
+      "reference": "",
+      "log": "view-model-summary",
       "completed": "false"
     }
   ]

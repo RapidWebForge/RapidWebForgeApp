@@ -1,0 +1,22 @@
+{
+  "title": "HTML: Crear enlaces con href",
+  "description": "Los enlaces (`<a>`) permiten dirigir al usuario a otras páginas internas o externas. En este tutorial aprenderás cómo insertar y configurar enlaces con el atributo `href`.",
+  "steps": [
+    {
+      "goal": "Insertar una etiqueta de enlace",
+      "comment": "Desde el Árbol de Componentes, selecciona el componente 'Link' y arrástralo a tu vista. Esto generará una etiqueta `<a>` que puedes usar para redireccionar.",
+      "help": "Coloca el enlace en una posición visible y clara para el usuario.",
+      "reference": "https://www.w3schools.com/html/html_links.asp",
+      "log": "insert-link-tag",
+      "completed": "false"
+    },
+    {
+      "goal": "Configurar propiedades del enlace",
+      "comment": "Haz clic sobre el componente de enlace para establecer el valor del atributo `href` (URL de destino), definir si se abre en una nueva pestaña (`target='_blank'`), y cambiar el texto visible.",
+      "help": "Verifica que la URL empiece con 'https://' para evitar errores de seguridad en navegadores modernos.",
+      "reference": "https://developer.mozilla.org/en-US/docs/Web/HTML/Element/a",
+      "log": "configure-link-properties",
+      "completed": "false"
+    }
+  ]
+}
