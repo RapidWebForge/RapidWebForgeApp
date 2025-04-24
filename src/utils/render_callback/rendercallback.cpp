@@ -91,9 +91,9 @@ std::string renderComponent(inja::Environment &env,
         std::string onChange = "";
 
         if (value[0] == '{') {
-            inputValue += value;
+            inputValue = value;
         } else if (!value.empty()) {
-            inputValue += "\"" + value + "\" ";
+            inputValue = "\"" + value + "\" ";
         }
 
         output += "<input";
@@ -108,7 +108,7 @@ std::string renderComponent(inja::Environment &env,
             output += " type=\"" + type + "\"";
 
         if (!inputValue.empty())
-            output += " value=\"" + inputValue + "\"";
+            output += " value=" + inputValue;
 
         if (parentProps.is_object() && !parentProps.empty()) {
             qDebug().noquote() << parentProps.dump(2);
