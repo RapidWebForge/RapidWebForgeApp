@@ -113,8 +113,8 @@ bool Component::isDifferentFrom(const std::shared_ptr<BaseNode> &other) const
         return true;
 
     // Comparar cantidad de hijos
-    if (this->getChildren().size() != otherComponent->getChildren().size())
-        return true;
+    // if (this->getChildren().size() != otherComponent->getChildren().size())
+    //     return true;
 
     // Comparar cada hijo
     // for (size_t i = 0; i < this->getChildren().size(); ++i) {

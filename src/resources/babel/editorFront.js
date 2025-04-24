@@ -40,7 +40,7 @@ const fileName = filePath.split("/").pop().split(".")[0];
     } else if (operation === "insert") {
       position = rest[0] || "";
       payloadPath = rest[1] || "";
-    } else if (operation === "refactor-delete") {
+    } else if (operation === "refactor-delete" || operation === "create") {
       position = rest[0] || "";
     }
 
@@ -258,7 +258,9 @@ const fileName = filePath.split("/").pop().split(".")[0];
                       modified = true;
                     }
                     if (
-                      code.includes("const handleChange") &&
+                      code.includes(
+                        `const handleChange${capitalizeOldMethod}${oldModel}`,
+                      ) &&
                       code.includes(`set${capitalizeOldMethod}${oldModel}`) &&
                       code.includes("[name]: value")
                     ) {
@@ -266,7 +268,9 @@ const fileName = filePath.split("/").pop().split(".")[0];
                       modified = true;
                     }
                     if (
-                      code.includes("const handleSubmit") &&
+                      code.includes(
+                        `const handleSubmit${capitalizeOldMethod}${oldModel}`,
+                      ) &&
                       code.includes(`${oldModel}Service.`)
                     ) {
                       path.remove();
@@ -640,6 +644,48 @@ const fileName = filePath.split("/").pop().split(".")[0];
       }
     }
 
+    if (operation === "create") {
+      const viewName = referenceId;
+      const routePath = rest[0];
+
+      // 1) Insertar import lazy tras los imports existentes
+      traverse(ast, {
+        Program(path) {
+          // encuentra el índice donde terminan los import
+          let lastImport = 0;
+          path.node.body.forEach((n, i) => {
+            if (t.isImportDeclaration(n)) lastImport = i;
+          });
+          const importNode = template.statement.ast(
+            `const ${viewName} = React.lazy(() => import("./views/${viewName}"));`,
+          );
+          path.node.body.splice(lastImport + 1, 0, importNode);
+          path.stop();
+        },
+      });
+
+      // 2) Insertar <Route> dentro de <Routes>
+      traverse(ast, {
+        JSXElement(path) {
+          // Detecta <Routes> ... </Routes>
+          if (
+            t.isJSXIdentifier(path.node.openingElement.name, { name: "Routes" })
+          ) {
+            // Crear el nuevo nodo <Route path="..." element={<View />} />
+            const routeNode = parser.parseExpression(
+              `<Route path="${routePath}" element={<${viewName} />} />`,
+              { plugins: ["jsx"] },
+            );
+            // Añadirlo al final de los children de <Routes>
+            path.pushContainer("children", routeNode);
+            path.stop();
+          }
+        },
+      });
+
+      fileModified = true;
+    }
+
     if (operation === "insert" && fragmentAst) {
       // Detectar si se trata de un componente personalizado
       const insertedComponentName =
@@ -760,14 +806,14 @@ const fileName = filePath.split("/").pop().split(".")[0];
         else if (method === "POST") methodService = "create";
 
         const formStateCode = `const [${lowerMethod}${model}, set${capitalizeMethod}${model}] = useState<${model}>();`;
-        const handleChangeCode = `const handleChange = (e: any) => {
+        const handleChangeCode = `const handleChange${capitalizeMethod}${model} = (e: any) => {
                  const { name, value } = e.target;
                  set${capitalizeMethod}${model}((prevData) => ({
                    ...prevData,
                    [name]: value,
                  }));
                };`;
-        const handleSubmitCode = `const handleSubmit = async (e: React.FormEvent) => {
+        const handleSubmitCode = `const handleSubmit${capitalizeMethod}${model} = async (e: React.FormEvent) => {
                  e.preventDefault();
                  if (!${lowerMethod}${model}) {
                    console.error("Data is undefined");

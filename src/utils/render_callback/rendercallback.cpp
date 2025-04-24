@@ -40,13 +40,9 @@ std::string renderCustomComponent(const nlohmann::json componentJson)
 std::string renderComponent(inja::Environment &env,
                             const nlohmann::json componentJson,
                             std::string type,
-                            std::string parentType)
+                            const nlohmann::json parentProps)
 {
     std::string output = "";
-
-    if (!parentType.empty()) {
-        // output = "\n";
-    }
 
     const auto &props = componentJson["props"];
     if (!props.is_object()) {
@@ -90,11 +86,13 @@ std::string renderComponent(inja::Environment &env,
     } else if (type == "Input") {
         std::string placeholder = props.value("placeholder", "");
         std::string type = props.value("type", "text");
-        std::string inputValue = "value=";
+        std::string value = props.value("value", "");
+        std::string inputValue = "";
+        std::string onChange = "";
 
         if (value[0] == '{') {
             inputValue += value;
-        } else {
+        } else if (!value.empty()) {
             inputValue += "\"" + value + "\" ";
         }
 
@@ -109,8 +107,27 @@ std::string renderComponent(inja::Environment &env,
         if (!type.empty())
             output += " type=\"" + type + "\"";
 
-        output += inputValue + (parentType == "Form" ? "onChange={handleChange}" : "")
-                  + " data-id=\"" + id + "\"/>";
+        if (!inputValue.empty())
+            output += " value=\"" + inputValue + "\"";
+
+        if (parentProps.is_object() && !parentProps.empty()) {
+            qDebug().noquote() << parentProps.dump(2);
+            std::string model = parentProps.value("model", "");
+            std::string method = parentProps.value("method", "");
+
+            if (model != "" && method != "") {
+                std::string methodCapitalize;
+
+                if (method == "PUT")
+                    methodCapitalize = "Put";
+                else if (method == "POST")
+                    methodCapitalize = "Post";
+
+                onChange = "onChange={handleChange" + methodCapitalize + model + "}";
+            }
+        }
+
+        output += onChange + " data-id=\"" + id + "\"/>";
 
     } else if (type == "Text Area") {
         std::string placeholder = props.value("placeholder", "");
@@ -178,7 +195,7 @@ std::string renderComponent(inja::Environment &env,
                     nlohmann::json contextWithNested;
                     contextWithNested["nestedComponent"] = nestedComponent;
 
-                    output += env.render("{{ render_component(nestedComponent, \"" + type + "\") }}",
+                    output += env.render("{{ render_component(nestedComponent, \"\") }}",
                                          contextWithNested);
                 } catch (const std::exception &e) {
                     fmt::print(stderr, "Error rendering nested component: {}\n", e.what());
@@ -196,16 +213,27 @@ std::string renderComponent(inja::Environment &env,
 
         output += "</div>";
     } else if (type == "Form") {
+        bool sendProps = true;
         className = props.value("class", "");
         std::string onSubmit = "";
-        std::string model = props.value("model", "Model");
-        std::string method = props.value("method", "Method");
+        std::string model = props.value("model", "");
+        std::string method = props.value("method", "");
 
-        bool modelIsValid = !model.empty() && model != "Model";
+        bool modelIsValid = !model.empty();
 
-        if (!method.empty() && method != "Method") {
-            if (method == "POST" || method == "PUT")
-                onSubmit += "handleSubmit";
+        if (!method.empty()) {
+            if (method == "POST" || method == "PUT") {
+                std::string methodCapitalize;
+
+                if (method == "PUT")
+                    methodCapitalize = "Put";
+                else if (method == "POST")
+                    methodCapitalize = "Post";
+
+                onSubmit += "handleSubmit" + methodCapitalize + model;
+            } else {
+                sendProps = false;
+            }
         }
 
         output += "<form data-id=\"" + id + "\"";
@@ -220,6 +248,9 @@ std::string renderComponent(inja::Environment &env,
 
         if (modelIsValid)
             output += " data-rwf-model=\"" + model + "\"";
+        else {
+            sendProps = false;
+        }
 
         output += ">";
 
@@ -229,7 +260,16 @@ std::string renderComponent(inja::Environment &env,
                 try {
                     nlohmann::json contextWithNested;
                     contextWithNested["nestedComponent"] = nestedComponent;
-                    output += env.render("{{ render_component(nestedComponent, \"" + type + "\") }}",
+
+                    if (sendProps) {
+                        contextWithNested["parentProps"] = props;
+                    } else {
+                        contextWithNested["parentProps"] = "";
+                    }
+
+                    output += env.render(R"(
+                            {{ render_component(nestedComponent, parentProps) }}
+                            )",
                                          contextWithNested);
                 } catch (const std::exception &e) {
                     fmt::print(stderr, "Error rendering nested component: {}", e.what());
@@ -260,9 +300,9 @@ std::string renderComponentCallback(inja::Environment &env, inja::Arguments &arg
 
     if (componentJson.contains("type") && componentJson["type"].is_string()) {
         std::string type = componentJson["type"];
-        std::string parentType = args.at(1)->get<std::string>();
+        const nlohmann::json &parentProps = *args[1];
 
-        return renderComponent(env, componentJson, type, parentType);
+        return renderComponent(env, componentJson, type, parentProps);
     } else {
         return renderCustomComponent(componentJson);
     }
@@ -368,9 +408,16 @@ std::string renderStatesCallback(inja::Environment &env, inja::Arguments &args)
                         std::string modelName = props["model"];
                         std::string method = props["method"];
 
+                        std::string methodCapitalize;
+
+                        if (method == "PUT")
+                            methodCapitalize = "Put";
+                        else if (method == "POST")
+                            methodCapitalize = "Post";
+
                         std::string lowerMethod = toLower(method);
 
-                        output += "const [" + lowerMethod + modelName + ", set" + lowerMethod
+                        output += "const [" + lowerMethod + modelName + ", set" + methodCapitalize
                                   + modelName + "] = useState<" + modelName + ">();\n";
                     }
                 }
@@ -410,33 +457,40 @@ std::string renderHandleFoosCallback(inja::Environment &env, inja::Arguments &ar
         return ""; // No se genera los handle
     }
 
-    // Generar el handleChange
-    handleChange = "const handleChange = (e: any) => {\n";
-    handleChange += "  const { name, value } = e.target;\n";
-
-    // Generar el handleSubmit
-    handleSubmit = "const handleSubmit = async (e: React.FormEvent) => {\n";
-    handleSubmit += "  e.preventDefault();\n\n";
-
     for (const auto &componentJson : components) {
         if (componentJson.contains("type") && componentJson["type"] == "Form") {
             const auto &props = componentJson["props"];
             if (props.contains("model") && props["model"].is_string()
                 && !props["model"].get<std::string>().empty() && props["model"] != "Model") {
-                std::string modelName = props["model"];
                 std::string method = props["method"];
-                std::string lowerModel = toLower(modelName);
-                std::string lowerMethod = toLower(method);
+                std::string modelName = props["model"];
+                std::string methodCapitalize;
 
+                if (method == "PUT")
+                    methodCapitalize = "Put";
+                else if (method == "POST")
+                    methodCapitalize = "Post";
+
+                // Generar el handleChange
+                handleChange = "const handleChange" + methodCapitalize + modelName;
+                handleChange += " = (e: any) => {\n";
+                handleChange += "  const { name, value } = e.target;\n";
+
+                // Generar el handleSubmit
+                handleSubmit = "const handleSubmit" + methodCapitalize + modelName;
+                handleSubmit += " = async (e: React.FormEvent) => {\n";
+                handleSubmit += "  e.preventDefault();\n\n";
+
+                std::string lowerMethod = toLower(method);
                 std::string methodService;
 
-                if (modelName == "PUT")
+                if (method == "PUT")
                     methodService = "update";
-                else if (modelName == "POST")
+                else if (method == "POST")
                     methodService = "create";
 
                 // Agregar código para handleChange
-                handleChange += "  set" + lowerMethod + modelName + "((prevData) => ({\n";
+                handleChange += "  set" + methodCapitalize + modelName + "((prevData) => ({\n";
                 handleChange += "    ...prevData,\n";
                 handleChange += "    [name]: value,\n";
                 handleChange += "  }));\n";
@@ -447,7 +501,7 @@ std::string renderHandleFoosCallback(inja::Environment &env, inja::Arguments &ar
                 handleSubmit += "  return;\n";
                 handleSubmit += "  }\n\n";
                 handleSubmit += "  try {\n";
-                handleSubmit += "    const response = await " + methodService + "Service.create"
+                handleSubmit += "    const response = await " + modelName + "Service.create"
                                 + modelName + "(" + lowerMethod + modelName + ");\n";
                 handleSubmit += "    console.log(\"Form submitted successfully:\", response);\n";
             }

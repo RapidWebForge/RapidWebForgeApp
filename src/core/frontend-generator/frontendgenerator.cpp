@@ -832,8 +832,18 @@ void FrontendGenerator::applyInsertion(std::shared_ptr<BaseNode> &node)
             if (generateCustomComponent(section->getName()))
                 return;
         } else {
-            if (generateView(section->getName()))
+            if (generateView(section->getName())) {
+                std::string filePath = projectPath + "/frontend/src/App.tsx";
+
+                std::vector<std::string> args = {filePath,
+                                                 "create",
+                                                 section->getName(),
+                                                 section->getPath()};
+
+                // Run script
+                runEditorScript(args);
                 return;
+            }
         }
     } else {
         // Determinar en qué archivo se debe insertar el nodo
@@ -971,8 +981,8 @@ std::string FrontendGenerator::getFilePathForNode(std::shared_ptr<BaseNode> &nod
 
 std::string FrontendGenerator::generateNodeFragment(std::shared_ptr<BaseNode> &node)
 {
-    nlohmann::json data;
-    std::string templatePath, templateString = "{{ render_component(data, \"\") }}";
+    nlohmann::json data, parentProps = nlohmann::json::object();
+    std::string templateString = "{{ render_component(data, parentProps) }}";
 
     // Determinar qué tipo de nodo es y cargar el JSON y plantilla adecuada
     if (node->getNodeType() == "Section") {
@@ -990,6 +1000,14 @@ std::string FrontendGenerator::generateNodeFragment(std::shared_ptr<BaseNode> &n
             return "";
         }
         data = processComponentToJson(component);
+
+        if ((componentTypeToString(component->getType()) == "Input") && component->getParent()) {
+            auto parent = std::dynamic_pointer_cast<Component>(component->getParent());
+            nlohmann::json parentJson = processComponentToJson(parent);
+            if (parentJson.contains("props") && parentJson["props"]["model"] != ""
+                && parentJson["props"]["method"] != "")
+                parentProps = parentJson["props"];
+        }
     } else {
         fmt::print(stderr,
                    "generateNodeFragment: Tipo de nodo no soportado para generación de "
@@ -999,7 +1017,8 @@ std::string FrontendGenerator::generateNodeFragment(std::shared_ptr<BaseNode> &n
 
     try {
         // Renderizar el fragmento usando Inja
-        std::string result = env.render(templateString, {{"data", data}});
+        std::string result = env.render(templateString,
+                                        {{"data", data}, {"parentProps", parentProps}});
         return result;
     } catch (const std::exception &e) {
         fmt::print(stderr,
@@ -1039,7 +1058,8 @@ void FrontendGenerator::getReferenceForInsertion(std::string &referenceId,
 
     if (children.size() == 1) {
         // Único hijo, se inserta dentro del padre (opcional)
-        referenceId = "none";
+        // referenceId = "none";
+        referenceId = boost::uuids::to_string(parent->getId());
         position = "inner";
     } else if (index == 0) {
         // Es el primero, usar el segundo como referencia con "before"
