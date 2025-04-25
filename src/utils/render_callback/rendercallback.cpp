@@ -87,6 +87,7 @@ std::string renderComponent(inja::Environment &env,
         std::string placeholder = props.value("placeholder", "");
         std::string type = props.value("type", "text");
         std::string value = props.value("value", "");
+        std::string name = props.value("name", "");
         std::string inputValue = "";
         std::string onChange = "";
 
@@ -102,7 +103,10 @@ std::string renderComponent(inja::Environment &env,
             output += " className=\"" + className + "\"";
 
         if (!placeholder.empty())
-            placeholder += " placeholder=\"" + placeholder + "\"";
+            output += " placeholder=\"" + placeholder + "\"";
+
+        if (!name.empty())
+            output += " name=\"" + name + "\"";
 
         if (!type.empty())
             output += " type=\"" + type + "\"";
@@ -138,7 +142,7 @@ std::string renderComponent(inja::Environment &env,
             output += " className=\"" + className + "\"";
 
         if (!placeholder.empty())
-            placeholder += " placeholder=\"" + placeholder + "\"";
+            output += " placeholder=\"" + placeholder + "\"";
 
         output += " data-id=\"" + id + "\" />";
     } else if (type == "Button") {
@@ -151,9 +155,30 @@ std::string renderComponent(inja::Environment &env,
             output += " className=\"" + className + "\"";
 
         if (!type.empty())
-            type += " type=\"" + type + "\"";
+            output += " type=\"" + type + "\"";
 
         output += " data-id=\"" + id + "\">" + value + "</button>";
+    } else if (type == "Hyperlink") {
+        value = props.value("text", "Default Hyperlink");
+        std::string href = props.value("href", "");
+        std::string target = props.value("target", "");
+        std::string rel = props.value("rel", "");
+
+        output += "<a";
+
+        if (!className.empty())
+            output += " className=\"" + className + "\"";
+
+        if (!href.empty())
+            output += " href=\"" + href + "\"";
+
+        if (!target.empty())
+            output += " target=\"" + target + "\"";
+
+        if (!rel.empty())
+            output += " rel=\"" + rel + "\"";
+
+        output += " data-id=\"" + id + "\">" + value + "</a>";
     } else if (type == "Horizontal Layout" || type == "Vertical Layout" || type == "Model Layout") {
         std::string layoutClass, model;
 

@@ -112,6 +112,11 @@
              <string>Button</string>
             </property>
            </item>
+           <item>
+            <property name="text">
+             <string>Hyperlink</string>
+            </property>
+           </item>
           </item>
           <item>
            <property name="text">
