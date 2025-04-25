@@ -87,6 +87,7 @@ std::string renderComponent(inja::Environment &env,
         std::string placeholder = props.value("placeholder", "");
         std::string type = props.value("type", "text");
         std::string value = props.value("value", "");
+        std::string id = props.value("id", "");
         std::string name = props.value("name", "");
         std::string required = props.value("required", "");
         std::string inputValue = "";
@@ -105,6 +106,9 @@ std::string renderComponent(inja::Environment &env,
 
         if (!placeholder.empty())
             output += " placeholder=\"" + placeholder + "\"";
+
+        if (!id.empty())
+            output += " id=\"" + id + "\"";
 
         if (!name.empty())
             output += " name=\"" + name + "\"";
@@ -136,6 +140,20 @@ std::string renderComponent(inja::Environment &env,
         }
 
         output += onChange + " data-id=\"" + id + "\"/>";
+
+    } else if (type == "Label") {
+        value = props.value("text", "Default Label");
+        std::string htmlFor = props.value("for", "");
+
+        output += "<label";
+
+        if (!className.empty())
+            output += " className=\"" + className + "\"";
+
+        if (!htmlFor.empty())
+            output += " htmlFor=\"" + htmlFor + "\"";
+
+        output += " data-id=\"" + id + "\">" + value + "</label>";
 
     } else if (type == "Text Area") {
         std::string placeholder = props.value("placeholder", "");
@@ -183,19 +201,63 @@ std::string renderComponent(inja::Environment &env,
             output += " rel=\"" + rel + "\"";
 
         output += " data-id=\"" + id + "\">" + value + "</a>";
-    } else if (type == "Horizontal Layout" || type == "Vertical Layout" || type == "Model Layout") {
+    } else if (type == "Image") {
+        std::string src = props.value("src", "");
+        std::string alt = props.value("alt", "");
+        std::string width = props.value("width", "");
+        std::string height = props.value("height", "");
+
+        output += "<img";
+
+        if (!className.empty())
+            output += " className=\"" + className + "\"";
+
+        if (!src.empty())
+            output += " src=\"" + src + "\"";
+
+        if (!alt.empty())
+            output += " alt=\"" + alt + "\"";
+
+        if (!width.empty())
+            output += " width=\"" + width + "\"";
+
+        if (!height.empty())
+            output += " height=\"" + height + "\"";
+
+        output += " data-id=\"" + id + "\" />";
+    } else if (type == "Iframe") {
+        std::string src = props.value("src", "");
+        std::string title = props.value("title", "");
+
+        output += "<iframe";
+
+        if (!className.empty())
+            output += " className=\"" + className + "\"";
+
+        if (!src.empty())
+            output += " src=\"" + src + "\"";
+
+        if (!title.empty())
+            output += " title=\"" + title + "\"";
+
+        output += " data-id=\"" + id + "\" />";
+    } else if (type == "Horizontal Layout" || type == "Vertical Layout" || type == "Model Layout"
+               || type == "Layout") {
         std::string layoutClass, model;
 
         if (type == "Model Layout") {
             layoutClass = props.value("class", "");
             model = props.value("model", "Model");
         } else {
-            layoutClass = (type == "Horizontal Layout") ? "flex flex-row" : "flex flex-col";
+            layoutClass = type == "Layout"                ? ""
+                          : (type == "Horizontal Layout") ? "flex flex-row"
+                                                          : "flex flex-col";
 
             if (props.contains("class") && !props["class"].get<std::string>().empty()) {
                 layoutClass += " " + props["class"].get<std::string>();
             }
         }
+
         output += "<div data-id=\"" + id + "\"";
 
         bool modelIsValid = !model.empty() && model != "Model";

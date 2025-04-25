@@ -77,6 +77,11 @@
              <string>Text Area</string>
             </property>
            </item>
+           <item>
+            <property name="text">
+             <string>Label</string>
+            </property>
+           </item>
           </item>
           <item>
            <property name="text">
@@ -120,6 +125,21 @@
           </item>
           <item>
            <property name="text">
+            <string>Media</string>
+           </property>
+           <item>
+            <property name="text">
+             <string>Image</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Iframe</string>
+            </property>
+           </item>
+          </item>
+          <item>
+           <property name="text">
             <string>Forms</string>
            </property>
            <item>
@@ -145,6 +165,11 @@
            <item>
             <property name="text">
              <string>Model Layout</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Layout</string>
             </property>
            </item>
           </item>

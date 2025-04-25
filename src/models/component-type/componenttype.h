@@ -12,6 +12,7 @@ enum class ComponentType {
     HeaderH3,
     Paragraph,
     Input,
+    Label,
     TextArea,
     Button,
     Hyperlink,
@@ -19,6 +20,9 @@ enum class ComponentType {
     HorizontalLayout,
     VerticalLayout,
     ModelLayout,
+    Layout,
+    Image,
+    Iframe,
 };
 
 // Mapa de propiedades predeterminadas
@@ -32,8 +36,10 @@ const std::map<ComponentType, std::map<std::string, std::string>> componentPrope
          {"placeholder", "Enter text"},
          {"type", "text"},
          {"value", ""},
+         {"id", ""},
          {"name", ""},
          {"required", ""}}},
+       {ComponentType::Label, {{"class", ""}, {"text", "Default Label"}, {"for", ""}}},
        {ComponentType::TextArea, {{"class", ""}, {"placeholder", "Enter text"}}},
        {ComponentType::Button,
         {{"class", ""}, {"text", "Default Button"}, {"type", "button"}, {"click", ""}}},
@@ -43,7 +49,10 @@ const std::map<ComponentType, std::map<std::string, std::string>> componentPrope
        {ComponentType::HorizontalLayout, {{"class", ""}}},
        {ComponentType::VerticalLayout, {{"class", ""}}},
        {ComponentType::ModelLayout, {{"class", ""}, {"model", ""}}},
-       {ComponentType::ModelLayout, {{"name", ""}}}};
+       {ComponentType::Layout, {{"class", ""}}},
+       {ComponentType::Image,
+        {{"class", ""}, {"src", ""}, {"alt", ""}, {"width", ""}, {"height", ""}}},
+       {ComponentType::Iframe, {{"class", ""}, {"src", ""}, {"title", ""}}}};
 
 // Función para convertir ComponentType a std::string
 inline std::string componentTypeToString(ComponentType type)
@@ -59,6 +68,8 @@ inline std::string componentTypeToString(ComponentType type)
         return "Paragraph";
     case ComponentType::Input:
         return "Input";
+    case ComponentType::Label:
+        return "Label";
     case ComponentType::TextArea:
         return "Text Area";
     case ComponentType::Button:
@@ -73,6 +84,12 @@ inline std::string componentTypeToString(ComponentType type)
         return "Vertical Layout";
     case ComponentType::ModelLayout:
         return "Model Layout";
+    case ComponentType::Layout:
+        return "Layout";
+    case ComponentType::Image:
+        return "Image";
+    case ComponentType::Iframe:
+        return "Iframe";
     default:
         return "Undefined";
     }
@@ -87,6 +104,7 @@ inline ComponentType stringToComponentType(const std::string &typeStr)
         {"Header H3", ComponentType::HeaderH3},
         {"Paragraph", ComponentType::Paragraph},
         {"Input", ComponentType::Input},
+        {"Label", ComponentType::Label},
         {"Text Area", ComponentType::TextArea},
         {"Button", ComponentType::Button},
         {"Hyperlink", ComponentType::Hyperlink},
@@ -94,6 +112,9 @@ inline ComponentType stringToComponentType(const std::string &typeStr)
         {"Horizontal Layout", ComponentType::HorizontalLayout},
         {"Vertical Layout", ComponentType::VerticalLayout},
         {"Model Layout", ComponentType::ModelLayout},
+        {"Layout", ComponentType::Layout},
+        {"Image", ComponentType::Image},
+        {"Iframe", ComponentType::Iframe},
     };
 
     auto it = typeMap.find(typeStr);
