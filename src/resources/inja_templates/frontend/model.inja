@@ -4,3 +4,9 @@ export default interface {{ model_name }} {
     {{ field.name }}: {{ render_type(field.type) }};
 {% endfor %}
 }
+
+export const default{{ model_name }} : {{ model_name }} = {
+{% for field in fields %}
+    {{ field.name }}: {{ render_default_type(field.type) }};
+{% endfor %}
+}

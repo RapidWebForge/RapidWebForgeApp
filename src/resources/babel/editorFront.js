@@ -51,26 +51,50 @@ const fileName = filePath.split("/").pop().split(".")[0];
           node.source.value === `../services/${model}Service`,
       );
 
-      const modelImportExists = ast.program.body.some(
+      const importDeclIndex = ast.program.body.findIndex(
         (node) =>
-          node.type === "ImportDeclaration" &&
+          t.isImportDeclaration(node) &&
           node.source.value === `../models/${model}`,
       );
 
-      if (!modelImportExists)
-        ast.program.body.unshift({
-          type: "ImportDeclaration",
-          specifiers: [
-            {
-              type: "ImportDefaultSpecifier",
-              local: { type: "Identifier", name: model },
-            },
+      if (importDeclIndex !== -1) {
+        const importDecl = ast.program.body[importDeclIndex];
+
+        const hasModel = importDecl.specifiers.some(
+          (spec) => t.isImportSpecifier(spec) && spec.imported.name === model,
+        );
+        const hasDefault = importDecl.specifiers.some(
+          (spec) =>
+            t.isImportSpecifier(spec) &&
+            spec.imported.name === `default${model}`,
+        );
+
+        if (!hasModel) {
+          importDecl.specifiers.push(
+            t.importSpecifier(t.identifier(model), t.identifier(model)),
+          );
+        }
+        if (!hasDefault) {
+          importDecl.specifiers.push(
+            t.importSpecifier(
+              t.identifier(`default${model}`),
+              t.identifier(`default${model}`),
+            ),
+          );
+        }
+      } else {
+        const newImport = t.importDeclaration(
+          [
+            t.importSpecifier(t.identifier(model), t.identifier(model)),
+            t.importSpecifier(
+              t.identifier(`default${model}`),
+              t.identifier(`default${model}`),
+            ),
           ],
-          source: {
-            type: "StringLiteral",
-            value: `../models/${model}`,
-          },
-        });
+          t.stringLiteral(`../models/${model}`),
+        );
+        ast.program.body.unshift(newImport);
+      }
 
       if (!serviceImportExists)
         ast.program.body.unshift({
@@ -158,29 +182,41 @@ const fileName = filePath.split("/").pop().split(".")[0];
           if (!attr || attr.value.value !== referenceId) return;
 
           if (operation === "modify" && fragmentAst) {
-            const oldModel = getAttrValue(path.node, "data-rwf-model");
-            const newModel = getAttrValue(fragmentAst, "data-rwf-model");
-            const oldMethod = getAttrValue(path.node, "data-rwf-method");
-            const newMethod = getAttrValue(fragmentAst, "data-rwf-method");
+            // Normalización previa (como te mostré antes)
+            const oldModelRaw = getAttrValue(path.node, "data-rwf-model");
+            const newModelRaw = getAttrValue(fragmentAst, "data-rwf-model");
+            const oldMethodRaw = getAttrValue(path.node, "data-rwf-method");
+            const newMethodRaw = getAttrValue(fragmentAst, "data-rwf-method");
+
+            const oldModel = oldModelRaw?.trim() ? oldModelRaw : null;
+            const newModel = newModelRaw?.trim() ? newModelRaw : null;
+            const oldMethod = oldMethodRaw?.trim() ? oldMethodRaw : null;
+            const newMethod = newMethodRaw?.trim() ? newMethodRaw : null;
+
+            const hasOldModel = oldModel !== null;
+            const hasNewModel = newModel !== null;
+            const hasOldMethod = oldMethod !== null;
+            const hasNewMethod = newMethod !== null;
+
+            const modelWasReplaced =
+              hasOldModel && hasNewModel && oldModel !== newModel;
+            const modelWasRemoved = hasOldModel && !hasNewModel;
+            const modelWasAdded = hasNewModel && !hasOldModel;
+            const methodWasReplaced =
+              hasOldMethod && hasNewMethod && oldMethod !== newMethod;
+            const methodWasRemoved = hasOldMethod && !hasNewMethod;
+            const methodWasAdded = hasNewMethod && !hasOldMethod;
+
             const isDiv = path.node.openingElement.name.name === "div";
             const isForm = path.node.openingElement.name.name === "form";
 
-            const modelWasReplaced =
-              oldModel && newModel && oldModel !== newModel;
-            const modelWasRemoved = oldModel && !newModel;
-            const modelWasAdded = newModel && !oldModel;
-
-            const methodWasReplaced =
-              oldMethod && newMethod && oldMethod !== newMethod;
-            const methodWasRemoved = oldMethod && !newMethod;
-            const methodWasAdded = newMethod && !oldMethod;
-
             if (isDiv) {
               // Eliminar useState y useEffect antiguos del oldModel
-              if (modelWasReplaced || modelWasRemoved)
+              if ((modelWasReplaced || modelWasRemoved) && hasOldModel) {
                 traverse(ast, {
                   VariableDeclaration(path) {
                     const code = generate(path.node).code;
+                    // p.ej. const [tasks, setTasks] = useState<Tasks[]>([]);
                     if (
                       code.includes(
                         `const [${toLower(oldModel)}, set${oldModel}]`,
@@ -193,6 +229,7 @@ const fileName = filePath.split("/").pop().split(".")[0];
                   },
                   ExpressionStatement(path) {
                     const code = generate(path.node).code;
+                    // p.ej. useEffect(() => { TasksService.getAllTasks()... }, []);
                     if (
                       code.includes("useEffect") &&
                       code.includes(`${oldModel}Service.getAll${oldModel}()`)
@@ -202,32 +239,34 @@ const fileName = filePath.split("/").pop().split(".")[0];
                     }
                   },
                 });
+              }
 
               // Agregar nuevas definiciones
-              if (modelWasReplaced || modelWasAdded) {
+              if ((modelWasReplaced || modelWasAdded) && hasNewModel) {
                 const lowerNewModel = toLower(newModel);
-                const stateCode = `const [${lowerNewModel}, set${newModel}] = useState<${newModel}[]>([]);`;
-                const effectCode = `useEffect(() => {
+                const stateCode = `
+                  const [${lowerNewModel}, set${newModel}] = useState<${newModel}[]>([]);
+                      `.trim();
+                const effectCode = `
+                  useEffect(() => {
                     ${newModel}Service.getAll${newModel}()
-                    .then((response) => {
-                      set${newModel}(response);
-                    })
-                    .catch((error) => {
-                      console.error("Error fetching ${newModel} data:", error);
-                    });
-                  }, []);`;
+                      .then(response => set${newModel}(response))
+                      .catch(error => console.error("Error fetching ${newModel} data:", error));
+                  }, []);
+                      `.trim();
 
                 traverse(ast, {
                   FunctionDeclaration(path) {
                     if (path.node.id?.name === fileName) {
-                      const stateNodeNew = template.ast(stateCode, {
+                      // Insertamos primero el effect, luego el state, para mantener orden lógico
+                      const effectNode = template.ast(effectCode, {
                         plugins: ["jsx", "typescript"],
                       });
-                      const effectNodeNew = template.ast(effectCode, {
+                      const stateNode = template.ast(stateCode, {
                         plugins: ["jsx", "typescript"],
                       });
-                      path.node.body.body.unshift(stateNodeNew);
-                      path.node.body.body.unshift(effectNodeNew);
+                      path.node.body.body.unshift(stateNode);
+                      path.node.body.body.unshift(effectNode);
                       modified = true;
                     }
                   },
@@ -242,42 +281,52 @@ const fileName = filePath.split("/").pop().split(".")[0];
                 methodWasReplaced ||
                 methodWasRemoved
               ) {
-                const capitalizeOldMethod = toCapitalize(oldMethod);
-                const lowerOldMethod = oldMethod.toLowerCase();
+                if (hasOldModel && hasOldMethod) {
+                  const capOldMtd = toCapitalize(oldMethod);
+                  const lowOldMtd = oldMethod.toLowerCase();
 
-                traverse(ast, {
-                  VariableDeclaration(path) {
-                    const code = generate(path.node).code;
-                    if (
-                      code.includes(
-                        `const [${lowerOldMethod}${oldModel}, set${capitalizeOldMethod}${oldModel}]`,
-                      ) &&
-                      code.includes(`useState<${oldModel}>()`)
-                    ) {
-                      path.remove();
-                      modified = true;
-                    }
-                    if (
-                      code.includes(
-                        `const handleChange${capitalizeOldMethod}${oldModel}`,
-                      ) &&
-                      code.includes(`set${capitalizeOldMethod}${oldModel}`) &&
-                      code.includes("[name]: value")
-                    ) {
-                      path.remove();
-                      modified = true;
-                    }
-                    if (
-                      code.includes(
-                        `const handleSubmit${capitalizeOldMethod}${oldModel}`,
-                      ) &&
-                      code.includes(`${oldModel}Service.`)
-                    ) {
-                      path.remove();
-                      modified = true;
-                    }
-                  },
-                });
+                  traverse(ast, {
+                    VariableDeclaration(path) {
+                      const code = generate(path.node).code;
+
+                      // Remover useState
+                      if (
+                        code.includes(
+                          `const [${lowOldMtd}${oldModel}, set${capOldMtd}${oldModel}]`,
+                        ) &&
+                        code.includes(
+                          `useState<${oldModel}>(default${oldModel})`,
+                        )
+                      ) {
+                        path.remove();
+                        modified = true;
+                      }
+
+                      // Remover handleChange
+                      if (
+                        code.includes(
+                          `const handleChange${capOldMtd}${oldModel}`,
+                        ) &&
+                        code.includes(`set${capOldMtd}${oldModel}`) &&
+                        code.includes("[name]: value")
+                      ) {
+                        path.remove();
+                        modified = true;
+                      }
+
+                      // Remover handleSubmit
+                      if (
+                        code.includes(
+                          `const handleSubmit${capOldMtd}${oldModel}`,
+                        ) &&
+                        code.includes(`${oldModel}Service.`)
+                      ) {
+                        path.remove();
+                        modified = true;
+                      }
+                    },
+                  });
+                }
               }
 
               // Agregar nuevas definiciones
@@ -287,59 +336,77 @@ const fileName = filePath.split("/").pop().split(".")[0];
                 methodWasReplaced ||
                 methodWasAdded
               ) {
-                const capitalizeNewMethod = toCapitalize(newMethod);
-                const lowerNewMethod = newMethod.toLowerCase();
+                // Ni intentar si no hay newModel u newMethod
+                if (hasNewModel && hasNewMethod) {
+                  const capNewMtd = toCapitalize(newMethod);
+                  const lowNewMtd = newMethod.toLowerCase();
 
-                let methodService = null;
+                  // Determinar el nombre de la acción del servicio
+                  let methodService = null;
+                  if (newMethod === "PUT") methodService = "update";
+                  if (newMethod === "POST") methodService = "create";
 
-                if (newMethod === "PUT") methodService = "update";
-                else if (newMethod === "POST") methodService = "create";
+                  const stateCode = `
+                    const [${lowNewMtd}${newModel}, set${capNewMtd}${newModel}] = useState<${newModel}>(default${newModel});
+                    `.trim();
 
-                const stateCode = `const [${lowerNewMethod}${newModel}, set${capitalizeNewMethod}${newModel}] = useState<${newModel}>();`;
-                const handleChangeCode = `const handleChange = (e: any) => {
-                   const { name, value } = e.target;
-                   set${capitalizeNewMethod}${newModel}((prevData) => ({
-                     ...prevData,
-                     [name]: value,
-                   }));
-                 };`;
-                const handleSubmitCode = `const handleSubmit = async (e: React.FormEvent) => {
-                   e.preventDefault();
-                   if (!${lowerNewMethod}${newModel}) {
-                     console.error("Data is undefined");
-                     return;
-                   }
-                   try {
-                     const response = await ${newModel}Service.${methodService}${newModel}(${lowerNewMethod}${newModel});
-                     console.log("Form submitted successfully:", response);
-                   } catch (error) {
-                     console.error("Error submitting form:", error);
-                   }
-                 };`;
+                  const handleChangeCode = `
+                    const handleChange${capNewMtd}${newModel} = (e: any) => {
+                      const { name, value } = e.target;
+                      set${capNewMtd}${newModel}((prev) => ({
+                        ...prev,
+                        [name]: value,
+                      }));
+                    };
+                    `.trim();
 
-                traverse(ast, {
-                  FunctionDeclaration(path) {
-                    if (path.node.id?.name === fileName) {
-                      const stateNodeNew = template.ast(stateCode, {
-                        plugins: ["jsx", "typescript"],
-                      });
-                      const changeNodeNew = template.ast(handleChangeCode, {
-                        plugins: ["jsx", "typescript"],
-                      });
-                      const submitNodeNew = template.ast(handleSubmitCode, {
-                        plugins: ["jsx", "typescript"],
-                      });
-                      path.node.body.body.unshift(stateNodeNew);
-                      path.node.body.body.unshift(changeNodeNew);
-                      path.node.body.body.unshift(submitNodeNew);
-                      modified = true;
-                    }
-                  },
-                });
+                  const handleSubmitCode = `
+                    const handleSubmit${capNewMtd}${newModel} = async (e: React.FormEvent) => {
+                      e.preventDefault();
+                      if (!${lowNewMtd}${newModel}) {
+                        console.error("Data is undefined");
+                        return;
+                      }
+                      try {
+                        const response = await ${newModel}Service.${methodService}${newModel}(${lowNewMtd}${newModel});
+                        console.log("Form submitted successfully:", response);
+                      } catch (error) {
+                        console.error("Error submitting form:", error);
+                      }
+                    };
+                    `.trim();
+
+                  traverse(ast, {
+                    FunctionDeclaration(path) {
+                      if (path.node.id?.name === fileName) {
+                        const stateNode = template.ast(stateCode, {
+                          plugins: ["jsx", "typescript"],
+                        });
+                        const changeNode = template.ast(handleChangeCode, {
+                          plugins: ["jsx", "typescript"],
+                        });
+                        const submitNode = template.ast(handleSubmitCode, {
+                          plugins: ["jsx", "typescript"],
+                        });
+
+                        // Insertamos en orden: state, change, submit
+                        path.node.body.body.unshift(submitNode);
+                        path.node.body.body.unshift(changeNode);
+                        path.node.body.body.unshift(stateNode);
+                        modified = true;
+                      }
+                    },
+                  });
+                }
               }
             }
 
             path.replaceWith(t.cloneNode(fragmentAst, true));
+
+            if ((modelWasAdded || modelWasReplaced) && hasNewModel) {
+              checkMissingImports(newModel);
+              modified = true;
+            }
 
             if (modelWasReplaced || modelWasAdded || modelWasRemoved) {
               const newAst = parser.parse(generate(ast).code, {
@@ -347,51 +414,81 @@ const fileName = filePath.split("/").pop().split(".")[0];
                 plugins: ["jsx", "typescript"],
               });
 
+              const defaultModel = `default${oldModel}`;
               let usesOldModel = false;
+              let usesDefaultModel = false;
               let usesOldModelService = false;
 
+              // 1) Detectar si siguen usándose en el código
               traverse(newAst, {
                 Identifier(path) {
-                  // Ignorar si viene de un import
                   if (path.findParent((p) => p.isImportDeclaration())) return;
-
-                  if (path.node.name === oldModel) usesOldModel = true;
-                  if (path.node.name === `${oldModel}Service`)
-                    usesOldModelService = true;
-
-                  // Si ya sabemos que se usan ambos, detenemos el análisis
-                  if (usesOldModel && usesOldModelService) {
+                  const n = path.node.name;
+                  if (n === oldModel) usesOldModel = true;
+                  if (n === defaultModel) usesDefaultModel = true;
+                  if (n === `${oldModel}Service`) usesOldModelService = true;
+                  if (usesOldModel && usesDefaultModel && usesOldModelService)
                     path.stop();
-                  }
                 },
               });
 
-              let deletedOldModelImports = false;
-
+              // 2) Recorrer imports y eliminar solo lo obsoleto
               traverse(ast, {
-                ImportDeclaration(importPath) {
-                  const importSource = importPath.node.source.value;
+                ImportDeclaration(path) {
+                  const src = path.node.source.value;
 
-                  const isModelImport =
-                    importSource === `../models/${oldModel}`;
-                  const isServiceImport =
-                    importSource === `../services/${oldModel}Service`;
-
+                  // 2.1) Servicio
                   if (
-                    (isModelImport && !usesOldModel) ||
-                    (isServiceImport && !usesOldModelService)
+                    src === `../services/${oldModel}Service` &&
+                    !usesOldModelService
                   ) {
-                    importPath.remove();
-                    deletedOldModelImports = true;
+                    path.remove();
                     modified = true;
+                    return;
+                  }
+
+                  // 2.2) Modelo + defaultModel
+                  if (src === `../models/${oldModel}`) {
+                    let changed = false;
+                    path.node.specifiers = path.node.specifiers.filter(
+                      (spec) => {
+                        // { Tasks, defaultTasks }
+                        if (t.isImportSpecifier(spec)) {
+                          const key = spec.imported.name;
+                          if (key === oldModel && !usesOldModel) {
+                            changed = true;
+                            return false;
+                          }
+                          if (key === defaultModel && !usesDefaultModel) {
+                            changed = true;
+                            return false;
+                          }
+                        }
+                        // import Model from ...
+                        if (
+                          t.isImportDefaultSpecifier(spec) &&
+                          spec.local.name === oldModel &&
+                          !usesOldModel
+                        ) {
+                          changed = true;
+                          return false;
+                        }
+                        return true;
+                      },
+                    );
+
+                    // Si quedó vacío, borramos toda la declaración
+                    if (path.node.specifiers.length === 0) {
+                      path.remove();
+                      changed = true;
+                    }
+
+                    if (changed) {
+                      modified = true;
+                    }
                   }
                 },
               });
-
-              // Solo después de eliminar, agrega si hace falta
-              if (deletedOldModelImports) {
-                checkMissingImports(newModel);
-              }
             }
 
             if (modelWasAdded)
@@ -443,7 +540,7 @@ const fileName = filePath.split("/").pop().split(".")[0];
                     code.includes(
                       `const [${lowerMethod}${model}, set${capitalizeMethod}${model}]`,
                     ) &&
-                    code.includes(`useState<${model}>()`)
+                    code.includes(`useState<${model}>(default${model})`)
                   ) {
                     path.remove();
                     modified = true;
@@ -476,42 +573,88 @@ const fileName = filePath.split("/").pop().split(".")[0];
                 plugins: ["jsx", "typescript"],
               });
 
+              const defaultModel = `default${model}`;
               let usesOldModel = false;
+              let usesDefaultModel = false;
               let usesOldModelService = false;
 
+              // 1) Detectar usos en newAst
               traverse(newAst, {
                 Identifier(path) {
-                  // Ignorar si viene de un import
                   if (path.findParent((p) => p.isImportDeclaration())) return;
-
-                  if (path.node.name === model) usesOldModel = true;
-                  if (path.node.name === `${model}Service`)
-                    usesOldModelService = true;
-
-                  // Si ya sabemos que se usan ambos, detenemos el análisis
-                  if (usesOldModel && usesOldModelService) {
+                  const name = path.node.name;
+                  if (name === model) usesOldModel = true;
+                  if (name === defaultModel) usesDefaultModel = true;
+                  if (name === `${model}Service`) usesOldModelService = true;
+                  if (usesOldModel && usesDefaultModel && usesOldModelService) {
                     path.stop();
                   }
                 },
               });
 
+              // 2) Limpiar imports obsoletos en ast
               traverse(ast, {
-                ImportDeclaration(importPath) {
-                  const importSource = importPath.node.source.value;
+                ImportDeclaration(path) {
+                  const src = path.node.source.value;
 
-                  const isModelImport = importSource === `../models/${model}`;
-                  const isServiceImport =
-                    importSource === `../services/${model}Service`;
-
+                  // 2.1) Servicio
                   if (
-                    (isModelImport && !usesOldModel) ||
-                    (isServiceImport && !usesOldModelService)
+                    src === `../services/${model}Service` &&
+                    !usesOldModelService
                   ) {
-                    importPath.remove();
+                    path.remove();
                     modified = true;
+                    return;
+                  }
+
+                  // 2.2) Modelo + defaultModel
+                  if (src === `../models/${model}`) {
+                    let changed = false;
+
+                    path.node.specifiers = path.node.specifiers.filter(
+                      (spec) => {
+                        // import { Tasks, defaultTasks } ...
+                        if (t.isImportSpecifier(spec)) {
+                          const name = spec.imported.name;
+                          if (name === model && !usesOldModel) {
+                            changed = true;
+                            return false;
+                          }
+                          if (name === defaultModel && !usesDefaultModel) {
+                            changed = true;
+                            return false;
+                          }
+                        }
+                        // import Tasks from ...
+                        if (
+                          t.isImportDefaultSpecifier(spec) &&
+                          spec.local.name === model &&
+                          !usesOldModel
+                        ) {
+                          changed = true;
+                          return false;
+                        }
+                        return true;
+                      },
+                    );
+
+                    // Si borramos todos los specifiers, eliminar la declaración
+                    if (path.node.specifiers.length === 0) {
+                      path.remove();
+                      changed = true;
+                    }
+
+                    if (changed) {
+                      modified = true;
+                    }
                   }
                 },
               });
+
+              // 3) Volver a agregar imports faltantes si fue necesario
+              // if (modified) {
+              //   checkMissingImports(model);
+              // }
             }
 
             // Ahora, si era un custom component, verificamos si quedan instancias
@@ -805,7 +948,7 @@ const fileName = filePath.split("/").pop().split(".")[0];
         if (method === "PUT") methodService = "update";
         else if (method === "POST") methodService = "create";
 
-        const formStateCode = `const [${lowerMethod}${model}, set${capitalizeMethod}${model}] = useState<${model}>();`;
+        const formStateCode = `const [${lowerMethod}${model}, set${capitalizeMethod}${model}] = useState<${model}>(default${model});`;
         const handleChangeCode = `const handleChange${capitalizeMethod}${model} = (e: any) => {
                  const { name, value } = e.target;
                  set${capitalizeMethod}${model}((prevData) => ({

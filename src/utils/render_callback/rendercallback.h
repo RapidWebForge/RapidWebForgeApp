@@ -23,6 +23,7 @@ std::string renderHandleFoosCallback(inja::Environment &env, inja::Arguments &ar
 std::string renderRequestsCallback(inja::Environment &env, inja::Arguments &args);
 
 std::string renderTypeFrontendModel(inja::Environment &env, inja::Arguments &args);
+std::string renderDefaultTypeFrontendModel(inja::Environment &env, inja::Arguments &args);
 } // namespace RenderCallback
 
 #endif // RENDERCALLBACK_H

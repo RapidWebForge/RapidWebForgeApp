@@ -495,8 +495,11 @@ void BackendGenerator::generateFrontendModel(const Transaction &transaction)
         env.add_callback("render_type", 1, [&env](inja::Arguments &args) -> std::string {
             return RenderCallback::renderTypeFrontendModel(env, args);
         });
+        env.add_callback("render_default_type", 1, [&env](inja::Arguments &args) -> std::string {
+            return RenderCallback::renderDefaultTypeFrontendModel(env, args);
+        });
     } catch (const std::exception &e) {
-        fmt::print(stderr, "Error adding callback: {}\n", e.what());
+        fmt::print(stderr, "Error adding callbacks: {}\n", e.what());
     }
 
     std::string modelTemplatePath = ":/inja/frontend/model";

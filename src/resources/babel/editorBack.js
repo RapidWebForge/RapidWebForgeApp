@@ -227,6 +227,54 @@ const [, , basePath, operation, transactionName] = process.argv;
 
                 // Reemplazar el array de miembros
                 path.node.body.body = members;
+              }
+            },
+            VariableDeclaration(path) {
+              // buscamos `export const default<ModelName>: <ModelName> = { ... }`
+              const decl = path.node.declarations[0];
+              if (
+                t.isIdentifier(decl.id, { name: `default${modelName}` }) &&
+                decl.init &&
+                t.isObjectExpression(decl.init)
+              ) {
+                // construir las propiedades nuevas
+                const defaultProps = payload.fields.map((field) => {
+                  let defaultNode;
+                  switch (field.type) {
+                    // strings
+                    case "STRING":
+                    case "TEXT":
+                    case "CHAR":
+                    case "DATE":
+                    case "DATEONLY":
+                    case "TIME":
+                      defaultNode = t.stringLiteral("");
+                      break;
+                    // booleans
+                    case "BOOLEAN":
+                      defaultNode = t.booleanLiteral(false);
+                      break;
+                    // números
+                    case "INTEGER":
+                    case "BIGINT":
+                    case "FLOAT":
+                    case "DOUBLE":
+                    case "DECIMAL":
+                      defaultNode = t.numericLiteral(0);
+                      break;
+                    // JSON u otros → null
+                    default:
+                      defaultNode = t.nullLiteral();
+                  }
+                  return t.objectProperty(
+                    t.identifier(field.name),
+                    defaultNode,
+                  );
+                });
+
+                // reemplazamos el .init por nuestro nuevo objectExpression
+                decl.init = t.objectExpression(defaultProps);
+                modified = true;
                 path.stop();
               }
             },

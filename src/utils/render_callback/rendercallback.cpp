@@ -351,7 +351,8 @@ std::string renderServiceImportsCallback(const nlohmann::json componentJson)
             // Generar el código de importación
             output += "import " + modelName + "Service from \"../services/" + modelName
                       + "Service\";\n";
-            output += "import " + modelName + " from \"../models/" + modelName + "\";\n";
+            output += "import { " + modelName + ", default" + modelName + " } from \"../models/"
+                      + modelName + "\";\n";
         }
     }
 
@@ -443,7 +444,8 @@ std::string renderStatesCallback(inja::Environment &env, inja::Arguments &args)
                         std::string lowerMethod = toLower(method);
 
                         output += "const [" + lowerMethod + modelName + ", set" + methodCapitalize
-                                  + modelName + "] = useState<" + modelName + ">();\n";
+                                  + modelName + "] = useState<" + modelName + ">(default"
+                                  + modelName + ");\n";
                     }
                 }
             }
@@ -603,8 +605,6 @@ std::string renderTypeFrontendModel(inja::Environment &env, inja::Arguments &arg
         return "<!-- Invalid argument -->";
     }
 
-    std::string output;
-
     const nlohmann::json &type = *args[0];
 
     static const std::unordered_map<std::string, std::string> typeMap = {
@@ -629,5 +629,38 @@ std::string renderTypeFrontendModel(inja::Environment &env, inja::Arguments &arg
 
     // Default type
     return "any";
+}
+
+std::string renderDefaultTypeFrontendModel(inja::Environment &env, inja::Arguments &args)
+{
+    if (args.empty() || !args[0]->is_string()) {
+        fmt::print(stderr, "Invalid argument passed to renderDefaultTypeFrontendModel.\n");
+        return "<!-- Invalid argument -->";
+    }
+
+    const nlohmann::json &type = *args[0];
+
+    static const std::unordered_map<std::string, std::string> typeMap = {
+        {"STRING", "\"\""},
+        {"TEXT", "\"\""},
+        {"CHAR", "\"\""},
+        {"DATE", "\"\""},
+        {"DATEONLY", "\"\""},
+        {"TIME", "\"\""},
+        {"BOOLEAN", "false"},
+        {"INTEGER", "0"},
+        {"BIGINT", "0"},
+        {"FLOAT", "0"},
+        {"DOUBLE", "0"},
+        {"DECIMAL", "0"},
+    };
+
+    auto it = typeMap.find(type);
+    if (it != typeMap.end()) {
+        return it->second;
+    }
+
+    // Default type
+    return "\"\"";
 }
 } // namespace RenderCallback
