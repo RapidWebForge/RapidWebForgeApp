@@ -22,23 +22,28 @@ enum class ComponentType {
 };
 
 // Mapa de propiedades predeterminadas
-const std::map<ComponentType, std::map<std::string, std::string>> componentPropertiesMap = {
-    {ComponentType::HeaderH1, {{"class", ""}, {"text", "Default Header"}}},
-    {ComponentType::HeaderH2, {{"class", ""}, {"text", "Default Header 2"}}},
-    {ComponentType::HeaderH3, {{"class", ""}, {"text", "Default Header 3"}}},
-    {ComponentType::Paragraph, {{"class", ""}, {"text", "Default Paragraph"}}},
-    {ComponentType::Input,
-     {{"class", ""}, {"placeholder", "Enter text"}, {"type", "text"}, {"value", ""}, {"name", ""}}},
-    {ComponentType::TextArea, {{"class", ""}, {"placeholder", "Enter text"}}},
-    {ComponentType::Button,
-     {{"class", ""}, {"text", "Default Button"}, {"type", "button"}, {"click", ""}}},
-    {ComponentType::Hyperlink,
-     {{"class", ""}, {"text", "Default Hyperlink"}, {"href", ""}, {"target", ""}, {"rel", ""}}},
-    {ComponentType::Form, {{"class", ""}, {"method", ""}, {"model", ""}}},
-    {ComponentType::HorizontalLayout, {{"class", ""}}},
-    {ComponentType::VerticalLayout, {{"class", ""}}},
-    {ComponentType::ModelLayout, {{"class", ""}, {"model", ""}}},
-    {ComponentType::ModelLayout, {{"name", ""}}}};
+const std::map<ComponentType, std::map<std::string, std::string>> componentPropertiesMap
+    = {{ComponentType::HeaderH1, {{"class", ""}, {"text", "Default Header"}}},
+       {ComponentType::HeaderH2, {{"class", ""}, {"text", "Default Header 2"}}},
+       {ComponentType::HeaderH3, {{"class", ""}, {"text", "Default Header 3"}}},
+       {ComponentType::Paragraph, {{"class", ""}, {"text", "Default Paragraph"}}},
+       {ComponentType::Input,
+        {{"class", ""},
+         {"placeholder", "Enter text"},
+         {"type", "text"},
+         {"value", ""},
+         {"name", ""},
+         {"required", ""}}},
+       {ComponentType::TextArea, {{"class", ""}, {"placeholder", "Enter text"}}},
+       {ComponentType::Button,
+        {{"class", ""}, {"text", "Default Button"}, {"type", "button"}, {"click", ""}}},
+       {ComponentType::Hyperlink,
+        {{"class", ""}, {"text", "Default Hyperlink"}, {"href", ""}, {"target", ""}, {"rel", ""}}},
+       {ComponentType::Form, {{"class", ""}, {"method", ""}, {"model", ""}}},
+       {ComponentType::HorizontalLayout, {{"class", ""}}},
+       {ComponentType::VerticalLayout, {{"class", ""}}},
+       {ComponentType::ModelLayout, {{"class", ""}, {"model", ""}}},
+       {ComponentType::ModelLayout, {{"name", ""}}}};
 
 // Función para convertir ComponentType a std::string
 inline std::string componentTypeToString(ComponentType type)

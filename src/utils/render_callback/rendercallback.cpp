@@ -88,6 +88,7 @@ std::string renderComponent(inja::Environment &env,
         std::string type = props.value("type", "text");
         std::string value = props.value("value", "");
         std::string name = props.value("name", "");
+        std::string required = props.value("required", "");
         std::string inputValue = "";
         std::string onChange = "";
 
@@ -107,6 +108,9 @@ std::string renderComponent(inja::Environment &env,
 
         if (!name.empty())
             output += " name=\"" + name + "\"";
+
+        if (!required.empty() && required == "true")
+            output += " required";
 
         if (!type.empty())
             output += " type=\"" + type + "\"";
@@ -209,7 +213,7 @@ std::string renderComponent(inja::Environment &env,
             if (modelIsValid) {
                 std::string lowerModel = toLower(model);
                 output += "{" + lowerModel + ".map((obj, index) => (";
-                output += "<div index={index}>";
+                output += "<div key={index}>";
             }
         }
 
