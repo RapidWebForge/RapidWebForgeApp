@@ -15,6 +15,8 @@ public:
                           const std::string &bunPath,
                           QObject *parent = nullptr);
 
+    DeployManager &getDeployManager();
+
 signals:
     void finished(QString errorMessage = {});
 

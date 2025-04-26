@@ -19,3 +19,8 @@ void DeployWorker::process()
         emit finished(QString::fromStdString(e.what()));
     }
 }
+
+DeployManager &DeployWorker::getDeployManager()
+{
+    return deployManager;
+}

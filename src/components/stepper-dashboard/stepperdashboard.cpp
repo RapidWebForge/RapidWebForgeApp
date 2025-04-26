@@ -758,6 +758,7 @@ void StepperDashboard::onDeployProject()
     QThread *deployThread = new QThread;
 
     worker->moveToThread(deployThread);
+    worker->getDeployManager().moveToThread(deployThread);
 
     connect(deployThread, &QThread::started, worker, &DeployWorker::process);
 

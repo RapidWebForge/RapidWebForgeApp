@@ -25,9 +25,14 @@ void VersionManager::initializeRepository()
         std::string gitignorePath = projectPath + "/.gitignore";
         std::ofstream gitignoreFile(gitignorePath);
 
-        // Agregar reglas para ignorar node_modules en backend y frontend
-        gitignoreFile << "backend/\n";
-        gitignoreFile << "frontend/\n";
+        // node_modules en backend y frontend
+        gitignoreFile << "*node_modules/\n";
+        // Temporales de nginx y archivo de configuracion
+        gitignoreFile << "logs/\n";
+        gitignoreFile << "temp/\n";
+        gitignoreFile << "nginx.conf";
+        // Archivo para editar
+        gitignoreFile << "runEditor.js";
         gitignoreFile.close();
 
         std::cout << ".gitignore file created with node_modules exclusions." << std::endl;
