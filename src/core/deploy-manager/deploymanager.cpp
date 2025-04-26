@@ -116,8 +116,8 @@ void DeployManager::start()
         return;
     }
 #elif defined(Q_OS_MAC)
-    spawnTerminal(backendDird);
-    spawnTerminal(frontendDird);
+    spawnTerminal(backendDir);
+    spawnTerminal(frontendDir);
 #endif
 
     // NgInx
