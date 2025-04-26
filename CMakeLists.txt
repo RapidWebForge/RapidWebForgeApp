@@ -141,6 +141,10 @@ set(PROJECT_SOURCES
         src/core/logging/actionloggerjson.cpp
         src/core/logging/stepvalidator.h
         src/core/logging/stepvalidator.cpp
+        src/core/code-worker/codeworker.h
+        src/core/code-worker/codeworker.cpp
+        src/core/deploy-worker/deployworker.h
+        src/core/deploy-worker/deployworker.cpp
         # Models
         src/models/project/project.h
         src/models/project/project.cpp
