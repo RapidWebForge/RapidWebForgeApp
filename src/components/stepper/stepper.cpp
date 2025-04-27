@@ -86,6 +86,8 @@ void Stepper::on_nextButton_clicked()
 
     // Create Project before Summary
     if (currentIndex == ui->stepsWidget->count() - 2) {
+        ui->nextButton->hide();
+
         // Crear y mostrar el diálogo personalizado
         QString createProject = "Creating project, please wait...";
         CustomProgressDialog *progressDialog = new CustomProgressDialog(createProject, this);
@@ -109,31 +111,29 @@ void Stepper::on_nextButton_clicked()
         connect(worker, &ProjectWorker::finished, this, [=]() {
             QMessageBox::information(this, "Successful", "Your project has been created successfully!");
             ui->nextButton->setEnabled(true);
-            workerThread->quit(); // Stop thread
-            workerThread->deleteLater(); // Clean memory
-            worker->deleteLater(); // Clean memory
+            workerThread->quit();
+            workerThread->wait();
+            workerThread->deleteLater();
+            worker->deleteLater();
+
+            // Show dashboard
+            StepperDashboard *stprDashboard = new StepperDashboard(nullptr, this->newProject);
+            stprDashboard->show();
+
+            this->hide();
+
+            // Show when dashboard is closed
+            connect(stprDashboard, &StepperDashboard::destroyed, this, &Stepper::show);
+
+            // Realizar el commit inicial al pasar al summary o finalizar el proyecto
+            if (this->newProject.getVersions()) {
+                VersionManager versionManager(this->newProject.getPath());
+                versionManager.saveChanges(); // Aquí se realiza el commit inicial
+            }
         });
 
         // Iniciar el hilo
         workerThread->start();
-    }
-
-    // Show dashboard
-    if (currentIndex == ui->stepsWidget->count() - 1) {
-        this->hide();
-
-        // When a project is clicked, open the StepperDashboard for that project
-        StepperDashboard *stprDashboard = new StepperDashboard(nullptr, this->newProject);
-        stprDashboard->show();
-
-        // Show when dashboard is closed
-        connect(stprDashboard, &StepperDashboard::destroyed, this, &Stepper::show);
-
-        // Realizar el commit inicial al pasar al summary o finalizar el proyecto
-        if (this->newProject.getVersions()) {
-            VersionManager versionManager(this->newProject.getPath());
-            versionManager.saveChanges(); // Aquí se realiza el commit inicial
-        }
     }
 }
 
