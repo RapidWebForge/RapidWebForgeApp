@@ -117,6 +117,12 @@ void CustomTreeWidget::dropEvent(QDropEvent *event)
     if ((tempComponent.isAllowingItems() || (targetIsSection && isTopLevel))
         && pos.y() > itemRect.top() + itemRect.height() / 3
         && pos.y() < itemRect.bottom() - itemRect.height() / 3) {
+        if (targetIsSection && isTopLevel && targetItem->childCount() >= 1) {
+            qDebug() << "❌ No se puede anidar más de un componente en un Section toplevel.";
+            event->ignore();
+            return;
+        }
+
         // Caso 3: Insertar como hijo
         parentItem = targetItem;
         dropIndex = 0; // Insertar como el primer hijo
@@ -133,10 +139,37 @@ void CustomTreeWidget::dropEvent(QDropEvent *event)
         // Caso 1: Insertar encima
         parentItem = targetItem->parent() ? targetItem->parent() : invisibleRootItem();
         dropIndex = parentItem->indexOfChild(targetItem);
+
+        // Validación extra para no permitir múltiples hijos en Section toplevel
+        if (parentItem && parentItem != invisibleRootItem()) {
+            std::string parentComponentTypeStr = parentItem->text(0).toStdString();
+            ComponentType parentType = stringToComponentType(parentComponentTypeStr);
+            bool parentIsSection = (componentTypeToString(parentType) == "Undefined");
+            bool parentIsTopLevel = (parentItem->parent() == nullptr);
+
+            if (parentIsSection && parentIsTopLevel && parentItem->childCount() >= 1) {
+                qDebug() << "❌ No se puede agregar más de un hijo a un Section toplevel.";
+                event->ignore();
+                return;
+            }
+        }
     } else if (pos.y() > itemRect.bottom() - itemRect.height() / 3) {
         // Caso 2: Insertar debajo
         parentItem = targetItem->parent() ? targetItem->parent() : invisibleRootItem();
         dropIndex = parentItem->indexOfChild(targetItem) + 1;
+
+        if (parentItem && parentItem != invisibleRootItem()) {
+            std::string parentComponentTypeStr = parentItem->text(0).toStdString();
+            ComponentType parentType = stringToComponentType(parentComponentTypeStr);
+            bool parentIsSection = (componentTypeToString(parentType) == "Undefined");
+            bool parentIsTopLevel = (parentItem->parent() == nullptr);
+
+            if (parentIsSection && parentIsTopLevel && parentItem->childCount() >= 1) {
+                qDebug() << "❌ No se puede agregar más de un hijo a un Section toplevel.";
+                event->ignore();
+                return;
+            }
+        }
     } else {
         event->ignore();
         return;

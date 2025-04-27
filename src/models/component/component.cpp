@@ -137,6 +137,7 @@ void Component::initializeDefaultProps()
     case ComponentType::HorizontalLayout:
     case ComponentType::VerticalLayout:
     case ComponentType::ModelLayout:
+    case ComponentType::Layout:
         this->allowItems = true;
         break;
     default:

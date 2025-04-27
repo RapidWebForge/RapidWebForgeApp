@@ -54,7 +54,6 @@ public:
     bool loadSchema();
     bool updateSchema();
     // Code
-    bool generateFrontendCode();
     bool updateFrontendCode();
     // Getters
     const std::shared_ptr<BaseNode> &getFrontendRoot() const;

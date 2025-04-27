@@ -11,10 +11,8 @@ export default function {{ name }}() {
   {{ render_requests(components) }}
 
   return (
-    <div>
-      {% for comp in components %}
-        {{ render_component(comp, "") }}
-      {% endfor %}
-    </div>
+    {% for comp in components %}
+      {{ render_component(comp, "") }}
+    {% endfor %}
   );
 }

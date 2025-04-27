@@ -3,6 +3,7 @@
 #include <QDir>
 #include <QFile>
 #include "../../models/time-chrono/timechrono.h"
+#include "../../utils/file/fileutiils.h"
 #include "../../utils/ziphelper/ziphelper.h"
 #include <boost/uuid/uuid_io.hpp>
 #include <filesystem>
@@ -208,9 +209,46 @@ bool CodeGenerator::createBaseFrontendProject()
     homeViewJson["createdOn"] = timePointToString(homeView.getCreatedOn());
     homeViewJson["updatedOn"] = timePointToString(homeView.getUpdatedOn());
 
+    Component mainDiv(ComponentType::Layout);
+
+    nlohmann::json mainDivJson;
+    mainDivJson["id"] = boost::uuids::to_string(mainDiv.getId());
+    mainDivJson["createdOn"] = timePointToString(mainDiv.getCreatedOn());
+    mainDivJson["updatedOn"] = timePointToString(mainDiv.getUpdatedOn());
+    mainDivJson["type"] = componentTypeToString(mainDiv.getType());
+    mainDivJson["props"] = nlohmann::json::object();
+    mainDivJson["props"]["class"] = "";
+    mainDivJson["nestedComponents"] = nlohmann::json::array();
+
+    homeViewJson["components"].push_back(mainDivJson);
+
     frontendJson["views"].push_back(homeViewJson);
 
     if (!createJsonFile(this->project.getPath() + "/frontend.json", frontendJson)) {
+        return false;
+    }
+
+    // Creating Home view
+
+    nlohmann::json data;
+
+    data["id"] = boost::uuids::to_string(mainDiv.getId());
+    std::string outputPath = this->project.getPath() + "/frontend/src/views/Home.tsx";
+
+    try {
+        // Renderizar con Inja usando el contenido del archivo como una cadena
+        inja::Environment env;
+        std::string result = env.render(R"(
+import React from "react";
+
+export default function Home() {
+  return <div data-id="{{id}}"></div>;
+}
+                                            )",
+                                        data);
+        FileUtils::writeFile(outputPath, result);
+    } catch (const std::exception &e) {
+        fmt::print(stderr, "Error generating Home view: {}\n", e.what());
         return false;
     }
 
