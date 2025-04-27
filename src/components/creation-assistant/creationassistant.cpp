@@ -1,7 +1,6 @@
 #include "creationassistant.h"
 #include <QFileDialog>
 #include "../../core/project-manager/projectmanager.h"
-#include "../../models/project/project.h"
 #include "ui_creationassistant.h"
 
 CreationAssistant::CreationAssistant(QWidget *parent)

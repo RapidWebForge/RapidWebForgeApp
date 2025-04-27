@@ -1,5 +1,6 @@
 #include "databaseassistant.h"
 #include <QMessageBox>
+#include "../../core/project-manager/projectmanager.h"
 #include "ui_databaseassistant.h"
 #include <mysqlx/xdevapi.h>
 
@@ -19,6 +20,8 @@ DatabaseAssistant::~DatabaseAssistant()
 
 std::string DatabaseAssistant::isValid(Project &project)
 {
+    ProjectManager projectManager;
+
     std::string server = ui->serverLineEdit->text().toStdString();
     std::string port = ui->portLineEdit->text().toStdString();
     std::string user = ui->userLineEdit->text().toStdString();
@@ -48,7 +51,10 @@ std::string DatabaseAssistant::isValid(Project &project)
     if (database.empty()) {
         return "Enter your database";
     } else {
-        project.getDatabaseData().setDatabase(database);
+        if (projectManager.isDatabaseAvailable(database))
+            project.getDatabaseData().setDatabase(database);
+        else
+            return "That database is already being used in another project";
     }
 
     return !testCompleted ? "You should test connection!" : "";
@@ -140,35 +146,34 @@ void DatabaseAssistant::on_testConnectionButton_clicked()
 
     if (server.empty() || port.empty() || user.empty() || password.empty() || database.empty()) {
         QMessageBox::warning(this, "Warning", QString::fromStdString("Complete all fields"));
-    } else {
-        try {
-            int portInt = std::stoi(port);
-            mysqlx::Session session(server, portInt, user, password);
+        return;
+    }
 
-            // Obtener el esquema (base de datos) y verificar su existencia
-            mysqlx::Schema schema
-                = session.getSchema(database, true); // true: forzar verificación de existencia
+    try {
+        int portInt = std::stoi(port);
+        mysqlx::Session session(server, portInt, user, password);
 
-            if (schema.existsInDatabase()) {
-                QMessageBox::information(this,
-                                         "Successful",
-                                         "Connection successful. Database exists.");
-                testCompleted = true;
-            } else {
-                QMessageBox::warning(this,
-                                     "Database Not Found",
-                                     "The specified database does not exist on the server.");
-            }
+        // Obtener el esquema(base de datos) y verificar su existencia
+        // true: forzar verificación de existencia
+        mysqlx::Schema schema = session.getSchema(database, true);
 
-        } catch (const mysqlx::Error &err) {
-            QString errorMsg = QString("MySQL Error: %1").arg(err.what());
-            QMessageBox::critical(this, "Connection Failed", errorMsg);
-        } catch (std::exception &ex) {
-            QString errorMsg = QString("STD Exception: %1").arg(ex.what());
-            QMessageBox::critical(this, "Connection Failed", errorMsg);
-        } catch (const char *ex) {
-            QString errorMsg = QString("Exception: %1").arg(ex);
-            QMessageBox::critical(this, "Connection Failed", errorMsg);
+        if (schema.existsInDatabase()) {
+            QMessageBox::information(this, "Successful", "Connection successful. Database exists.");
+            testCompleted = true;
+        } else {
+            QMessageBox::warning(this,
+                                 "Database Not Found",
+                                 "The specified database does not exist on the server.");
         }
+
+    } catch (const mysqlx::Error &err) {
+        QString errorMsg = QString("MySQL Error: %1").arg(err.what());
+        QMessageBox::critical(this, "Connection Failed", errorMsg);
+    } catch (std::exception &ex) {
+        QString errorMsg = QString("STD Exception: %1").arg(ex.what());
+        QMessageBox::critical(this, "Connection Failed", errorMsg);
+    } catch (const char *ex) {
+        QString errorMsg = QString("Exception: %1").arg(ex);
+        QMessageBox::critical(this, "Connection Failed", errorMsg);
     }
 }

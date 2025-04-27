@@ -118,12 +118,14 @@ void ProjectManager::createProject(const Project &project)
             fmt::print("Directorio creado con éxito en: {}\n", pathToCreate);
         } else {
             fmt::print("El directorio ya existe o no se pudo crear.\n");
+            return;
         }
     } catch (const fs::filesystem_error &e) {
         fmt::print(stderr, "Error al crear el directorio: {}", e.what());
+        return;
     }
 
-    // Add the new database's project to the sqlite database
+    // Añadir la nueva base de datos del project a sqlite
     sqlite3 *db = Database::getInstance().getConnection();
     DatabaseData dbData = project.getDatabaseData();
 
@@ -151,7 +153,7 @@ void ProjectManager::createProject(const Project &project)
         = "INSERT INTO projects (name, description, path, frontendPort, backendPort, created_at, "
           "updated_at, database_id, versions) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);";
 
-    // Avoid lost pointers
+    // Evitar punteros perdidos
     std::string projectName = project.getName();
     std::string description = project.getDescription();
     std::string path = project.getPath();
@@ -283,27 +285,6 @@ std::vector<Project> ProjectManager::getAllProjects()
     return projects;
 }
 
-bool ProjectManager::isProjectAvailable(const std::string &projectName)
-{
-    sqlite3 *db = Database::getInstance().getConnection();
-    bool exists = false;
-
-    std::string sql = "SELECT COUNT(*) FROM projects WHERE name = ?;";
-
-    executeSQL(
-        db,
-        sql,
-        [&](sqlite3_stmt *stmt) {
-            sqlite3_bind_text(stmt, 1, projectName.c_str(), -1, SQLITE_STATIC);
-        },
-        [&](sqlite3_stmt *stmt) {
-            int count = sqlite3_column_int(stmt, 0);
-            exists = (count > 0);
-        });
-
-    return !exists;
-}
-
 void ProjectManager::updateProject(const Project &project)
 {
     sqlite3 *db = Database::getInstance().getConnection();
@@ -359,4 +340,46 @@ void ProjectManager::deleteProjectById(int id)
     executeSQL(db, sqlDeleteDatabase, [&](sqlite3_stmt *stmt) {
         sqlite3_bind_int(stmt, 1, databaseId);
     });
+}
+
+bool ProjectManager::isProjectAvailable(const std::string &projectName)
+{
+    sqlite3 *db = Database::getInstance().getConnection();
+    bool exists = false;
+
+    std::string sql = "SELECT COUNT(*) FROM projects WHERE name = ?;";
+
+    executeSQL(
+        db,
+        sql,
+        [&](sqlite3_stmt *stmt) {
+            sqlite3_bind_text(stmt, 1, projectName.c_str(), -1, SQLITE_STATIC);
+        },
+        [&](sqlite3_stmt *stmt) {
+            int count = sqlite3_column_int(stmt, 0);
+            exists = (count > 0);
+        });
+
+    return !exists;
+}
+
+bool ProjectManager::isDatabaseAvailable(const std::string &databaseName)
+{
+    sqlite3 *db = Database::getInstance().getConnection();
+    bool exists = false;
+
+    std::string sql = "SELECT COUNT(*) FROM databases WHERE database_name = ?;";
+
+    executeSQL(
+        db,
+        sql,
+        [&](sqlite3_stmt *stmt) {
+            sqlite3_bind_text(stmt, 1, databaseName.c_str(), -1, SQLITE_STATIC);
+        },
+        [&](sqlite3_stmt *stmt) {
+            int count = sqlite3_column_int(stmt, 0);
+            exists = (count > 0);
+        });
+
+    return !exists;
 }
