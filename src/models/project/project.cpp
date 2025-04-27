@@ -11,6 +11,7 @@ Project::Project()
     , databaseData()
     , frontendPort("9000")
     , backendPort("3000")
+    , versions(false)
     , createdAt(std::chrono::system_clock::now())
     , updatedAt(createdAt)
 {}
@@ -23,7 +24,7 @@ Project::Project(int id,
                  const DatabaseData &databaseData,
                  const std::string &frontendPort,
                  const std::string &backendPort,
-                 bool versions) // Añadir versions
+                 bool versions)
     : id(id)
     , name(name)
     , description(description)
@@ -31,7 +32,7 @@ Project::Project(int id,
     , databaseData(databaseData)
     , frontendPort(frontendPort)
     , backendPort(backendPort)
-    , versions(versions) // Inicializar versions
+    , versions(versions)
     , createdAt(std::chrono::system_clock::now())
     , updatedAt(createdAt)
 {}
@@ -45,6 +46,7 @@ Project::Project(const Project &project)
     , databaseData(project.getDatabaseData())
     , frontendPort(project.getFrontendPort())
     , backendPort(project.getBackendPort())
+    , versions(project.getVersions())
     , createdAt(project.getCreatedAtChrono())
     , updatedAt(project.getUpdatedAtChrono())
 {}
@@ -118,6 +120,11 @@ std::chrono::system_clock::time_point Project::getUpdatedAtChrono() const
     return updatedAt;
 }
 
+bool Project::getVersions() const
+{
+    return versions;
+}
+
 // Setters
 void Project::setName(const std::string &newName)
 {
@@ -149,19 +156,13 @@ void Project::setBackendPort(const std::string &newBackendPort)
     setUpdatedAt();
 }
 
-void Project::setUpdatedAt()
-{
-    updatedAt = std::chrono::system_clock::now();
-}
-
-// Getter y Setter para versions
-bool Project::getVersions() const
-{
-    return versions;
-}
-
 void Project::setVersions(bool newVersions)
 {
     versions = newVersions;
     setUpdatedAt();
+}
+
+void Project::setUpdatedAt()
+{
+    updatedAt = std::chrono::system_clock::now();
 }

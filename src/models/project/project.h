@@ -38,6 +38,7 @@ public:
     std::string getName() const;
     std::string getDescription() const;
     std::string getPath() const;
+    bool getVersions() const;
 
     const DatabaseData &getDatabaseData() const;
     DatabaseData &getDatabaseData();
@@ -59,11 +60,9 @@ public:
     void setFrontendPort(const std::string &frontendPort);
     void setBackendPort(const std::string &backendPort);
     void setUpdatedAt();
+    void setVersions(bool versions);
 
     bool isTutorialEnabled() const { return tutorialsEnabled; }
-
-    bool getVersions() const;
-    void setVersions(bool newVersions);
 };
 
 #endif // PROJECT_H

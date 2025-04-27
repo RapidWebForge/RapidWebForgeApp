@@ -1,4 +1,5 @@
 #include "projectworker.h"
+#include <QDebug>
 #include "../code-generator/codegenerator.h"
 #include "../project-manager/projectmanager.h"
 #include "../version-manager/versionmanager.h"

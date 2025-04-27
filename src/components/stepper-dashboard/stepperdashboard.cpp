@@ -503,29 +503,33 @@ void StepperDashboard::setupMenus()
     projectMenu->addAction(projectChangeAction);
     projectMenu->addAction(createNewProjectAction);
     projectMenu->addAction(saveChangesAction);
-    projectMenu->addSeparator(); // Añadir un separador
+    projectMenu->addSeparator();
     projectMenu->addAction(deployProjectAction);
 
-    // Configurar acciones para el menú de Versions
-    versionsMenu->addAction(createVersionAction);
-    versionsMenu->addAction(changeVersionAction);
-    versionsMenu->addAction(versionHistoryAction);
-    versionsMenu->addSeparator(); // Añadir un separador
-    versionsMenu->addAction(deleteVersionAction);
-
-    // Configurar las acciones de cada opción
-
     connect(projectChangeAction, &QAction::triggered, this, &StepperDashboard::onProjectChange);
-
-    // Conectar señales de las acciones a slots si es necesario
     connect(createNewProjectAction, &QAction::triggered, this, &StepperDashboard::onCreateProject);
     connect(saveChangesAction, &QAction::triggered, this, &StepperDashboard::onSaveChanges);
     connect(deployProjectAction, &QAction::triggered, this, &StepperDashboard::onDeployProject);
-    // Versions
-    connect(createVersionAction, &QAction::triggered, this, &StepperDashboard::onCreateVersion);
-    connect(changeVersionAction, &QAction::triggered, this, &StepperDashboard::onChangeVersion);
-    connect(versionHistoryAction, &QAction::triggered, this, &StepperDashboard::onVersionHistory);
-    connect(deleteVersionAction, &QAction::triggered, this, &StepperDashboard::onDeleteVersion);
+
+    // Configurar acciones para el menú de Versions
+    if (project.getVersions()) {
+        versionsMenu->addAction(createVersionAction);
+        versionsMenu->addAction(changeVersionAction);
+        versionsMenu->addAction(versionHistoryAction);
+        versionsMenu->addSeparator();
+        versionsMenu->addAction(deleteVersionAction);
+
+        connect(createVersionAction, &QAction::triggered, this, &StepperDashboard::onCreateVersion);
+        connect(changeVersionAction, &QAction::triggered, this, &StepperDashboard::onChangeVersion);
+        connect(versionHistoryAction,
+                &QAction::triggered,
+                this,
+                &StepperDashboard::onVersionHistory);
+        connect(deleteVersionAction, &QAction::triggered, this, &StepperDashboard::onDeleteVersion);
+    } else {
+        versionsMenu->menuAction()->setVisible(false);
+        ui->versionsButton->hide();
+    }
 }
 
 bool StepperDashboard::showConfirmationDialog(QWidget *parent,

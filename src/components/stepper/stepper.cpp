@@ -74,7 +74,7 @@ void Stepper::on_nextButton_clicked()
         ui->backButton->hide();
     }
 
-    if (message != "") {
+    if (!message.empty()) {
         QMessageBox::warning(this, "Warning", QString::fromStdString(message));
         return; // Stop here
     }

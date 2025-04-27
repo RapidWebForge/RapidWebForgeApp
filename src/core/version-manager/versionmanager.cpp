@@ -1,7 +1,10 @@
 #include "versionmanager.h"
+#include <QDir>
+#include <QFileInfo>
+#include <QString>
 #include <algorithm>
 #include <ctime>
-#include <fstream> // Para crear un archivo temporal
+#include <fstream>
 #include <git2.h>
 #include <iostream>
 #include <string>
@@ -10,7 +13,11 @@
 VersionManager::VersionManager(const std::string &projectPath)
     : projectPath(projectPath)
 {
-    git_libgit2_init(); // Inicializar libgit2
+    static bool libgitInitialized = false;
+    if (!libgitInitialized) {
+        git_libgit2_init();
+        libgitInitialized = true;
+    }
 }
 
 void VersionManager::initializeRepository()
@@ -18,29 +25,41 @@ void VersionManager::initializeRepository()
     git_repository *repo = nullptr;
     int error = git_repository_init(&repo, projectPath.c_str(), false);
 
-    if (error == 0) {
+    if (error == 0 && repo) {
         std::cout << "Git repository initialized successfully in: " << projectPath << std::endl;
 
-        // Crear el archivo .gitignore
-        std::string gitignorePath = projectPath + "/.gitignore";
-        std::ofstream gitignoreFile(gitignorePath);
-
-        // node_modules en backend y frontend
-        gitignoreFile << "*node_modules/\n";
-        // Temporales de nginx y archivo de configuracion
-        gitignoreFile << "logs/\n";
-        gitignoreFile << "temp/\n";
-        gitignoreFile << "nginx.conf";
-        // Archivo para editar
-        gitignoreFile << "runEditor.js";
-        gitignoreFile.close();
-
-        std::cout << ".gitignore file created with node_modules exclusions." << std::endl;
+        if (createGitignore()) {
+            std::cout << "✅ .gitignore file created successfully.\n";
+        } else {
+            std::cerr << "❌ Failed to create .gitignore file.\n";
+        }
     } else {
-        std::cerr << "Failed to initialize Git repository: " << giterr_last()->message << std::endl;
+        const git_error *e = giterr_last();
+        std::cerr << "❌ Failed to initialize Git repository: "
+                  << (e ? e->message : "Unknown error") << std::endl;
     }
 
-    git_repository_free(repo);
+    if (repo) {
+        git_repository_free(repo);
+    }
+}
+
+bool VersionManager::createGitignore() const
+{
+    std::string gitignorePath = projectPath + "/.gitignore";
+    std::ofstream gitignoreFile(gitignorePath);
+
+    if (!gitignoreFile.is_open()) {
+        return false;
+    }
+
+    gitignoreFile << "*node_modules/\n"
+                  << "logs/\n"
+                  << "temp/\n"
+                  << "nginx.conf\n"
+                  << "runEditor.js\n";
+    gitignoreFile.close();
+    return true;
 }
 
 void VersionManager::createVersion(const std::string &branchName)
