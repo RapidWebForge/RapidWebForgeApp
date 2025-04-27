@@ -177,8 +177,15 @@ const [, , basePath, operation, transactionName] = process.argv;
             TSInterfaceDeclaration(path) {
               // Solo nos interesa la interfaz Tasks (payload.name)
               if (path.node.id.name === modelName) {
+                // Agregar id?:number
+                const idProp = t.tsPropertySignature(
+                  t.identifier("id"),
+                  t.tsTypeAnnotation(t.tsNumberKeyword()),
+                );
+                idProp.optional = true;
+
                 // Reconstruir los miembros de la interfaz con payload.fields
-                const members = payload.fields.map((field) => {
+                const fieldProps = payload.fields.map((field) => {
                   // Mapear el tipo de Sequelize a TS
                   let tsTypeNode;
                   switch (field.type) {
@@ -226,56 +233,67 @@ const [, , basePath, operation, transactionName] = process.argv;
                 });
 
                 // Reemplazar el array de miembros
-                path.node.body.body = members;
+                path.node.body.body = [idProp, ...fieldProps];
               }
             },
+
             VariableDeclaration(path) {
-              // buscamos `export const default<ModelName>: <ModelName> = { ... }`
               const decl = path.node.declarations[0];
               if (
-                t.isIdentifier(decl.id, { name: `default${modelName}` }) &&
+                t.isIdentifier(decl.id) &&
                 decl.init &&
                 t.isObjectExpression(decl.init)
               ) {
-                // construir las propiedades nuevas
-                const defaultProps = payload.fields.map((field) => {
-                  let defaultNode;
-                  switch (field.type) {
-                    // strings
-                    case "STRING":
-                    case "TEXT":
-                    case "CHAR":
-                    case "DATE":
-                    case "DATEONLY":
-                    case "TIME":
-                      defaultNode = t.stringLiteral("");
-                      break;
-                    // booleans
-                    case "BOOLEAN":
-                      defaultNode = t.booleanLiteral(false);
-                      break;
-                    // números
-                    case "INTEGER":
-                    case "BIGINT":
-                    case "FLOAT":
-                    case "DOUBLE":
-                    case "DECIMAL":
-                      defaultNode = t.numericLiteral(0);
-                      break;
-                    // JSON u otros → null
-                    default:
-                      defaultNode = t.nullLiteral();
-                  }
-                  return t.objectProperty(
-                    t.identifier(field.name),
-                    defaultNode,
-                  );
-                });
+                const name = decl.id.name;
+                // Sólo nos interesan defaultPost<ModelName> y defaultPut<ModelName>
+                if (
+                  name === `defaultPost${modelName}` ||
+                  name === `defaultPut${modelName}`
+                ) {
+                  const props = [];
 
-                // reemplazamos el .init por nuestro nuevo objectExpression
-                decl.init = t.objectExpression(defaultProps);
-                modified = true;
-                path.stop();
+                  // Si es defaultPut, primero forzamos id: 0
+                  if (name === `defaultPut${modelName}`) {
+                    props.push(
+                      t.objectProperty(t.identifier("id"), t.numericLiteral(0)),
+                    );
+                  }
+
+                  // Ahora los campos según payload.fields
+                  for (const field of payload.fields) {
+                    let defaultNode;
+                    switch (field.type) {
+                      case "STRING":
+                      case "TEXT":
+                      case "CHAR":
+                      case "DATE":
+                      case "DATEONLY":
+                      case "TIME":
+                        defaultNode = t.stringLiteral("");
+                        break;
+                      case "BOOLEAN":
+                        defaultNode = t.booleanLiteral(false);
+                        break;
+                      case "INTEGER":
+                      case "BIGINT":
+                      case "FLOAT":
+                      case "DOUBLE":
+                      case "DECIMAL":
+                        defaultNode = t.numericLiteral(0);
+                        break;
+                      default:
+                        // JSON, ENUM, BLOB, etc.
+                        defaultNode = t.nullLiteral();
+                    }
+                    props.push(
+                      t.objectProperty(t.identifier(field.name), defaultNode),
+                    );
+                  }
+
+                  // Reemplazamos el init({ … }) por nuestro nuevo objectExpression
+                  decl.init = t.objectExpression(props);
+                  modified = true;
+                }
               }
             },
           });

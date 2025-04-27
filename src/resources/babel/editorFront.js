@@ -63,10 +63,9 @@ const fileName = filePath.split("/").pop().split(".")[0];
         const hasModel = importDecl.specifiers.some(
           (spec) => t.isImportSpecifier(spec) && spec.imported.name === model,
         );
-        const hasDefault = importDecl.specifiers.some(
+        const hasDefaults = importDecl.specifiers.some(
           (spec) =>
-            t.isImportSpecifier(spec) &&
-            spec.imported.name === `default${model}`,
+            t.isImportSpecifier(spec) && spec.imported.name === "defaults",
         );
 
         if (!hasModel) {
@@ -74,11 +73,11 @@ const fileName = filePath.split("/").pop().split(".")[0];
             t.importSpecifier(t.identifier(model), t.identifier(model)),
           );
         }
-        if (!hasDefault) {
+        if (!hasDefaults) {
           importDecl.specifiers.push(
             t.importSpecifier(
-              t.identifier(`default${model}`),
-              t.identifier(`default${model}`),
+              t.identifier("defaults"),
+              t.identifier("defaults"),
             ),
           );
         }
@@ -87,8 +86,8 @@ const fileName = filePath.split("/").pop().split(".")[0];
           [
             t.importSpecifier(t.identifier(model), t.identifier(model)),
             t.importSpecifier(
-              t.identifier(`default${model}`),
-              t.identifier(`default${model}`),
+              t.identifier("defaults"),
+              t.identifier("defaults"),
             ),
           ],
           t.stringLiteral(`../models/${model}`),
@@ -96,20 +95,13 @@ const fileName = filePath.split("/").pop().split(".")[0];
         ast.program.body.unshift(newImport);
       }
 
-      if (!serviceImportExists)
-        ast.program.body.unshift({
-          type: "ImportDeclaration",
-          specifiers: [
-            {
-              type: "ImportDefaultSpecifier",
-              local: { type: "Identifier", name: model + "Service" },
-            },
-          ],
-          source: {
-            type: "StringLiteral",
-            value: `../services/${model}Service`,
-          },
-        });
+      if (!serviceImportExists) {
+        const svcImport = t.importDeclaration(
+          [t.importDefaultSpecifier(t.identifier(`${model}Service`))],
+          t.stringLiteral(`../services/${model}Service`),
+        );
+        ast.program.body.unshift(svcImport);
+      }
     };
 
     const ensureReactHooksImport = (ast, hooks = []) => {
@@ -295,7 +287,7 @@ const fileName = filePath.split("/").pop().split(".")[0];
                           `const [${lowOldMtd}${oldModel}, set${capOldMtd}${oldModel}]`,
                         ) &&
                         code.includes(
-                          `useState<${oldModel}>(default${oldModel})`,
+                          `useState<${oldModel}>(defaults.default${capOldMtd}${oldModel})`,
                         )
                       ) {
                         path.remove();
@@ -347,7 +339,7 @@ const fileName = filePath.split("/").pop().split(".")[0];
                   if (newMethod === "POST") methodService = "create";
 
                   const stateCode = `
-                    const [${lowNewMtd}${newModel}, set${capNewMtd}${newModel}] = useState<${newModel}>(default${newModel});
+                    const [${lowNewMtd}${newModel}, set${capNewMtd}${newModel}] = useState<${newModel}>(defaults.default${capNewMtd}${newModel});
                     `.trim();
 
                   const handleChangeCode = `
@@ -414,7 +406,7 @@ const fileName = filePath.split("/").pop().split(".")[0];
                 plugins: ["jsx", "typescript"],
               });
 
-              const defaultModel = `default${oldModel}`;
+              const defaults = "defaults";
               let usesOldModel = false;
               let usesDefaultModel = false;
               let usesOldModelService = false;
@@ -425,7 +417,7 @@ const fileName = filePath.split("/").pop().split(".")[0];
                   if (path.findParent((p) => p.isImportDeclaration())) return;
                   const n = path.node.name;
                   if (n === oldModel) usesOldModel = true;
-                  if (n === defaultModel) usesDefaultModel = true;
+                  if (n === defaults) usesDefaultModel = true;
                   if (n === `${oldModel}Service`) usesOldModelService = true;
                   if (usesOldModel && usesDefaultModel && usesOldModelService)
                     path.stop();
@@ -447,19 +439,19 @@ const fileName = filePath.split("/").pop().split(".")[0];
                     return;
                   }
 
-                  // 2.2) Modelo + defaultModel
+                  // 2.2) Modelo + defaults
                   if (src === `../models/${oldModel}`) {
                     let changed = false;
                     path.node.specifiers = path.node.specifiers.filter(
                       (spec) => {
-                        // { Tasks, defaultTasks }
+                        // { Model, defaults }
                         if (t.isImportSpecifier(spec)) {
                           const key = spec.imported.name;
                           if (key === oldModel && !usesOldModel) {
                             changed = true;
                             return false;
                           }
-                          if (key === defaultModel && !usesDefaultModel) {
+                          if (key === defaults && !usesDefaultModel) {
                             changed = true;
                             return false;
                           }
@@ -540,7 +532,9 @@ const fileName = filePath.split("/").pop().split(".")[0];
                     code.includes(
                       `const [${lowerMethod}${model}, set${capitalizeMethod}${model}]`,
                     ) &&
-                    code.includes(`useState<${model}>(default${model})`)
+                    code.includes(
+                      `useState<${model}>(defaults.default${capitalizeMethod}${model})`,
+                    )
                   ) {
                     path.remove();
                     modified = true;
@@ -573,7 +567,7 @@ const fileName = filePath.split("/").pop().split(".")[0];
                 plugins: ["jsx", "typescript"],
               });
 
-              const defaultModel = `default${model}`;
+              const defaults = "defaults";
               let usesOldModel = false;
               let usesDefaultModel = false;
               let usesOldModelService = false;
@@ -584,7 +578,7 @@ const fileName = filePath.split("/").pop().split(".")[0];
                   if (path.findParent((p) => p.isImportDeclaration())) return;
                   const name = path.node.name;
                   if (name === model) usesOldModel = true;
-                  if (name === defaultModel) usesDefaultModel = true;
+                  if (name === defaults) usesDefaultModel = true;
                   if (name === `${model}Service`) usesOldModelService = true;
                   if (usesOldModel && usesDefaultModel && usesOldModelService) {
                     path.stop();
@@ -607,20 +601,20 @@ const fileName = filePath.split("/").pop().split(".")[0];
                     return;
                   }
 
-                  // 2.2) Modelo + defaultModel
+                  // 2.2) Modelo + defaults
                   if (src === `../models/${model}`) {
                     let changed = false;
 
                     path.node.specifiers = path.node.specifiers.filter(
                       (spec) => {
-                        // import { Tasks, defaultTasks } ...
+                        // import { Model, defaults } ...
                         if (t.isImportSpecifier(spec)) {
                           const name = spec.imported.name;
                           if (name === model && !usesOldModel) {
                             changed = true;
                             return false;
                           }
-                          if (name === defaultModel && !usesDefaultModel) {
+                          if (name === defaults && !usesDefaultModel) {
                             changed = true;
                             return false;
                           }
@@ -948,7 +942,7 @@ const fileName = filePath.split("/").pop().split(".")[0];
         if (method === "PUT") methodService = "update";
         else if (method === "POST") methodService = "create";
 
-        const formStateCode = `const [${lowerMethod}${model}, set${capitalizeMethod}${model}] = useState<${model}>(default${model});`;
+        const formStateCode = `const [${lowerMethod}${model}, set${capitalizeMethod}${model}] = useState<${model}>(defaults.default${capitalizeMethod}${model});`;
         const handleChangeCode = `const handleChange${capitalizeMethod}${model} = (e: any) => {
                  const { name, value } = e.target;
                  set${capitalizeMethod}${model}((prevData) => ({

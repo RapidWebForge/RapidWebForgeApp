@@ -411,14 +411,14 @@ std::string renderServiceImportsCallback(const nlohmann::json componentJson)
 
         // Verificar si el modelo no es "Model" y no es un string vacío
         if (props.contains("model") && props["model"].is_string()
-            && !props["model"].get<std::string>().empty() && props["model"] != "Model") {
+            && !props["model"].get<std::string>().empty()) {
             std::string modelName = props["model"];
 
             // Generar el código de importación
             output += "import " + modelName + "Service from \"../services/" + modelName
                       + "Service\";\n";
-            output += "import { " + modelName + ", default" + modelName + " } from \"../models/"
-                      + modelName + "\";\n";
+            output += "import { " + modelName + ", defaults } from \"../models/" + modelName
+                      + "\";\n";
         }
     }
 
@@ -510,8 +510,8 @@ std::string renderStatesCallback(inja::Environment &env, inja::Arguments &args)
                         std::string lowerMethod = toLower(method);
 
                         output += "const [" + lowerMethod + modelName + ", set" + methodCapitalize
-                                  + modelName + "] = useState<" + modelName + ">(default"
-                                  + modelName + ");\n";
+                                  + modelName + "] = useState<" + modelName + ">(defaults.default"
+                                  + methodCapitalize + modelName + ");\n";
                     }
                 }
             }

@@ -17,8 +17,8 @@ private:
     std::string backendPort;
     std::chrono::system_clock::time_point createdAt;
     std::chrono::system_clock::time_point updatedAt;
-    bool versions; // Nueva propiedad para el control de versiones
-    bool tutorialsEnabled = true; // Cambia según la lógica de tu proyecto.
+    bool versions;
+    bool tutorialsEnabled = true;
 
 public:
     // Constructors
@@ -30,7 +30,7 @@ public:
             const DatabaseData &databaseData,
             const std::string &frontendPort,
             const std::string &backendPort,
-            bool versions); // Constructor con versions
+            bool versions);
     Project();
 
     // Getters
