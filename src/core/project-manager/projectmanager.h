@@ -21,6 +21,7 @@ public:
     std::optional<Project> getProjectById(int projectId);
     std::optional<Project> getProjectByName(std::string name);
     std::vector<Project> getAllProjects();
+    bool isProjectAvailable(const std::string &projectName);
     void updateProject(const Project &project);
     void deleteProjectById(int id);
 

@@ -283,6 +283,27 @@ std::vector<Project> ProjectManager::getAllProjects()
     return projects;
 }
 
+bool ProjectManager::isProjectAvailable(const std::string &projectName)
+{
+    sqlite3 *db = Database::getInstance().getConnection();
+    bool exists = false;
+
+    std::string sql = "SELECT COUNT(*) FROM projects WHERE name = ?;";
+
+    executeSQL(
+        db,
+        sql,
+        [&](sqlite3_stmt *stmt) {
+            sqlite3_bind_text(stmt, 1, projectName.c_str(), -1, SQLITE_STATIC);
+        },
+        [&](sqlite3_stmt *stmt) {
+            int count = sqlite3_column_int(stmt, 0);
+            exists = (count > 0);
+        });
+
+    return !exists;
+}
+
 void ProjectManager::updateProject(const Project &project)
 {
     sqlite3 *db = Database::getInstance().getConnection();

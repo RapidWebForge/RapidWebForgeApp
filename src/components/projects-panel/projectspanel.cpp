@@ -81,8 +81,6 @@ void ProjectsPanel::showTutorials()
 {
     ui->stackedWidget->setCurrentWidget(tutorialsPanel);
     ui->label->setText("Tutorials");
-    // Actualizar la lista de proyectos cada vez que abrimos la pestaña
-    overviewPanel->setupProjects(this->projectManager.getAllProjects());
 }
 
 // Mostrar la página Projects
