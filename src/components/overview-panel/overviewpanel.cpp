@@ -16,12 +16,16 @@ OverviewPanel::OverviewPanel(QWidget *parent)
     ui->setupUi(this);
 
     // Modificar los labels desde el código
-    ui->label_2->setText("Tutorials");
     ui->label_2->setStyleSheet("font-size: 18px; font-weight: bold; color: #333; padding: 5px;");
 
-    ui->label->setText("Recents");
     ui->label->setStyleSheet("font-size: 18px; font-weight: bold; color: #333; padding: 5px;");
 }
+
+OverviewPanel::~OverviewPanel()
+{
+    delete ui;
+}
+
 void OverviewPanel::setupProjects(const std::vector<Project> &projects)
 {
     this->projects = projects;
@@ -218,11 +222,11 @@ void OverviewPanel::onAddProjectClicked()
     stepper->show();
 
     // Show when create assistant is closed
-    connect(stepper, &Stepper::destroyed, this, &OverviewPanel::show);
+    connect(stepper, &Stepper::destroyed, projectsPanel, &QWidget::show);
 
-    connect(stepper, &Stepper::backToProjectsPanel, this, [this, stepper]() {
+    connect(stepper, &Stepper::backToProjectsPanel, this, [this, stepper, projectsPanel]() {
         stepper->close();
-        this->show();
+        projectsPanel->show();
     });
 }
 
@@ -321,8 +325,4 @@ void OverviewPanel::onTutorialClicked(const QString &tutorialPath)
     connect(stprDashboard, &StepperDashboard::destroyed, projectsPanel, [projectsPanel]() {
         projectsPanel->show();
     });
-}
-OverviewPanel::~OverviewPanel()
-{
-    delete ui;
 }

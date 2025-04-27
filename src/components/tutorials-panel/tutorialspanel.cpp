@@ -7,15 +7,20 @@
 #include "../project-preview/projectpreview.h"
 #include "../stepper-dashboard/stepperdashboard.h"
 #include "ui_tutorialspanel.h"
-#include <string>
 
 TutorialsPanel::TutorialsPanel(QWidget *parent)
-    : QDialog(parent)
+    : QWidget(parent)
     , ui(new Ui::TutorialsPanel)
 {
     ui->setupUi(this);
-    setupTutorials(); // Llamar a setupTutorials() en lugar de setupProjects()
+    setupTutorials();
 }
+
+TutorialsPanel::~TutorialsPanel()
+{
+    delete ui;
+}
+
 void TutorialsPanel::setupTutorials()
 {
     // Obtener los layouts de cada nivel desde el XML
@@ -127,91 +132,6 @@ void TutorialsPanel::setupTutorials()
     ui->scrollArea->update();
 }
 
-void TutorialsPanel::onAddProjectClicked()
-{
-    bool pathStatus = confManager->getConfiguration().getStatus();
-
-    if (!pathStatus) {
-        QMessageBox::critical(this, "Warning", "You need to set the tech paths in 'Configuration'");
-        return;
-    }
-
-    this->hide();
-
-    // When the "+" button is clicked, open the Stepper window
-    Stepper *stepper = new Stepper();
-    stepper->show();
-
-    // Show when create assistant is closed
-    connect(stepper, &Stepper::destroyed, this, &TutorialsPanel::show);
-
-    connect(stepper, &Stepper::backToProjectsPanel, this, [this, stepper]() {
-        stepper->close();
-        this->show();
-    });
-}
-void TutorialsPanel::onDeleteProjectRequested(int projectId)
-{
-    qDebug() << "Intentando eliminar el proyecto con ID:" << projectId;
-
-    QMessageBox::StandardButton reply;
-    reply = QMessageBox::question(this,
-                                  "Confirmar eliminación",
-                                  "¿Estás seguro de que deseas eliminar este proyecto?",
-                                  QMessageBox::Yes | QMessageBox::No);
-
-    if (reply == QMessageBox::Yes) {
-        qDebug() << "Confirmación recibida para eliminar el proyecto con ID:" << projectId;
-
-        // Eliminar el proyecto de la base de datos sin recargar el QGridLayout
-        ProjectManager projectManager;
-        projectManager.deleteProjectById(projectId);
-        // Aquí solo obtenemos los proyectos nuevamente sin eliminar en la base de datos
-        setupTutorials();
-
-        qDebug() << "Proyecto con ID:" << projectId
-                 << "ha sido eliminado exitosamente de la base de datos.";
-    } else {
-        qDebug() << "Eliminación cancelada para el proyecto con ID:" << projectId;
-    }
-}
-
-void TutorialsPanel::onProjectPreviewClicked(const QString &tutorialPath, int projectId)
-{
-    qDebug() << "Opening tutorial with path: " << tutorialPath << " for project ID: " << projectId;
-
-    // Buscar la ventana principal (ProjectsPanel) desde `TutorialsPanel`
-    QWidget *projectsPanel = this;
-    while (projectsPanel->parentWidget() != nullptr) {
-        projectsPanel = projectsPanel->parentWidget();
-    }
-
-    // OCULTAR `ProjectsPanel` completamente
-    projectsPanel->hide();
-
-    // Verificar si `projectId` es válido antes de proceder
-    ProjectManager projectManager;
-    std::optional<Project> projectOpt = projectManager.getProjectById(projectId);
-
-    if (!projectOpt.has_value()) {
-        QMessageBox::critical(this, "Error", "Invalid project ID.");
-        projectsPanel->show();
-        return;
-    }
-
-    // Extraer el valor del `std::optional<Project>`
-    Project project = projectOpt.value();
-
-    // Crear instancia de `StepperDashboard`, pasando el tutorialPath si es un tutorial
-    StepperDashboard *stprDashboard = new StepperDashboard(nullptr, project, tutorialPath);
-    stprDashboard->showMaximized();
-
-    // Restaurar `ProjectsPanel` cuando `StepperDashboard` se cierre
-    connect(stprDashboard, &StepperDashboard::destroyed, projectsPanel, [projectsPanel]() {
-        projectsPanel->show();
-    });
-}
-
 void TutorialsPanel::onTutorialClicked(const QString &tutorialPath)
 {
     // Buscar la ventana principal (ProjectsPanel) desde `TutorialsPanel`
@@ -255,8 +175,4 @@ void TutorialsPanel::onTutorialClicked(const QString &tutorialPath)
         projectsPanel->show();
     });
     qDebug() << "Opening tutorial with path: " << tutorialPath;
-}
-TutorialsPanel::~TutorialsPanel()
-{
-    delete ui;
 }

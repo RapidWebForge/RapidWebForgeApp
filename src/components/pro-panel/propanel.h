@@ -15,7 +15,7 @@ namespace Ui {
 class ProPanel;
 }
 
-class ProPanel : public QDialog
+class ProPanel : public QWidget
 {
     Q_OBJECT
 

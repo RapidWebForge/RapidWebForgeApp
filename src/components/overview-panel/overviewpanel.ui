@@ -17,7 +17,7 @@
    <item>
     <widget class="QLabel" name="label_2">
      <property name="text">
-      <string>TextLabel</string>
+      <string>Tutorials</string>
      </property>
     </widget>
    </item>
@@ -49,8 +49,8 @@
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>780</width>
-        <height>264</height>
+        <width>774</width>
+        <height>257</height>
        </rect>
       </property>
       <layout class="QHBoxLayout" name="tutorialLayout"/>
@@ -60,7 +60,7 @@
    <item>
     <widget class="QLabel" name="label">
      <property name="text">
-      <string>TextLabel</string>
+      <string>Recents</string>
      </property>
     </widget>
    </item>
@@ -74,8 +74,8 @@
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>780</width>
-        <height>264</height>
+        <width>774</width>
+        <height>257</height>
        </rect>
       </property>
       <layout class="QGridLayout" name="gridLayout">

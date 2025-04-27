@@ -1,7 +1,6 @@
 #ifndef CREATIONASSISTANT_H
 #define CREATIONASSISTANT_H
 
-// #include <QKeyEvent>
 #include <QWidget>
 #include "../../models/project/project.h"
 
@@ -23,11 +22,8 @@ private slots:
 
 private:
     Ui::CreationAssistant *ui;
-    void applyStylesCA(); // Declaración de la función applyStyles
-    bool shouldCreateGitRepo(); // Método para verificar si se debe crear un repositorio Git
-
-    // protected:
-    //     void keyPressEvent(QKeyEvent *event) override;
+    void applyStylesCA();
+    bool shouldCreateGitRepo();
 };
 
 #endif // CREATIONASSISTANT_H

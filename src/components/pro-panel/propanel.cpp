@@ -9,11 +9,12 @@
 #include <string>
 
 ProPanel::ProPanel(QWidget *parent)
-    : QDialog(parent)
+    : QWidget(parent)
     , ui(new Ui::ProPanel)
 {
     ui->setupUi(this);
 }
+
 void ProPanel::setupProjects(const std::vector<Project> &projects)
 {
     this->projects = projects;
@@ -114,20 +115,25 @@ void ProPanel::onAddProjectClicked()
         return;
     }
 
-    this->hide();
+    QWidget *projectsPanel = this;
+    while (projectsPanel->parentWidget() != nullptr) {
+        projectsPanel = projectsPanel->parentWidget();
+    }
+    projectsPanel->hide();
 
     // When the "+" button is clicked, open the Stepper window
     Stepper *stepper = new Stepper();
     stepper->show();
 
     // Show when create assistant is closed
-    connect(stepper, &Stepper::destroyed, this, &ProPanel::show);
+    connect(stepper, &Stepper::destroyed, projectsPanel, &QWidget::show);
 
-    connect(stepper, &Stepper::backToProjectsPanel, this, [this, stepper]() {
+    connect(stepper, &Stepper::backToProjectsPanel, this, [this, stepper, projectsPanel]() {
         stepper->close();
-        this->show();
+        projectsPanel->show();
     });
 }
+
 void ProPanel::onDeleteProjectRequested(int projectId)
 {
     qDebug() << "Intentando eliminar el proyecto con ID:" << projectId;

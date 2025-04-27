@@ -25,12 +25,6 @@ public:
     explicit ProjectsPanel(QWidget *parent = nullptr);
     ~ProjectsPanel();
 
-private slots:
-    void showRecents();
-    void showTutorials();
-    void showProjects();
-    void on_configurationButton_clicked();
-
 private:
     Ui::ProjectsPanel *ui;
     OverviewPanel *overviewPanel;
@@ -44,6 +38,12 @@ private:
     void applyStylesProj();
     ConfigurationManager *confManager = nullptr;
     QStackedWidget *stackedWidget;
+
+private slots:
+    void showRecents();
+    void showTutorials();
+    void showProjects();
+    void on_configurationButton_clicked();
 };
 
 #endif // PROJECTSPANEL_H
