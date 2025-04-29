@@ -3,6 +3,7 @@
 #include <QMessageBox>
 #include <QVBoxLayout>
 #include "../../core/project-manager/projectmanager.h"
+#include "../edit-project/editproject.h"
 #include "../project-preview/projectpreview.h"
 #include "../stepper-dashboard/stepperdashboard.h"
 #include "ui_propanel.h"
@@ -87,6 +88,10 @@ void ProPanel::setupProjects(const std::vector<Project> &projects)
                 &ProjectPreview::deleteRequested,
                 this,
                 &ProPanel::onDeleteProjectRequested);
+        connect(projectPreview,
+                &ProjectPreview::editRequested,
+                this,
+                &ProPanel::onEditProjectRequested);
 
         gridLayout->addWidget(projectPreview, row, column);
 
@@ -157,6 +162,23 @@ void ProPanel::onDeleteProjectRequested(int projectId)
                  << "ha sido eliminado exitosamente de la base de datos.";
     } else {
         qDebug() << "Eliminación cancelada para el proyecto con ID:" << projectId;
+    }
+}
+
+void ProPanel::onEditProjectRequested(int projectId)
+{
+    qDebug() << "Editando el proyecto con ID:" << projectId;
+
+    ProjectManager projectManager;
+
+    if (auto projectOpt = projectManager.getProjectById(projectId)) {
+        Project project = projectOpt.value();
+
+        EditProject dialog(project, this);
+        dialog.exec();
+    } else {
+        qWarning() << "No se encontró el proyecto con ID:" << projectId;
+        QMessageBox::critical(this, "Error on edit request", "Project id was not found");
     }
 }
 

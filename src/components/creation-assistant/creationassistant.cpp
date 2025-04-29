@@ -25,6 +25,7 @@ std::string CreationAssistant::isValid(Project &project)
     ProjectManager projectManager;
 
     std::string projectName = ui->projectNameLineEdit->text().toStdString();
+    std::string projectDescription = ui->descriptionPlainTextEdit->toPlainText().toStdString();
     std::string projectPath = ui->browseButton->text().toStdString();
 
     if (projectName.empty()) {
@@ -34,6 +35,9 @@ std::string CreationAssistant::isValid(Project &project)
             project.setName(projectName);
         else
             return "A project with that name was already created";
+    }
+    if (!projectDescription.empty()) {
+        project.setDescription(projectDescription);
     }
     if (projectPath == "Select path" || projectPath.empty()) {
         return "Select a path for your project";
@@ -85,7 +89,7 @@ void CreationAssistant::applyStylesCA()
     ui->projectNameLabel->setStyleSheet(generalStyle);
     ui->projectLocationLabel->setStyleSheet(generalStyle);
     ui->defaultLanguageLabel->setStyleSheet(generalStyle);
-    ui->label->setStyleSheet(generalStyle);
+    ui->descriptionLabel->setStyleSheet(generalStyle);
 
     // Estilo específico para la etiqueta de información del proyecto
     ui->projectInfoLabel->setStyleSheet("font-size: 25px; color: #000000; padding-bottom: 0px; "
@@ -94,6 +98,7 @@ void CreationAssistant::applyStylesCA()
         "font-size: 35px; color: #27292A; padding-top: 10px; padding-left: 40px;");
     // Estilo para la línea de edición de texto
     ui->projectNameLineEdit->setStyleSheet(inputStyle);
+    ui->descriptionPlainTextEdit->setStyleSheet(inputStyle);
 
     // Estilo para el botón de búsqueda
     ui->browseButton->setStyleSheet(inputStyle);

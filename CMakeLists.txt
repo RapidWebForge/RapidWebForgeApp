@@ -120,6 +120,9 @@ set(PROJECT_SOURCES
         src/components/overview-panel/overviewpanel.h
         src/components/overview-panel/overviewpanel.cpp
         src/components/overview-panel/overviewpanel.ui
+        src/components/edit-project/editproject.h
+        src/components/edit-project/editproject.cpp
+        src/components/edit-project/editproject.ui
         # Core
         src/core/project-manager/projectmanager.h
         src/core/project-manager/projectmanager.cpp

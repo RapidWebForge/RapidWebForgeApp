@@ -195,8 +195,7 @@ std::optional<Project> ProjectManager::getProjectById(int projectId)
             std::string frontendPort = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 4));
             std::string backendPort = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 5));
             int databaseId = sqlite3_column_int(stmt, 6);
-            bool versions = sqlite3_column_int(stmt, 9)
-                            == 1; // Obteniendo valor de versions como bool
+            bool versions = sqlite3_column_int(stmt, 9) == 1;
 
             auto dbDataOpt = getDatabaseById(databaseId);
             if (dbDataOpt) {
@@ -233,8 +232,7 @@ std::optional<Project> ProjectManager::getProjectByName(std::string name)
             std::string frontendPort = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 4));
             std::string backendPort = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 5));
             int databaseId = sqlite3_column_int(stmt, 6);
-            bool versions = sqlite3_column_int(stmt, 9)
-                            == 1; // Obteniendo valor de versions como bool
+            bool versions = sqlite3_column_int(stmt, 9) == 1;
 
             auto dbDataOpt = getDatabaseById(databaseId);
             if (dbDataOpt) {
@@ -267,7 +265,7 @@ std::vector<Project> ProjectManager::getAllProjects()
         std::string frontendPort = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 4));
         std::string backendPort = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 5));
         int databaseId = sqlite3_column_int(stmt, 6);
-        bool versions = sqlite3_column_int(stmt, 9) == 1; // Obteniendo el valor de versions
+        bool versions = sqlite3_column_int(stmt, 9) == 1;
 
         auto dbDataOpt = getDatabaseById(databaseId);
         if (dbDataOpt) {
@@ -288,31 +286,21 @@ std::vector<Project> ProjectManager::getAllProjects()
 void ProjectManager::updateProject(const Project &project)
 {
     sqlite3 *db = Database::getInstance().getConnection();
-    const DatabaseData &dbData = project.getDatabaseData();
 
-    std::string sqlUpdateDatabase = "UPDATE databases SET server = ?, port = ?, user = ?, password "
-                                    "= ?, database_name = ? WHERE id = ?;";
-    executeSQL(db, sqlUpdateDatabase, [&](sqlite3_stmt *stmt) {
-        sqlite3_bind_text(stmt, 1, dbData.getServer().c_str(), -1, SQLITE_STATIC);
-        sqlite3_bind_text(stmt, 2, dbData.getPort().c_str(), -1, SQLITE_STATIC);
-        sqlite3_bind_text(stmt, 3, dbData.getUser().c_str(), -1, SQLITE_STATIC);
-        sqlite3_bind_text(stmt, 4, dbData.getPassword().c_str(), -1, SQLITE_STATIC);
-        sqlite3_bind_text(stmt, 5, dbData.getDatabaseName().c_str(), -1, SQLITE_STATIC);
-        sqlite3_bind_int(stmt, 6, dbData.getId());
-    });
+    std::string sqlUpdateProject = "UPDATE projects SET name = ?, description = ?, "
+                                   "updated_at = ? WHERE id = ?;";
 
-    std::string sqlUpdateProject
-        = "UPDATE projects SET name = ?, description = ?, path = ?, "
-          "frontendPort = ?, backendPort = ?,  updated_at = ?, versions = ? WHERE id = ?;";
+    // Evitar punteros perdidos
+    std::string projectName = project.getName();
+    std::string description = project.getDescription();
+    std::string updatedAt = project.getUpdatedAt();
+    int projectId = project.getId();
+
     executeSQL(db, sqlUpdateProject, [&](sqlite3_stmt *stmt) {
-        sqlite3_bind_text(stmt, 1, project.getName().c_str(), -1, SQLITE_STATIC);
-        sqlite3_bind_text(stmt, 2, project.getDescription().c_str(), -1, SQLITE_STATIC);
-        sqlite3_bind_text(stmt, 3, project.getPath().c_str(), -1, SQLITE_STATIC);
-        sqlite3_bind_text(stmt, 4, project.getFrontendPort().c_str(), -1, SQLITE_STATIC);
-        sqlite3_bind_text(stmt, 5, project.getBackendPort().c_str(), -1, SQLITE_STATIC);
-        sqlite3_bind_text(stmt, 6, project.getUpdatedAt().c_str(), -1, SQLITE_STATIC);
-        sqlite3_bind_int(stmt, 7, project.getVersions() ? 1 : 0); // Agregar el campo 'versions'
-        sqlite3_bind_int(stmt, 8, project.getId());
+        sqlite3_bind_text(stmt, 1, projectName.c_str(), -1, SQLITE_STATIC);
+        sqlite3_bind_text(stmt, 2, description.c_str(), -1, SQLITE_STATIC);
+        sqlite3_bind_text(stmt, 3, updatedAt.c_str(), -1, SQLITE_STATIC);
+        sqlite3_bind_int(stmt, 4, projectId);
     });
 }
 
