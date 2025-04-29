@@ -54,11 +54,11 @@ void FrontendDashboard::applyStylesFront()
     ui->titleLabel->setStyleSheet("font-size: 35px; color: #27292A; padding-top: 10px; "
                                   "padding-left: 40px; padding-bottom: 20px;");
 
-    QFile primaryButtonstyleFile(":/styles/primarybutton");
-    if (primaryButtonstyleFile.open(QFile::ReadOnly)) {
-        QString styleSheet = QLatin1String(primaryButtonstyleFile.readAll());
-        ui->saveButton->setStyleSheet(styleSheet);
-    }
+    // QFile primaryButtonstyleFile(":/styles/primarybutton");
+    // if (primaryButtonstyleFile.open(QFile::ReadOnly)) {
+    //     QString styleSheet = QLatin1String(primaryButtonstyleFile.readAll());
+    //     ui->saveButton->setStyleSheet(styleSheet);
+    // }
     QFile secondaryButtonstyleFile(":/styles/secondarybutton");
     if (secondaryButtonstyleFile.open(QFile::ReadOnly)) {
         QString styleSheet = QLatin1String(secondaryButtonstyleFile.readAll());
