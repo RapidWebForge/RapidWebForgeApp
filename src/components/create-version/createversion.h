@@ -15,14 +15,13 @@ class CreateVersion : public QDialog
 public:
     explicit CreateVersion(VersionManager *versionManager, QWidget *parent = nullptr);
     ~CreateVersion();
-    QString getVersionName() const;
 
 private slots:
-    void onRegisterButtonClicked(); // Slot para el botón de registro
+    void on_registerButton_clicked();
 
 private:
     Ui::CreateVersion *ui;
-    VersionManager *versionManager; // Puntero a VersionManager para interactuar con el repositorio
+    VersionManager *versionManager;
 
     void applyStyles();
 };

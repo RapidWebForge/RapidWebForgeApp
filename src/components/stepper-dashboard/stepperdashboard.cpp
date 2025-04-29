@@ -579,6 +579,8 @@ void StepperDashboard::onSaveChanges()
         progressDialog->close();
 
         if (success) {
+            versionManager->saveChanges();
+
             QMessageBox::information(this, "Success", "Changes saved successfully.");
             validateCurrentStep(currentStepIndex);
         } else {
@@ -610,22 +612,7 @@ void StepperDashboard::onCreateVersion()
 
     // Mostrar el diálogo para ingresar el nombre de la versión
     CreateVersion dialog(versionManager, this);
-
-    if (dialog.exec() == QDialog::Accepted) {
-        // Obtener el nombre de la versión del diálogo
-        QString versionName = dialog.getVersionName();
-
-        if (versionName.isEmpty()) {
-            QMessageBox::warning(this, "Invalid Version", "Version name cannot be empty.");
-            return;
-        }
-
-        // Crear la versión en el repositorio (crear una nueva rama)
-        versionManager->createVersion(versionName.toStdString());
-
-        // Confirmación de éxito
-        QMessageBox::information(this, "Success", "Version created successfully.");
-    }
+    dialog.exec();
 }
 
 void StepperDashboard::onChangeVersion()
@@ -640,50 +627,14 @@ void StepperDashboard::onChangeVersion()
 
     // Crear el diálogo y pasar el `versionManager`
     ManageVersion dialog(versionManager, this);
-
-    if (dialog.exec() == QDialog::Accepted) {
-        // Obtener la rama seleccionada del diálogo
-        QString selectedBranch = dialog.getSelectedBranch();
-        if (selectedBranch.isEmpty()) {
-            QMessageBox::warning(this, "Change Version", "No branch selected.");
-            return;
-        }
-
-        // Cambiar a la rama seleccionada
-        versionManager->changeVersion(selectedBranch.toStdString());
-
-        // Confirmación de éxito
-        QMessageBox::information(this, "Change Version", "Switched to version: " + selectedBranch);
-    }
-    // TODO: Usar el version manager
+    dialog.exec();
 }
 
 void StepperDashboard::onDeleteVersion()
 {
     // Crear el diálogo para eliminar versiones
-    DeleteVersion dialog(this);
-
-    // Obtener la lista de versiones y establecerlas en el diálogo
-    std::vector<std::string> versions = versionManager->listVersions();
-    dialog.setVersions(versions);
-
-    if (dialog.exec() == QDialog::Accepted) {
-        // Obtener la versión seleccionada
-        QString selectedVersion = dialog.getSelectedVersion();
-
-        if (selectedVersion.isEmpty()) {
-            QMessageBox::warning(this, "Delete Version", "No version selected.");
-            return;
-        }
-
-        // Eliminar la versión seleccionada
-        versionManager->deleteVersion(selectedVersion.toStdString());
-
-        // Confirmación de éxito
-        QMessageBox::information(this,
-                                 "Delete Version",
-                                 "Version '" + selectedVersion + "' deleted successfully.");
-    }
+    DeleteVersion dialog(versionManager, this);
+    dialog.exec();
 }
 
 void StepperDashboard::onVersionHistory()
@@ -703,10 +654,7 @@ void StepperDashboard::onVersionHistory()
     // Establecer la lista de commits y ramas en el diálogo
     dialog.setCommits(commits);
     dialog.setBranches(branches);
-
-    // Mostrar el diálogo
     dialog.exec();
-    // TODO: Usar el version manager
 }
 
 void StepperDashboard::onDeployProject()

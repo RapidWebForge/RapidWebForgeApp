@@ -13,11 +13,7 @@ ManageVersion::ManageVersion(VersionManager *versionManager, QWidget *parent)
     ui->setupUi(this);
 
     // Conectar el botón "Change to" para aceptar el diálogo
-    connect(ui->acceptButton, &QPushButton::clicked, this, &QDialog::accept);
-    connect(ui->cancelButton,
-            &QPushButton::clicked,
-            this,
-            &ManageVersion::reject); // Cerrar el diálogo al cancelar
+    connect(ui->cancelButton, &QPushButton::clicked, this, &ManageVersion::reject);
 
     // Cargar ramas en el QListView
     std::vector<std::string> branches = versionManager->listVersions();
@@ -50,12 +46,21 @@ void ManageVersion::applyStyles()
     }
 }
 
-// Método para obtener la rama seleccionada en versionslistView
-QString ManageVersion::getSelectedBranch() const
+void ManageVersion::on_acceptButton_clicked()
 {
+    QString selectedVersion;
+
     QModelIndexList selectedIndexes = ui->versionslistView->selectionModel()->selectedIndexes();
     if (!selectedIndexes.isEmpty()) {
-        return selectedIndexes.first().data().toString();
+        selectedVersion = selectedIndexes.first().data().toString();
     }
-    return QString();
+
+    if (selectedVersion.isEmpty())
+        return;
+
+    // Llamar a VersionManager para crear la versión
+    versionManager->changeVersion(selectedVersion.toStdString());
+
+    // Cerrar el diálogo
+    accept();
 }
