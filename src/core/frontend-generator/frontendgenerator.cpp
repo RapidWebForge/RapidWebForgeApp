@@ -676,23 +676,31 @@ bool FrontendGenerator::updateFrontendCode()
         return true;
     }
 
+    std::vector<NodeOperation> deletes, modifies, inserts;
     // Aplicar cada operación de forma incremental
     for (auto op : operations) {
         switch (op.type) {
         case OperationType::Insert:
-            // Ubicar posición mediante op.node->id (data-id) y generar fragmento
-            applyInsertion(op.node);
+            inserts.push_back(op);
             break;
         case OperationType::Modify:
-            // Buscar en el archivo el fragmento con data-id y actualizarlo
-            applyModification(op.node);
+            modifies.push_back(op);
             break;
         case OperationType::Delete:
-            // Eliminar el fragmento con el data-id del nodo eliminado
-            applyDeletion(op.node);
+            deletes.push_back(op);
             break;
         }
     }
+
+    // Eliminar el fragmento con el data-id del nodo eliminado
+    for (auto &op : deletes)
+        applyDeletion(op.node);
+    // Buscar en el archivo el fragmento con data-id y actualizarlo
+    for (auto &op : modifies)
+        applyModification(op.node);
+    // Ubicar posición mediante op.node->id (data-id) y generar fragmento
+    for (auto &op : inserts)
+        applyInsertion(op.node);
 
     if (!updateSchema()) {
         qDebug() << "Error on Updating Schema";
@@ -975,12 +983,11 @@ void FrontendGenerator::getReferenceForInsertion(std::string &referenceId,
 
     auto parent = node->getParent();
     auto children = parent->getChildren();
+    auto section = std::dynamic_pointer_cast<Section>(parent);
 
-    if (children.empty()) {
-        if (auto section = std::dynamic_pointer_cast<Section>(parent)) {
-            referenceId = "none";
-            position = "inner";
-        }
+    if (children.empty() || section) {
+        referenceId = "none";
+        position = "inner";
         return;
     }
 

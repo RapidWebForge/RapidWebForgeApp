@@ -989,15 +989,40 @@ const fileName = filePath.split("/").pop().split(".")[0];
 
       // Inserción normal
       if (referenceId === "none" && position === "inner") {
+        // 1) Localizar el último ReturnStatement
+        let lastReturnPath = null;
         traverse(ast, {
-          JSXElement(path) {
-            if (path.node.openingElement.name.name === "div" && !modified) {
-              path.node.children.push(t.cloneNode(fragmentAst, true));
-              modified = true;
-              path.stop();
-            }
+          ReturnStatement(path) {
+            lastReturnPath = path;
           },
         });
+
+        // 2) Si existe, aplicar las dos reglas
+        if (lastReturnPath) {
+          const ret = lastReturnPath.node;
+          const arg = ret.argument;
+
+          // A) Si no había nada: return;
+          if (arg == null) {
+            ret.argument = t.cloneNode(fragmentAst, true);
+            modified = true;
+            console.log(
+              "✅ Fallback: inserted fragment as sole return argument.",
+            );
+          }
+          // B) Si ya hay <div> o <form> en el return …
+          else if (
+            t.isJSXElement(arg) &&
+            (t.isJSXIdentifier(arg.openingElement.name, { name: "div" }) ||
+              t.isJSXIdentifier(arg.openingElement.name, { name: "form" }))
+          ) {
+            arg.children.push(t.cloneNode(fragmentAst, true));
+            modified = true;
+            console.log(
+              `✅ Fallback: inserted fragment inside <${arg.openingElement.name.name}> of last return.`,
+            );
+          }
+        }
       } else {
         let inserted = false;
 
@@ -1036,37 +1061,46 @@ const fileName = filePath.split("/").pop().split(".")[0];
         // Fallback: si no se encontró el referenceId
         if (!inserted) {
           console.warn(
-            `! referenceId "${referenceId}" no encontrado. Verificando fallback en <div> raíz.`,
+            `! referenceId "${referenceId}" no encontrado. Aplicando fallback en el último return…`,
           );
 
+          // 1) Encontrar el último ReturnStatement
+          let lastReturnPath = null;
           traverse(ast, {
             ReturnStatement(path) {
-              const root = path.node.argument;
-              if (
-                root?.type === "JSXElement" &&
-                root.openingElement.name.name === "div"
-              ) {
-                const childCount = root.children.filter(
-                  (child) =>
-                    child.type !== "JSXText" || child.value.trim() !== "",
-                ).length;
-
-                if (childCount <= 1) {
-                  root.children.push(t.cloneNode(fragmentAst, true));
-                  modified = true;
-                  console.log(
-                    "✅ Fragment insertado en <div> raíz como fallback.",
-                  );
-                } else {
-                  console.warn(
-                    "⛔ <div> raíz no está vacío. No se insertó como fallback.",
-                  );
-                }
-
-                path.stop();
-              }
+              lastReturnPath = path;
             },
           });
+
+          // 2) Si lo encontramos, aplicamos la lógica de fallback
+          if (lastReturnPath) {
+            const ret = lastReturnPath.node;
+            const arg = ret.argument;
+
+            // Caso A: return;  (sin argumento)
+            if (arg == null) {
+              // Lo convertimos en: return <...fragmentAst...>;
+              ret.argument = t.cloneNode(fragmentAst, true);
+              modified = true;
+              console.log(
+                "✅ Fragment insertado como único argumento del último return.",
+              );
+            }
+            // Caso B: return <div>…</div>; o <form>…</form>;
+            else if (
+              t.isJSXElement(arg) &&
+              (t.isJSXIdentifier(arg.openingElement.name, { name: "div" }) ||
+                t.isJSXIdentifier(arg.openingElement.name, { name: "form" }))
+            ) {
+              // Lo añadimos como hijo
+              arg.children.push(t.cloneNode(fragmentAst, true));
+              modified = true;
+              console.log(
+                `✅ Fragment insertado como hijo de <${arg.openingElement.name.name}> en el último return.`,
+              );
+            }
+            // Si el return ya era otro JSX distinto, aquí podrías decidir reemplazarlo o ignorar
+          }
         }
       }
     }
