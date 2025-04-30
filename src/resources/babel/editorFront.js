@@ -152,7 +152,7 @@ const fileName = filePath.split("/").pop().split(".")[0];
     };
 
     let fragmentAst = null;
-    if (operation !== "delete" && operation !== "refactor-delete")
+    if (operation !== "delete" && operation !== "refactor-delete" && operation !== "create")
       try {
         const raw = fs.readFileSync(payloadPath, "utf-8");
         fragmentAst = parser.parseExpression(JSON.parse(raw), {
@@ -819,8 +819,6 @@ const fileName = filePath.split("/").pop().split(".")[0];
           }
         },
       });
-
-      fileModified = true;
     }
 
     if (operation === "insert" && fragmentAst) {

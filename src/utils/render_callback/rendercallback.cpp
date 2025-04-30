@@ -443,13 +443,20 @@ std::string renderCustomComponentsImportsCallback(const nlohmann::json component
 std::string renderImportsCallback(inja::Environment &env, inja::Arguments &args)
 {
     // Validar que el argumento sea un array de componentes
-    if (args.empty() || !args[0]->is_array()) {
+    if (args.empty() || !args[0]->is_array() || !args[1]->is_string()) {
         fmt::print(stderr, "Invalid argument passed to renderImportsCallback.\n");
-        return "<!-- Invalid argument -->";
+        return {};
     }
 
     const nlohmann::json &components = *args[0];
+    const std::string &path = *args[1];
     std::string output;
+
+    // Buscar un segmento que comience por ':'
+    // (ej: "/product/:id/details/:tab")
+    if (path.find('/:') != std::string::npos) {
+        output += "import { useParams } from \"react-router-dom\";\n";
+    }
 
     for (const auto &componentJson : components) {
         if (componentJson.contains("type"))
