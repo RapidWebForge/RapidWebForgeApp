@@ -29,6 +29,9 @@ FrontendGenerator::FrontendGenerator(const std::string &projectPath)
         env.add_callback("render_imports", 1, [this](inja::Arguments &args) -> std::string {
             return RenderCallback::renderImportsCallback(this->env, args);
         });
+        env.add_callback("render_params", 1, [this](inja::Arguments &args) -> std::string {
+            return RenderCallback::renderParamsCallback(this->env, args);
+        });
         env.add_callback("render_states", 1, [this](inja::Arguments &args) -> std::string {
             return RenderCallback::renderStatesCallback(this->env, args);
         });

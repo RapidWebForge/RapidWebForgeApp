@@ -461,6 +461,38 @@ std::string renderImportsCallback(inja::Environment &env, inja::Arguments &args)
     return output;
 }
 
+std::string renderParamsCallback(inja::Environment &env, inja::Arguments &args)
+{
+    if (args.empty() || !args[0]->is_string()) {
+        fmt::print(stderr, "Invalid argument passed to renderParamsCallback.\n");
+        return {};
+    }
+
+    const std::string &path = *args[0];
+    std::vector<std::string> params;
+
+    std::istringstream iss(path);
+    std::string segment;
+    while (std::getline(iss, segment, '/')) {
+        if (!segment.empty() && segment[0] == ':') {
+            params.push_back(segment.substr(1)); // remove ':'
+        }
+    }
+
+    if (params.empty())
+        return {};
+
+    std::string output = "const { ";
+    for (size_t i = 0; i < params.size(); ++i) {
+        output += params[i];
+        if (i != params.size() - 1)
+            output += ", ";
+    }
+    output += " } = useParams();";
+
+    return output;
+}
+
 std::string renderStatesCallback(inja::Environment &env, inja::Arguments &args)
 {
     // Validar que el argumento sea un array de componentes
