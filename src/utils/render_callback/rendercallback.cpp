@@ -654,39 +654,83 @@ std::string renderRequestsCallback(inja::Environment &env, inja::Arguments &args
     // Validar que el argumento sea un array de componentes
     if (args.empty() || !args[0]->is_array()) {
         fmt::print(stderr, "Invalid argument passed to renderRequestsCallback.\n");
-        return "<!-- Invalid argument -->";
+        return {};
     }
 
     const nlohmann::json &components = *args[0];
+    const std::string &path = *args[1];
     std::string output;
 
-    // Verificar si existe al menos un "Model Layout" con un "prop.model" válido
-    bool hasValidModel = false;
-    for (const auto &componentJson : components) {
-        if (componentJson.contains("type") && componentJson["type"] == "Model Layout") {
-            const auto &props = componentJson["props"];
-            if (props.contains("model") && props["model"].is_string()
-                && !props["model"].get<std::string>().empty() && props["model"] != "Model") {
-                hasValidModel = true;
-                break;
-            }
+    std::vector<std::string> params;
+    std::istringstream iss(path);
+    std::string segment;
+    while (std::getline(iss, segment, '/')) {
+        if (!segment.empty() && segment[0] == ':') {
+            params.push_back(segment.substr(1)); // remove ':'
         }
     }
 
-    // Si no hay un "Model Layout" con un "prop.model" válido, retornar vacío
-    if (!hasValidModel) {
-        return output; // No se genera el useEffect
-    }
-
-    // Generar el useEffect si existe un "Model Layout" válido
-    output = "useEffect(() => {\n";
-
     for (const auto &componentJson : components) {
-        if (componentJson.contains("type") && componentJson["type"] == "Model Layout") {
-            const auto &props = componentJson["props"];
-            if (props.contains("model") && props["model"].is_string()
-                && !props["model"].get<std::string>().empty() && props["model"] != "Model") {
+        if (componentJson.contains("type")) {
+            if (componentJson["type"] == "Form") {
+                bool hasValidModel = false, hasValidMethod = false;
+                std::string modelName;
+                std::string lowerModel;
+                std::string lowerModelParam;
+
+                const auto &props = componentJson["props"];
+                if (props.contains("model") && props["model"].is_string()
+                    && !props["model"].get<std::string>().empty()) {
+                    modelName = props["model"];
+                    lowerModel = toLower(modelName);
+                    lowerModelParam = lowerModel + "Id";
+
+                    if (std::find(params.begin(), params.end(), lowerModelParam) != params.end())
+                        hasValidModel = true;
+                }
+                if (props.contains("method") && props["method"].is_string()
+                    && !props["method"].get<std::string>().empty()) {
+                    std::string method = props["method"];
+                    if (method == "PUT")
+                        hasValidMethod = true;
+                }
+
+                // Si el "Form" no tiene un "prop.model" válido ni un "prop.method" válido, seguir
+                if (!hasValidModel || !hasValidMethod) {
+                    continue;
+                }
+
+                // Solo puede ser este
+                std::string methodCapitalize = "Put";
+
+                output += "useEffect(() => {\n";
+                output += "  " + modelName + "Service.get" + modelName + "ById(" + lowerModelParam
+                          + ")\n";
+                output += "    .then((response) => {\n";
+                output += "      set" + methodCapitalize + modelName + "(response);\n";
+                output += "    })\n";
+                output += "    .catch((error) => {\n";
+                output += "      console.error(\"Error fetching " + modelName
+                          + " data by id:\", error);\n";
+                output += "    });\n";
+                output += "}, [" + lowerModelParam + "]); // Run every time id change\n";
+            }
+            if (componentJson["type"] == "Model Layout") {
+                bool hasValidModel = false;
+
+                const auto &props = componentJson["props"];
+                if (props.contains("model") && props["model"].is_string()
+                    && !props["model"].get<std::string>().empty()) {
+                    hasValidModel = true;
+                }
+
+                // Si el "Model Layout" no tiene un "prop.model" válido, seguir
+                if (!hasValidModel) {
+                    continue;
+                }
+
                 std::string modelName = props["model"];
+                output += "useEffect(() => {\n";
                 output += "  " + modelName + "Service.getAll" + modelName + "()\n";
                 output += "    .then((response) => {\n";
                 output += "      set" + modelName + "(response);\n";
@@ -695,11 +739,11 @@ std::string renderRequestsCallback(inja::Environment &env, inja::Arguments &args
                 output += "      console.error(\"Error fetching " + modelName
                           + " data:\", error);\n";
                 output += "    });\n";
+                output += "}, []); // Empty dependency array to run once\n";
             }
         }
     }
 
-    output += "}, []); // Empty dependency array to run once\n";
     return output;
 }
 
@@ -707,7 +751,7 @@ std::string renderTypeFrontendModel(inja::Environment &env, inja::Arguments &arg
 {
     if (args.empty() || !args[0]->is_string()) {
         fmt::print(stderr, "Invalid argument passed to renderTypeFrontendModel.\n");
-        return "<!-- Invalid argument -->";
+        return {};
     }
 
     const nlohmann::json &type = *args[0];
@@ -740,7 +784,7 @@ std::string renderDefaultTypeFrontendModel(inja::Environment &env, inja::Argumen
 {
     if (args.empty() || !args[0]->is_string()) {
         fmt::print(stderr, "Invalid argument passed to renderDefaultTypeFrontendModel.\n");
-        return "<!-- Invalid argument -->";
+        return {};
     }
 
     const nlohmann::json &type = *args[0];

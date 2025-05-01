@@ -38,7 +38,7 @@ FrontendGenerator::FrontendGenerator(const std::string &projectPath)
         env.add_callback("render_handles", 1, [this](inja::Arguments &args) -> std::string {
             return RenderCallback::renderHandleFoosCallback(this->env, args);
         });
-        env.add_callback("render_requests", 1, [this](inja::Arguments &args) -> std::string {
+        env.add_callback("render_requests", [this](inja::Arguments &args) -> std::string {
             return RenderCallback::renderRequestsCallback(this->env, args);
         });
     } catch (const std::exception &e) {

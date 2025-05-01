@@ -9,7 +9,7 @@ export default function {{ name }}() {
 
   {{ render_handles(components) }}
 
-  {{ render_requests(components) }}
+  {{ render_requests(components, path) }}
 
   return (
     {% for comp in components %}
