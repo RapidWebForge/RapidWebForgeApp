@@ -17,6 +17,7 @@ std::string renderComponent(inja::Environment &env,
 std::string renderComponentCallback(inja::Environment &env, inja::Arguments &args);
 std::string renderServiceImportsCallback(const nlohmann::json componentJson);
 std::string renderCustomComponentsImportsCallback(const nlohmann::json componentJson);
+std::string renderImportParamsCallback(inja::Environment &env, inja::Arguments &args);
 std::string renderImportsCallback(inja::Environment &env, inja::Arguments &args);
 std::string renderParamsCallback(inja::Environment &env, inja::Arguments &args);
 std::string renderStatesCallback(inja::Environment &env, inja::Arguments &args);

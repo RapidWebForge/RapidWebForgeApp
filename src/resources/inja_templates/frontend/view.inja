@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 
-{{ render_imports(components, path) }}
+{{ render_import_params(path) }}
+{{ render_imports(components) }}
 
 export default function {{ name }}() {
   {{ render_params(path) }}

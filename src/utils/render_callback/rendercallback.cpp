@@ -1,5 +1,4 @@
 #include "rendercallback.h"
-
 #include <QDebug>
 #include <algorithm>
 #include <cctype>
@@ -247,7 +246,7 @@ std::string renderComponent(inja::Environment &env,
 
         if (type == "Model Layout") {
             layoutClass = props.value("class", "");
-            model = props.value("model", "Model");
+            model = props.value("model", "");
         } else {
             layoutClass = type == "Layout"                ? ""
                           : (type == "Horizontal Layout") ? "flex flex-row"
@@ -258,9 +257,25 @@ std::string renderComponent(inja::Environment &env,
             }
         }
 
-        output += "<div data-id=\"" + id + "\"";
+        bool modelIsValid = !model.empty();
+        bool getAll = false;
+        std::string get;
+        std::string lowerModel;
+        if (props.contains("get") && !props["get"].get<std::string>().empty())
+            get = props["get"];
 
-        bool modelIsValid = !model.empty() && model != "Model";
+        // Add map to iterate only if 'model' is valid
+        if (get == "ALL" && modelIsValid) {
+            lowerModel = toLower(model);
+            getAll = true;
+            output += "{" + lowerModel + ".length > 0 && (";
+        }
+        if (get == "ID" && modelIsValid) {
+            lowerModel = toLower(model);
+            output += "{" + lowerModel + " && (";
+        }
+
+        output += "<div data-id=\"" + id + "\"";
 
         if (!layoutClass.empty())
             output += " className=\"" + layoutClass + "\"";
@@ -270,13 +285,10 @@ std::string renderComponent(inja::Environment &env,
 
         output += ">";
 
-        if (type == "Model Layout") {
-            // Add map to iterate only if 'model' is valid
-            if (modelIsValid) {
-                std::string lowerModel = toLower(model);
-                output += "{" + lowerModel + ".map((obj, index) => (";
-                output += "<div key={index}>";
-            }
+        // Model Layout
+        if (modelIsValid && getAll) {
+            output += "{" + lowerModel + ".map((obj, index) => (";
+            output += "<div key={index}>";
         }
 
         if (componentJson.contains("nestedComponents")
@@ -295,14 +307,18 @@ std::string renderComponent(inja::Environment &env,
             }
         }
 
-        if (type == "Model Layout") {
-            if (modelIsValid) {
-                output += "</div>";
-                output += "))}";
-            }
+        // Model Layout
+        if (modelIsValid && getAll) {
+            output += "</div>";
+            output += "))}";
         }
 
         output += "</div>";
+
+        // Model Layout
+        if ((get == "ALL" || get == "ID") && modelIsValid)
+            output += ")}";
+
     } else if (type == "Form") {
         bool sendProps = true;
         className = props.value("class", "");
@@ -440,16 +456,15 @@ std::string renderCustomComponentsImportsCallback(const nlohmann::json component
     return output;
 }
 
-std::string renderImportsCallback(inja::Environment &env, inja::Arguments &args)
+std::string renderImportParamsCallback(inja::Environment &env, inja::Arguments &args)
 {
     // Validar que el argumento sea un array de componentes
-    if (args.empty() || !args[0]->is_array() || !args[1]->is_string()) {
+    if (args.empty() || !args[0]->is_string()) {
         fmt::print(stderr, "Invalid argument passed to renderImportsCallback.\n");
         return {};
     }
 
-    const nlohmann::json &components = *args[0];
-    const std::string &path = *args[1];
+    const std::string &path = *args[0];
     std::string output;
 
     // Buscar un segmento que comience por ':'
@@ -458,11 +473,33 @@ std::string renderImportsCallback(inja::Environment &env, inja::Arguments &args)
         output += "import { useParams } from \"react-router-dom\";\n";
     }
 
+    return output;
+}
+
+std::string renderImportsCallback(inja::Environment &env, inja::Arguments &args)
+{
+    // Validar que el argumento sea un array de componentes
+    if (args.empty() || !args[0]->is_array()) {
+        fmt::print(stderr, "Invalid argument passed to renderImportsCallback.\n");
+        return {};
+    }
+
+    const nlohmann::json &components = *args[0];
+    std::string output;
+
     for (const auto &componentJson : components) {
         if (componentJson.contains("type"))
             output += renderServiceImportsCallback(componentJson);
         else
             output += renderCustomComponentsImportsCallback(componentJson);
+
+        if (componentJson.contains("nestedComponents")
+            && componentJson["nestedComponents"].is_array()) {
+            nlohmann::json contextWithNested;
+            contextWithNested["components"] = componentJson["nestedComponents"];
+
+            output += env.render(R"({{ render_imports(components) }})", contextWithNested);
+        }
     }
 
     return output;
@@ -524,14 +561,25 @@ std::string renderStatesCallback(inja::Environment &env, inja::Arguments &args)
 
             // Verificar si el modelo no es "Model" y no es un string vacío
             if (props.contains("model") && props["model"].is_string()
-                && !props["model"].get<std::string>().empty() && props["model"] != "Model") {
+                && !props["model"].get<std::string>().empty()) {
                 std::string modelName = props["model"];
                 std::string lowerModelName = toLower(modelName);
 
                 if (componentType == "Model Layout") {
-                    // Generar la declaración del estado usando useState
-                    output += "const [" + lowerModelName + ", set" + modelName + "] = useState<"
-                              + modelName + "[]>([]);\n";
+                    if (props.contains("get") && props["get"].is_string()
+                        && !props["get"].get<std::string>().empty()) {
+                        std::string get = props["get"];
+                        if (get == "ALL" || get == "ID") {
+                            // Generar la declaración del estado usando useState
+                            output += "const [" + lowerModelName + ", set" + modelName
+                                      + "] = useState<" + modelName;
+                            if (get == "ALL")
+                                output += "[]>([]);\n";
+                            if (get == "ID")
+                                output += ">();\n";
+                        }
+                    }
+
                 } else if (componentType == "Form") {
                     if (props.contains("method") && props["method"].is_string()
                         && !props["method"].get<std::string>().empty()
@@ -555,6 +603,14 @@ std::string renderStatesCallback(inja::Environment &env, inja::Arguments &args)
                 }
             }
         }
+
+        if (componentJson.contains("nestedComponents")
+            && componentJson["nestedComponents"].is_array()) {
+            nlohmann::json contextWithNested;
+            contextWithNested["components"] = componentJson["nestedComponents"];
+
+            output += env.render(R"({{ render_states(components) }})", contextWithNested);
+        }
     }
 
     return output;
@@ -569,31 +625,13 @@ std::string renderHandleFoosCallback(inja::Environment &env, inja::Arguments &ar
     }
 
     const nlohmann::json &components = *args[0];
-    std::string handleChange, handleSubmit;
-
-    // Verificar si existe al menos un "Form" con un "prop.model" válido
-    bool hasValidModel = false;
-    for (const auto &componentJson : components) {
-        if (componentJson.contains("type") && componentJson["type"] == "Form") {
-            const auto &props = componentJson["props"];
-            if (props.contains("model") && props["model"].is_string()
-                && !props["model"].get<std::string>().empty() && props["model"] != "Model") {
-                hasValidModel = true;
-                break;
-            }
-        }
-    }
-
-    // Si no hay un "Form" con un "prop.model" válido, retornar vacío
-    if (!hasValidModel) {
-        return ""; // No se genera los handle
-    }
+    std::string output;
 
     for (const auto &componentJson : components) {
         if (componentJson.contains("type") && componentJson["type"] == "Form") {
             const auto &props = componentJson["props"];
             if (props.contains("model") && props["model"].is_string()
-                && !props["model"].get<std::string>().empty() && props["model"] != "Model") {
+                && !props["model"].get<std::string>().empty()) {
                 std::string method = props["method"];
                 std::string modelName = props["model"];
                 std::string methodCapitalize;
@@ -602,6 +640,8 @@ std::string renderHandleFoosCallback(inja::Environment &env, inja::Arguments &ar
                     methodCapitalize = "Put";
                 else if (method == "POST")
                     methodCapitalize = "Post";
+
+                std::string handleChange, handleSubmit;
 
                 // Generar el handleChange
                 handleChange = "const handleChange" + methodCapitalize + modelName;
@@ -636,17 +676,26 @@ std::string renderHandleFoosCallback(inja::Environment &env, inja::Arguments &ar
                 handleSubmit += "    const response = await " + modelName + "Service.create"
                                 + modelName + "(" + lowerMethod + modelName + ");\n";
                 handleSubmit += "    console.log(\"Form submitted successfully:\", response);\n";
+                handleChange += "};\n\n";
+                handleSubmit += "  } catch (error) {\n";
+                handleSubmit += "    console.error(\"Error submitting form:\", error);\n";
+                handleSubmit += "  }\n";
+                handleSubmit += "};\n";
+
+                output += handleChange + handleSubmit;
             }
+        }
+
+        if (componentJson.contains("nestedComponents")
+            && componentJson["nestedComponents"].is_array()) {
+            nlohmann::json contextWithNested;
+            contextWithNested["components"] = componentJson["nestedComponents"];
+
+            output += env.render(R"({{ render_handles(components) }})", contextWithNested);
         }
     }
 
-    handleChange += "};\n\n";
-    handleSubmit += "  } catch (error) {\n";
-    handleSubmit += "    console.error(\"Error submitting form:\", error);\n";
-    handleSubmit += "  }\n";
-    handleSubmit += "};\n";
-
-    return handleChange + handleSubmit;
+    return output;
 }
 
 std::string renderRequestsCallback(inja::Environment &env, inja::Arguments &args)
@@ -716,31 +765,73 @@ std::string renderRequestsCallback(inja::Environment &env, inja::Arguments &args
                 output += "}, [" + lowerModelParam + "]); // Run every time id change\n";
             }
             if (componentJson["type"] == "Model Layout") {
-                bool hasValidModel = false;
+                bool hasValidModel = false, hasValidGet = false;
+                std::string get;
+                std::string modelName;
+                std::string lowerModel;
+                std::string lowerModelParam;
 
                 const auto &props = componentJson["props"];
                 if (props.contains("model") && props["model"].is_string()
                     && !props["model"].get<std::string>().empty()) {
+                    modelName = props["model"];
+
                     hasValidModel = true;
                 }
 
+                if (props.contains("get") && props["get"].is_string()
+                    && !props["get"].get<std::string>().empty()) {
+                    get = props["get"];
+                    if (get == "ALL" || get == "ID") {
+                        hasValidGet = true;
+
+                        if (get == "ID") {
+                            lowerModel = toLower(modelName);
+                            lowerModelParam = lowerModel + "Id";
+
+                            if (std::find(params.begin(), params.end(), lowerModelParam)
+                                == params.end())
+                                hasValidModel = false;
+                        }
+                    }
+                }
+
                 // Si el "Model Layout" no tiene un "prop.model" válido, seguir
-                if (!hasValidModel) {
+                if (!hasValidModel || !hasValidGet) {
                     continue;
                 }
 
-                std::string modelName = props["model"];
                 output += "useEffect(() => {\n";
-                output += "  " + modelName + "Service.getAll" + modelName + "()\n";
+                if (get == "ALL")
+                    output += "  " + modelName + "Service.getAll" + modelName + "()\n";
+                else // ID
+                    output += "  " + modelName + "Service.get" + modelName + "ById("
+                              + lowerModelParam + ")\n";
                 output += "    .then((response) => {\n";
                 output += "      set" + modelName + "(response);\n";
                 output += "    })\n";
                 output += "    .catch((error) => {\n";
-                output += "      console.error(\"Error fetching " + modelName
-                          + " data:\", error);\n";
+
+                output += "      console.error(\"Error fetching " + modelName;
+                if (get == "ALL")
+                    output += " data:\", error);\n";
+                if (get == "ID")
+                    output += " data by id:\", error);\n";
                 output += "    });\n";
-                output += "}, []); // Empty dependency array to run once\n";
+                if (get == "ALL")
+                    output += "}, []); // Empty dependency array to run once\n";
+                if (get == "ID")
+                    output += "}, [" + lowerModelParam + "]); // Run every time id change\n";
             }
+        }
+
+        if (componentJson.contains("nestedComponents")
+            && componentJson["nestedComponents"].is_array()) {
+            nlohmann::json contextWithNested;
+            contextWithNested["components"] = componentJson["nestedComponents"];
+            contextWithNested["path"] = path;
+
+            output += env.render(R"({{ render_requests(components, path) }})", contextWithNested);
         }
     }
 

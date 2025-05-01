@@ -48,7 +48,7 @@ const std::map<ComponentType, std::map<std::string, std::string>> componentPrope
        {ComponentType::Form, {{"class", ""}, {"method", ""}, {"model", ""}}},
        {ComponentType::HorizontalLayout, {{"class", ""}}},
        {ComponentType::VerticalLayout, {{"class", ""}}},
-       {ComponentType::ModelLayout, {{"class", ""}, {"model", ""}, {"byId", ""}}},
+       {ComponentType::ModelLayout, {{"class", ""}, {"model", ""}, {"get", ""}}},
        {ComponentType::Layout, {{"class", ""}}},
        {ComponentType::Image,
         {{"class", ""}, {"src", ""}, {"alt", ""}, {"width", ""}, {"height", ""}}},
