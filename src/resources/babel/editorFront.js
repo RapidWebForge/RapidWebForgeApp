@@ -152,7 +152,11 @@ const fileName = filePath.split("/").pop().split(".")[0];
     };
 
     let fragmentAst = null;
-    if (operation !== "delete" && operation !== "refactor-delete" && operation !== "create")
+    if (
+      operation !== "delete" &&
+      operation !== "refactor-delete" &&
+      operation !== "create"
+    )
       try {
         const raw = fs.readFileSync(payloadPath, "utf-8");
         fragmentAst = parser.parseExpression(JSON.parse(raw), {
@@ -713,28 +717,36 @@ const fileName = filePath.split("/").pop().split(".")[0];
             }
           },
           CallExpression(path) {
-            const isLazy =
-              path.node.callee.type === "MemberExpression" &&
-              path.node.callee.object.name === "React" &&
-              path.node.callee.property.name === "lazy";
-
-            if (!isLazy) return;
-
-            const arg = path.node.arguments[0];
+            // Detectar React.lazy(...)
             if (
-              arg.type === "ArrowFunctionExpression" &&
-              arg.body.type === "CallExpression" &&
-              arg.body.callee.type === "Import"
+              t.isMemberExpression(path.node.callee) &&
+              t.isIdentifier(path.node.callee.object, { name: "React" }) &&
+              t.isIdentifier(path.node.callee.property, { name: "lazy" })
             ) {
-              const parentVarDecl = path.findParent((p) =>
-                p.isVariableDeclaration(),
-              );
-              if (parentVarDecl) {
-                parentVarDecl.remove(); // Eliminar toda la declaración: const View = React.lazy(...)
-                modified = true;
-              } else {
-                path.remove(); // fallback por si no encuentra el contenedor
-                modified = true;
+              const [firstArg] = path.node.arguments;
+              // Asegurarnos de que es una ArrowFunctionExpression
+              if (
+                t.isArrowFunctionExpression(firstArg) &&
+                t.isCallExpression(firstArg.body) &&
+                t.isImport(firstArg.body.callee)
+              ) {
+                // Verificamos el string literal de la ruta
+                const importArg = firstArg.body.arguments[0];
+                if (
+                  t.isStringLiteral(importArg) &&
+                  importArg.value === `./views/${importName}`
+                ) {
+                  // Eliminamos la declaración completa: const X = React.lazy(...)
+                  const varDecl = path.findParent((p) =>
+                    p.isVariableDeclaration(),
+                  );
+                  if (varDecl) {
+                    varDecl.remove();
+                  } else {
+                    path.remove();
+                  }
+                  modified = true;
+                }
               }
             }
           },
