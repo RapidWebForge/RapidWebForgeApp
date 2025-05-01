@@ -14,6 +14,7 @@ const getAttrValue = (node, attrName) => {
   );
   return attr && attr.value && attr.value.value;
 };
+
 const toLower = (s) => s.charAt(0).toLowerCase() + s.slice(1);
 
 const toCapitalize = (str) => {
@@ -281,6 +282,35 @@ const fileName = filePath.split("/").pop().split(".")[0];
                   const capOldMtd = toCapitalize(oldMethod);
                   const lowOldMtd = oldMethod.toLowerCase();
 
+                  if (oldMethod === "PUT") {
+                    traverse(ast, {
+                      ExpressionStatement(path) {
+                        const expr = path.node.expression;
+
+                        if (
+                          t.isCallExpression(expr) &&
+                          t.isIdentifier(expr.callee, { name: "useEffect" }) &&
+                          expr.arguments.length === 2 &&
+                          t.isArrayExpression(expr.arguments[1])
+                        ) {
+                          const deps = expr.arguments[1].elements;
+
+                          const modelIdName = `${toLower(oldModel)}Id`;
+
+                          const hasTargetDep = deps.some(
+                            (el) =>
+                              t.isIdentifier(el) && el.name === modelIdName,
+                          );
+
+                          if (hasTargetDep) {
+                            path.remove();
+                            modified = true;
+                          }
+                        }
+                      },
+                    });
+                  }
+
                   traverse(ast, {
                     VariableDeclaration(path) {
                       const code = generate(path.node).code;
@@ -342,6 +372,48 @@ const fileName = filePath.split("/").pop().split(".")[0];
                   if (newMethod === "PUT") methodService = "update";
                   if (newMethod === "POST") methodService = "create";
 
+                  const lowNewModel = toLower(newModel);
+                  const modelParam = `${lowNewModel}Id`;
+
+                  let effectCodeUpdate = null;
+                  if (newMethod === "PUT") {
+                    effectCodeUpdate = `useEffect(() => {
+                    ${newModel}Service.get${newModel}ById(${modelParam})
+                      .then((response) => {
+                          set${capNewMtd}${newModel}(response);
+                      })
+                      .catch((error) => {
+                        console.error("Error fetching ${newModel} data by id:", error);
+                      });
+                    }, [${modelParam}]);`;
+                  }
+
+                  let modelParamFound = false;
+
+                  traverse(ast, {
+                    VariableDeclarator(path) {
+                      // buscamos ObjectPattern = useParams()
+                      if (
+                        t.isObjectPattern(path.node.id) &&
+                        t.isCallExpression(path.node.init) &&
+                        t.isIdentifier(path.node.init.callee, {
+                          name: "useParams",
+                        })
+                      ) {
+                        // ¿está nuestro parámetro entre las propiedades?
+                        const hasParam = path.node.id.properties.some(
+                          (prop) =>
+                            t.isObjectProperty(prop) &&
+                            t.isIdentifier(prop.key, { name: modelParam }),
+                        );
+                        if (hasParam) {
+                          modelParamFound = true;
+                        }
+                        path.stop();
+                      }
+                    },
+                  });
+
                   const stateCode = `
                     const [${lowNewMtd}${newModel}, set${capNewMtd}${newModel}] = useState<${newModel}>(defaults.default${capNewMtd}${newModel});
                     `.trim();
@@ -384,11 +456,18 @@ const fileName = filePath.split("/").pop().split(".")[0];
                         const submitNode = template.ast(handleSubmitCode, {
                           plugins: ["jsx", "typescript"],
                         });
+                        let effectNode = null;
+                        if (modelParamFound && effectCodeUpdate)
+                          effectNode = template.ast(effectCodeUpdate, {
+                            plugins: ["jsx", "typescript"],
+                          });
 
                         // Insertamos en orden: state, change, submit
                         path.node.body.body.unshift(submitNode);
                         path.node.body.body.unshift(changeNode);
                         path.node.body.body.unshift(stateNode);
+                        if (effectNode)
+                          path.node.body.body.unshift(effectNode);
                         modified = true;
                       }
                     },
@@ -489,7 +568,8 @@ const fileName = filePath.split("/").pop().split(".")[0];
 
             if (modelWasAdded)
               ensureReactHooksImport(ast, ["useState", "useEffect"]);
-          } else if (operation === "delete") {
+          }
+          if (operation === "delete") {
             let deletedComponentName = null;
 
             if (path.node.openingElement.name.type === "JSXIdentifier") {
@@ -530,6 +610,29 @@ const fileName = filePath.split("/").pop().split(".")[0];
               const lowerMethod = method.toLowerCase();
 
               traverse(ast, {
+                ExpressionStatement(path) {
+                  const expr = path.node.expression;
+
+                  if (
+                    t.isCallExpression(expr) &&
+                    t.isIdentifier(expr.callee, { name: "useEffect" }) &&
+                    expr.arguments.length === 2 &&
+                    t.isArrayExpression(expr.arguments[1])
+                  ) {
+                    const deps = expr.arguments[1].elements;
+
+                    const modelIdName = `${toLower(model)}Id`;
+
+                    const hasTargetDep = deps.some(
+                      (el) => t.isIdentifier(el) && el.name === modelIdName,
+                    );
+
+                    if (hasTargetDep) {
+                      path.remove();
+                      modified = true;
+                    }
+                  }
+                },
                 VariableDeclaration(path) {
                   const code = generate(path.node).code;
                   if (
@@ -648,11 +751,6 @@ const fileName = filePath.split("/").pop().split(".")[0];
                   }
                 },
               });
-
-              // 3) Volver a agregar imports faltantes si fue necesario
-              // if (modified) {
-              //   checkMissingImports(model);
-              // }
             }
 
             // Ahora, si era un custom component, verificamos si quedan instancias
@@ -945,12 +1043,51 @@ const fileName = filePath.split("/").pop().split(".")[0];
       }
       if (method && insertedComponentName === "form") {
         const lowerMethod = method.toLowerCase();
+        const lowerModel = toLower(model);
+        const modelParam = `${lowerModel}Id`;
         const capitalizeMethod = toCapitalize(method);
 
         let methodService = null;
 
         if (method === "PUT") methodService = "update";
         else if (method === "POST") methodService = "create";
+
+        let effectCodeUpdate;
+        if (method === "PUT") {
+          effectCodeUpdate = `useEffect(() => {
+            ${model}Service.get${model}ById(${modelParam})
+              .then((response) => {
+                  set${capitalizeMethod}${model}(response);
+              })
+              .catch((error) => {
+                console.error("Error fetching ${model} data by id:", error);
+              });
+          }, [${modelParam}]);`;
+        }
+
+        let modelParamFound = false;
+
+        traverse(ast, {
+          VariableDeclarator(path) {
+            // buscamos ObjectPattern = useParams()
+            if (
+              t.isObjectPattern(path.node.id) &&
+              t.isCallExpression(path.node.init) &&
+              t.isIdentifier(path.node.init.callee, { name: "useParams" })
+            ) {
+              // ¿está nuestro parámetro entre las propiedades?
+              const hasParam = path.node.id.properties.some(
+                (prop) =>
+                  t.isObjectProperty(prop) &&
+                  t.isIdentifier(prop.key, { name: modelParam }),
+              );
+              if (hasParam) {
+                modelParamFound = true;
+              }
+              path.stop();
+            }
+          },
+        });
 
         const formStateCode = `const [${lowerMethod}${model}, set${capitalizeMethod}${model}] = useState<${model}>(defaults.default${capitalizeMethod}${model});`;
         const handleChangeCode = `const handleChange${capitalizeMethod}${model} = (e: any) => {
@@ -986,9 +1123,16 @@ const fileName = filePath.split("/").pop().split(".")[0];
               const submitNodeNew = template.ast(handleSubmitCode, {
                 plugins: ["jsx", "typescript"],
               });
+              let effectNodeNew = null;
+              if (modelParamFound && effectCodeUpdate) {
+                effectNodeNew = template.ast(effectCodeUpdate, {
+                  plugins: ["jsx", "typescript"],
+                });
+              }
               path.node.body.body.unshift(stateNodeNew);
               path.node.body.body.unshift(changeNodeNew);
               path.node.body.body.unshift(submitNodeNew);
+              if (effectNodeNew) path.node.body.body.unshift(effectNodeNew);
               modified = true;
             }
           },
