@@ -803,15 +803,14 @@ void FrontendGenerator::applyInsertion(std::shared_ptr<BaseNode> &node)
 
         // Generar el fragmento de código usando la plantilla Inja
         std::string jsxFragment = generateNodeFragment(node);
-        std::string payloadJson = nlohmann::json(jsxFragment).dump();
 
         // Escribir el payload a archivo temporal
         QString tempPath = QStandardPaths::writableLocation(QStandardPaths::TempLocation);
-        QString payloadPath = tempPath + "/payload.json";
+        QString payloadPath = tempPath + "/payload.jsxfrag";
         QFile payloadFile(payloadPath);
         if (payloadFile.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text)) {
             QTextStream out(&payloadFile);
-            out << QString::fromStdString(payloadJson);
+            out << QString::fromStdString(jsxFragment);
             payloadFile.close();
         } else {
             fmt::print(stderr, "❌ Unable to write temporary payload.json\n");
@@ -845,15 +844,15 @@ void FrontendGenerator::applyModification(std::shared_ptr<BaseNode> &node)
 
     // Generar el fragmento de código usando la plantilla Inja
     std::string jsxFragment = generateNodeFragment(node);
-    std::string payloadJson = nlohmann::json(jsxFragment).dump();
+    // std::string payloadJson = nlohmann::json(jsxFragment).dump();
 
     // Escribir el payload a archivo temporal
     QString tempPath = QStandardPaths::writableLocation(QStandardPaths::TempLocation);
-    QString payloadPath = tempPath + "/payload.json";
+    QString payloadPath = tempPath + "/payload.jsxfrag";
     QFile payloadFile(payloadPath);
     if (payloadFile.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text)) {
         QTextStream out(&payloadFile);
-        out << QString::fromStdString(payloadJson);
+        out << QString::fromStdString(jsxFragment);
         payloadFile.close();
     } else {
         fmt::print(stderr, "❌ Unable to write temporary payload.json\n");

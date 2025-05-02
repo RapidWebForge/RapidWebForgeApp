@@ -258,7 +258,7 @@ std::string renderComponent(inja::Environment &env,
         }
 
         bool modelIsValid = !model.empty();
-        bool getAll = false;
+        bool getAll = false, getId = false;
         std::string get;
         std::string lowerModel;
         if (props.contains("get") && !props["get"].get<std::string>().empty())
@@ -268,11 +268,12 @@ std::string renderComponent(inja::Environment &env,
         if (get == "ALL" && modelIsValid) {
             lowerModel = toLower(model);
             getAll = true;
-            output += "{" + lowerModel + ".length > 0 && (";
+            // output += "{" + lowerModel + ".length > 0 && (";
         }
         if (get == "ID" && modelIsValid) {
             lowerModel = toLower(model);
-            output += "{" + lowerModel + " && (";
+            getId = true;
+            // output += "{" + lowerModel + " && (";
         }
 
         output += "<div data-id=\"" + id + "\"";
@@ -282,6 +283,9 @@ std::string renderComponent(inja::Environment &env,
 
         if (modelIsValid)
             output += " data-rwf-model=\"" + model + "\"";
+
+        if (getId || getAll)
+            output += " data-rwf-get=\"" + get + "\"";
 
         output += ">";
 
@@ -316,8 +320,8 @@ std::string renderComponent(inja::Environment &env,
         output += "</div>";
 
         // Model Layout
-        if ((get == "ALL" || get == "ID") && modelIsValid)
-            output += ")}";
+        // if ((get == "ALL" || get == "ID") && modelIsValid)
+        //     output += ")}";
 
     } else if (type == "Form") {
         bool sendProps = true;
@@ -433,8 +437,8 @@ std::string renderServiceImportsCallback(const nlohmann::json componentJson)
             // Generar el código de importación
             output += "import " + modelName + "Service from \"../services/" + modelName
                       + "Service\";\n";
-            output += "import { " + modelName + ", defaults } from \"../models/" + modelName
-                      + "\";\n";
+            output += "import " + modelName + ", { " + modelName + "Defaults } from \"../models/"
+                      + modelName + "\";\n";
         }
     }
 
@@ -597,8 +601,8 @@ std::string renderStatesCallback(inja::Environment &env, inja::Arguments &args)
                         std::string lowerMethod = toLower(method);
 
                         output += "const [" + lowerMethod + modelName + ", set" + methodCapitalize
-                                  + modelName + "] = useState<" + modelName + ">(defaults.default"
-                                  + methodCapitalize + modelName + ");\n";
+                                  + modelName + "] = useState<" + modelName + ">(" + modelName
+                                  + "Defaults.default" + methodCapitalize + modelName + ");\n";
                     }
                 }
             }
