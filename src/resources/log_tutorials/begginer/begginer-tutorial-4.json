@@ -20,7 +20,7 @@
     },
     {
       "goal": "Aplicar diseños de columnas adaptativas",
-      "comment": "Agrega clases como `grid-cols-1 md:grid-cols-2` para modificar el número de columnas por pantalla.",
+      "comment": "Aplica clases como grid grid-cols-1 md:grid-cols-2 para distribuir elementos en columnas adaptativas. Asegúrate de incluir la clase grid antes de usar cualquier utilidad como grid-cols-*, ya que sin ella no se aplicará correctamente.",
       "help": "Esto mejora la estructura visual en dispositivos grandes.",
       "reference": "https://tailwindcss.com/docs/grid-template-columns",
       "log": "responsive-columns",
