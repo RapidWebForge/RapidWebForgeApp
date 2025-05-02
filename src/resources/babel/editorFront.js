@@ -243,66 +243,167 @@ const fileName = filePath.split("/").pop().split(".")[0];
               const isForm = path.node.openingElement.name.name === "form";
 
               if (isDiv) {
+                const oldGetRaw = getAttrValue(path.node, "data-rwf-get");
+                const newGetRaw = getAttrValue(fragmentAst, "data-rwf-get");
+
+                const oldGet = oldGetRaw?.trim() ? oldGetRaw : null;
+                const newGet = newGetRaw?.trim() ? newGetRaw : null;
+
+                const hasOldGet = oldGet !== null;
+                const hasNewGet = newGet !== null;
+
+                const getWasReplaced =
+                  hasOldGet && hasNewGet && oldGet !== newGet;
+                const getWasRemoved = hasOldGet && !hasNewGet;
+                const getWasAdded = hasNewGet && !hasOldGet;
+
                 // Eliminar useState y useEffect antiguos del oldModel
-                if ((modelWasReplaced || modelWasRemoved) && hasOldModel) {
+                if (
+                  ((modelWasReplaced || modelWasRemoved) && hasOldModel) ||
+                  ((getWasReplaced || getWasRemoved) && hasOldGet)
+                ) {
                   safeTraverse(ast, {
                     VariableDeclaration(path) {
                       const code = generate(path.node).code;
-                      // p.ej. const [tasks, setTasks] = useState<Tasks[]>([]);
-                      if (
-                        code.includes(
-                          `const [${toLower(oldModel)}, set${oldModel}]`
-                        ) &&
-                        code.includes(`useState<${oldModel}[]>`)
-                      ) {
-                        path.remove();
-                        modified = true;
-                      }
+                      if (oldGet === "ALL")
+                        if (
+                          code.includes(
+                            `const [${toLower(oldModel)}, set${oldModel}]`
+                          ) &&
+                          code.includes(`useState<${oldModel}[]>`)
+                        ) {
+                          path.remove();
+                          modified = true;
+                        }
+                      if (oldGet === "ID")
+                        if (
+                          code.includes(
+                            `const [${toLower(oldModel)}, set${oldModel}]`
+                          ) &&
+                          code.includes(`useState<${oldModel}>`)
+                        ) {
+                          path.remove();
+                          modified = true;
+                        }
                     },
                     ExpressionStatement(path) {
                       const code = generate(path.node).code;
-                      // p.ej. useEffect(() => { TasksService.getAllTasks()... }, []);
-                      if (
-                        code.includes("useEffect") &&
-                        code.includes(`${oldModel}Service.getAll${oldModel}()`)
-                      ) {
-                        path.remove();
-                        modified = true;
-                      }
+                      if (oldGet === "ALL")
+                        if (
+                          code.includes("useEffect") &&
+                          code.includes(
+                            `${oldModel}Service.getAll${oldModel}()`
+                          )
+                        ) {
+                          path.remove();
+                          modified = true;
+                        }
+                      if (oldGet === "ID")
+                        if (
+                          code.includes("useEffect") &&
+                          code.includes(
+                            `${oldModel}Service.get${oldModel}ById(${toLower(
+                              oldModel
+                            )}Id)`
+                          )
+                        ) {
+                          path.remove();
+                          modified = true;
+                        }
                     },
                   });
                 }
 
                 // Agregar nuevas definiciones
-                if ((modelWasReplaced || modelWasAdded) && hasNewModel) {
+                if (
+                  ((modelWasReplaced || modelWasAdded) &&
+                    hasNewModel &&
+                    (getWasReplaced || getWasAdded) &&
+                    hasNewGet) ||
+                  ((getWasReplaced || getWasAdded) &&
+                    hasNewGet &&
+                    hasNewModel) ||
+                  ((modelWasReplaced || modelWasAdded) &&
+                    hasNewModel &&
+                    hasNewGet)
+                ) {
                   const lowerNewModel = toLower(newModel);
-                  const stateCode = `
-                  const [${lowerNewModel}, set${newModel}] = useState<${newModel}[]>([]);
-                      `.trim();
-                  const effectCode = `
-                  useEffect(() => {
-                    ${newModel}Service.getAll${newModel}()
-                      .then(response => set${newModel}(response))
-                      .catch(error => console.error("Error fetching ${newModel} data:", error));
-                  }, []);
-                      `.trim();
+                  const modelParam = `${lowerNewModel}Id`;
+                  let modelParamFound = false;
 
                   safeTraverse(ast, {
-                    FunctionDeclaration(path) {
-                      if (path.node.id?.name === fileName) {
-                        // Insertamos primero el effect, luego el state, para mantener orden lógico
-                        const effectNode = template.ast(effectCode, {
-                          plugins: ["jsx", "typescript"],
-                        });
-                        const stateNode = template.ast(stateCode, {
-                          plugins: ["jsx", "typescript"],
-                        });
-                        path.node.body.body.unshift(stateNode);
-                        path.node.body.body.unshift(effectNode);
-                        modified = true;
+                    VariableDeclarator(path) {
+                      if (!path || !path.node) return;
+                      // buscamos ObjectPattern = useParams()
+                      if (
+                        t.isObjectPattern(path.node.id) &&
+                        t.isCallExpression(path.node.init) &&
+                        t.isIdentifier(path.node.init.callee, {
+                          name: "useParams",
+                        })
+                      ) {
+                        // ¿está nuestro parámetro entre las propiedades?
+                        const hasParam = path.node.id.properties.some(
+                          (prop) =>
+                            t.isObjectProperty(prop) &&
+                            t.isIdentifier(prop.key, { name: modelParam })
+                        );
+                        if (hasParam) {
+                          modelParamFound = true;
+                        }
+                        path.stop();
                       }
                     },
                   });
+
+                  if (
+                    (newGet === "ID" && modelParamFound) ||
+                    newGet === "ALL"
+                  ) {
+                    let stateCode;
+                    if (newGet === "ALL") {
+                      stateCode = `const [${lowerNewModel}, set${newModel}] = useState<${newModel}[]>([]);`;
+                    } else if (newGet === "ID") {
+                      stateCode = `const [${lowerNewModel}, set${newModel}] = useState<${newModel}>();`;
+                    }
+                    let effectCode;
+                    if (newGet === "ALL") {
+                      effectCode = `
+                        useEffect(() => {
+                          ${newModel}Service.getAll${newModel}()
+                            .then(response => set${newModel}(response))
+                            .catch(error => console.error("Error fetching ${newModel} data:", error));
+                        }, []);
+                      `.trim();
+                    } else if (newGet === "ID") {
+                      effectCode = `
+                        useEffect(() => {
+                          ${newModel}Service.get${newModel}ById(${modelParam})
+                            .then(response => set${newModel}(response))
+                            .catch(error => console.error("Error fetching ${newModel} by id:", error));
+                        }, [${modelParam}]);
+                      `.trim();
+                    }
+                    safeTraverse(ast, {
+                      FunctionDeclaration(path) {
+                        if (!path || !path.node || !path.node.id) return;
+                        if (path.node.id?.name === fileName) {
+                          // Generar nodos con statement.ast
+                          const stateNode = template.ast(stateCode, {
+                            plugins: ["jsx", "typescript"],
+                          });
+                          console.log("stateNode", stateNode.type);
+                          const effectNode = template.ast(effectCode, {
+                            plugins: ["jsx", "typescript"],
+                          });
+                          // Insertar en el orden que prefieras
+                          path.node.body.body.unshift(stateNode);
+                          path.node.body.body.unshift(effectNode);
+                        }
+                      },
+                    });
+                    ensureReactHooksImport(ast, ["useState", "useEffect"]);
+                  }
                 }
               }
               if (isForm) {
@@ -619,26 +720,52 @@ const fileName = filePath.split("/").pop().split(".")[0];
               const isForm = path.node.openingElement.name.name === "form";
 
               if (isDiv && model) {
+                const get = getAttrValue(path.node, "data-rwf-get");
+
                 traverse(ast, {
                   VariableDeclaration(path) {
                     const code = generate(path.node).code;
-                    if (
-                      code.includes(`const [${toLower(model)}, set${model}]`) &&
-                      code.includes(`useState<${model}[]>`)
-                    ) {
-                      path.remove();
-                      modified = true;
-                    }
+                    if (get === "ALL")
+                      if (
+                        code.includes(
+                          `const [${toLower(model)}, set${model}]`
+                        ) &&
+                        code.includes(`useState<${model}[]>`)
+                      ) {
+                        path.remove();
+                        modified = true;
+                      }
+                    if (get === "ID")
+                      if (
+                        code.includes(
+                          `const [${toLower(model)}, set${model}]`
+                        ) &&
+                        code.includes(`useState<${model}>`)
+                      ) {
+                        path.remove();
+                        modified = true;
+                      }
                   },
                   ExpressionStatement(path) {
                     const code = generate(path.node).code;
-                    if (
-                      code.includes("useEffect") &&
-                      code.includes(`${model}Service.getAll${model}()`)
-                    ) {
-                      path.remove();
-                      modified = true;
-                    }
+                    if (get === "ALL")
+                      if (
+                        code.includes("useEffect") &&
+                        code.includes(`${model}Service.getAll${model}()`)
+                      ) {
+                        path.remove();
+                        modified = true;
+                      }
+                    if (get === "ID")
+                      if (
+                        code.includes("useEffect") &&
+                        code.includes(
+                          `${model}Service.get${model}ById(${toLower(model)}Id)`
+                        )
+                      ) {
+                        path.remove();
+                        modified = true;
+                      }
                   },
                 });
               }
