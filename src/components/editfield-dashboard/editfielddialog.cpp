@@ -1,4 +1,5 @@
 #include "editfielddialog.h"
+#include "../../core/logging/actionloggerjson.h"
 #include "ui_editfielddialog.h"
 
 EditFieldDialog::EditFieldDialog(QWidget *parent)
@@ -112,6 +113,8 @@ void EditFieldDialog::on_acceptButton_clicked()
         currentField->setForeignKeyTable(ui->foreignKeyTableComboBox->currentText().toStdString());
     }
 
+    loggerJson.logAction("edit-field-in-model",
+                         "Field " + ui->fieldNameLineEdit->text().toStdString() + " editado.");
     // Emitir la señal con los datos actualizados
     emit fieldSaved();
 

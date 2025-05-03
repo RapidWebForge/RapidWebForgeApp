@@ -104,7 +104,7 @@ private:
     std::shared_ptr<BaseNode> frontendRoot;
     std::shared_ptr<Section> currentSection;
     std::shared_ptr<Component> currentComponent;
-    ActionLoggerJson loggerJson; // Logs en formato .json
+    ActionLoggerJson loggerJson;
 };
 
 #endif // FRONTENDDASHBOARD_H

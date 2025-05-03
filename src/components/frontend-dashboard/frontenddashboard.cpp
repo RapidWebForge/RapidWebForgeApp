@@ -379,6 +379,8 @@ void FrontendDashboard::insertComponentInSection(std::shared_ptr<BaseNode> &newC
                          Qt::UserRole,
                          QString::fromStdString(boost::uuids::to_string(newSectionPtr->getId())));
         parentItem->insertChild(dropIndex, newItem);
+        loggerJson.logAction("use-component-in-view",
+                             "Custom Component añadido a una vista o componente personalizado");
     }
 }
 
@@ -488,7 +490,15 @@ void FrontendDashboard::onItemDropped(QTreeWidgetItem *parentItem,
         return;
     }
 
-    if (isView(parentItem) || isCustomComponent(parentItem)) {
+    bool isCc = isCustomComponent(parentItem);
+    bool isVw = isView(parentItem);
+
+    if (isCc)
+        loggerJson.logAction("add-html-to-component", "Html tags añadidos a un custom component.");
+    if (isVw)
+        loggerJson.logAction("add-html-to-view", "Html tags añadidos a un view.");
+
+    if (isVw || isCc) {
         insertComponentInSection(newNode, parentItem, dropIndex);
     } else {
         auto parentComponent = findComponentInTree(currentSection, parentItem);
@@ -608,22 +618,47 @@ void FrontendDashboard::onPropertyValueChanged(int row, int column)
         std::string logMessage = "Property '" + propertyName.toStdString() + "' updated to '"
                                  + newValue.toStdString() + "'";
         loggerJson.logAction("edit-tag-attributes", logMessage);
+        if (propertyName.toStdString() == "placeholder") {
+            logMessage = "Placeholder updated to " + newValue.toStdString();
+            loggerJson.logAction("edit-placeholder", logMessage);
+        }
+        if (propertyName.toStdString() == "maxlength") {
+            logMessage = "MaxLength updated to " + newValue.toStdString();
+            loggerJson.logAction("add-maxlength", logMessage);
+        }
+        if (propertyName.toStdString() == "required") {
+            logMessage = "Required updated to " + newValue.toStdString();
+            loggerJson.logAction("add-required", logMessage);
+        }
+        if (propertyName.toStdString() == "href") {
+            logMessage = "Navigating to view " + newValue.toStdString();
+            loggerJson.logAction("navigate-between-views", logMessage);
+        }
 
-        // --- Nueva lógica para detectar estilos de Tailwind ---
         if (propertyName == "class") {
             std::string classValue = newValue.toStdString();
 
+            if (componentTypeToString(componentPtr->getType()) == "Button")
+                loggerJson.logAction("style-button-tailwind",
+                                     "User applied styles in class property of a button.");
+
             // Lista de logs y patrones de Tailwind a detectar
             std::vector<std::pair<std::string, std::string>> tailwindLogs
-                = {{"apply-text-styling", "text-"},
-                   {"use-flexbox-grid", "flex"},
-                   {"use-flexbox-grid", "grid"},
-                   {"responsive-design", "sm:"},
-                   {"responsive-design", "md:"},
-                   {"responsive-design", "lg:"},
-                   {"responsive-design", "xl:"},
-                   {"responsive-design", "2xl:"},
-                   {"apply-bg-styling", "bg-"}};
+                = {{"apply-text-styling", "text-"},     {"responsive-text", "text-base"},
+                   {"responsive-text", "text-xl"},      {"use-flexbox-grid", "flex"},
+                   {"use-flexbox-grid", "grid"},        {"responsive-columns", "grid"},
+                   {"use-flexbox-grid", "grid-cols-"},  {"responsive-columns", "grid-cols-"},
+                   {"responsive-design", "sm:"},        {"responsive-design", "md:"},
+                   {"responsive-design", "lg:"},        {"responsive-design", "xl:"},
+                   {"responsive-design", "2xl:"},       {"apply-bg-styling", "bg-"},
+                   {"add-spacing-tailwind", "m-"},      {"add-spacing-tailwind", "mt-"},
+                   {"add-spacing-tailwind", "mb-"},     {"add-spacing-tailwind", "mr-"},
+                   {"add-spacing-tailwind", "ml-"},     {"add-spacing-tailwind", "mx-"},
+                   {"add-spacing-tailwind", "my-"},     {"add-spacing-tailwind", "p-"},
+                   {"add-spacing-tailwind", "pt-"},     {"add-spacing-tailwind", "pb-"},
+                   {"add-spacing-tailwind", "pr-"},     {"add-spacing-tailwind", "pl-"},
+                   {"add-spacing-tailwind", "px-"},     {"add-spacing-tailwind", "py-"},
+                   {"responsive-visibility", "hidden"}, {"responsive-visibility", "block"}};
 
             for (const auto &[logType, pattern] : tailwindLogs) {
                 if (classValue.find(pattern) != std::string::npos) {

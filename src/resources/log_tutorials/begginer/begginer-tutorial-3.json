@@ -1,21 +1,37 @@
 {
   "title": "CSS: Conociendo los estilos en cascada",
-  "description": "En este tutorial conocerás los estilos en cascada o CSS, los cuales nos permiten cambiar el aspecto de nuestras etiquetas HTML y adecuarlas al estilo de nuestra aplicación web. Además, usaremos el popular framework CSS, TailwindCSS, para facilitar el aprendizaje y obtener una valiosa herramienta en nuestro tech stack.",
+  "description": "Los estilos en cascada (CSS) nos permiten cambiar el aspecto visual de nuestras etiquetas HTML. En este tutorial aprenderás a aplicar estilos con TailwindCSS, un framework que simplifica este proceso.",
   "steps": [
     {
       "goal": "Agregar estilos a una etiqueta de texto",
-      "comment": "Se puede agregar estilos directamente a las etiquetas con la propiedad 'style', pero se puede lograr casi el mismo resultado usando TailwindCSS. Práctica agregando estilos a una etiqueta de texto, modifica el color, tamaño de letra y estilo de la misma. Puedes añadir algo como: 'text-red-500 text-2xl italic' y ver como el texto cambia a estar de color rojo, tener un mayor tamaño y estar en cursiva.",
-      "help": "TailwindCSS ya está instalado en nuestra aplicación web, entonces solo tienes que introducir las clases predefinidas por el framework. Para mayor información puedes revisar la documentación oficial del framework https://tailwindcss.com/docs/text-color",
-      "reference": "https://developer.mozilla.org/en-US/docs/Learn_web_development/Core/Styling_basics/What_is_CSS",
+      "comment": "Usa clases de Tailwind como `text-red-500`, `text-2xl`, `italic` para cambiar color, tamaño y estilo del texto.",
+      "help": "Puedes aplicar múltiples clases para personalizar tu contenido.",
+      "reference": "https://tailwindcss.com/docs/text-color",
       "log": "apply-text-styling",
       "completed": "false"
     },
     {
-      "goal": "Conocer flexbox y grid",
-      "comment": "Flexbox y Grid son conocimientos importantes en cuanto a los estilos con CSS, ya que permiten modificar la estructura de nuestro contenido y como se mostrará. Se pueden estructurar de manera vertical, horizontal, en base al ancho de los elementos y demás.",
-      "help": "RapidWebForge ofrece dos componentes con disposición horizontal y vertical por defecto, puedes usarlos empleando los componentes 'Vertical Layout' y 'Horizontal Layout' a tu vista actual. Luego agrega otros elementos anidados y observa como se distribuyen.",
+      "goal": "Aplicar estilos a botones",
+      "comment": "Selecciona un botón y agrégale clases como `bg-blue-500 text-white p-2 rounded` para darle estilo.",
+      "help": "Una buena apariencia mejora la claridad y usabilidad de los elementos interactivos.",
+      "reference": "https://tailwindcss.com/docs/background-color",
+      "log": "style-button-tailwind",
+      "completed": "false"
+    },
+    {
+      "goal": "Usar layout vertical u horizontal",
+      "comment": "Usa los componentes 'Vertical Layout' y 'Horizontal Layout' para estructurar contenido con flexbox.",
+      "help": "Estos componentes agrupan automáticamente los elementos y aplican estilos responsive.",
       "reference": "https://css-tricks.com/snippets/css/a-guide-to-flexbox/",
-      "log": "use-flexbox-grid",
+      "log": "use-layout-tailwind",
+      "completed": "false"
+    },
+    {
+      "goal": "Aplicar márgenes y paddings",
+      "comment": "Agrega clases como `m-4`, `p-2`, `mt-2` para controlar el espaciado de los elementos.",
+      "help": "Tailwind ofrece control total del espaciado en todas las direcciones.",
+      "reference": "https://tailwindcss.com/docs/margin",
+      "log": "add-spacing-tailwind",
       "completed": "false"
     }
   ]

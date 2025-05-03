@@ -730,6 +730,8 @@ void StepperDashboard::onDeployProject()
 
         // Activar menus
         toggleMenuButtons(true);
+
+        loggerJson.logAction("generate-orm-models", "Generando código backend");
     });
 
     deployThread->start();

@@ -1,7 +1,6 @@
 #include "addfielddialog.h"
 #include <QFile>
 #include <QMessageBox>
-#include "../../core/logging/actionloggerjson.h"
 #include "ui_addfielddialog.h"
 #include <algorithm>
 #include <cctype>

@@ -130,6 +130,15 @@ void CustomTreeWidget::dropEvent(QDropEvent *event)
         // Log para "nest-tag"
         QString sourceTagName = sourceItem->text(0); // Nombre del componente arrastrado
         QString targetTagName = targetItem->text(0); // Nombre del componente destino
+
+        if (sourceTagName.toStdString() == "Vertical Layout"
+            || sourceTagName.toStdString() == "Horizontal Layout")
+            loggerJson.logAction("use-layout-tailwind",
+                                 "Layout añadido al árbol de componentes: "
+                                     + sourceTagName.toStdString());
+        loggerJson.logAction("add-new-tag",
+                             "Etiqueta añadida al árbol de componentes: "
+                                 + sourceTagName.toStdString());
         loggerJson.logAction("nest-tag",
                              "Etiqueta " + sourceTagName.toStdString() + " anidada dentro de "
                                  + targetTagName.toStdString());
