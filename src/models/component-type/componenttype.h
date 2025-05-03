@@ -36,7 +36,7 @@ const std::map<ComponentType, std::map<std::string, std::string>> componentPrope
          {"placeholder", "Enter text"},
          {"type", "text"},
          {"value", ""},
-         {"id", ""},
+         {"inputid", ""},
          {"name", ""},
          {"minlength", ""},
          {"maxlength", ""},

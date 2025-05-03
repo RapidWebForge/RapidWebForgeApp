@@ -86,7 +86,7 @@ std::string renderComponent(inja::Environment &env,
         std::string placeholder = props.value("placeholder", "");
         std::string type = props.value("type", "text");
         std::string value = props.value("value", "");
-        std::string id = props.value("id", "");
+        std::string inputId = props.value("inputid", "");
         std::string name = props.value("name", "");
         std::string minlength = props.value("minlength", "");
         std::string maxlength = props.value("maxlength", "");
@@ -108,8 +108,8 @@ std::string renderComponent(inja::Environment &env,
         if (!placeholder.empty())
             output += " placeholder=\"" + placeholder + "\"";
 
-        if (!id.empty())
-            output += " id=\"" + id + "\"";
+        if (!inputId.empty())
+            output += " id=\"" + inputId + "\"";
 
         if (!name.empty())
             output += " name=\"" + name + "\"";
