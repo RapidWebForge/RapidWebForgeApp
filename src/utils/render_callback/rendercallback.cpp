@@ -88,6 +88,8 @@ std::string renderComponent(inja::Environment &env,
         std::string value = props.value("value", "");
         std::string id = props.value("id", "");
         std::string name = props.value("name", "");
+        std::string minlength = props.value("minlength", "");
+        std::string maxlength = props.value("maxlength", "");
         std::string required = props.value("required", "");
         std::string inputValue = "";
         std::string onChange = "";
@@ -111,6 +113,12 @@ std::string renderComponent(inja::Environment &env,
 
         if (!name.empty())
             output += " name=\"" + name + "\"";
+
+        if (!minlength.empty())
+            output += " minlength=\"" + minlength + "\"";
+
+        if (!maxlength.empty())
+            output += " maxlength=\"" + maxlength + "\"";
 
         if (!required.empty() && required == "true")
             output += " required";
@@ -156,6 +164,8 @@ std::string renderComponent(inja::Environment &env,
 
     } else if (type == "Text Area") {
         std::string placeholder = props.value("placeholder", "");
+        std::string minlength = props.value("minlength", "");
+        std::string maxlength = props.value("maxlength", "");
 
         output += "<textarea";
 
@@ -164,6 +174,12 @@ std::string renderComponent(inja::Environment &env,
 
         if (!placeholder.empty())
             output += " placeholder=\"" + placeholder + "\"";
+
+        if (!minlength.empty())
+            output += " minlength=\"" + minlength + "\"";
+
+        if (!maxlength.empty())
+            output += " maxlength=\"" + maxlength + "\"";
 
         output += " data-id=\"" + id + "\" />";
     } else if (type == "Button") {

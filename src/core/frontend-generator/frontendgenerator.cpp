@@ -951,9 +951,14 @@ std::string FrontendGenerator::generateNodeFragment(std::shared_ptr<BaseNode> &n
         if ((componentTypeToString(component->getType()) == "Input") && component->getParent()) {
             auto parent = std::dynamic_pointer_cast<Component>(component->getParent());
             nlohmann::json parentJson = processComponentToJson(parent);
-            if (parentJson.contains("props") && parentJson["props"]["model"] != ""
-                && parentJson["props"]["method"] != "")
-                parentProps = parentJson["props"];
+            if (parentJson.contains("props")) {
+                auto props = parentJson.value("props", nlohmann::json::object());
+                std::string model = props.value("model", "");
+                std::string method = props.value("method", "");
+                if (!model.empty() && !method.empty()) {
+                    parentProps = props;
+                }
+            }
         }
     } else {
         fmt::print(stderr,
