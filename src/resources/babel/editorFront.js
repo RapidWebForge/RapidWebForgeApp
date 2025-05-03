@@ -23,7 +23,17 @@ const getAttrValue = (node, attrName) => {
   const attr = node.openingElement.attributes.find(
     (a) => a.type === "JSXAttribute" && a.name.name === attrName
   );
-  return attr && attr.value && attr.value.value;
+  if (!attr || !attr.value) return null;
+
+  if (attr.value.type === "StringLiteral") {
+    return attr.value.value;
+  }
+
+  if (attr.value.type === "JSXExpressionContainer") {
+    return generate(attr.value.expression).code;
+  }
+
+  return null;
 };
 
 const toLower = (s) => s.charAt(0).toLowerCase() + s.slice(1);
@@ -31,6 +41,18 @@ const toLower = (s) => s.charAt(0).toLowerCase() + s.slice(1);
 const toCapitalize = (str) => {
   if (!str) return "";
   return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+};
+
+const extractObjectName = (code) => {
+  if (!code || typeof code !== "string") return null;
+
+  // Extrae todo lo que esté dentro de deleteXXXById(...)
+  const match = code.match(/delete([A-Za-z0-9]+)ById\s*\(/);
+  if (match?.[1]) {
+    return match[1];
+  }
+
+  return null;
 };
 
 const fileName = filePath.split("/").pop().split(".")[0];
@@ -241,7 +263,172 @@ const fileName = filePath.split("/").pop().split(".")[0];
 
               const isDiv = path.node.openingElement.name.name === "div";
               const isForm = path.node.openingElement.name.name === "form";
+              const isButton = path.node.openingElement.name.name === "button";
 
+              if (isButton) {
+                const oldClickRaw = getAttrValue(path.node, "onClick");
+                const newClickRaw = getAttrValue(fragmentAst, "onClick");
+
+                const oldClick = oldClickRaw?.trim() ? oldClickRaw : null;
+                const newClick = newClickRaw?.trim() ? newClickRaw : null;
+
+                const hasOldClick = oldClick !== null;
+                const hasNewClick = newClick !== null;
+
+                const clickWasReplaced =
+                  hasOldClick && hasNewClick && oldClick !== newClick;
+                const clickWasRemoved = hasOldClick && !hasNewClick;
+                const clickWasAdded = hasNewClick && !hasOldClick;
+
+                if (clickWasReplaced || clickWasRemoved) {
+                  let buttonModelFound = false;
+                  let buttonModel;
+
+                  if (hasOldClick) {
+                    let model = null;
+                    model = extractObjectName(oldClick);
+                    if (model) {
+                      traverse(ast, {
+                        VariableDeclaration(path) {
+                          const code = generate(path.node).code;
+                          if (
+                            code.includes(`const delete${model}ById`) &&
+                            code.includes(`${model}Service.`)
+                          ) {
+                            path.remove();
+                            modified = true;
+                          }
+                        },
+                      });
+                      buttonModelFound = true;
+                      buttonModel = model;
+                    }
+                  }
+
+                  if (buttonModelFound) {
+                    const newAst = parser.parse(generate(ast).code, {
+                      sourceType: "module",
+                      plugins: ["jsx", "typescript"],
+                    });
+
+                    const defaultsButton = `${buttonModel}Defaults`;
+                    let useButtonModel = false;
+                    let usesButtonModelDefaults = false;
+                    let usesButtonModelService = false;
+
+                    safeTraverse(newAst, {
+                      Identifier(path) {
+                        if (path.findParent((p) => p.isImportDeclaration()))
+                          return;
+                        const name = path.node.name;
+                        if (name === buttonModel) useButtonModel = true;
+                        if (name === defaultsButton)
+                          usesButtonModelDefaults = true;
+                        if (name === `${buttonModel}Service`)
+                          usesButtonModelService = true;
+                        if (
+                          useButtonModel &&
+                          usesButtonModelDefaults &&
+                          usesButtonModelService
+                        ) {
+                          path.stop();
+                        }
+                      },
+                    });
+
+                    safeTraverse(ast, {
+                      ImportDeclaration(path) {
+                        const src = path.node.source.value;
+
+                        // 2.1) Servicio
+                        if (
+                          src === `../services/${buttonModel}Service` &&
+                          !usesButtonModelService
+                        ) {
+                          path.remove();
+                          modified = true;
+                          return;
+                        }
+
+                        // 2.2) Modelo + defaults
+                        if (src === `../models/${buttonModel}`) {
+                          let changed = false;
+
+                          path.node.specifiers = path.node.specifiers.filter(
+                            (spec) => {
+                              // import Model, {defaults } ...
+                              if (t.isImportSpecifier(spec)) {
+                                const name = spec.imported.name;
+                                if (name === buttonModel && !useButtonModel) {
+                                  changed = true;
+                                  return false;
+                                }
+                                if (
+                                  name === defaultsButton &&
+                                  !usesButtonModelDefaults
+                                ) {
+                                  changed = true;
+                                  return false;
+                                }
+                              }
+                              // import Tasks from ...
+                              if (
+                                t.isImportDefaultSpecifier(spec) &&
+                                spec.local.name === buttonModel &&
+                                !useButtonModel
+                              ) {
+                                changed = true;
+                                return false;
+                              }
+                              return true;
+                            }
+                          );
+
+                          // Si borramos todos los specifiers, eliminar la declaración
+                          if (path.node.specifiers.length === 0) {
+                            path.remove();
+                            changed = true;
+                          }
+
+                          if (changed) {
+                            modified = true;
+                          }
+                        }
+                      },
+                    });
+                  }
+                }
+
+                if (clickWasReplaced || clickWasAdded) {
+                  if (hasNewClick) {
+                    const model = extractObjectName(newClick);
+                    if (model) {
+                      checkMissingImports(model);
+
+                      const code = `const delete${model}ById = async (id: number) => {
+                        try {
+                          const response = await ${model}Service.delete${model}ById(id);
+                          console.log("Element deleted successfully:", response);
+                        } catch (error) {
+                          console.error("Error deleting element:", error);
+                        }
+                      };`;
+
+                      safeTraverse(ast, {
+                        FunctionDeclaration(path) {
+                          if (!path || !path.node || !path.node.id) return;
+                          if (path.node.id?.name === fileName) {
+                            const node = template.ast(code, {
+                              plugins: ["jsx", "typescript"],
+                            });
+                            path.node.body.body.unshift(node);
+                          }
+                        },
+                      });
+                    }
+                  }
+                }
+              }
               if (isDiv) {
                 const oldGetRaw = getAttrValue(path.node, "data-rwf-get");
                 const newGetRaw = getAttrValue(fragmentAst, "data-rwf-get");
@@ -718,7 +905,31 @@ const fileName = filePath.split("/").pop().split(".")[0];
               const method = getAttrValue(path.node, "data-rwf-method");
               const isDiv = path.node.openingElement.name.name === "div";
               const isForm = path.node.openingElement.name.name === "form";
+              const isButton = path.node.openingElement.name.name === "button";
+              let buttonModelFound = false;
+              let buttonModel;
 
+              if (isButton) {
+                const onClick = getAttrValue(path.node, "onClick");
+                let model = null;
+                if (onClick) model = extractObjectName(onClick);
+                if (model) {
+                  traverse(ast, {
+                    VariableDeclaration(path) {
+                      const code = generate(path.node).code;
+                      if (
+                        code.includes(`const delete${model}ById`) &&
+                        code.includes(`${model}Service.`)
+                      ) {
+                        path.remove();
+                        modified = true;
+                      }
+                    },
+                  });
+                  buttonModelFound = true;
+                  buttonModel = model;
+                }
+              }
               if (isDiv && model) {
                 const get = getAttrValue(path.node, "data-rwf-get");
 
@@ -899,6 +1110,97 @@ const fileName = filePath.split("/").pop().split(".")[0];
                             t.isImportDefaultSpecifier(spec) &&
                             spec.local.name === model &&
                             !usesOldModel
+                          ) {
+                            changed = true;
+                            return false;
+                          }
+                          return true;
+                        }
+                      );
+
+                      // Si borramos todos los specifiers, eliminar la declaración
+                      if (path.node.specifiers.length === 0) {
+                        path.remove();
+                        changed = true;
+                      }
+
+                      if (changed) {
+                        modified = true;
+                      }
+                    }
+                  },
+                });
+              }
+
+              if (isButton && buttonModelFound) {
+                const newAst = parser.parse(generate(ast).code, {
+                  sourceType: "module",
+                  plugins: ["jsx", "typescript"],
+                });
+
+                const defaultsButton = `${buttonModel}Defaults`;
+                let useButtonModel = false;
+                let usesButtonModelDefaults = false;
+                let usesButtonModelService = false;
+
+                safeTraverse(newAst, {
+                  Identifier(path) {
+                    if (path.findParent((p) => p.isImportDeclaration())) return;
+                    const name = path.node.name;
+                    if (name === buttonModel) useButtonModel = true;
+                    if (name === defaultsButton) usesButtonModelDefaults = true;
+                    if (name === `${buttonModel}Service`)
+                      usesButtonModelService = true;
+                    if (
+                      useButtonModel &&
+                      usesButtonModelDefaults &&
+                      usesButtonModelService
+                    ) {
+                      path.stop();
+                    }
+                  },
+                });
+
+                safeTraverse(ast, {
+                  ImportDeclaration(path) {
+                    const src = path.node.source.value;
+
+                    // 2.1) Servicio
+                    if (
+                      src === `../services/${buttonModel}Service` &&
+                      !usesButtonModelService
+                    ) {
+                      path.remove();
+                      modified = true;
+                      return;
+                    }
+
+                    // 2.2) Modelo + defaults
+                    if (src === `../models/${buttonModel}`) {
+                      let changed = false;
+
+                      path.node.specifiers = path.node.specifiers.filter(
+                        (spec) => {
+                          // import Model, {defaults } ...
+                          if (t.isImportSpecifier(spec)) {
+                            const name = spec.imported.name;
+                            if (name === buttonModel && !useButtonModel) {
+                              changed = true;
+                              return false;
+                            }
+                            if (
+                              name === defaultsButton &&
+                              !usesButtonModelDefaults
+                            ) {
+                              changed = true;
+                              return false;
+                            }
+                          }
+                          // import Tasks from ...
+                          if (
+                            t.isImportDefaultSpecifier(spec) &&
+                            spec.local.name === buttonModel &&
+                            !useButtonModel
                           ) {
                             changed = true;
                             return false;
@@ -1174,6 +1476,39 @@ const fileName = filePath.split("/").pop().split(".")[0];
           },
         });
         modified = true;
+      }
+
+      // Button with click
+      if (insertedComponentName === "button") {
+        const click = getAttrValue(fragmentAst, "onClick");
+
+        if (click) {
+          const model = extractObjectName(click);
+          if (model) {
+            checkMissingImports(model);
+
+            const code = `const delete${model}ById = async (id: number) => {
+              try {
+                const response = await ${model}Service.delete${model}ById(id);
+                console.log("Element deleted successfully:", response);
+              } catch (error) {
+                console.error("Error deleting element:", error);
+              }
+            };`;
+
+            safeTraverse(ast, {
+              FunctionDeclaration(path) {
+                if (!path || !path.node || !path.node.id) return;
+                if (path.node.id?.name === fileName) {
+                  const node = template.ast(code, {
+                    plugins: ["jsx", "typescript"],
+                  });
+                  path.node.body.body.unshift(node);
+                }
+              },
+            });
+          }
+        }
       }
 
       // Model Layout

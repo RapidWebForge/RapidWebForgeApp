@@ -169,6 +169,7 @@ std::string renderComponent(inja::Environment &env,
     } else if (type == "Button") {
         value = props.value("text", "Default Button");
         std::string type = props.value("type", "button");
+        std::string click = props.value("click", "");
 
         output += "<button";
 
@@ -177,6 +178,9 @@ std::string renderComponent(inja::Environment &env,
 
         if (!type.empty())
             output += " type=\"" + type + "\"";
+
+        if (!click.empty())
+            output += " onClick={ () => {" + click + "} }";
 
         output += " data-id=\"" + id + "\">" + value + "</button>";
     } else if (type == "Hyperlink") {
@@ -620,18 +624,63 @@ std::string renderStatesCallback(inja::Environment &env, inja::Arguments &args)
     return output;
 }
 
+std::string extractObjectName(const std::string &input)
+{
+    std::string prefix = "delete";
+    std::string suffix = "ById";
+
+    size_t start = input.find(prefix);
+    if (start == std::string::npos)
+        return "";
+
+    start += prefix.length();
+    size_t end = input.find(suffix, start);
+    if (end == std::string::npos)
+        return "";
+
+    return input.substr(start, end - start);
+}
+
 std::string renderHandleFoosCallback(inja::Environment &env, inja::Arguments &args)
 {
     // Validar que el argumento sea un array de componentes
     if (args.empty() || !args[0]->is_array()) {
         fmt::print(stderr, "Invalid argument passed to renderHandleFoosCallback.\n");
-        return "<!-- Invalid argument -->";
+        return {};
     }
 
     const nlohmann::json &components = *args[0];
     std::string output;
 
     for (const auto &componentJson : components) {
+        if (componentJson.contains("type") && componentJson["type"] == "Button") {
+            const auto &props = componentJson["props"];
+            if (props.contains("click") && props["click"].is_string()
+                && !props["click"].get<std::string>().empty()) {
+                std::string click = props["click"];
+                if (click.empty())
+                    continue;
+                std::string model = extractObjectName(click);
+                if (model.empty())
+                    continue;
+
+                std::string deleteModel;
+
+                // Generar el deleteModelById()
+                deleteModel = "const delete" + model + "ById";
+                deleteModel += " = async (id: number) => {\n";
+                deleteModel += "  try {\n";
+                deleteModel += "    const response = await " + model + "Service.delete" + model
+                               + "ById(id);\n";
+                deleteModel += "    console.log(\"Element deleted successfully:\", response);\n";
+                deleteModel += "  } catch (error) {\n";
+                deleteModel += "    console.error(\"Error deleting element:\", error);\n";
+                deleteModel += "  }\n";
+                deleteModel += "};\n";
+
+                output += deleteModel;
+            }
+        }
         if (componentJson.contains("type") && componentJson["type"] == "Form") {
             const auto &props = componentJson["props"];
             if (props.contains("model") && props["model"].is_string()
