@@ -681,7 +681,7 @@ const [, , basePath, operation, transactionName] = process.argv;
           plugins: ["jsx", "typescript"],
         });
 
-        if (filePath.includes("models/index.js")) {
+        if (filePath.includes("models")) {
           if (operation === "insert") {
             // 1. Verificar si ya existe el import del mdoelo
             const importExists = ast.program.body.some(
@@ -772,7 +772,7 @@ const [, , basePath, operation, transactionName] = process.argv;
           modified = true;
         }
 
-        if (filePath.includes("routes/index.js")) {
+        if (filePath.includes("routes")) {
           if (operation === "insert") {
             // 1. Preparar nombres
             const importExists = ast.program.body.some(
