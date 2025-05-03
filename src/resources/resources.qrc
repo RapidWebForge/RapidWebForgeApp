@@ -73,6 +73,8 @@
         <file>log_tutorials/intermedium/intermediate-tutorial-1.json</file>
         <file>log_tutorials/intermedium/intermediate-tutorial-2.json</file>
         <file>log_tutorials/intermedium/intermediate-tutorial-3.json</file>
+        <file>log_tutorials/intermedium/intermediate-tutorial-4.json</file>
+        <file>log_tutorials/intermedium/intermediate-tutorial-5.json</file>
     </qresource>
     <qresource prefix="/babel">
         <file alias="editorFrontend">babel/editorFront.js</file>

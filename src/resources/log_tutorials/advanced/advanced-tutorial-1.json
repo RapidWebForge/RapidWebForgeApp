@@ -1,0 +1,22 @@
+{
+  "title": "React: Creando formularios",
+  "description": "Los formularios permiten a los usuarios ingresar información en la aplicación. RapidWebForge facilita su creación extendiendo la funcionalidad tradicional de HTML con propiedades adicionales.",
+  "steps": [
+    {
+      "goal": "Ingresar una etiqueta Form y sus componentes",
+      "comment": "Desde el Árbol de Componentes, selecciona Form y agrégalo. Añade campos como Inputs y un botón.",
+      "help": "El formulario necesita tener componentes anidados para funcionar correctamente.",
+      "reference": "https://www.w3schools.com/html/html_forms.asp",
+      "log": "insert-form-tag",
+      "completed": "false"
+    },
+    {
+      "goal": "Completar las propiedades necesarias",
+      "comment": "Configura model (modelo backend), method (POST o PUT) y value en Inputs. Cambia el botón a tipo submit.",
+      "help": "Estas propiedades son necesarias para que el formulario funcione correctamente.",
+      "reference": "https://www.w3schools.com/html/html_forms.asp",
+      "log": "configure-form-properties",
+      "completed": "false"
+    }
+  ]
+}

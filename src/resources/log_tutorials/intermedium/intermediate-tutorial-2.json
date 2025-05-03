@@ -1,13 +1,21 @@
 {
-  "title": "Base de Datos: Relaciones SQL",
-  "description": "En el tutorial anterior vimos como crear modelos. Sin embargo, en las aplicaciones web reales normalmento hay al menos dos modelos que se relacionan de algún modo y hoy vamos a reflejar ese comportamiento en nuestra aplicación.",
+  "title": "HTML: Crear enlaces",
+  "description": "Los enlaces (`<a>`) permiten dirigir al usuario a otras páginas internas o externas. En este tutorial aprenderás cómo insertar y configurar enlaces con el atributo `href`.",
   "steps": [
     {
-      "goal": "Crear modelos que se relacionen",
-      "comment": "Para crear una relación entre nuestros modelos solo tenemos que agregar un campo que tenga como constraint ser una llave foránea e indicar a que modelo referencia. Por ejemplo, si tengo un modelo llamado Alumnos, podemos crear un campo llamado aulaId el cual haga referencia al ID del modelo llamado Aula y tendríamos la siguiente relación: 'Cada Alumno tiene un Aula y un Aula tiene muchos Alumnos'",
-      "help": "Las relaciones pueden ser un poco complicadas de entender, así que tomate tu tiempo definiendolas antes de implementarlas en la aplicación.",
-      "reference": "https://code.tutsplus.com/es/sql-for-beginners-part-3-database-relationships--net-8561a",
-      "log": "create-relationship-between-models",
+      "goal": "Insertar una etiqueta de enlace",
+      "comment": "Desde el Árbol de Componentes, selecciona el componente 'Link' y arrástralo a tu vista. Esto generará una etiqueta `<a>` que puedes usar para redireccionar.",
+      "help": "Coloca el enlace en una posición visible y clara para el usuario.",
+      "reference": "https://www.w3schools.com/html/html_links.asp",
+      "log": "insert-link-tag",
+      "completed": "false"
+    },
+    {
+      "goal": "Configurar propiedades del enlace",
+      "comment": "Haz clic sobre el componente de enlace para establecer el valor del atributo `href` (URL de destino), definir si se abre en una nueva pestaña (`target='_blank'`), y cambiar el texto visible.",
+      "help": "Verifica que la URL empiece con 'https://' para evitar errores de seguridad en navegadores modernos.",
+      "reference": "https://developer.mozilla.org/en-US/docs/Web/HTML/Element/a",
+      "log": "configure-link-properties",
       "completed": "false"
     }
   ]

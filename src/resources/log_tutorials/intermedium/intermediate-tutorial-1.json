@@ -1,37 +1,21 @@
 {
-  "title": "Base de datos: Creando nuestros modelos",
-  "description": "La mayoría de aplicaciones web utilizan modelos para estructurar la información. En este tutorial aprenderás a crear tus modelos, definir sus campos y prepararlos para futuras relaciones.",
+  "title": "HTML: Insertar imágenes",
+  "description": "Agregar imágenes en tu aplicación es esencial para mejorar la experiencia visual y enriquecer el contenido. En este tutorial aprenderás cómo insertar imágenes usando la etiqueta HTML `<img>` y personalizar sus atributos.",
   "steps": [
     {
-      "goal": "Definir cuales serán tus modelos",
-      "comment": "Haz clic en 'New model', asigna un nombre y crea las estructuras base. Recuerda que es común usar nombres en plural como 'Usuarios' o 'Productos'.",
-      "help": "Si necesitas corregir algo, puedes editar o eliminar el modelo sin problema.",
-      "reference": "https://database.guide/what-is-a-table/",
-      "log": "create-new-model",
+      "goal": "Agregar una etiqueta de imagen",
+      "comment": "Desde el Árbol de Componentes, selecciona 'Imagen' y arrástralo al árbol de tu vista. Esto insertará una etiqueta `<img>` en tu aplicación.",
+      "help": "Coloca la imagen dentro de un contenedor si deseas alinear o controlar su posición fácilmente.",
+      "reference": "https://www.w3schools.com/html/html_images.asp",
+      "log": "insert-image-tag",
       "completed": "false"
     },
     {
-      "goal": "Agregar campos a los modelos",
-      "comment": "Selecciona el modelo creado, presiona 'Add field' y completa los datos requeridos: nombre del campo, tipo de dato, restricciones, etc.",
-      "help": "Aún no añadas llaves foráneas. Eso lo verás en el siguiente tutorial.",
-      "reference": "https://www.geeksforgeeks.org/components-of-table-in-database/",
-      "log": "add-field-to-model",
-      "completed": "false"
-    },
-    {
-      "goal": "Editar o eliminar campos existentes",
-      "comment": "Para mantener tu modelo actualizado, puedes modificar o eliminar cualquier campo con los botones de acción junto a cada uno.",
-      "help": "No olvides guardar los cambios para mantener la estructura de datos sincronizada.",
-      "reference": "https://www.geeksforgeeks.org/components-of-table-in-database/",
-      "log": "edit-field-in-model",
-      "completed": "false"
-    },
-    {
-      "goal": "Visualizar el resumen del modelo",
-      "comment": "Una vez creado tu modelo y campos, observa el resumen de la estructura y cómo se representará en la base de datos.",
-      "help": "Esto te ayudará a tener una visión clara antes de pasar a relaciones o despliegue.",
-      "reference": "https://www.geeksforgeeks.org/components-of-table-in-database/",
-      "log": "generate-orm-models",
+      "goal": "Configurar atributos de la imagen",
+      "comment": "Selecciona la imagen insertada y accede a la configuración para agregar atributos como `src` (ruta de la imagen), `alt` (texto alternativo) y clases de estilo como tamaño o bordes.",
+      "help": "Si la imagen no aparece, asegúrate de que la ruta en `src` sea válida o prueba con una URL pública.",
+      "reference": "https://developer.mozilla.org/en-US/docs/Web/HTML/Element/img",
+      "log": "configure-image-properties",
       "completed": "false"
     }
   ]

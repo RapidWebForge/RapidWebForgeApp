@@ -63,16 +63,23 @@ void TutorialsPanel::setupTutorials()
                                        ":/resources/log_tutorials/begginer/begginer-tutorial-6.json"},
                                       };
 
-    tutorialsByLevel[gridIntermediate] = {
-        {"Base de datos - Creando nuestros modelos",":/resources/log_tutorials/intermedium/intermediate-tutorial-1.json"},
-        {"Base de Datos - Relaciones SQL",":/resources/log_tutorials/intermedium/intermediate-tutorial-2.json"},
-        {"ORM - Entendiendo el ORM",":/resources/log_tutorials/intermedium/intermediate-tutorial-3.json"}
-    };
+    tutorialsByLevel[gridIntermediate]
+        = {{"HTML: Insertar imágenes",
+            ":/resources/log_tutorials/intermedium/intermediate-tutorial-1.json"},
+           {"HTML: Crear enlaces",
+            ":/resources/log_tutorials/intermedium/intermediate-tutorial-2.json"},
+           {"Base de datos - Creando nuestros modelos",
+            ":/resources/log_tutorials/intermedium/intermediate-tutorial-3.json"},
+           {"Base de Datos - Relaciones SQL",
+            ":/resources/log_tutorials/intermedium/intermediate-tutorial-4.json"},
+           {"ORM - Entendiendo el ORM",
+            ":/resources/log_tutorials/intermedium/intermediate-tutorial-5.json"}};
 
-    tutorialsByLevel[gridAdvanced] = {
-        {"Backend - Creando APIs REST", ":/resources/log_tutorials/advanced/advanced-tutorial-1.json"},
-        {"Seguridad - Autenticación y autorización", ":/resources/log_tutorials/advanced/advanced-tutorial-2.json"}
-    };
+    tutorialsByLevel[gridAdvanced]
+        = {{"React: Creando formularios",
+            ":/resources/log_tutorials/advanced/advanced-tutorial-1.json"},
+           {"React: Recuperando información",
+            ":/resources/log_tutorials/advanced/advanced-tutorial-2.json"}};
 
     // Agregar tutoriales a cada nivel
     for (auto it = tutorialsByLevel.begin(); it != tutorialsByLevel.end(); ++it) {

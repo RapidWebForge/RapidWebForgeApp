@@ -732,6 +732,7 @@ void StepperDashboard::onDeployProject()
         toggleMenuButtons(true);
 
         loggerJson.logAction("generate-orm-models", "Generando código backend");
+        loggerJson.logAction("deploy-project", "Desplegando la aplicación web");
     });
 
     deployThread->start();
@@ -1251,6 +1252,8 @@ void StepperDashboard::toggleExtraButtons() {
 void StepperDashboard::openBackendInVSCode() {
     std::string backendPath = project.getPath() + "/backend";
     qDebug() << "📂 Abriendo Backend en VS Code: " << QString::fromStdString(backendPath);
+
+    loggerJson.logAction("open-backend", "Abriendo la carpeta backend");
 
     if (!FileOpener::openInVSCode(backendPath)) {
         qDebug() << "❌ Error al abrir VS Code en la carpeta Backend.";

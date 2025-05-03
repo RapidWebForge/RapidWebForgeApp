@@ -134,13 +134,23 @@ void CustomTreeWidget::dropEvent(QDropEvent *event)
         if (sourceTagName.toStdString() == "Vertical Layout"
             || sourceTagName.toStdString() == "Horizontal Layout")
             loggerJson.logAction("use-layout-tailwind",
-                                 "Layout añadido al árbol de componentes: "
-                                     + sourceTagName.toStdString());
+                                 "Layout added to components tree: " + sourceTagName.toStdString());
+        if (sourceTagName.toStdString() == "Image")
+            loggerJson.logAction("insert-image-tag", "Image tag added to components tree");
+        if (sourceTagName.toStdString() == "Hyperlink")
+            loggerJson.logAction("insert-link-tag", "Hyperlink tag added to components tree");
+        if (sourceTagName.toStdString() == "Form")
+            loggerJson.logAction("insert-form-tag", "Form tag added to components tree");
+        if (sourceTagName.toStdString() == "Model Layout")
+            loggerJson.logAction("insert-model-layout", "Model Layout tag added to components tree");
+
+        if (targetTagName.toStdString() == "Model Layout")
+            loggerJson.logAction("display-model-values", "Nested tags on Model Layout");
+
         loggerJson.logAction("add-new-tag",
-                             "Etiqueta añadida al árbol de componentes: "
-                                 + sourceTagName.toStdString());
+                             "Tag added to components tree: " + sourceTagName.toStdString());
         loggerJson.logAction("nest-tag",
-                             "Etiqueta " + sourceTagName.toStdString() + " anidada dentro de "
+                             "Tag " + sourceTagName.toStdString() + " nested inside "
                                  + targetTagName.toStdString());
         logAction = "nest-tag";
 
@@ -199,7 +209,7 @@ void CustomTreeWidget::dropEvent(QDropEvent *event)
         }
     }
     if (!logAction.isEmpty()) {
-        loggerJson.logAction(logAction.toStdString(), "Componente movido");
+        loggerJson.logAction(logAction.toStdString(), "Move component");
     }
     // Oculta el indicador después del drop
     showDropIndicator = false;

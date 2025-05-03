@@ -494,9 +494,9 @@ void FrontendDashboard::onItemDropped(QTreeWidgetItem *parentItem,
     bool isVw = isView(parentItem);
 
     if (isCc)
-        loggerJson.logAction("add-html-to-component", "Html tags añadidos a un custom component.");
+        loggerJson.logAction("add-html-to-component", "Html tags added to a custom component.");
     if (isVw)
-        loggerJson.logAction("add-html-to-view", "Html tags añadidos a un view.");
+        loggerJson.logAction("add-html-to-view", "Html tags added to a view.");
 
     if (isVw || isCc) {
         insertComponentInSection(newNode, parentItem, dropIndex);
@@ -618,6 +618,7 @@ void FrontendDashboard::onPropertyValueChanged(int row, int column)
         std::string logMessage = "Property '" + propertyName.toStdString() + "' updated to '"
                                  + newValue.toStdString() + "'";
         loggerJson.logAction("edit-tag-attributes", logMessage);
+
         if (propertyName.toStdString() == "placeholder") {
             logMessage = "Placeholder updated to " + newValue.toStdString();
             loggerJson.logAction("edit-placeholder", logMessage);
@@ -633,6 +634,21 @@ void FrontendDashboard::onPropertyValueChanged(int row, int column)
         if (propertyName.toStdString() == "href") {
             logMessage = "Navigating to view " + newValue.toStdString();
             loggerJson.logAction("navigate-between-views", logMessage);
+            logMessage = "Configuring hyperlink properties with: " + newValue.toStdString();
+            loggerJson.logAction("configure-link-properties", logMessage);
+        }
+        if (propertyName.toStdString() == "target") {
+            logMessage = "Configuring hyperlink properties with: " + newValue.toStdString();
+            loggerJson.logAction("configure-link-properties", logMessage);
+        }
+        if (propertyName.toStdString() == "src" || propertyName.toStdString() == "alt") {
+            logMessage = "Configuring image properties with: " + newValue.toStdString();
+            loggerJson.logAction("configure-image-properties", logMessage);
+        }
+        if ((propertyName.toStdString() == "method" || propertyName.toStdString() == "model")
+            && componentTypeToString(componentPtr->getType()) == "Form") {
+            logMessage = "Configuring form properties with: " + newValue.toStdString();
+            loggerJson.logAction("configure-form-properties", logMessage);
         }
 
         if (propertyName == "class") {

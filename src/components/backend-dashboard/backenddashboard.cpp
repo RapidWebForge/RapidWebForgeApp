@@ -446,6 +446,10 @@ void BackendDashboard::on_deleteField_clicked()
         // Eliminar el campo del currentTransaction
         currentTransaction->removeFieldByName(currentField->getName());
 
+        if (currentField->isForeignKey())
+            loggerJson.logAction("remove-relationship",
+                                 "Eliminando llave foranea :" + currentField->getName());
+
         // Actualizar la tabla visual (QTableWidget)
         updateFieldsTable();
     }

@@ -57,8 +57,7 @@ void OverviewPanel::setupProjects(const std::vector<Project> &projects)
 
     // Lista de tutoriales con sus rutas
     QMap<QString, QString> tutorials
-        = {
-           {"Beginner: HTML - Introducción a las etiquetas",
+        = {{"Beginner: HTML - Introducción a las etiquetas",
             ":/resources/log_tutorials/begginer/begginer-tutorial-1.json"},
            {"Beginner: HTML - Atributos de las etiquetas",
             ":/resources/log_tutorials/begginer/begginer-tutorial-2.json"},
@@ -70,12 +69,20 @@ void OverviewPanel::setupProjects(const std::vector<Project> &projects)
             ":/resources/log_tutorials/begginer/begginer-tutorial-5.json"},
            {"Beginner: React - Creando nuevas vistas",
             ":/resources/log_tutorials/begginer/begginer-tutorial-6.json"},
-           {"Intermediate: Base de datos - Creando nuestros modelos",
+           {"Intermediate: HTML: Insertar imágenes",
             ":/resources/log_tutorials/intermedium/intermediate-tutorial-1.json"},
-           {"Intermediate: Base de Datos - Relaciones SQL",
+           {"Intermediate: HTML: Crear enlaces",
             ":/resources/log_tutorials/intermedium/intermediate-tutorial-2.json"},
+           {"Intermediate: Base de datos - Creando nuestros modelos",
+            ":/resources/log_tutorials/intermedium/intermediate-tutorial-3.json"},
+           {"Intermediate: Base de Datos - Relaciones SQL",
+            ":/resources/log_tutorials/intermedium/intermediate-tutorial-4.json"},
            {"Intermediate: ORM - Entendiendo el ORM",
-            ":/resources/log_tutorials/intermedium/intermediate-tutorial-3.json"}};
+            ":/resources/log_tutorials/intermedium/intermediate-tutorial-5.json"},
+           {"Advanced: React: Creando formularios",
+            ":/resources/log_tutorials/advanced/advanced-tutorial-1.json"},
+           {"Advanced: React: Recuperando información",
+            ":/resources/log_tutorials/advanced/advanced-tutorial-2.json"}};
 
     int row1 = 0;
     for (auto it = tutorials.begin(); it != tutorials.end(); ++it) {
