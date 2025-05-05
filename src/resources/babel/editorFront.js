@@ -6,6 +6,74 @@ const traverse = require("@babel/traverse").default;
 const t = require("@babel/types");
 const template = require("@babel/template").default;
 
+// --- justo después de los imports de babel y tus utilidades ---
+const reorderComponentStatements = (ast, t, traverse) => {
+  traverse(ast, {
+    FunctionDeclaration(path) {
+      const name = path.node.id?.name;
+      if (!name || name[0] !== name[0].toUpperCase()) return;
+
+      const groups = { router: [], state: [], effect: [], handler: [], other: [], render: [] };
+      path.get('body').get('body').forEach(stmtPath => {
+        const node = stmtPath.node;
+        // 1) router hooks
+        if (
+          t.isVariableDeclaration(node) &&
+          node.declarations[0].init?.callee?.name?.match(/^use(P|L|N)/)
+        ) {
+          groups.router.push(node);
+          return;
+        }
+        // 2) useState
+        if (
+          t.isVariableDeclaration(node) &&
+          node.declarations[0].init?.callee?.name === 'useState'
+        ) {
+          groups.state.push(node);
+          return;
+        }
+        // 3) useEffect
+        if (
+          (t.isVariableDeclaration(node) &&
+            node.declarations[0].init?.callee?.name === 'useEffect') ||
+          (t.isExpressionStatement(node) &&
+            node.expression.callee?.name === 'useEffect')
+        ) {
+          groups.effect.push(node);
+          return;
+        }
+        // 4) handlers
+        if (
+          t.isVariableDeclaration(node) &&
+          (t.isArrowFunctionExpression(node.declarations[0].init) ||
+           t.isFunctionExpression(node.declarations[0].init))
+        ) {
+          groups.handler.push(node);
+          return;
+        }
+        // 5) return
+        if (t.isReturnStatement(node)) {
+          groups.render.push(node);
+          return;
+        }
+        // 6) resto
+        groups.other.push(node);
+      });
+
+      // Reemplazo del body en orden
+      const ordered = [
+        ...groups.router,
+        ...groups.state,
+        ...groups.effect,
+        ...groups.handler,
+        ...groups.other,
+        ...groups.render,
+      ];
+      path.get('body').node.body = ordered.map(n => t.cloneDeep(n));
+    }
+  });
+};
+
 // Custom error handling for babel traverse
 const safeTraverse = (ast, visitor) => {
   try {
@@ -1864,6 +1932,8 @@ const fileName = filePath.split("/").pop().split(".")[0];
     }
 
     try {
+      reorderComponentStatements(ast, t, traverse);
+
       const output = generate(ast, { retainLines: true }, sourceCode);
 
       // Guardar el código antes de formatear
