@@ -84,7 +84,7 @@ std::string renderComponent(inja::Environment &env,
 
     } else if (type == "Input") {
         std::string placeholder = props.value("placeholder", "");
-        std::string type = props.value("type", "text");
+        std::string inputType = props.value("type", "text");
         std::string value = props.value("value", "");
         std::string inputId = props.value("inputid", "");
         std::string name = props.value("name", "");
@@ -123,8 +123,8 @@ std::string renderComponent(inja::Environment &env,
         if (!required.empty() && required == "true")
             output += " required";
 
-        if (!type.empty())
-            output += " type=\"" + type + "\"";
+        if (!inputType.empty())
+            output += " type=\"" + inputType + "\"";
 
         if (!inputValue.empty())
             output += " value=" + inputValue;
@@ -414,7 +414,7 @@ std::string renderComponent(inja::Environment &env,
         output += "</form>";
     } else {
         fmt::print(stderr, "Unsupported component type: {}", type);
-        output = "<!-- Unsupported component type: " + type + " -->";
+        output = {};
     }
 
     return output;
@@ -424,7 +424,7 @@ std::string renderComponentCallback(inja::Environment &env, inja::Arguments &arg
 {
     if (args.empty() || !args[0]->is_object()) {
         fmt::print(stderr, "Invalid argument passed to renderComponentCallback.\n");
-        return "<!-- Invalid argument -->";
+        return {};
     }
 
     const nlohmann::json &componentJson = *args[0];
@@ -480,7 +480,7 @@ std::string renderCustomComponentsImportsCallback(const nlohmann::json component
     return output;
 }
 
-std::string renderImportParamsCallback(inja::Environment &env, inja::Arguments &args)
+std::string renderImportParamsCallback(inja::Arguments &args)
 {
     // Validar que el argumento sea un array de componentes
     if (args.empty() || !args[0]->is_string()) {
@@ -529,7 +529,7 @@ std::string renderImportsCallback(inja::Environment &env, inja::Arguments &args)
     return output;
 }
 
-std::string renderParamsCallback(inja::Environment &env, inja::Arguments &args)
+std::string renderParamsCallback(inja::Arguments &args)
 {
     if (args.empty() || !args[0]->is_string()) {
         fmt::print(stderr, "Invalid argument passed to renderParamsCallback.\n");
@@ -566,7 +566,7 @@ std::string renderStatesCallback(inja::Environment &env, inja::Arguments &args)
     // Validar que el argumento sea un array de componentes
     if (args.empty() || !args[0]->is_array()) {
         fmt::print(stderr, "Invalid argument passed to renderStatesCallback.\n");
-        return "<!-- Invalid argument -->";
+        return {};
     }
 
     const nlohmann::json &components = *args[0];
@@ -781,15 +781,23 @@ std::string renderRequestsCallback(inja::Environment &env, inja::Arguments &args
     }
 
     const nlohmann::json &components = *args[0];
-    const std::string &path = *args[1];
+    std::string path;
+    if (args.size() > 1 && args[1]->is_string()) {
+        path = *args[1];
+    } else {
+        path = "";
+    }
+
     std::string output;
 
     std::vector<std::string> params;
-    std::istringstream iss(path);
-    std::string segment;
-    while (std::getline(iss, segment, '/')) {
-        if (!segment.empty() && segment[0] == ':') {
-            params.push_back(segment.substr(1)); // remove ':'
+    if (!path.empty()) {
+        std::istringstream iss(path);
+        std::string segment;
+        while (std::getline(iss, segment, '/')) {
+            if (!segment.empty() && segment[0] == ':') {
+                params.push_back(segment.substr(1)); // remove ':'
+            }
         }
     }
 

@@ -48,6 +48,7 @@
         <file alias="view">inja_templates/frontend/view.inja</file>
         <file alias="model">inja_templates/frontend/model.inja</file>
         <file alias="service">inja_templates/frontend/service.inja</file>
+        <file alias="component">inja_templates/frontend/component.inja</file>
     </qresource>
     <qresource prefix="/inja/nginx">
         <file alias="nginx_conf">inja_templates/nginx/nginx_template.inja</file>

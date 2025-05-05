@@ -25,11 +25,8 @@ private:
     std::vector<std::shared_ptr<BaseNode>> parseNestedComponents(
         const nlohmann::json &nestedJsonArray);
     void parseJson(const nlohmann::json &jsonSchema);
-    // Funciones Auxiliares de búsqueda
-    std::shared_ptr<Section> findViewByName(const std::string &viewName);
-    std::shared_ptr<Section> findCustomComponentByName(const std::string &viewName);
-    bool generateView(const std::string &viewName);
-    bool generateCustomComponent(const std::string &custComponentName);
+    bool generateView(const std::shared_ptr<Section> &view);
+    bool generateCustomComponent(const std::shared_ptr<Section> &custComp);
     // Funciones Auxiliares para modificaciones
     std::vector<NodeOperation> diffTrees(std::shared_ptr<BaseNode> &oldNode,
                                          std::shared_ptr<BaseNode> &newNode);
