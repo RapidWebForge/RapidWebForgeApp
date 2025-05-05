@@ -742,8 +742,13 @@ std::string renderHandleFoosCallback(inja::Environment &env, inja::Arguments &ar
                 handleSubmit += "  return;\n";
                 handleSubmit += "  }\n\n";
                 handleSubmit += "  try {\n";
-                handleSubmit += "    const response = await " + modelName + "Service.create"
-                                + modelName + "(" + lowerMethod + modelName + ");\n";
+                handleSubmit += "    const response = await " + modelName + "Service."
+                                + methodService + modelName;
+                if (method == "PUT")
+                    handleSubmit += "ById(" + lowerMethod + modelName + ".id, " + lowerMethod
+                                    + modelName + ");\n";
+                if (method == "POST")
+                    handleSubmit += "(" + lowerMethod + modelName + ");\n";
                 handleSubmit += "    console.log(\"Form submitted successfully:\", response);\n";
                 handleChange += "};\n\n";
                 handleSubmit += "  } catch (error) {\n";

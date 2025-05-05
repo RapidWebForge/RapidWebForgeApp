@@ -753,21 +753,39 @@ const fileName = filePath.split("/").pop().split(".")[0];
                     };
                     `.trim();
 
-                    const handleSubmitCode = `
-                    const handleSubmit${capNewMtd}${newModel} = async (e: React.FormEvent) => {
-                      e.preventDefault();
-                      if (!${lowNewMtd}${newModel}) {
-                        console.error("Data is undefined");
-                        return;
-                      }
-                      try {
-                        const response = await ${newModel}Service.${methodService}${newModel}(${lowNewMtd}${newModel});
-                        console.log("Form submitted successfully:", response);
-                      } catch (error) {
-                        console.error("Error submitting form:", error);
-                      }
-                    };
-                    `.trim();
+                    let handleSubmitCode;
+                    if (newMethod === "PUT")
+                      handleSubmitCode = `
+                      const handleSubmit${capNewMtd}${newModel} = async (e: React.FormEvent) => {
+                        e.preventDefault();
+                        if (!${lowNewMtd}${newModel}) {
+                          console.error("Data is undefined");
+                          return;
+                        }
+                        try {
+                          const response = await ${newModel}Service.${methodService}${newModel}ById(${lowNewMtd}${newModel}.id, ${lowNewMtd}${newModel});
+                          console.log("Form submitted successfully:", response);
+                        } catch (error) {
+                          console.error("Error submitting form:", error);
+                        }
+                      };
+                      `.trim();
+                    if (newMethod === "POST")
+                      handleSubmitCode = `
+                      const handleSubmit${capNewMtd}${newModel} = async (e: React.FormEvent) => {
+                        e.preventDefault();
+                        if (!${lowNewMtd}${newModel}) {
+                          console.error("Data is undefined");
+                          return;
+                        }
+                        try {
+                          const response = await ${newModel}Service.${methodService}${newModel}(${lowNewMtd}${newModel});
+                          console.log("Form submitted successfully:", response);
+                        } catch (error) {
+                          console.error("Error submitting form:", error);
+                        }
+                      };
+                      `.trim();
 
                     safeTraverse(ast, {
                       FunctionDeclaration(path) {
@@ -1653,7 +1671,23 @@ const fileName = filePath.split("/").pop().split(".")[0];
                    [name]: value,
                  }));
                };`;
-        const handleSubmitCode = `const handleSubmit${capitalizeMethod}${model} = async (e: React.FormEvent) => {
+        let handleSubmitCode;
+        if (method === "PUT")
+          handleSubmitCode = `const handleSubmit${capitalizeMethod}${model} = async (e: React.FormEvent) => {
+                 e.preventDefault();
+                 if (!${lowerMethod}${model}) {
+                   console.error("Data is undefined");
+                   return;
+                 }
+                 try {
+                   const response = await ${model}Service.${methodService}${model}ById(${lowerMethod}${model}.id, ${lowerMethod}${model});
+                   console.log("Form submitted successfully:", response);
+                 } catch (error) {
+                   console.error("Error submitting form:", error);
+                 }
+               };`;
+        if (method === "POST")
+          handleSubmitCode = `const handleSubmit${capitalizeMethod}${model} = async (e: React.FormEvent) => {
                  e.preventDefault();
                  if (!${lowerMethod}${model}) {
                    console.error("Data is undefined");
