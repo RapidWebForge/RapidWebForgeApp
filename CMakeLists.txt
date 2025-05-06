@@ -184,6 +184,8 @@ set(PROJECT_SOURCES
         src/utils/vscode/fileopener.cpp
         src/utils/ui/codeviewer.h
         src/utils/ui/codeviewer.cpp
+        src/utils/logger_util/loggerutils.h
+        src/utils/logger_util/loggerutils.cpp
         # Resources
         src/resources/resources.qrc
 )

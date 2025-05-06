@@ -6,6 +6,7 @@
 #include "../../core/logging/actionloggerjson.h"
 #include "../../models/component-type/componenttype.h"
 #include "../../models/generic-node/genericnode.h"
+#include "../../utils/logger_util/loggerutils.h"
 #include "../../utils/render_callback/rendercallback.h"
 #include "ui_frontenddashboard.h"
 #include <boost/uuid/uuid_io.hpp>
@@ -583,15 +584,42 @@ void FrontendDashboard::populatePropertiesTable(const std::shared_ptr<Component>
     // Ajustar el número de filas
     ui->propertiesTable->setRowCount(props.size());
 
+    const std::unordered_map<std::string, QStringList> restrictedProps
+        = {{"get:Model Layout", {"ALL", "ID"}},
+           {"method:Form", {"POST", "PUT"}},
+           {"type:Button", {"button", "submit"}},
+           {"type:Input",
+            {"text", "email", "number", "password", "submit", "button", "checkbox", "color", "date"}},
+           {"required:Input", {"false", "true"}},
+           {"target:Hyperlink", {"_self", "_blank"}}};
+
     int row = 0;
     for (const auto &prop : props) {
         QTableWidgetItem *keyItem = new QTableWidgetItem(QString::fromStdString(prop.first));
-        QTableWidgetItem *valueItem = new QTableWidgetItem(QString::fromStdString(prop.second));
-
         keyItem->setFlags(keyItem->flags() & ~Qt::ItemIsEditable);
-
         ui->propertiesTable->setItem(row, 0, keyItem);
-        ui->propertiesTable->setItem(row, 1, valueItem);
+
+        std::string key = prop.first;
+        std::string componentType = componentTypeToString(componentPtr->getType());
+
+        std::string mapKey = key + ":" + componentType;
+
+        if (restrictedProps.find(mapKey) != restrictedProps.end()) {
+            const auto &options = restrictedProps.at(mapKey);
+
+            QComboBox *comboBox = new QComboBox();
+            comboBox->addItems(options);
+            comboBox->setCurrentText(QString::fromStdString(prop.second));
+
+            connect(comboBox, &QComboBox::currentTextChanged, this, [=](const QString &newText) {
+                onPropertyComboBoxChanged(row, prop.first, newText);
+            });
+
+            ui->propertiesTable->setCellWidget(row, 1, comboBox);
+        } else {
+            QTableWidgetItem *valueItem = new QTableWidgetItem(QString::fromStdString(prop.second));
+            ui->propertiesTable->setItem(row, 1, valueItem);
+        }
 
         ++row;
     }
@@ -610,97 +638,54 @@ void FrontendDashboard::onPropertyValueChanged(int row, int column)
         QString newValue = ui->propertiesTable->item(row, 1)->text();
 
         // Actualizar las propiedades en `currentComponent`
-        auto componentPtr = std::dynamic_pointer_cast<Component>(currentComponent);
-        std::map<std::string, std::string> currentProps = componentPtr->getProps();
+        std::map<std::string, std::string> currentProps = currentComponent->getProps();
         currentProps[propertyName.toStdString()] = newValue.toStdString();
-        componentPtr->setProps(currentProps);
-        // Registrar log de la acción
-        std::string logMessage = "Property '" + propertyName.toStdString() + "' updated to '"
-                                 + newValue.toStdString() + "'";
-        loggerJson.logAction("edit-tag-attributes", logMessage);
+        currentComponent->setProps(currentProps);
 
-        if (propertyName.toStdString() == "placeholder") {
-            logMessage = "Placeholder updated to " + newValue.toStdString();
-            loggerJson.logAction("edit-placeholder", logMessage);
-        }
-        if (propertyName.toStdString() == "maxlength") {
-            logMessage = "MaxLength updated to " + newValue.toStdString();
-            loggerJson.logAction("add-maxlength", logMessage);
-        }
-        if (propertyName.toStdString() == "required") {
-            logMessage = "Required updated to " + newValue.toStdString();
-            loggerJson.logAction("add-required", logMessage);
-        }
-        if (propertyName.toStdString() == "href") {
-            logMessage = "Navigating to view " + newValue.toStdString();
-            loggerJson.logAction("navigate-between-views", logMessage);
-            logMessage = "Configuring hyperlink properties with: " + newValue.toStdString();
-            loggerJson.logAction("configure-link-properties", logMessage);
-        }
-        if (propertyName.toStdString() == "target") {
-            logMessage = "Configuring hyperlink properties with: " + newValue.toStdString();
-            loggerJson.logAction("configure-link-properties", logMessage);
-        }
-        if (propertyName.toStdString() == "src" || propertyName.toStdString() == "alt") {
-            logMessage = "Configuring image properties with: " + newValue.toStdString();
-            loggerJson.logAction("configure-image-properties", logMessage);
-        }
-        if ((propertyName.toStdString() == "method" || propertyName.toStdString() == "model")
-            && componentTypeToString(componentPtr->getType()) == "Form") {
-            logMessage = "Configuring form properties with: " + newValue.toStdString();
-            loggerJson.logAction("configure-form-properties", logMessage);
-        }
+        std::string componentType = componentTypeToString(currentComponent->getType());
 
-        if (propertyName == "class") {
-            std::string classValue = newValue.toStdString();
-
-            if (componentTypeToString(componentPtr->getType()) == "Button")
-                loggerJson.logAction("style-button-tailwind",
-                                     "User applied styles in class property of a button.");
-
-            // Lista de logs y patrones de Tailwind a detectar
-            std::vector<std::pair<std::string, std::string>> tailwindLogs
-                = {{"apply-text-styling", "text-"},     {"responsive-text", "text-base"},
-                   {"responsive-text", "text-xl"},      {"use-flexbox-grid", "flex"},
-                   {"use-flexbox-grid", "grid"},        {"responsive-columns", "grid"},
-                   {"use-flexbox-grid", "grid-cols-"},  {"responsive-columns", "grid-cols-"},
-                   {"responsive-design", "sm:"},        {"responsive-design", "md:"},
-                   {"responsive-design", "lg:"},        {"responsive-design", "xl:"},
-                   {"responsive-design", "2xl:"},       {"apply-bg-styling", "bg-"},
-                   {"add-spacing-tailwind", "m-"},      {"add-spacing-tailwind", "mt-"},
-                   {"add-spacing-tailwind", "mb-"},     {"add-spacing-tailwind", "mr-"},
-                   {"add-spacing-tailwind", "ml-"},     {"add-spacing-tailwind", "mx-"},
-                   {"add-spacing-tailwind", "my-"},     {"add-spacing-tailwind", "p-"},
-                   {"add-spacing-tailwind", "pt-"},     {"add-spacing-tailwind", "pb-"},
-                   {"add-spacing-tailwind", "pr-"},     {"add-spacing-tailwind", "pl-"},
-                   {"add-spacing-tailwind", "px-"},     {"add-spacing-tailwind", "py-"},
-                   {"responsive-visibility", "hidden"}, {"responsive-visibility", "block"}};
-
-            for (const auto &[logType, pattern] : tailwindLogs) {
-                if (classValue.find(pattern) != std::string::npos) {
-                    loggerJson.logAction(logType,
-                                         "User applied '" + pattern + "' in class property.");
-                    break; // Para evitar múltiples registros del mismo cambio
-                }
-            }
-        }
+        // Logs
+        LoggerUtils::logPropertyChange(loggerJson, propertyName, newValue, componentType);
 
         // Actualizar el componente en `currentSection` usando el método `findComponentInTree`
-        std::shared_ptr<Component> componentInSection = findComponentInTree(currentSection,
-                                                            ui->currentSectionTree->currentItem());
-
-        if (componentInSection) {
-            auto componentPtr = std::dynamic_pointer_cast<Component>(componentInSection);
-            componentInSection->setProps(componentPtr->getProps());
-
+        if (currentComponent) {
             qDebug() << "Property updated in currentSection. Updated Properties:";
-            for (const auto &prop : componentInSection->getProps()) {
+            for (const auto &prop : currentComponent->getProps()) {
                 qDebug() << "  " << QString::fromStdString(prop.first) << "="
                          << QString::fromStdString(prop.second);
             }
         } else {
             qDebug() << "Could not find component in currentSection.";
         }
+    }
+}
+
+void FrontendDashboard::onPropertyComboBoxChanged(int row,
+                                                  const std::string &propertyName,
+                                                  const QString &newValue)
+{
+    auto currentProps = currentComponent->getProps();
+    currentProps[propertyName] = newValue.toStdString();
+    currentComponent->setProps(currentProps);
+
+    std::string componentType = componentTypeToString(currentComponent->getType());
+
+    LoggerUtils::logPropertyChange(loggerJson,
+                                   QString::fromStdString(propertyName),
+                                   newValue,
+                                   componentType);
+
+    loggerJson.logAction("combo-change",
+                         "Changed " + propertyName + " to " + newValue.toStdString());
+
+    if (currentComponent) {
+        qDebug() << "Property updated in currentSection. Updated Properties:";
+        for (const auto &prop : currentComponent->getProps()) {
+            qDebug() << "  " << QString::fromStdString(prop.first) << "="
+                     << QString::fromStdString(prop.second);
+        }
+    } else {
+        qDebug() << "Could not find component in currentSection.";
     }
 }
 
