@@ -204,14 +204,21 @@ std::string renderComponent(inja::Environment &env,
         std::string href = props.value("href", "");
         std::string target = props.value("target", "");
         std::string rel = props.value("rel", "");
+        std::string hyperlinkRef = "";
+
+        if (href[0] == '{') {
+            hyperlinkRef = href;
+        } else if (!href.empty()) {
+            hyperlinkRef = "\"" + href + "\" ";
+        }
 
         output += "<a";
 
         if (!className.empty())
             output += " className=\"" + className + "\"";
 
-        if (!href.empty())
-            output += " href=\"" + href + "\"";
+        if (!hyperlinkRef.empty())
+            output += " href=" + hyperlinkRef;
 
         if (!target.empty())
             output += " target=\"" + target + "\"";

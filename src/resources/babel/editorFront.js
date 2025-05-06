@@ -43884,7 +43884,7 @@ var require_insert = __commonJS({
         checkMissingImports(ast, model);
         ensureReactHooksImport(ast, ["useState", "useEffect"]);
       }
-      if (method && insertedComponentName === "form") {
+      if (method && model && insertedComponentName === "form") {
         const lowerMethod = method.toLowerCase();
         const lowerModel = toLower(model);
         const modelParam = `${lowerModel}Id`;

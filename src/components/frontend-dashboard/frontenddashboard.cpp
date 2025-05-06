@@ -880,6 +880,22 @@ void FrontendDashboard::on_deleteButton_clicked()
         return;
     }
 
+    // Cuadro de diálogo de confirmación con estilos aplicados
+    QMessageBox msgBox;
+    msgBox.setStyleSheet(
+        "QPushButton { background-color: #f0f0f0; color: black; padding: 5px 10px; }"
+        "QMessageBox { background-color: white; }");
+
+    msgBox.setWindowTitle("Delete Component");
+    msgBox.setText("Are you sure you want to delete the selected component?");
+    msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
+    msgBox.setDefaultButton(QMessageBox::No);
+
+    int reply = msgBox.exec();
+
+    if (reply == QMessageBox::No)
+        return;
+
     // Obtiene el nombre del elemento seleccionado
     std::string selectedItemName = selectedItem->text(0).toStdString();
 
