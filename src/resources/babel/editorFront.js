@@ -44129,8 +44129,6 @@ var require_modify = __commonJS({
             const modelWasRemoved = hasOldModel && !hasNewModel;
             const modelWasAdded = hasNewModel && !hasOldModel;
             const methodWasReplaced = hasOldMethod && hasNewMethod && oldMethod !== newMethod;
-            const methodWasRemoved = hasOldMethod && !hasNewMethod;
-            const methodWasAdded = hasNewMethod && !hasOldMethod;
             const isDiv = node.openingElement.name.name === "div";
             const isForm = node.openingElement.name.name === "form";
             const isButton = node.openingElement.name.name === "button";
@@ -44265,9 +44263,7 @@ var require_modify = __commonJS({
               const hasOldGet = oldGet !== null;
               const hasNewGet = newGet !== null;
               const getWasReplaced = hasOldGet && hasNewGet && oldGet !== newGet;
-              const getWasRemoved = hasOldGet && !hasNewGet;
-              const getWasAdded = hasNewGet && !hasOldGet;
-              if ((modelWasReplaced || modelWasRemoved) && hasOldModel || (getWasReplaced || getWasRemoved) && hasOldGet) {
+              if (modelWasReplaced || modelWasRemoved || getWasReplaced) {
                 safeTraverse(ast, {
                   VariableDeclaration(path2) {
                     const code = generate(path2.node).code;
@@ -44305,7 +44301,7 @@ var require_modify = __commonJS({
                   }
                 });
               }
-              if ((modelWasReplaced || modelWasAdded) && hasNewModel && (getWasReplaced || getWasAdded) && hasNewGet || (getWasReplaced || getWasAdded) && hasNewGet && hasNewModel || (modelWasReplaced || modelWasAdded) && hasNewModel && hasNewGet) {
+              if (hasNewGet && hasNewModel) {
                 const lowerNewModel = toLower(newModel);
                 const modelParam = `${lowerNewModel}Id`;
                 let modelParamFound = false;
@@ -44356,15 +44352,35 @@ var require_modify = __commonJS({
                       if (!path2 || !path2.node || !path2.node.id)
                         return;
                       if (path2.node.id?.name === fileName) {
+                        const stateSnippet = newGet === "ALL" ? `useState<${newModel}[]>(` : `useState<${newModel}>`;
+                        const effectSnippet = newGet === "ALL" ? `${newModel}Service.getAll${newModel}()` : `${newModel}Service.get${newModel}ById(${modelParam})`;
+                        const stateExists = path2.node.body.body.some(
+                          (stmt) => stmt.type === "VariableDeclaration" && stmt.declarations.some(
+                            (d) => d.init && d.init.callee?.name === "useState" && generate(d.init).code.includes(stateSnippet)
+                          )
+                        );
+                        const effectExists = path2.node.body.body.some((stmt) => {
+                          if (stmt.type === "ExpressionStatement" && stmt.expression.callee?.name === "useEffect") {
+                            const src = generate(stmt).code;
+                            return src.includes(effectSnippet);
+                          }
+                          if (stmt.type === "VariableDeclaration" && stmt.declarations.some(
+                            (d) => d.init && d.init.callee?.name === "useEffect" && generate(d.init).code.includes(effectSnippet)
+                          )) {
+                            return true;
+                          }
+                          return false;
+                        });
                         const stateNode = template.ast(stateCode, {
                           plugins: ["jsx", "typescript"]
                         });
-                        console.log("stateNode", stateNode.type);
                         const effectNode = template.ast(effectCode, {
                           plugins: ["jsx", "typescript"]
                         });
-                        path2.node.body.body.unshift(stateNode);
-                        path2.node.body.body.unshift(effectNode);
+                        if (!stateExists)
+                          path2.node.body.body.unshift(stateNode);
+                        if (!effectExists)
+                          path2.node.body.body.unshift(effectNode);
                       }
                     }
                   });
@@ -44373,67 +44389,60 @@ var require_modify = __commonJS({
               }
             }
             if (isForm) {
-              if (modelWasReplaced || modelWasRemoved || methodWasReplaced || methodWasRemoved) {
-                if (hasOldModel && hasOldMethod) {
-                  const capOldMtd = toCapitalize(oldMethod);
-                  const lowOldMtd = oldMethod.toLowerCase();
-                  if (oldMethod === "PUT") {
-                    safeTraverse(ast, {
-                      ExpressionStatement(path2) {
-                        const expr = path2.node.expression;
-                        if (t.isCallExpression(expr) && t.isIdentifier(expr.callee, {
-                          name: "useEffect"
-                        }) && expr.arguments.length === 2 && t.isArrayExpression(expr.arguments[1])) {
-                          const deps = expr.arguments[1].elements;
-                          const modelIdName = `${toLower(oldModel)}Id`;
-                          const hasTargetDep = deps.some(
-                            (el) => t.isIdentifier(el) && el.name === modelIdName
-                          );
-                          if (hasTargetDep) {
-                            path2.remove();
-                          }
-                        }
-                      }
-                    });
-                  }
+              if (modelWasReplaced || modelWasRemoved || methodWasReplaced) {
+                const capOldMtd = toCapitalize(oldMethod);
+                const lowOldMtd = oldMethod.toLowerCase();
+                if (oldMethod === "PUT") {
                   safeTraverse(ast, {
-                    VariableDeclaration(path2) {
-                      const code = generate(path2.node).code;
-                      if (code.includes(
-                        `const [${lowOldMtd}${oldModel}, set${capOldMtd}${oldModel}]`
-                      ) && code.includes(
-                        `useState<${oldModel}>(${oldModel}Defaults.default${capOldMtd}${oldModel})`
-                      )) {
-                        path2.remove();
-                      }
-                      if (code.includes(
-                        `const handleChange${capOldMtd}${oldModel}`
-                      ) && code.includes(`set${capOldMtd}${oldModel}`) && code.includes("[name]: value")) {
-                        path2.remove();
-                      }
-                      if (code.includes(
-                        `const handleSubmit${capOldMtd}${oldModel}`
-                      ) && code.includes(`${oldModel}Service.`)) {
-                        path2.remove();
+                    ExpressionStatement(path2) {
+                      const expr = path2.node.expression;
+                      if (t.isCallExpression(expr) && t.isIdentifier(expr.callee, {
+                        name: "useEffect"
+                      }) && expr.arguments.length === 2 && t.isArrayExpression(expr.arguments[1])) {
+                        const deps = expr.arguments[1].elements;
+                        const modelIdName = `${toLower(oldModel)}Id`;
+                        const hasTargetDep = deps.some(
+                          (el) => t.isIdentifier(el) && el.name === modelIdName
+                        );
+                        if (hasTargetDep) {
+                          path2.remove();
+                        }
                       }
                     }
                   });
                 }
+                safeTraverse(ast, {
+                  VariableDeclaration(path2) {
+                    const code = generate(path2.node).code;
+                    if (code.includes(
+                      `const [${lowOldMtd}${oldModel}, set${capOldMtd}${oldModel}]`
+                    ) && code.includes(
+                      `useState<${oldModel}>(${oldModel}Defaults.default${capOldMtd}${oldModel})`
+                    )) {
+                      path2.remove();
+                    }
+                    if (code.includes(`const handleChange${capOldMtd}${oldModel}`) && code.includes(`set${capOldMtd}${oldModel}`) && code.includes("[name]: value")) {
+                      path2.remove();
+                    }
+                    if (code.includes(`const handleSubmit${capOldMtd}${oldModel}`) && code.includes(`${oldModel}Service.`)) {
+                      path2.remove();
+                    }
+                  }
+                });
               }
-              if (modelWasReplaced || modelWasAdded || methodWasReplaced || methodWasAdded) {
-                if (hasNewModel && hasNewMethod) {
-                  const capNewMtd = toCapitalize(newMethod);
-                  const lowNewMtd = newMethod.toLowerCase();
-                  let methodService = null;
-                  if (newMethod === "PUT")
-                    methodService = "update";
-                  if (newMethod === "POST")
-                    methodService = "create";
-                  const lowNewModel = toLower(newModel);
-                  const modelParam = `${lowNewModel}Id`;
-                  let effectCodeUpdate = null;
-                  if (newMethod === "PUT") {
-                    effectCodeUpdate = `useEffect(() => {
+              if (modelWasReplaced || modelWasAdded || methodWasReplaced) {
+                const capNewMtd = toCapitalize(newMethod);
+                const lowNewMtd = newMethod.toLowerCase();
+                let methodService = null;
+                if (newMethod === "PUT")
+                  methodService = "update";
+                if (newMethod === "POST")
+                  methodService = "create";
+                const lowNewModel = toLower(newModel);
+                const modelParam = `${lowNewModel}Id`;
+                let effectCodeUpdate = null;
+                if (newMethod === "PUT") {
+                  effectCodeUpdate = `useEffect(() => {
                     ${newModel}Service.get${newModel}ById(${modelParam})
                       .then((response) => {
                           set${capNewMtd}${newModel}(response);
@@ -44442,27 +44451,27 @@ var require_modify = __commonJS({
                         console.error("Error fetching ${newModel} data by id:", error);
                       });
                     }, [${modelParam}]);`;
-                  }
-                  let modelParamFound = false;
-                  safeTraverse(ast, {
-                    VariableDeclarator(path2) {
-                      if (t.isObjectPattern(path2.node.id) && t.isCallExpression(path2.node.init) && t.isIdentifier(path2.node.init.callee, {
-                        name: "useParams"
-                      })) {
-                        const hasParam = path2.node.id.properties.some(
-                          (prop) => t.isObjectProperty(prop) && t.isIdentifier(prop.key, { name: modelParam })
-                        );
-                        if (hasParam) {
-                          modelParamFound = true;
-                        }
-                        path2.stop();
+                }
+                let modelParamFound = false;
+                safeTraverse(ast, {
+                  VariableDeclarator(path2) {
+                    if (t.isObjectPattern(path2.node.id) && t.isCallExpression(path2.node.init) && t.isIdentifier(path2.node.init.callee, {
+                      name: "useParams"
+                    })) {
+                      const hasParam = path2.node.id.properties.some(
+                        (prop) => t.isObjectProperty(prop) && t.isIdentifier(prop.key, { name: modelParam })
+                      );
+                      if (hasParam) {
+                        modelParamFound = true;
                       }
+                      path2.stop();
                     }
-                  });
-                  const stateCode = `
+                  }
+                });
+                const stateCode = `
                     const [${lowNewMtd}${newModel}, set${capNewMtd}${newModel}] = useState<${newModel}>(${newModel}Defaults.default${capNewMtd}${newModel});
                     `.trim();
-                  const handleChangeCode = `
+                const handleChangeCode = `
                     const handleChange${capNewMtd}${newModel} = (e: any) => {
                       const { name, value } = e.target;
                       set${capNewMtd}${newModel}((prev) => ({
@@ -44471,9 +44480,9 @@ var require_modify = __commonJS({
                       }));
                     };
                     `.trim();
-                  let handleSubmitCode;
-                  if (newMethod === "PUT")
-                    handleSubmitCode = `
+                let handleSubmitCode;
+                if (newMethod === "PUT")
+                  handleSubmitCode = `
                       const handleSubmit${capNewMtd}${newModel} = async (e: React.FormEvent) => {
                         e.preventDefault();
                         if (!${lowNewMtd}${newModel}) {
@@ -44488,8 +44497,8 @@ var require_modify = __commonJS({
                         }
                       };
                       `.trim();
-                  if (newMethod === "POST")
-                    handleSubmitCode = `
+                if (newMethod === "POST")
+                  handleSubmitCode = `
                       const handleSubmit${capNewMtd}${newModel} = async (e: React.FormEvent) => {
                         e.preventDefault();
                         if (!${lowNewMtd}${newModel}) {
@@ -44504,32 +44513,31 @@ var require_modify = __commonJS({
                         }
                       };
                       `.trim();
-                  safeTraverse(ast, {
-                    FunctionDeclaration(path2) {
-                      if (path2.node.id?.name === fileName) {
-                        const stateNode = template.ast(stateCode, {
+                safeTraverse(ast, {
+                  FunctionDeclaration(path2) {
+                    if (path2.node.id?.name === fileName) {
+                      const stateNode = template.ast(stateCode, {
+                        plugins: ["jsx", "typescript"]
+                      });
+                      const changeNode = template.ast(handleChangeCode, {
+                        plugins: ["jsx", "typescript"]
+                      });
+                      const submitNode = template.ast(handleSubmitCode, {
+                        plugins: ["jsx", "typescript"]
+                      });
+                      let effectNode = null;
+                      if (modelParamFound && effectCodeUpdate)
+                        effectNode = template.ast(effectCodeUpdate, {
                           plugins: ["jsx", "typescript"]
                         });
-                        const changeNode = template.ast(handleChangeCode, {
-                          plugins: ["jsx", "typescript"]
-                        });
-                        const submitNode = template.ast(handleSubmitCode, {
-                          plugins: ["jsx", "typescript"]
-                        });
-                        let effectNode = null;
-                        if (modelParamFound && effectCodeUpdate)
-                          effectNode = template.ast(effectCodeUpdate, {
-                            plugins: ["jsx", "typescript"]
-                          });
-                        path2.node.body.body.unshift(submitNode);
-                        path2.node.body.body.unshift(changeNode);
-                        path2.node.body.body.unshift(stateNode);
-                        if (effectNode)
-                          path2.node.body.body.unshift(effectNode);
-                      }
+                      path2.node.body.body.unshift(submitNode);
+                      path2.node.body.body.unshift(changeNode);
+                      path2.node.body.body.unshift(stateNode);
+                      if (effectNode)
+                        path2.node.body.body.unshift(effectNode);
                     }
-                  });
-                }
+                  }
+                });
               }
             }
             path.replaceWith(t.cloneNode(fragmentAst, true));
@@ -44622,7 +44630,6 @@ var require_delete = __commonJS({
       generate,
       getAttrValue,
       extractObjectName,
-      toLower,
       toCapitalize
     } = require_utils2();
     function del(ast, opts) {
@@ -44668,36 +44675,54 @@ var require_delete = __commonJS({
             }
             if (isDiv && model) {
               const get = getAttrValue(path.node, "data-rwf-get");
+              let remainingInstances = false;
               safeTraverse(ast, {
-                VariableDeclaration(path2) {
-                  const code = generate(path2.node).code;
-                  if (get === "ALL") {
-                    if (code.includes(`const [${toLower(model)}, set${model}]`) && code.includes(`useState<${model}[]>`)) {
+                JSXElement(path2) {
+                  const elem = path2.node.openingElement;
+                  if (!elem?.attributes)
+                    return;
+                  const idAttr = elem.attributes.find(
+                    (a) => a.type === "JSXAttribute" && a.name.name === "data-id"
+                  );
+                  const modelAttr = elem.attributes.find(
+                    (a) => a.type === "JSXAttribute" && a.name.name === "data-rwf-model"
+                  );
+                  if (idAttr && idAttr.value.value === referenceId2)
+                    return;
+                  if (modelAttr && modelAttr.value.value === model) {
+                    remainingInstances = true;
+                    path2.stop();
+                  }
+                }
+              });
+              if (!remainingInstances) {
+                safeTraverse(ast, {
+                  VariableDeclaration(path2) {
+                    const code = generate(path2.node).code;
+                    if (get === "ALL" && code.includes(
+                      `const [${model.toLowerCase()}, set${model}]`
+                    ) && code.includes(`useState<${model}[]>`)) {
                       path2.remove();
                     }
-                  }
-                  if (get === "ID") {
-                    if (code.includes(`const [${toLower(model)}, set${model}]`) && code.includes(`useState<${model}>`)) {
+                    if (get === "ID" && code.includes(
+                      `const [${model.toLowerCase()}, set${model}]`
+                    ) && code.includes(`useState<${model}>`)) {
                       path2.remove();
                     }
-                  }
-                },
-                ExpressionStatement(path2) {
-                  const code = generate(path2.node).code;
-                  if (get === "ALL") {
-                    if (code.includes("useEffect") && code.includes(`${model}Service.getAll${model}()`)) {
+                  },
+                  ExpressionStatement(path2) {
+                    const code = generate(path2.node).code;
+                    if (get === "ALL" && code.includes("useEffect") && code.includes(`${model}Service.getAll${model}()`)) {
                       path2.remove();
                     }
-                  }
-                  if (get === "ID") {
-                    if (code.includes("useEffect") && code.includes(
-                      `${model}Service.get${model}ById(${toLower(model)}Id)`
+                    if (get === "ID" && code.includes("useEffect") && code.includes(
+                      `${model}Service.get${model}ById(${model.toLowerCase()}Id)`
                     )) {
                       path2.remove();
                     }
                   }
-                }
-              });
+                });
+              }
             }
             if (isForm && method && model) {
               const capitalizeMethod = toCapitalize(method);
@@ -44707,7 +44732,7 @@ var require_delete = __commonJS({
                   const expr = path2.node.expression;
                   if (t.isCallExpression(expr) && t.isIdentifier(expr.callee, { name: "useEffect" }) && expr.arguments.length === 2 && t.isArrayExpression(expr.arguments[1])) {
                     const deps = expr.arguments[1].elements;
-                    const modelIdName = `${toLower(model)}Id`;
+                    const modelIdName = `${model.toLowerCase()}Id`;
                     const hasTargetDep = deps.some(
                       (el) => t.isIdentifier(el) && el.name === modelIdName
                     );
