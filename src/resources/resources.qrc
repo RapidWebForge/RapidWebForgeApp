@@ -29,6 +29,7 @@
         <file>recent2.png</file>
         <file>exp.png</file>
         <file>Icono React.webp</file>
+        <file>template.png</file>
     </qresource>
     <qresource prefix="/inja/backend">
         <file alias="controllers">inja_templates/backend/controllers.inja</file>
@@ -80,5 +81,9 @@
     <qresource prefix="/babel">
         <file alias="editorFrontend">babel/editorFront.js</file>
         <file alias="editorBackend">babel/editorBack.js</file>
+    </qresource>
+    <qresource prefix="/base_projects/crud">
+        <file alias="backend">base_projects/crud/backend.json</file>
+        <file alias="frontend">base_projects/crud/frontend.json</file>
     </qresource>
 </RCC>

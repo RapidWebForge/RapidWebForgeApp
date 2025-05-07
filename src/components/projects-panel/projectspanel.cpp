@@ -14,6 +14,7 @@ ProjectsPanel::ProjectsPanel(QWidget *parent)
     , overviewPanel(new OverviewPanel())
     , tutorialsPanel(new TutorialsPanel())
     , proPanel(new ProPanel())
+    , templatesPanel(new TemplatesPanel())
 {
     ui->setupUi(this);
 
@@ -25,17 +26,15 @@ ProjectsPanel::ProjectsPanel(QWidget *parent)
     ui->stackedWidget->addWidget(overviewPanel);
     ui->stackedWidget->addWidget(tutorialsPanel);
     ui->stackedWidget->addWidget(proPanel);
-    ui->stackedWidget->setCurrentWidget(proPanel);
+    ui->stackedWidget->addWidget(templatesPanel);
 
-    showRecents(); // Cambia a la pestaña "Overview"
+    ui->stackedWidget->setCurrentWidget(overviewPanel);
+    ui->label->setText("Overview");
+    // Actualizar la lista de proyectos cada vez que abrimos la pestaña
+    overviewPanel->setupProjects(this->projectManager.getAllProjects());
 
     ui->stackedWidget->update();
     ui->stackedWidget->repaint();
-
-    // Conectar botones con las funciones para cambiar de vista
-    connect(ui->recentsButton, &QPushButton::clicked, this, &ProjectsPanel::showRecents);
-    connect(ui->tutorialButton, &QPushButton::clicked, this, &ProjectsPanel::showTutorials);
-    connect(ui->projectButton, &QPushButton::clicked, this, &ProjectsPanel::showProjects);
 
     applyStylesProj();
 }
@@ -68,7 +67,7 @@ void ProjectsPanel::on_configurationButton_clicked()
 }
 
 // Mostrar la página Overview (Recents)
-void ProjectsPanel::showRecents()
+void ProjectsPanel::on_recentsButton_clicked()
 {
     ui->stackedWidget->setCurrentWidget(overviewPanel);
     ui->label->setText("Overview");
@@ -77,14 +76,14 @@ void ProjectsPanel::showRecents()
 }
 
 // Mostrar la página Tutorials
-void ProjectsPanel::showTutorials()
+void ProjectsPanel::on_tutorialButton_clicked()
 {
     ui->stackedWidget->setCurrentWidget(tutorialsPanel);
     ui->label->setText("Tutorials");
 }
 
 // Mostrar la página Projects
-void ProjectsPanel::showProjects()
+void ProjectsPanel::on_projectButton_clicked()
 {
     ui->stackedWidget->setCurrentWidget(proPanel);
     ui->label->setText("Projects");
@@ -92,3 +91,9 @@ void ProjectsPanel::showProjects()
     proPanel->setupProjects(this->projectManager.getAllProjects());
 }
 
+// Mostrar la página Templates
+void ProjectsPanel::on_templatesButton_clicked()
+{
+    ui->stackedWidget->setCurrentWidget(templatesPanel);
+    ui->label->setText("Templates");
+}

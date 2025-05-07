@@ -123,6 +123,9 @@ set(PROJECT_SOURCES
         src/components/edit-project/editproject.h
         src/components/edit-project/editproject.cpp
         src/components/edit-project/editproject.ui
+        src/components/templates-panel/templatespanel.h
+        src/components/templates-panel/templatespanel.cpp
+        src/components/templates-panel/templatespanel.ui
         # Core
         src/core/project-manager/projectmanager.h
         src/core/project-manager/projectmanager.cpp
@@ -212,7 +215,6 @@ target_link_libraries(RapidWebForgeApp PRIVATE
     OpenSSL::SSL
     fmt::fmt
     pantor::inja
-    unofficial::mysql-connector-cpp::connector
     unofficial::sqlite3::sqlite3
     libzip::zip
     PkgConfig::LIBGIT2

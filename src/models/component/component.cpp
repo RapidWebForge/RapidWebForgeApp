@@ -158,6 +158,11 @@ const std::map<std::string, std::string> &Component::getProps() const
     return props;
 }
 
+std::map<std::string, std::string> &Component::getProps()
+{
+    return props;
+}
+
 bool Component::isAllowingItems() const
 {
     return this->allowItems;

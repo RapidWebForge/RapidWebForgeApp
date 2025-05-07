@@ -14,6 +14,7 @@ Project::Project()
     , versions(false)
     , createdAt(std::chrono::system_clock::now())
     , updatedAt(createdAt)
+    , baseProject("")
 {}
 
 // Constructor with parameters
@@ -37,6 +38,28 @@ Project::Project(int id,
     , updatedAt(createdAt)
 {}
 
+Project::Project(int id,
+                 const std::string &name,
+                 const std::string &description,
+                 const std::string &path,
+                 const DatabaseData &databaseData,
+                 const std::string &frontendPort,
+                 const std::string &backendPort,
+                 const std::string &baseProject,
+                 bool versions)
+    : id(id)
+    , name(name)
+    , description(description)
+    , path(path)
+    , databaseData(databaseData)
+    , frontendPort(frontendPort)
+    , backendPort(backendPort)
+    , versions(versions)
+    , createdAt(std::chrono::system_clock::now())
+    , updatedAt(createdAt)
+    , baseProject(baseProject)
+{}
+
 // Constructor with Project
 Project::Project(const Project &project)
     : id(project.getId())
@@ -49,6 +72,7 @@ Project::Project(const Project &project)
     , versions(project.getVersions())
     , createdAt(project.getCreatedAtChrono())
     , updatedAt(project.getUpdatedAtChrono())
+    , baseProject(project.getBaseProject())
 {}
 
 // Getters
@@ -90,6 +114,11 @@ std::string Project::getFrontendPort() const
 std::string Project::getBackendPort() const
 {
     return backendPort;
+}
+
+std::string Project::getBaseProject() const
+{
+    return baseProject;
 }
 
 std::string Project::timePointToString(const std::chrono::system_clock::time_point &tp) const
@@ -153,6 +182,12 @@ void Project::setFrontendPort(const std::string &newFrontendPort)
 void Project::setBackendPort(const std::string &newBackendPort)
 {
     backendPort = newBackendPort;
+    setUpdatedAt();
+}
+
+void Project::setBaseProject(const std::string &newBaseProject)
+{
+    baseProject = newBaseProject;
     setUpdatedAt();
 }
 

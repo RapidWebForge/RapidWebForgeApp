@@ -17,6 +17,7 @@ private:
     std::string backendPort;
     std::chrono::system_clock::time_point createdAt;
     std::chrono::system_clock::time_point updatedAt;
+    std::string baseProject;
     bool versions;
     bool tutorialsEnabled = true;
 
@@ -30,6 +31,15 @@ public:
             const DatabaseData &databaseData,
             const std::string &frontendPort,
             const std::string &backendPort,
+            bool versions);
+    Project(int id,
+            const std::string &name,
+            const std::string &description,
+            const std::string &path,
+            const DatabaseData &databaseData,
+            const std::string &frontendPort,
+            const std::string &backendPort,
+            const std::string &baseProject,
             bool versions);
     Project();
 
@@ -45,6 +55,7 @@ public:
 
     std::string getFrontendPort() const;
     std::string getBackendPort() const;
+    std::string getBaseProject() const;
 
     std::string getCreatedAt() const;
     std::chrono::system_clock::time_point getCreatedAtChrono() const;
@@ -59,6 +70,7 @@ public:
     void setPath(const std::string &newPath);
     void setFrontendPort(const std::string &frontendPort);
     void setBackendPort(const std::string &backendPort);
+    void setBaseProject(const std::string &baseProject);
     void setUpdatedAt();
     void setVersions(bool versions);
 

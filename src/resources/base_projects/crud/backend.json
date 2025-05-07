@@ -1,0 +1,37 @@
+{
+  "transactions": [
+    {
+      "fields": [
+        {
+          "hasCheck": false,
+          "hasDefault": false,
+          "isForeignKey": false,
+          "isNull": false,
+          "isUnique": false,
+          "name": "name",
+          "type": "STRING"
+        },
+        {
+          "hasCheck": false,
+          "hasDefault": false,
+          "isForeignKey": false,
+          "isNull": false,
+          "isUnique": false,
+          "name": "description",
+          "type": "STRING"
+        },
+        {
+          "hasCheck": false,
+          "hasDefault": false,
+          "isForeignKey": false,
+          "isNull": false,
+          "isUnique": false,
+          "name": "amount",
+          "type": "INTEGER"
+        }
+      ],
+      "name": "Products",
+      "nameConst": "products"
+    }
+  ]
+}

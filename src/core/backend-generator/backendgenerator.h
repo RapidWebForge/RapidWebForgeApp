@@ -13,8 +13,11 @@ class BackendGenerator
 {
 public:
     BackendGenerator(const std::string &projectPath, const DatabaseData &databaseData);
+    // Schema
     bool loadSchema();
     bool updateSchema();
+    // Code
+    bool generateCode();
     bool updateBackendCode();
     // Getters
     std::vector<Transaction> *getTransactions();

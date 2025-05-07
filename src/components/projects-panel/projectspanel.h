@@ -6,6 +6,7 @@
 #include <QWidget>
 #include "../../../src/components/overview-panel/overviewpanel.h"
 #include "../../../src/components/pro-panel/propanel.h"
+#include "../../../src/components/templates-panel/templatespanel.h"
 #include "../../../src/components/tutorials-panel/tutorialspanel.h"
 #include "../../core/configuration-manager/configurationmanager.h"
 #include "../../core/project-manager/projectmanager.h"
@@ -30,6 +31,7 @@ private:
     OverviewPanel *overviewPanel;
     TutorialsPanel *tutorialsPanel;
     ProPanel *proPanel;
+    TemplatesPanel *templatesPanel;
     QWidget *recentsPage;
     QWidget *tutorialsPage;
     QWidget *projectsPage;
@@ -40,10 +42,11 @@ private:
     QStackedWidget *stackedWidget;
 
 private slots:
-    void showRecents();
-    void showTutorials();
-    void showProjects();
     void on_configurationButton_clicked();
+    void on_recentsButton_clicked();
+    void on_tutorialButton_clicked();
+    void on_projectButton_clicked();
+    void on_templatesButton_clicked();
 };
 
 #endif // PROJECTSPANEL_H

@@ -11,6 +11,22 @@
 
 class FrontendGenerator
 {
+public:
+    FrontendGenerator(const std::string &projectPath);
+    // AST
+    std::shared_ptr<BaseNode> getChildByType(const std::shared_ptr<BaseNode> &root,
+                                             const std::string &type);
+    // Schema
+    bool loadSchema();
+    bool updateSchema();
+    // Code
+    bool generateCode();
+    bool updateFrontendCode();
+    // Getters
+    const std::shared_ptr<BaseNode> &getFrontendRoot() const;
+    // Prevent lost nodes
+    bool isProgressSaved();
+
 private:
     std::string projectPath;
     std::shared_ptr<BaseNode> frontendRoot;
@@ -42,20 +58,6 @@ private:
     void applyRefactorForDeletedSection(const std::string &sectionName,
                                         const std::string &sectionType);
 
-public:
-    FrontendGenerator(const std::string &projectPath);
-    // AST
-    std::shared_ptr<BaseNode> getChildByType(const std::shared_ptr<BaseNode> &root,
-                                             const std::string &type);
-    // Schema
-    bool loadSchema();
-    bool updateSchema();
-    // Code
-    bool updateFrontendCode();
-    // Getters
-    const std::shared_ptr<BaseNode> &getFrontendRoot() const;
-    // Prevent lost nodes
-    bool isProgressSaved();
 };
 
 #endif // FRONTENDGENERATOR_H

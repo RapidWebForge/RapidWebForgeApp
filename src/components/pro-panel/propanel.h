@@ -38,7 +38,6 @@ private slots:
     void onEditProjectRequested(int projectId);
 
 signals:
-    void projectCreationRequested();
     void projectClicked(const Project &project);
     void deleteRequested(int projectId);
     void editRequested(int projectId);

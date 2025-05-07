@@ -292,12 +292,6 @@ bool FrontendGenerator::loadSchema()
     return true;
 }
 
-bool allowsNestedComponents(ComponentType type)
-{
-    return type == ComponentType::Form || type == ComponentType::HorizontalLayout
-           || type == ComponentType::VerticalLayout || type == ComponentType::ModelLayout;
-}
-
 nlohmann::json processComponentToJson(const std::shared_ptr<Component> &component)
 {
     nlohmann::json componentJson;
@@ -584,6 +578,28 @@ std::shared_ptr<BaseNode> FrontendGenerator::getChildByType(const std::shared_pt
             return child;
     }
     return nullptr;
+}
+
+bool FrontendGenerator::generateCode()
+{
+    loadSchema();
+
+    auto viewsNode = getChildByType(frontendRoot, "Views");
+    auto customComponentsNode = getChildByType(frontendRoot, "CustomComponents");
+
+    if (customComponentsNode) {
+        for (const auto &custComp : customComponentsNode->getChildren()) {
+            applyInsertion(custComp);
+        }
+    }
+
+    if (viewsNode) {
+        for (const auto &view : viewsNode->getChildren()) {
+            applyInsertion(view);
+        }
+    }
+
+    return true;
 }
 
 bool FrontendGenerator::updateFrontendCode()

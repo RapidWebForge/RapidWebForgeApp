@@ -20,7 +20,7 @@ BackendGenerator::BackendGenerator(const std::string &projectPath, const Databas
     , databaseData(databaseData)
 {}
 
-// Loading database schema from JSON file
+// Cargar el backend.json
 bool BackendGenerator::loadSchema()
 {
     std::ifstream file(projectPath + "/backend.json");
@@ -216,6 +216,19 @@ bool BackendGenerator::updateSchema()
     fmt::print("File saved successfully: {}\n", filePath);
 
     return true;
+}
+
+// Generar backend a partir de un JSON (usado principalmente para generar el código inicial en un template)
+bool BackendGenerator::generateCode()
+{
+    if (!loadSchema()) {
+        return false;
+    }
+
+    // Generar los archivos de backend
+    for (const auto &transaction : transactions) {
+        applyInsertion(transaction);
+    }
 }
 
 // Regenerate backend with new information

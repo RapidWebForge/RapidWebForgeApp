@@ -16,7 +16,7 @@
 #include <cstdlib>
 #include <iostream>
 
-Stepper::Stepper(QWidget *parent)
+Stepper::Stepper(QWidget *parent, const std::string& projectTemplate)
     : QWidget(parent)
     , ui(new Ui::Stepper)
     , creationAssistant(new CreationAssistant())
@@ -33,6 +33,10 @@ Stepper::Stepper(QWidget *parent)
     ui->stepsWidget->addWidget(frontendAssistant);
     ui->stepsWidget->addWidget(backendAssistant);
     ui->stepsWidget->addWidget(summaryAssistant);
+    
+    if (!projectTemplate.empty())
+        newProject.setBaseProject(projectTemplate);
+    
     applyStyles(); // Aplicar todos los estilos
     ui->stepsWidget->setCurrentWidget(creationAssistant);
 }
