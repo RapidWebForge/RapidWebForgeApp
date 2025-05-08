@@ -213,7 +213,7 @@ bool CodeGenerator::createBaseBackendProject()
 
     // Crear el backend.json
     if (!project.getBaseProject().empty()) {
-        if (!createJsonFromTemplate(projectTemplate, "backend")) {
+        if (!createJsonFromTemplate("backend")) {
             return false;
         }
     } else {
@@ -243,7 +243,7 @@ bool CodeGenerator::createBaseFrontendProject()
     }
 
     if (!project.getBaseProject().empty()) {
-        if (!createJsonFromTemplate(projectTemplate, "backend")) {
+        if (!createJsonFromTemplate("frontend")) {
             return false;
         }
     } else {
@@ -331,8 +331,8 @@ export default function Home() {
 
 bool CodeGenerator::createApplication()
 {
-    if (backendGenerator.generateCode())
-        return frontendGenerator.generateCode();
+    if (backendGenerator.generateInitialBackendCode())
+        return frontendGenerator.generateInitialFrontendCode();
     return false;
 }
 

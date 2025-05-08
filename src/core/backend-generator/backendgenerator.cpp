@@ -219,16 +219,19 @@ bool BackendGenerator::updateSchema()
 }
 
 // Generar backend a partir de un JSON (usado principalmente para generar el código inicial en un template)
-bool BackendGenerator::generateCode()
+bool BackendGenerator::generateInitialBackendCode()
 {
     if (!loadSchema()) {
+        fmt::print(stderr, "generateInitialBackendCode: Failed to load schema.\n");
         return false;
     }
 
     // Generar los archivos de backend
-    for (const auto &transaction : transactions) {
+    for (auto &transaction : transactions) {
         applyInsertion(transaction);
     }
+
+    return true;
 }
 
 // Regenerate backend with new information

@@ -20,7 +20,7 @@ void ProjectWorker::process()
     CodeGenerator codeGenerator(newProject);
     if (codeGenerator.createRunEditor()) {
         if (codeGenerator.createBaseBackendProject())
-            if (codeGenerator.createBaseFrontendProject() && newProject.getBaseProject())
+            if (codeGenerator.createBaseFrontendProject() && !newProject.getBaseProject().empty())
                 codeGenerator.createApplication();
     }
 

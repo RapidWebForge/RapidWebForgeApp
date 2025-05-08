@@ -17,7 +17,7 @@ public:
     bool loadSchema();
     bool updateSchema();
     // Code
-    bool generateCode();
+    bool generateInitialBackendCode();
     bool updateBackendCode();
     // Getters
     std::vector<Transaction> *getTransactions();

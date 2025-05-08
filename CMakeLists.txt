@@ -215,6 +215,7 @@ target_link_libraries(RapidWebForgeApp PRIVATE
     OpenSSL::SSL
     fmt::fmt
     pantor::inja
+    unofficial::mysql-connector-cpp::connector
     unofficial::sqlite3::sqlite3
     libzip::zip
     PkgConfig::LIBGIT2

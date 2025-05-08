@@ -580,21 +580,24 @@ std::shared_ptr<BaseNode> FrontendGenerator::getChildByType(const std::shared_pt
     return nullptr;
 }
 
-bool FrontendGenerator::generateCode()
+bool FrontendGenerator::generateInitialFrontendCode()
 {
-    loadSchema();
+    if (!loadSchema()) {
+        fmt::print(stderr, "generateInitialFrontendCode: Failed to load schema.\n");
+        return false;
+    }
 
     auto viewsNode = getChildByType(frontendRoot, "Views");
     auto customComponentsNode = getChildByType(frontendRoot, "CustomComponents");
 
     if (customComponentsNode) {
-        for (const auto &custComp : customComponentsNode->getChildren()) {
+        for (auto &custComp : customComponentsNode->getChildren()) {
             applyInsertion(custComp);
         }
     }
 
     if (viewsNode) {
-        for (const auto &view : viewsNode->getChildren()) {
+        for (auto &view : viewsNode->getChildren()) {
             applyInsertion(view);
         }
     }

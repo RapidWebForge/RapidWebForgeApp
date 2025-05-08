@@ -44999,6 +44999,13 @@ var require_create = __commonJS({
             console.error("\u274C Invalid Program path structure");
             return;
           }
+          const existing = path.node.body.some(
+            (n) => n.type === "VariableDeclaration" && n.declarations.some(
+              (d) => d.id.name === viewName && d.init && d.init.callee?.object?.name === "React" && d.init.callee?.property?.name === "lazy"
+            )
+          );
+          if (existing)
+            return;
           let lastImport = 0;
           path.node.body.forEach((n, i) => {
             if (t.isImportDeclaration(n))
@@ -45013,16 +45020,24 @@ var require_create = __commonJS({
       });
       safeTraverse(ast, {
         JSXElement(path) {
-          if (!path || !path.node || !path.node.openingElement)
+          const node = path?.node;
+          if (!node || node.type !== "JSXElement" || !node.openingElement)
             return;
-          if (t.isJSXIdentifier(path.node.openingElement.name, { name: "Routes" })) {
-            const routeNode = parser.parseExpression(
-              `<Route path="${routePath}" element={<${viewName} />} />`,
-              { plugins: ["jsx"] }
+          if (node.openingElement.name.name !== "Routes")
+            return;
+          const hasRoute = node.children.some((child) => {
+            return child.type === "JSXElement" && child.openingElement.name.name === "Route" && child.openingElement.attributes.some(
+              (attr) => attr.name && attr.name.name === "element" && attr.value && attr.value.expression && attr.value.expression.openingElement && attr.value.expression.openingElement.name.name === viewName
             );
-            path.pushContainer("children", routeNode);
-            path.stop();
-          }
+          });
+          if (hasRoute)
+            return;
+          const routeNode = parser.parseExpression(
+            `<Route path="${routePath}" element={<${viewName} />} />`,
+            { plugins: ["jsx"] }
+          );
+          path.pushContainer("children", routeNode);
+          path.stop();
         }
       });
     }
@@ -45108,6 +45123,7 @@ var require_pipeline = __commonJS({
     var create = require_create();
     var reorder = require_reorder();
     module2.exports = function pipeline2({ filePath: filePath2, operation: operation2, referenceId: referenceId2, rest: rest2 }) {
+      console.log("\u2699\uFE0F  Args recibidos:", { filePath: filePath2, operation: operation2, referenceId: referenceId2, rest: rest2 });
       console.log(`\u23F3 ${operation2} \u2192 ${filePath2}`);
       let pos = "";
       let payloadPath = "";
