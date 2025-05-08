@@ -44632,6 +44632,166 @@ var require_delete = __commonJS({
       extractObjectName,
       toCapitalize
     } = require_utils2();
+    function cleanupModelImports(ast, model) {
+      const newAst = parser.parse(generate(ast).code, {
+        sourceType: "module",
+        plugins: ["jsx", "typescript"]
+      });
+      const defaults = `${model}Defaults`;
+      let usesOldModel = false;
+      let usesDefaultModel = false;
+      let usesOldModelService = false;
+      safeTraverse(newAst, {
+        Identifier(path) {
+          if (path.findParent((p) => p.isImportDeclaration()))
+            return;
+          const name = path.node.name;
+          if (name === model)
+            usesOldModel = true;
+          if (name === defaults)
+            usesDefaultModel = true;
+          if (name === `${model}Service`)
+            usesOldModelService = true;
+          if (usesOldModel && usesDefaultModel && usesOldModelService) {
+            path.stop();
+          }
+        }
+      });
+      safeTraverse(ast, {
+        ImportDeclaration(path) {
+          const src = path.node.source.value;
+          if (src === `../services/${model}Service` && !usesOldModelService) {
+            path.remove();
+            return;
+          }
+          if (src === `../models/${model}`) {
+            path.node.specifiers = path.node.specifiers.filter((spec) => {
+              if (t.isImportSpecifier(spec)) {
+                const name = spec.imported.name;
+                if (name === model && !usesOldModel) {
+                  return false;
+                }
+                if (name === defaults && !usesDefaultModel) {
+                  return false;
+                }
+              }
+              if (t.isImportDefaultSpecifier(spec) && spec.local.name === model && !usesOldModel) {
+                return false;
+              }
+              return true;
+            });
+            if (path.node.specifiers.length === 0) {
+              path.remove();
+            }
+          }
+        }
+      });
+    }
+    function removeButtonLogic(mainPath, ast) {
+      const onClick = getAttrValue(mainPath.node, "onClick");
+      let model = null;
+      if (onClick)
+        model = extractObjectName(onClick);
+      if (model) {
+        safeTraverse(ast, {
+          VariableDeclaration(path) {
+            const code = generate(path.node).code;
+            if (code.includes(`const delete${model}ById`) && code.includes(`${model}Service.`)) {
+              path.remove();
+            }
+          }
+        });
+        cleanupCustomComponentImports(ast, model);
+      }
+    }
+    function removeModelHooks(mainPath, ast, model, referenceId2) {
+      const get = getAttrValue(mainPath.node, "data-rwf-get");
+      let remainingInstances = false;
+      safeTraverse(ast, {
+        JSXElement(path) {
+          const elem = path.node.openingElement;
+          const idAttr = elem.attributes.find(
+            (a) => a.type === "JSXAttribute" && a.name.name === "data-id"
+          );
+          const isDiv = elem.name.name === "div";
+          const modelAttr = elem.attributes.find(
+            (a) => a.type === "JSXAttribute" && a.name.name === "data-rwf-model"
+          );
+          const getAttr = elem.attributes.find(
+            (a) => a.type === "JSXAttribute" && a.name.name === "data-rwf-get"
+          );
+          if (!isDiv)
+            return;
+          if (idAttr && idAttr.value.value === referenceId2)
+            return;
+          if (modelAttr && modelAttr.value.value === model && getAttr && getAttr.value.value === get) {
+            remainingInstances = true;
+            path.stop();
+          }
+        }
+      });
+      if (!remainingInstances) {
+        safeTraverse(ast, {
+          VariableDeclaration(path) {
+            const code = generate(path.node).code;
+            if (get === "ALL" && code.includes(`const [${model.toLowerCase()}, set${model}]`) && code.includes(`useState<${model}[]>`)) {
+              path.remove();
+            }
+            if (get === "ID" && code.includes(`const [${model.toLowerCase()}, set${model}]`) && code.includes(`useState<${model}>`)) {
+              path.remove();
+            }
+          },
+          ExpressionStatement(path) {
+            const code = generate(path.node).code;
+            if (get === "ALL" && code.includes("useEffect") && code.includes(`${model}Service.getAll${model}()`)) {
+              path.remove();
+            }
+            if (get === "ID" && code.includes("useEffect") && code.includes(
+              `${model}Service.get${model}ById(${model.toLowerCase()}Id)`
+            )) {
+              path.remove();
+            }
+          }
+        });
+      }
+    }
+    function removeFormLogic(ast, model, method) {
+      const capitalizeMethod = toCapitalize(method);
+      const lowerMethod = method.toLowerCase();
+      safeTraverse(ast, {
+        ExpressionStatement(path) {
+          const expr = path.node.expression;
+          if (t.isCallExpression(expr) && t.isIdentifier(expr.callee, { name: "useEffect" }) && expr.arguments.length === 2 && t.isArrayExpression(expr.arguments[1])) {
+            const deps = expr.arguments[1].elements;
+            const modelIdName = `${model.toLowerCase()}Id`;
+            const hasTargetDep = deps.some(
+              (el) => t.isIdentifier(el) && el.name === modelIdName
+            );
+            if (hasTargetDep) {
+              path.remove();
+            }
+          }
+        },
+        VariableDeclaration(path) {
+          const code = generate(path.node).code;
+          if (code.includes(
+            `const [${lowerMethod}${model}, set${capitalizeMethod}${model}]`
+          ) && code.includes(
+            `useState<${model}>(${model}Defaults.default${capitalizeMethod}${model})`
+          )) {
+            path.remove();
+          }
+          if (code.includes("const handleChange") && code.includes(`set${capitalizeMethod}${model}`) && code.includes("[name]: value")) {
+            path.remove();
+          }
+          if (code.includes("const handleSubmit") && code.includes(`${model}Service.`)) {
+            path.remove();
+          }
+        }
+      });
+    }
+    function cleanupCustomComponentImports(ast, name) {
+    }
     function del(ast, opts) {
       const { referenceId: referenceId2 } = opts;
       safeTraverse(ast, {
@@ -44653,237 +44813,17 @@ var require_delete = __commonJS({
             const isDiv = path.node.openingElement.name.name === "div";
             const isForm = path.node.openingElement.name.name === "form";
             const isButton = path.node.openingElement.name.name === "button";
-            let buttonModelFound = false;
-            let buttonModel;
-            if (isButton) {
-              const onClick = getAttrValue(path.node, "onClick");
-              let model2 = null;
-              if (onClick)
-                model2 = extractObjectName(onClick);
-              if (model2) {
-                safeTraverse(ast, {
-                  VariableDeclaration(path2) {
-                    const code = generate(path2.node).code;
-                    if (code.includes(`const delete${model2}ById`) && code.includes(`${model2}Service.`)) {
-                      path2.remove();
-                    }
-                  }
-                });
-                buttonModelFound = true;
-                buttonModel = model2;
-              }
-            }
-            if (isDiv && model) {
-              const get = getAttrValue(path.node, "data-rwf-get");
-              let remainingInstances = false;
-              safeTraverse(ast, {
-                JSXElement(path2) {
-                  const elem = path2.node.openingElement;
-                  if (!elem?.attributes)
-                    return;
-                  const idAttr = elem.attributes.find(
-                    (a) => a.type === "JSXAttribute" && a.name.name === "data-id"
-                  );
-                  const modelAttr = elem.attributes.find(
-                    (a) => a.type === "JSXAttribute" && a.name.name === "data-rwf-model"
-                  );
-                  if (idAttr && idAttr.value.value === referenceId2)
-                    return;
-                  if (modelAttr && modelAttr.value.value === model) {
-                    remainingInstances = true;
-                    path2.stop();
-                  }
-                }
-              });
-              if (!remainingInstances) {
-                safeTraverse(ast, {
-                  VariableDeclaration(path2) {
-                    const code = generate(path2.node).code;
-                    if (get === "ALL" && code.includes(
-                      `const [${model.toLowerCase()}, set${model}]`
-                    ) && code.includes(`useState<${model}[]>`)) {
-                      path2.remove();
-                    }
-                    if (get === "ID" && code.includes(
-                      `const [${model.toLowerCase()}, set${model}]`
-                    ) && code.includes(`useState<${model}>`)) {
-                      path2.remove();
-                    }
-                  },
-                  ExpressionStatement(path2) {
-                    const code = generate(path2.node).code;
-                    if (get === "ALL" && code.includes("useEffect") && code.includes(`${model}Service.getAll${model}()`)) {
-                      path2.remove();
-                    }
-                    if (get === "ID" && code.includes("useEffect") && code.includes(
-                      `${model}Service.get${model}ById(${model.toLowerCase()}Id)`
-                    )) {
-                      path2.remove();
-                    }
-                  }
-                });
-              }
-            }
-            if (isForm && method && model) {
-              const capitalizeMethod = toCapitalize(method);
-              const lowerMethod = method.toLowerCase();
-              safeTraverse(ast, {
-                ExpressionStatement(path2) {
-                  const expr = path2.node.expression;
-                  if (t.isCallExpression(expr) && t.isIdentifier(expr.callee, { name: "useEffect" }) && expr.arguments.length === 2 && t.isArrayExpression(expr.arguments[1])) {
-                    const deps = expr.arguments[1].elements;
-                    const modelIdName = `${model.toLowerCase()}Id`;
-                    const hasTargetDep = deps.some(
-                      (el) => t.isIdentifier(el) && el.name === modelIdName
-                    );
-                    if (hasTargetDep) {
-                      path2.remove();
-                    }
-                  }
-                },
-                VariableDeclaration(path2) {
-                  const code = generate(path2.node).code;
-                  if (code.includes(
-                    `const [${lowerMethod}${model}, set${capitalizeMethod}${model}]`
-                  ) && code.includes(
-                    `useState<${model}>(${model}Defaults.default${capitalizeMethod}${model})`
-                  )) {
-                    path2.remove();
-                  }
-                  if (code.includes("const handleChange") && code.includes(`set${capitalizeMethod}${model}`) && code.includes("[name]: value")) {
-                    path2.remove();
-                  }
-                  if (code.includes("const handleSubmit") && code.includes(`${model}Service.`)) {
-                    path2.remove();
-                  }
-                }
-              });
+            if (isButton)
+              removeButtonLogic(path, ast);
+            if (model) {
+              if (isDiv)
+                removeModelHooks(path, ast, model, referenceId2);
+              if (isForm && method)
+                removeFormLogic(ast, model, method);
             }
             path.remove();
-            if (isDiv || isForm) {
-              const newAst = parser.parse(generate(ast).code, {
-                sourceType: "module",
-                plugins: ["jsx", "typescript"]
-              });
-              const defaults = `${model}Defaults`;
-              let usesOldModel = false;
-              let usesDefaultModel = false;
-              let usesOldModelService = false;
-              safeTraverse(newAst, {
-                Identifier(path2) {
-                  if (path2.findParent((p) => p.isImportDeclaration()))
-                    return;
-                  const name = path2.node.name;
-                  if (name === model)
-                    usesOldModel = true;
-                  if (name === defaults)
-                    usesDefaultModel = true;
-                  if (name === `${model}Service`)
-                    usesOldModelService = true;
-                  if (usesOldModel && usesDefaultModel && usesOldModelService) {
-                    path2.stop();
-                  }
-                }
-              });
-              safeTraverse(ast, {
-                ImportDeclaration(path2) {
-                  const src = path2.node.source.value;
-                  if (src === `../services/${model}Service` && !usesOldModelService) {
-                    path2.remove();
-                    return;
-                  }
-                  if (src === `../models/${model}`) {
-                    let changed = false;
-                    path2.node.specifiers = path2.node.specifiers.filter((spec) => {
-                      if (t.isImportSpecifier(spec)) {
-                        const name = spec.imported.name;
-                        if (name === model && !usesOldModel) {
-                          changed = true;
-                          return false;
-                        }
-                        if (name === defaults && !usesDefaultModel) {
-                          changed = true;
-                          return false;
-                        }
-                      }
-                      if (t.isImportDefaultSpecifier(spec) && spec.local.name === model && !usesOldModel) {
-                        changed = true;
-                        return false;
-                      }
-                      return true;
-                    });
-                    if (path2.node.specifiers.length === 0) {
-                      path2.remove();
-                      changed = true;
-                    }
-                    if (changed) {
-                    }
-                  }
-                }
-              });
-            }
-            if (isButton && buttonModelFound) {
-              const newAst = parser.parse(generate(ast).code, {
-                sourceType: "module",
-                plugins: ["jsx", "typescript"]
-              });
-              const defaultsButton = `${buttonModel}Defaults`;
-              let useButtonModel = false;
-              let usesButtonModelDefaults = false;
-              let usesButtonModelService = false;
-              safeTraverse(newAst, {
-                Identifier(path2) {
-                  if (path2.findParent((p) => p.isImportDeclaration()))
-                    return;
-                  const name = path2.node.name;
-                  if (name === buttonModel)
-                    useButtonModel = true;
-                  if (name === defaultsButton)
-                    usesButtonModelDefaults = true;
-                  if (name === `${buttonModel}Service`)
-                    usesButtonModelService = true;
-                  if (useButtonModel && usesButtonModelDefaults && usesButtonModelService) {
-                    path2.stop();
-                  }
-                }
-              });
-              safeTraverse(ast, {
-                ImportDeclaration(path2) {
-                  const src = path2.node.source.value;
-                  if (src === `../services/${buttonModel}Service` && !usesButtonModelService) {
-                    path2.remove();
-                    return;
-                  }
-                  if (src === `../models/${buttonModel}`) {
-                    let changed = false;
-                    path2.node.specifiers = path2.node.specifiers.filter((spec) => {
-                      if (t.isImportSpecifier(spec)) {
-                        const name = spec.imported.name;
-                        if (name === buttonModel && !useButtonModel) {
-                          changed = true;
-                          return false;
-                        }
-                        if (name === defaultsButton && !usesButtonModelDefaults) {
-                          changed = true;
-                          return false;
-                        }
-                      }
-                      if (t.isImportDefaultSpecifier(spec) && spec.local.name === buttonModel && !useButtonModel) {
-                        changed = true;
-                        return false;
-                      }
-                      return true;
-                    });
-                    if (path2.node.specifiers.length === 0) {
-                      path2.remove();
-                      changed = true;
-                    }
-                    if (changed) {
-                    }
-                  }
-                }
-              });
-            }
+            if (model)
+              cleanupModelImports(ast, model);
             if (deletedComponentName) {
               let found = false;
               safeTraverse(ast, {

@@ -559,6 +559,11 @@ void StepperDashboard::toggleMenuButtons(bool active)
 
 void StepperDashboard::onSaveChanges()
 {
+    if (isProgressSaved()) {
+        QMessageBox::information(this, "No Changes Detected", "There are no unsaved changes.");
+        return;
+    }
+
     // Bloquear menus
     toggleMenuButtons(false);
 
@@ -659,9 +664,6 @@ void StepperDashboard::onVersionHistory()
 
 void StepperDashboard::onDeployProject()
 {
-    // Bloquear menus
-    toggleMenuButtons(false);
-
     if (!isProgressSaved()) {
         if (!showConfirmationDialog(this,
                                     "Unsaved Progress",
@@ -699,6 +701,9 @@ void StepperDashboard::onDeployProject()
         QMessageBox::critical(this, "Critical", "You cannot deploy without set bun Path");
         return;
     }
+
+    // Bloquear menus
+    toggleMenuButtons(false);
 
     // Crear y mostrar el diálogo personalizado
     QString deployMessage = "Deploying project, please wait...";

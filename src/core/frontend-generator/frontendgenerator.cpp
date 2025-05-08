@@ -637,15 +637,15 @@ bool FrontendGenerator::updateFrontendCode()
         }
     }
 
-    // Eliminar el fragmento con el data-id del nodo eliminado
-    for (auto &op : deletes)
-        applyDeletion(op.node);
     // Buscar en el archivo el fragmento con data-id y actualizarlo
     for (auto &op : modifies)
         applyModification(op.node);
     // Ubicar posición mediante op.node->id (data-id) y generar fragmento
     for (auto &op : inserts)
         applyInsertion(op.node);
+    // Eliminar el fragmento con el data-id del nodo eliminado
+    for (auto &op : deletes)
+        applyDeletion(op.node);
 
     if (!updateSchema()) {
         qDebug() << "Error on Updating Schema";

@@ -333,7 +333,7 @@ std::string renderComponent(inja::Environment &env,
                                          contextWithNested);
                 } catch (const std::exception &e) {
                     fmt::print(stderr, "Error rendering nested component: {}\n", e.what());
-                    output += "<!-- Error rendering nested component -->";
+                    output += {};
                 }
             }
         }
@@ -851,7 +851,7 @@ std::string renderRequestsCallback(inja::Environment &env, inja::Arguments &args
                 output += "      console.error(\"Error fetching " + modelName
                           + " data by id:\", error);\n";
                 output += "    });\n";
-                output += "}, [" + lowerModelParam + "]); // Run every time id change\n";
+                output += "}, [" + lowerModelParam + "]);\n";
             }
             if (componentJson["type"] == "Model Layout") {
                 bool hasValidModel = false, hasValidGet = false;
@@ -910,7 +910,7 @@ std::string renderRequestsCallback(inja::Environment &env, inja::Arguments &args
                 if (get == "ALL")
                     output += "}, []); // Empty dependency array to run once\n";
                 if (get == "ID")
-                    output += "}, [" + lowerModelParam + "]); // Run every time id change\n";
+                    output += "}, [" + lowerModelParam + "]);\n";
             }
         }
 
