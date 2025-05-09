@@ -12,14 +12,14 @@ var require_lib = __commonJS({
     function _objectWithoutPropertiesLoose(r, e) {
       if (null == r)
         return {};
-      var t = {};
+      var t2 = {};
       for (var n in r)
         if ({}.hasOwnProperty.call(r, n)) {
           if (-1 !== e.indexOf(n))
             continue;
-          t[n] = r[n];
+          t2[n] = r[n];
         }
-      return t;
+      return t2;
     }
     var Position = class {
       constructor(line, col, index) {
@@ -6946,7 +6946,7 @@ var require_lib = __commonJS({
       }
       tsParseTypeOrTypePredicateAnnotation(returnToken) {
         return this.tsInType(() => {
-          const t = this.startNode();
+          const t2 = this.startNode();
           this.expect(returnToken);
           const node = this.startNode();
           const asserts = !!this.tsTryParse(this.tsParseTypePredicateAsserts.bind(this));
@@ -6961,26 +6961,26 @@ var require_lib = __commonJS({
               this.resetStartLocationFromNode(thisTypePredicate, node);
               thisTypePredicate.asserts = true;
             }
-            t.typeAnnotation = thisTypePredicate;
-            return this.finishNode(t, "TSTypeAnnotation");
+            t2.typeAnnotation = thisTypePredicate;
+            return this.finishNode(t2, "TSTypeAnnotation");
           }
           const typePredicateVariable = this.tsIsIdentifier() && this.tsTryParse(this.tsParseTypePredicatePrefix.bind(this));
           if (!typePredicateVariable) {
             if (!asserts) {
-              return this.tsParseTypeAnnotation(false, t);
+              return this.tsParseTypeAnnotation(false, t2);
             }
             node.parameterName = this.parseIdentifier();
             node.asserts = asserts;
             node.typeAnnotation = null;
-            t.typeAnnotation = this.finishNode(node, "TSTypePredicate");
-            return this.finishNode(t, "TSTypeAnnotation");
+            t2.typeAnnotation = this.finishNode(node, "TSTypePredicate");
+            return this.finishNode(t2, "TSTypeAnnotation");
           }
           const type = this.tsParseTypeAnnotation(false);
           node.parameterName = typePredicateVariable;
           node.typeAnnotation = type;
           node.asserts = asserts;
-          t.typeAnnotation = this.finishNode(node, "TSTypePredicate");
-          return this.finishNode(t, "TSTypeAnnotation");
+          t2.typeAnnotation = this.finishNode(node, "TSTypePredicate");
+          return this.finishNode(t2, "TSTypeAnnotation");
         });
       }
       tsTryParseTypeOrTypePredicateAnnotation() {
@@ -7017,13 +7017,13 @@ var require_lib = __commonJS({
         }
         return true;
       }
-      tsParseTypeAnnotation(eatColon = true, t = this.startNode()) {
+      tsParseTypeAnnotation(eatColon = true, t2 = this.startNode()) {
         this.tsInType(() => {
           if (eatColon)
             this.expect(14);
-          t.typeAnnotation = this.tsParseType();
+          t2.typeAnnotation = this.tsParseType();
         });
-        return this.finishNode(t, "TSTypeAnnotation");
+        return this.finishNode(t2, "TSTypeAnnotation");
       }
       tsParseType() {
         assert(this.state.inType);
@@ -8919,7 +8919,7 @@ var require_lib = __commonJS({
           }
           const topicToken = pluginsMap.get("pipelineOperator").topicToken;
           if (!TOPIC_TOKENS.includes(topicToken)) {
-            const tokenList = TOPIC_TOKENS.map((t) => `"${t}"`).join(", ");
+            const tokenList = TOPIC_TOKENS.map((t2) => `"${t2}"`).join(", ");
             throw new Error(`"pipelineOperator" in "proposal": "hack" mode also requires a "topicToken" option whose value must be one of: ${tokenList}.`);
           }
           {
@@ -32552,7 +32552,7 @@ var require_typescript2 = __commonJS({
       this.tokenChar(60);
       let printTrailingSeparator = parent.type === "ArrowFunctionExpression" && node.params.length === 1;
       if (this.tokenMap && node.start != null && node.end != null) {
-        printTrailingSeparator && (printTrailingSeparator = !!this.tokenMap.find(node, (t) => this.tokenMap.matchesOriginal(t, ",")));
+        printTrailingSeparator && (printTrailingSeparator = !!this.tokenMap.find(node, (t2) => this.tokenMap.matchesOriginal(t2, ",")));
         printTrailingSeparator || (printTrailingSeparator = this.shouldPrintTrailingComma(">"));
       }
       this.printList(node.params, printTrailingSeparator);
@@ -35457,8 +35457,8 @@ var require_renamer = __commonJS({
       value: true
     });
     exports2.default = void 0;
-    var t = require_lib4();
-    var _t = t;
+    var t2 = require_lib4();
+    var _t = t2;
     var _traverseNode = require_traverse_node();
     var _visitors = require_visitors();
     var _context = require_context2();
@@ -35526,7 +35526,7 @@ var require_renamer = __commonJS({
           const {
             declaration
           } = maybeExportDeclar.node;
-          if (t.isDeclaration(declaration) && !declaration.id) {
+          if (t2.isDeclaration(declaration) && !declaration.id) {
             return;
           }
         }
@@ -35562,11 +35562,11 @@ var require_renamer = __commonJS({
         const skipKeys = {
           discriminant: true
         };
-        if (t.isMethod(blockToTraverse)) {
+        if (t2.isMethod(blockToTraverse)) {
           if (blockToTraverse.computed) {
             skipKeys.key = true;
           }
-          if (!t.isObjectMethod(blockToTraverse)) {
+          if (!t2.isObjectMethod(blockToTraverse)) {
             skipKeys.decorators = true;
           }
         }
@@ -37307,7 +37307,7 @@ var require_scope = __commonJS({
     var _binding = require_binding();
     var _globals = require_globals2();
     var _t = require_lib4();
-    var t = _t;
+    var t2 = _t;
     var _cache = require_cache();
     var {
       assignmentExpression,
@@ -37515,7 +37515,7 @@ var require_scope = __commonJS({
         parent.registerDeclaration(path);
       },
       ReferencedIdentifier(path, state) {
-        if (t.isTSQualifiedName(path.parent) && path.parent.right === path.node) {
+        if (t2.isTSQualifiedName(path.parent) && path.parent.right === path.node) {
           return;
         }
         if (path.parentPath.isTSImportEqualsDeclaration())
@@ -37941,7 +37941,7 @@ var require_scope = __commonJS({
         } else if (isCallExpression(node)) {
           return matchesPattern(node.callee, "Symbol.for") && !this.hasBinding("Symbol", {
             noGlobals: true
-          }) && node.arguments.length === 1 && t.isStringLiteral(node.arguments[0]);
+          }) && node.arguments.length === 1 && t2.isStringLiteral(node.arguments[0]);
         } else {
           return isPureish(node);
         }
@@ -40652,14 +40652,14 @@ var require_options = __commonJS({
     function _objectWithoutPropertiesLoose(r, e) {
       if (null == r)
         return {};
-      var t = {};
+      var t2 = {};
       for (var n in r)
         if ({}.hasOwnProperty.call(r, n)) {
           if (-1 !== e.indexOf(n))
             continue;
-          t[n] = r[n];
+          t2[n] = r[n];
         }
-      return t;
+      return t2;
     }
     function merge(a, b) {
       const {
@@ -42706,7 +42706,7 @@ var require_path = __commonJS({
     var _index = require_lib8();
     var _index2 = require_scope();
     var _t = require_lib4();
-    var t = _t;
+    var t2 = _t;
     var cache = require_cache();
     var _generator = require_lib5();
     var NodePath_ancestry = require_ancestry();
@@ -42982,9 +42982,9 @@ var require_path = __commonJS({
         _getPattern: NodePath_family._getPattern
       });
     }
-    for (const type of t.TYPES) {
+    for (const type of t2.TYPES) {
       const typeKey = `is${type}`;
-      const fn = t[typeKey];
+      const fn = t2[typeKey];
       NodePath_Final.prototype[typeKey] = function(opts) {
         return fn(this.node, opts);
       };
@@ -42998,8 +42998,8 @@ var require_path = __commonJS({
     for (const type of Object.keys(virtualTypes)) {
       if (type[0] === "_")
         continue;
-      if (!t.TYPES.includes(type))
-        t.TYPES.push(type);
+      if (!t2.TYPES.includes(type))
+        t2.TYPES.push(type);
     }
   }
 });
@@ -43204,7 +43204,7 @@ var require_context2 = __commonJS({
     var _traverseNode = require_traverse_node();
     var _index = require_path();
     var _removal = require_removal();
-    var t = require_lib4();
+    var t2 = require_lib4();
     function call(key) {
       const opts = this.opts;
       this.debug(key);
@@ -43409,7 +43409,7 @@ var require_context2 = __commonJS({
         context,
         node
       } = this;
-      if (!t.isPrivate(node) && node.computed) {
+      if (!t2.isPrivate(node) && node.computed) {
         context.maybeQueue(this.get("key"));
       }
       if (node.decorators) {
@@ -43555,7 +43555,7 @@ var require_utils2 = __commonJS({
     var parser = require_lib();
     var generate = require_lib5().default;
     var traverse = require_lib8().default;
-    var t = require_lib4();
+    var t2 = require_lib4();
     var safeTraverse = (ast, visitor) => {
       try {
         traverse(ast, visitor);
@@ -43579,7 +43579,6 @@ var require_utils2 = __commonJS({
       }
       return null;
     };
-    var toLower = (s) => s.charAt(0).toLowerCase() + s.slice(1);
     var toCapitalize = (str) => {
       if (!str)
         return "";
@@ -43599,48 +43598,48 @@ var require_utils2 = __commonJS({
         (node) => node.type === "ImportDeclaration" && node.source.value === `../services/${model}Service`
       );
       const importDeclIndex = ast.program.body.findIndex(
-        (node) => t.isImportDeclaration(node) && node.source.value === `../models/${model}`
+        (node) => t2.isImportDeclaration(node) && node.source.value === `../models/${model}`
       );
       if (importDeclIndex !== -1) {
         const importDecl = ast.program.body[importDeclIndex];
-        const hasDefault = importDecl.specifiers.some(t.isImportDefaultSpecifier);
+        const hasDefault = importDecl.specifiers.some(t2.isImportDefaultSpecifier);
         if (!hasDefault) {
           importDecl.specifiers = importDecl.specifiers.filter(
-            (spec) => !(t.isImportSpecifier(spec) && spec.imported.name === model)
+            (spec) => !(t2.isImportSpecifier(spec) && spec.imported.name === model)
           );
           importDecl.specifiers.unshift(
-            t.importDefaultSpecifier(t.identifier(model))
+            t2.importDefaultSpecifier(t2.identifier(model))
           );
         }
         const defaultsName = `${model}Defaults`;
         const hasDefaults = importDecl.specifiers.some(
-          (spec) => t.isImportSpecifier(spec) && spec.imported.name === defaultsName
+          (spec) => t2.isImportSpecifier(spec) && spec.imported.name === defaultsName
         );
         if (!hasDefaults) {
           importDecl.specifiers.push(
-            t.importSpecifier(
-              t.identifier(defaultsName),
-              t.identifier(defaultsName)
+            t2.importSpecifier(
+              t2.identifier(defaultsName),
+              t2.identifier(defaultsName)
             )
           );
         }
       } else {
-        const newImport = t.importDeclaration(
+        const newImport = t2.importDeclaration(
           [
-            t.importDefaultSpecifier(t.identifier(model)),
-            t.importSpecifier(
-              t.identifier(`${model}Defaults`),
-              t.identifier(`${model}Defaults`)
+            t2.importDefaultSpecifier(t2.identifier(model)),
+            t2.importSpecifier(
+              t2.identifier(`${model}Defaults`),
+              t2.identifier(`${model}Defaults`)
             )
           ],
-          t.stringLiteral(`../models/${model}`)
+          t2.stringLiteral(`../models/${model}`)
         );
         ast.program.body.unshift(newImport);
       }
       if (!serviceImportExists) {
-        const svcImport = t.importDeclaration(
-          [t.importDefaultSpecifier(t.identifier(`${model}Service`))],
-          t.stringLiteral(`../services/${model}Service`)
+        const svcImport = t2.importDeclaration(
+          [t2.importDefaultSpecifier(t2.identifier(`${model}Service`))],
+          t2.stringLiteral(`../services/${model}Service`)
         );
         ast.program.body.unshift(svcImport);
       }
@@ -43687,13 +43686,37 @@ var require_utils2 = __commonJS({
         });
       }
     };
+    var nativeElements = /* @__PURE__ */ new Set([
+      "div",
+      "form",
+      "input",
+      "span",
+      "button",
+      "label",
+      "select",
+      "option",
+      "textarea",
+      "ul",
+      "li",
+      "p",
+      "h1",
+      "h2",
+      "h3",
+      "h4",
+      "h5",
+      "h6"
+    ]);
+    var isCustomComponent = (insertedComponentName) => {
+      return insertedComponentName && /^[A-Z]/.test(insertedComponentName) && !nativeElements.has(insertedComponentName);
+    };
     module2.exports = {
-      t,
+      t: t2,
       generate,
       parser,
+      nativeElements,
+      isCustomComponent,
       safeTraverse,
       getAttrValue,
-      toLower,
       toCapitalize,
       extractObjectName,
       checkMissingImports,
@@ -43723,54 +43746,362 @@ var require_format = __commonJS({
   }
 });
 
-// transforms/insert.js
-var require_insert = __commonJS({
-  "transforms/insert.js"(exports2, module2) {
+// transforms/generators/generateGetState.js
+var require_generateGetState = __commonJS({
+  "transforms/generators/generateGetState.js"(exports2, module2) {
+    var template = require_lib7().default;
+    function generateGetState(lowerModelName, modelName, get) {
+      let stateCode;
+      if (get === "ALL") {
+        stateCode = `const [${lowerModelName}, set${modelName}] = useState<${modelName}[]>([]);`;
+      } else if (get === "ID") {
+        stateCode = `const [${lowerModelName}, set${modelName}] = useState<${modelName}>();`;
+      }
+      return template.ast(stateCode, {
+        plugins: ["jsx", "typescript"]
+      });
+    }
+    module2.exports = generateGetState;
+  }
+});
+
+// transforms/generators/generateGetEffect.js
+var require_generateGetEffect = __commonJS({
+  "transforms/generators/generateGetEffect.js"(exports2, module2) {
+    var template = require_lib7().default;
+    function generateGetEffect(modelName, modelParam, get) {
+      let effectCode;
+      if (get === "ALL") {
+        effectCode = `
+    useEffect(() => {
+        ${modelName}Service.getAll${modelName}()
+        .then(response => set${modelName}(response))
+        .catch(error => console.error("Error fetching ${modelName} data:", error));
+    }, []);
+    `.trim();
+      } else if (get === "ID") {
+        effectCode = `
+    useEffect(() => {
+        ${modelName}Service.get${modelName}ById(${modelParam})
+        .then(response => set${modelName}(response))
+        .catch(error => console.error("Error fetching ${modelName} by id:", error));
+    }, [${modelParam}]);
+    `.trim();
+      }
+      return template.ast(effectCode, {
+        plugins: ["jsx", "typescript"]
+      });
+    }
+    module2.exports = generateGetEffect;
+  }
+});
+
+// transforms/handlers/insertDivLogic.js
+var require_insertDivLogic = __commonJS({
+  "transforms/handlers/insertDivLogic.js"(exports2, module2) {
     var {
-      t,
+      t: t2,
+      safeTraverse,
+      getAttrValue,
+      checkMissingImports,
+      ensureReactHooksImport
+    } = require_utils2();
+    var generateGetState = require_generateGetState();
+    var generateGetEffect = require_generateGetEffect();
+    function insertDivLogic(ast, fragmentAst, model, fileName) {
+      checkMissingImports(ast, model);
+      const lowerModel = model.toLowerCase();
+      const modelParam = `${lowerModel}Id`;
+      const get = getAttrValue(fragmentAst, "data-rwf-get");
+      let modelParamFound = false;
+      safeTraverse(ast, {
+        VariableDeclarator(path) {
+          if (!path || !path.node)
+            return;
+          if (t2.isObjectPattern(path.node.id) && t2.isCallExpression(path.node.init) && t2.isIdentifier(path.node.init.callee, { name: "useParams" })) {
+            const hasParam = path.node.id.properties.some(
+              (prop) => t2.isObjectProperty(prop) && t2.isIdentifier(prop.key, { name: modelParam })
+            );
+            if (hasParam) {
+              modelParamFound = true;
+            }
+            path.stop();
+          }
+        }
+      });
+      if (get === "ID" && modelParamFound || get === "ALL") {
+        safeTraverse(ast, {
+          FunctionDeclaration(path) {
+            if (!path || !path.node || !path.node.id)
+              return;
+            if (path.node.id?.name === fileName) {
+              const stateNode = generateGetState(lowerModel, model, get);
+              const effectNode = generateGetEffect(model, modelParam, get);
+              path.node.body.body.unshift(stateNode);
+              path.node.body.body.unshift(effectNode);
+            }
+          }
+        });
+      }
+      ensureReactHooksImport(ast, ["useState", "useEffect"]);
+    }
+    module2.exports = insertDivLogic;
+  }
+});
+
+// transforms/generators/generateGetEffectById.js
+var require_generateGetEffectById = __commonJS({
+  "transforms/generators/generateGetEffectById.js"(exports2, module2) {
+    var template = require_lib7().default;
+    function generateGetEffectById(modelName, modelParam, capitalizeMethod) {
+      const effectCodeUpdate = `useEffect(() => {
+    ${modelName}Service.get${modelName}ById(${modelParam})
+        .then((response) => {
+            set${capitalizeMethod}${modelName}(response);
+        })
+        .catch((error) => {
+        console.error("Error fetching ${modelName} data by id:", error);
+        });
+    }, [${modelParam}]);`;
+      return template.ast(effectCodeUpdate, {
+        plugins: ["jsx", "typescript"]
+      });
+    }
+    module2.exports = generateGetEffectById;
+  }
+});
+
+// transforms/generators/generateFormState.js
+var require_generateFormState = __commonJS({
+  "transforms/generators/generateFormState.js"(exports2, module2) {
+    var template = require_lib7().default;
+    function generateFormState(modelName, lowerMethod, capitalizeMethod) {
+      const formStateCode = `const [${lowerMethod}${modelName}, set${capitalizeMethod}${modelName}] = useState<${modelName}>(${modelName}Defaults.default${capitalizeMethod}${modelName});`;
+      return template.ast(formStateCode, {
+        plugins: ["jsx", "typescript"]
+      });
+    }
+    module2.exports = generateFormState;
+  }
+});
+
+// transforms/generators/generateHandleChange.js
+var require_generateHandleChange = __commonJS({
+  "transforms/generators/generateHandleChange.js"(exports2, module2) {
+    var template = require_lib7().default;
+    function generateHandleChange(modelName, capitalizeMethod) {
+      const handleChangeCode = `const handleChange${capitalizeMethod}${modelName} = (e: any) => {
+    const { name, value } = e.target;
+    set${capitalizeMethod}${modelName}((prevData) => ({
+        ...prevData,
+        [name]: value,
+    }));
+    };`;
+      return template.ast(handleChangeCode, {
+        plugins: ["jsx", "typescript"]
+      });
+    }
+    module2.exports = generateHandleChange;
+  }
+});
+
+// transforms/generators/generateHandleSubmit.js
+var require_generateHandleSubmit = __commonJS({
+  "transforms/generators/generateHandleSubmit.js"(exports2, module2) {
+    var template = require_lib7().default;
+    function generateHandleChange(modelName, method, lowerMethod, methodService, capitalizeMethod) {
+      let handleSubmitCode;
+      if (method === "PUT")
+        handleSubmitCode = `const handleSubmit${capitalizeMethod}${modelName} = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!${lowerMethod}${modelName}) {
+        console.error("Data is undefined");
+        return;
+        }
+        try {
+        const response = await ${modelName}Service.${methodService}${modelName}ById(${lowerMethod}${modelName}.id, ${lowerMethod}${modelName});
+        console.log("Form submitted successfully:", response);
+        } catch (error) {
+        console.error("Error submitting form:", error);
+        }
+    };`;
+      if (method === "POST")
+        handleSubmitCode = `const handleSubmit${capitalizeMethod}${modelName} = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!${lowerMethod}${modelName}) {
+        console.error("Data is undefined");
+        return;
+        }
+        try {
+        const response = await ${modelName}Service.${methodService}${modelName}(${lowerMethod}${modelName});
+        console.log("Form submitted successfully:", response);
+        } catch (error) {
+        console.error("Error submitting form:", error);
+        }
+    };`;
+      return template.ast(handleSubmitCode, {
+        plugins: ["jsx", "typescript"]
+      });
+    }
+    module2.exports = generateHandleChange;
+  }
+});
+
+// transforms/handlers/insertFormLogic.js
+var require_insertFormLogic = __commonJS({
+  "transforms/handlers/insertFormLogic.js"(exports2, module2) {
+    var {
+      safeTraverse,
+      checkMissingImports,
+      ensureReactHooksImport,
+      toCapitalize
+    } = require_utils2();
+    var generateGetEffectById = require_generateGetEffectById();
+    var generateFormState = require_generateFormState();
+    var generateHandleChange = require_generateHandleChange();
+    var generateHandleSubmit = require_generateHandleSubmit();
+    function insertFormLogic(ast, model, method, fileName) {
+      checkMissingImports(ast, model);
+      const lowerMethod = method.toLowerCase();
+      const lowerModel = model.toLowerCase();
+      const modelParam = `${lowerModel}Id`;
+      const capitalizeMethod = toCapitalize(method);
+      let methodService = null;
+      if (method === "PUT")
+        methodService = "update";
+      else if (method === "POST")
+        methodService = "create";
+      let modelParamFound = false;
+      safeTraverse(ast, {
+        VariableDeclarator(path) {
+          if (!path || !path.node)
+            return;
+          if (t.isObjectPattern(path.node.id) && t.isCallExpression(path.node.init) && t.isIdentifier(path.node.init.callee, { name: "useParams" })) {
+            const hasParam = path.node.id.properties.some(
+              (prop) => t.isObjectProperty(prop) && t.isIdentifier(prop.key, { name: modelParam })
+            );
+            if (hasParam) {
+              modelParamFound = true;
+            }
+            path.stop();
+          }
+        }
+      });
+      safeTraverse(ast, {
+        FunctionDeclaration(path) {
+          if (!path || !path.node || !path.node.id)
+            return;
+          if (path.node.id?.name === fileName) {
+            const stateNodeNew = generateFormState(
+              model,
+              lowerMethod,
+              capitalizeMethod
+            );
+            const changeNodeNew = generateHandleChange(model, capitalizeMethod);
+            const submitNodeNew = generateHandleSubmit(
+              model,
+              method,
+              lowerMethod,
+              methodService,
+              capitalizeMethod
+            );
+            let effectNodeNew = null;
+            if (modelParamFound && method === "PUT") {
+              effectNodeNew = generateGetEffectById(
+                model,
+                modelParam,
+                capitalizeMethod
+              );
+            }
+            path.node.body.body.unshift(stateNodeNew);
+            path.node.body.body.unshift(changeNodeNew);
+            path.node.body.body.unshift(submitNodeNew);
+            if (effectNodeNew)
+              path.node.body.body.unshift(effectNodeNew);
+          }
+        }
+      });
+      ensureReactHooksImport(ast, ["useState", "useEffect"]);
+    }
+    module2.exports = insertFormLogic;
+  }
+});
+
+// transforms/generators/generateDeleteByIdFn.js
+var require_generateDeleteByIdFn = __commonJS({
+  "transforms/generators/generateDeleteByIdFn.js"(exports2, module2) {
+    var template = require_lib7().default;
+    function generateDeleteByIdFn(modelName) {
+      const code = `const delete${modelName}ById = async (id: number) => {
+    try {
+      const response = await ${modelName}Service.delete${modelName}ById(id);
+      console.log("Element deleted successfully:", response);
+    } catch (error) {
+      console.error("Error deleting element:", error);
+    }
+  };`;
+      return template.ast(code, {
+        plugins: ["jsx", "typescript"]
+      });
+    }
+    module2.exports = generateDeleteByIdFn;
+  }
+});
+
+// transforms/handlers/insertButtonLogic.js
+var require_insertButtonLogic = __commonJS({
+  "transforms/handlers/insertButtonLogic.js"(exports2, module2) {
+    var {
       safeTraverse,
       getAttrValue,
       extractObjectName,
-      checkMissingImports,
-      ensureReactHooksImport,
-      toLower,
-      toCapitalize
+      checkMissingImports
     } = require_utils2();
-    var template = require_lib7().default;
-    function insert(ast, opts) {
-      const { fragmentAst, referenceId: referenceId2, position, fileName } = opts;
-      if (!fragmentAst)
-        return;
-      const insertedComponentName = fragmentAst.type === "JSXElement" && fragmentAst.openingElement.name.type === "JSXIdentifier" ? fragmentAst.openingElement.name.name : null;
-      const nativeElements = /* @__PURE__ */ new Set([
-        "div",
-        "form",
-        "input",
-        "span",
-        "button",
-        "label",
-        "select",
-        "option",
-        "textarea",
-        "ul",
-        "li",
-        "p",
-        "h1",
-        "h2",
-        "h3",
-        "h4",
-        "h5",
-        "h6"
-      ]);
-      const isCustomComponent = insertedComponentName && /^[A-Z]/.test(insertedComponentName) && !nativeElements.has(insertedComponentName);
-      const model = getAttrValue(fragmentAst, "data-rwf-model");
-      const method = getAttrValue(fragmentAst, "data-rwf-method");
+    var generateDeleteByIdFn = require_generateDeleteByIdFn();
+    function insertButtonLogic(ast, fragmentAst, fileName) {
+      const click = getAttrValue(fragmentAst, "onClick");
+      if (click) {
+        const model = extractObjectName(click);
+        if (model) {
+          let deleteFnExists = false;
+          safeTraverse(ast, {
+            VariableDeclarator(path) {
+              if (path.node.id.name === `delete${model}ById`) {
+                deleteFnExists = true;
+                path.stop();
+              }
+            }
+          });
+          if (deleteFnExists)
+            return;
+          safeTraverse(ast, {
+            FunctionDeclaration(path) {
+              if (!path || !path.node || !path.node.id)
+                return;
+              if (path.node.id?.name === fileName) {
+                const node = generateDeleteByIdFn(model);
+                path.node.body.body.unshift(node);
+              }
+            }
+          });
+          checkMissingImports(ast, model);
+        }
+      }
+    }
+    module2.exports = insertButtonLogic;
+  }
+});
+
+// transforms/handlers/insertCustomComponentLogic.js
+var require_insertCustomComponentLogic = __commonJS({
+  "transforms/handlers/insertCustomComponentLogic.js"(exports2, module2) {
+    function insertCustomComponentLogic(ast, insertedComponentName) {
       const alreadyImported = insertedComponentName ? ast.program.body.some(
         (node) => node.type === "ImportDeclaration" && node.specifiers.some(
           (spec) => spec.type === "ImportDefaultSpecifier" && spec.local.name === insertedComponentName
         )
       ) : false;
-      if (isCustomComponent && !alreadyImported) {
+      if (!alreadyImported) {
         ast.program.body.unshift({
           type: "ImportDeclaration",
           specifiers: [
@@ -43785,230 +44116,95 @@ var require_insert = __commonJS({
           }
         });
       }
-      if (insertedComponentName === "button") {
-        const click = getAttrValue(fragmentAst, "onClick");
-        if (click) {
-          const model2 = extractObjectName(click);
-          if (model2) {
-            checkMissingImports(ast, model2);
-            const code = `const delete${model2}ById = async (id: number) => {
-              try {
-                const response = await ${model2}Service.delete${model2}ById(id);
-                console.log("Element deleted successfully:", response);
-              } catch (error) {
-                console.error("Error deleting element:", error);
-              }
-            };`;
-            safeTraverse(ast, {
-              FunctionDeclaration(path) {
-                if (!path || !path.node || !path.node.id)
-                  return;
-                if (path.node.id?.name === fileName) {
-                  const node = template.ast(code, {
-                    plugins: ["jsx", "typescript"]
-                  });
-                  path.node.body.body.unshift(node);
-                }
-              }
-            });
-          }
+    }
+    module2.exports = insertCustomComponentLogic;
+  }
+});
+
+// transforms/insert.js
+var require_insert = __commonJS({
+  "transforms/insert.js"(exports2, module2) {
+    var {
+      t: t2,
+      safeTraverse,
+      getAttrValue,
+      isCustomComponent
+    } = require_utils2();
+    var handleDivInsertion = require_insertDivLogic();
+    var handleFormInsertion = require_insertFormLogic();
+    var handleButtonInsertion = require_insertButtonLogic();
+    var handleCustomComponentInsertion = require_insertCustomComponentLogic();
+    var addedCustomComponents = /* @__PURE__ */ new Set();
+    function fallbackInsert(ast, fragmentAst) {
+      let lastReturnPath = null;
+      safeTraverse(ast, {
+        ReturnStatement(path) {
+          lastReturnPath = path;
+        }
+      });
+      if (lastReturnPath) {
+        const ret = lastReturnPath.node;
+        const arg = ret.argument;
+        if (arg == null) {
+          ret.argument = t2.cloneNode(fragmentAst, true);
+          console.log(
+            "\u2705 Fragment insertado como \xFAnico argumento del \xFAltimo return."
+          );
+        } else if (t2.isJSXElement(arg) && (t2.isJSXIdentifier(arg.openingElement.name, { name: "div" }) || t2.isJSXIdentifier(arg.openingElement.name, { name: "form" }))) {
+          arg.children.push(t2.cloneNode(fragmentAst, true));
+          console.log(
+            `\u2705 Fragment insertado como hijo de <${arg.openingElement.name.name}> en el \xFAltimo return.`
+          );
         }
       }
-      if (model && insertedComponentName === "div") {
-        checkMissingImports(ast, model);
-        const lowerModel = toLower(model);
-        const modelParam = `${lowerModel}Id`;
-        const get = getAttrValue(fragmentAst, "data-rwf-get");
-        let modelParamFound = false;
-        safeTraverse(ast, {
-          VariableDeclarator(path) {
-            if (!path || !path.node)
-              return;
-            if (t.isObjectPattern(path.node.id) && t.isCallExpression(path.node.init) && t.isIdentifier(path.node.init.callee, { name: "useParams" })) {
-              const hasParam = path.node.id.properties.some(
-                (prop) => t.isObjectProperty(prop) && t.isIdentifier(prop.key, { name: modelParam })
-              );
-              if (hasParam) {
-                modelParamFound = true;
-              }
-              path.stop();
-            }
-          }
-        });
-        if (get === "ID" && modelParamFound || get === "ALL") {
-          let stateCode;
-          if (get === "ALL") {
-            stateCode = `const [${lowerModel}, set${model}] = useState<${model}[]>([]);`;
-          } else if (get === "ID") {
-            stateCode = `const [${lowerModel}, set${model}] = useState<${model}>();`;
-          }
-          let effectCode;
-          if (get === "ALL") {
-            effectCode = `
-            useEffect(() => {
-              ${model}Service.getAll${model}()
-                .then(response => set${model}(response))
-                .catch(error => console.error("Error fetching ${model} data:", error));
-            }, []);
-          `.trim();
-          } else if (get === "ID") {
-            effectCode = `
-            useEffect(() => {
-              ${model}Service.get${model}ById(${modelParam})
-                .then(response => set${model}(response))
-                .catch(error => console.error("Error fetching ${model} by id:", error));
-            }, [${modelParam}]);
-          `.trim();
-          }
-          safeTraverse(ast, {
-            FunctionDeclaration(path) {
-              if (!path || !path.node || !path.node.id)
-                return;
-              if (path.node.id?.name === fileName) {
-                const stateNode = template.ast(stateCode, {
-                  plugins: ["jsx", "typescript"]
-                });
-                console.log("stateNode", stateNode.type);
-                const effectNode = template.ast(effectCode, {
-                  plugins: ["jsx", "typescript"]
-                });
-                path.node.body.body.unshift(stateNode);
-                path.node.body.body.unshift(effectNode);
-              }
-            }
-          });
-          ensureReactHooksImport(ast, ["useState", "useEffect"]);
+    }
+    function processDivSubtree(ast, fragmentAst, model, fileName) {
+      if (model) {
+        handleDivInsertion(ast, fragmentAst, model, fileName);
+      }
+      for (const childNode of fragmentAst.children) {
+        if (!t2.isJSXElement(childNode))
+          continue;
+        const childName = childNode.openingElement.name.name;
+        if (isCustomComponent(childName)) {
+          addedCustomComponents.add(childName);
+        }
+        const childFrag = t2.cloneNode(childNode, true);
+        const childModel = getAttrValue(childNode, "data-rwf-model");
+        const childMethod = getAttrValue(childNode, "data-rwf-method");
+        if (childName === "div") {
+          processDivSubtree(ast, childFrag, childModel, fileName);
+        } else if (childName === "form") {
+          handleFormInsertion(ast, childModel, childMethod, fileName);
+        } else if (childName === "button") {
+          handleButtonInsertion(ast, childFrag, fileName);
         }
       }
-      if (model && insertedComponentName === "form") {
-        checkMissingImports(ast, model);
-        ensureReactHooksImport(ast, ["useState", "useEffect"]);
+    }
+    function insert(ast, opts) {
+      const { fragmentAst, referenceId: referenceId2, position, fileName } = opts;
+      if (!fragmentAst)
+        return;
+      const model = getAttrValue(fragmentAst, "data-rwf-model");
+      const method = getAttrValue(fragmentAst, "data-rwf-method");
+      const insertedComponentName = fragmentAst.type === "JSXElement" && fragmentAst.openingElement.name.type === "JSXIdentifier" ? fragmentAst.openingElement.name.name : null;
+      const isCustComp = isCustomComponent(insertedComponentName);
+      if (isCustComp)
+        handleCustomComponentInsertion(insertedComponentName);
+      if (insertedComponentName === "button")
+        handleButtonInsertion(ast, fragmentAst, fileName);
+      if (insertedComponentName === "form" && method && model) {
+        handleFormInsertion(ast, model, method, fileName);
       }
-      if (method && model && insertedComponentName === "form") {
-        const lowerMethod = method.toLowerCase();
-        const lowerModel = toLower(model);
-        const modelParam = `${lowerModel}Id`;
-        const capitalizeMethod = toCapitalize(method);
-        let methodService = null;
-        if (method === "PUT")
-          methodService = "update";
-        else if (method === "POST")
-          methodService = "create";
-        let effectCodeUpdate;
-        if (method === "PUT") {
-          effectCodeUpdate = `useEffect(() => {
-            ${model}Service.get${model}ById(${modelParam})
-              .then((response) => {
-                  set${capitalizeMethod}${model}(response);
-              })
-              .catch((error) => {
-                console.error("Error fetching ${model} data by id:", error);
-              });
-          }, [${modelParam}]);`;
+      if (insertedComponentName === "div") {
+        processDivSubtree(ast, fragmentAst, model, fileName);
+        for (const componentName of addedCustomComponents) {
+          handleCustomComponentInsertion(ast, componentName);
         }
-        let modelParamFound = false;
-        safeTraverse(ast, {
-          VariableDeclarator(path) {
-            if (!path || !path.node)
-              return;
-            if (t.isObjectPattern(path.node.id) && t.isCallExpression(path.node.init) && t.isIdentifier(path.node.init.callee, { name: "useParams" })) {
-              const hasParam = path.node.id.properties.some(
-                (prop) => t.isObjectProperty(prop) && t.isIdentifier(prop.key, { name: modelParam })
-              );
-              if (hasParam) {
-                modelParamFound = true;
-              }
-              path.stop();
-            }
-          }
-        });
-        const formStateCode = `const [${lowerMethod}${model}, set${capitalizeMethod}${model}] = useState<${model}>(${model}Defaults.default${capitalizeMethod}${model});`;
-        const handleChangeCode = `const handleChange${capitalizeMethod}${model} = (e: any) => {
-                 const { name, value } = e.target;
-                 set${capitalizeMethod}${model}((prevData) => ({
-                   ...prevData,
-                   [name]: value,
-                 }));
-               };`;
-        let handleSubmitCode;
-        if (method === "PUT")
-          handleSubmitCode = `const handleSubmit${capitalizeMethod}${model} = async (e: React.FormEvent) => {
-                 e.preventDefault();
-                 if (!${lowerMethod}${model}) {
-                   console.error("Data is undefined");
-                   return;
-                 }
-                 try {
-                   const response = await ${model}Service.${methodService}${model}ById(${lowerMethod}${model}.id, ${lowerMethod}${model});
-                   console.log("Form submitted successfully:", response);
-                 } catch (error) {
-                   console.error("Error submitting form:", error);
-                 }
-               };`;
-        if (method === "POST")
-          handleSubmitCode = `const handleSubmit${capitalizeMethod}${model} = async (e: React.FormEvent) => {
-                 e.preventDefault();
-                 if (!${lowerMethod}${model}) {
-                   console.error("Data is undefined");
-                   return;
-                 }
-                 try {
-                   const response = await ${model}Service.${methodService}${model}(${lowerMethod}${model});
-                   console.log("Form submitted successfully:", response);
-                 } catch (error) {
-                   console.error("Error submitting form:", error);
-                 }
-               };`;
-        safeTraverse(ast, {
-          FunctionDeclaration(path) {
-            if (!path || !path.node || !path.node.id)
-              return;
-            if (path.node.id?.name === fileName) {
-              const stateNodeNew = template.ast(formStateCode, {
-                plugins: ["jsx", "typescript"]
-              });
-              const changeNodeNew = template.ast(handleChangeCode, {
-                plugins: ["jsx", "typescript"]
-              });
-              const submitNodeNew = template.ast(handleSubmitCode, {
-                plugins: ["jsx", "typescript"]
-              });
-              let effectNodeNew = null;
-              if (modelParamFound && effectCodeUpdate) {
-                effectNodeNew = template.ast(effectCodeUpdate, {
-                  plugins: ["jsx", "typescript"]
-                });
-              }
-              path.node.body.body.unshift(stateNodeNew);
-              path.node.body.body.unshift(changeNodeNew);
-              path.node.body.body.unshift(submitNodeNew);
-              if (effectNodeNew)
-                path.node.body.body.unshift(effectNodeNew);
-            }
-          }
-        });
-        ensureReactHooksImport(ast, ["useState", "useEffect"]);
+        addedCustomComponents.clear();
       }
       if (referenceId2 === "none" && position === "inner") {
-        let lastReturnPath = null;
-        safeTraverse(ast, {
-          ReturnStatement(path) {
-            lastReturnPath = path;
-          }
-        });
-        if (lastReturnPath) {
-          const ret = lastReturnPath.node;
-          const arg = ret.argument;
-          if (arg == null) {
-            ret.argument = t.cloneNode(fragmentAst, true);
-            console.log("\u2705 Fallback: inserted fragment as sole return argument.");
-          } else if (t.isJSXElement(arg) && (t.isJSXIdentifier(arg.openingElement.name, { name: "div" }) || t.isJSXIdentifier(arg.openingElement.name, { name: "form" }))) {
-            arg.children.push(t.cloneNode(fragmentAst, true));
-            console.log(
-              `\u2705 Fallback: inserted fragment inside <${arg.openingElement.name.name}> of last return.`
-            );
-          }
-        }
+        fallbackInsert(ast, fragmentAst);
       } else {
         let inserted = false;
         safeTraverse(ast, {
@@ -44027,13 +44223,13 @@ var require_insert = __commonJS({
               );
               switch (position) {
                 case "before":
-                  path.insertBefore(t.cloneNode(fragmentAst, true));
+                  path.insertBefore(t2.cloneNode(fragmentAst, true));
                   break;
                 case "after":
-                  path.insertAfter(t.cloneNode(fragmentAst, true));
+                  path.insertAfter(t2.cloneNode(fragmentAst, true));
                   break;
                 case "inner":
-                  path.node.children.push(t.cloneNode(fragmentAst, true));
+                  path.node.children.push(t2.cloneNode(fragmentAst, true));
                   break;
                 default:
                   console.error("\u274C Unknown insert position:", position);
@@ -44052,27 +44248,7 @@ var require_insert = __commonJS({
           console.warn(
             `! referenceId "${referenceId2}" no encontrado. Aplicando fallback en el \xFAltimo return\u2026`
           );
-          let lastReturnPath = null;
-          safeTraverse(ast, {
-            ReturnStatement(path) {
-              lastReturnPath = path;
-            }
-          });
-          if (lastReturnPath) {
-            const ret = lastReturnPath.node;
-            const arg = ret.argument;
-            if (arg == null) {
-              ret.argument = t.cloneNode(fragmentAst, true);
-              console.log(
-                "\u2705 Fragment insertado como \xFAnico argumento del \xFAltimo return."
-              );
-            } else if (t.isJSXElement(arg) && (t.isJSXIdentifier(arg.openingElement.name, { name: "div" }) || t.isJSXIdentifier(arg.openingElement.name, { name: "form" }))) {
-              arg.children.push(t.cloneNode(fragmentAst, true));
-              console.log(
-                `\u2705 Fragment insertado como hijo de <${arg.openingElement.name.name}> en el \xFAltimo return.`
-              );
-            }
-          }
+          fallbackInsert(ast, fragmentAst);
         }
       }
     }
@@ -44084,7 +44260,7 @@ var require_insert = __commonJS({
 var require_modify = __commonJS({
   "transforms/modify.js"(exports2, module2) {
     var {
-      t,
+      t: t2,
       parser,
       safeTraverse,
       generate,
@@ -44197,7 +44373,7 @@ var require_modify = __commonJS({
                         let changed = false;
                         path2.node.specifiers = path2.node.specifiers.filter(
                           (spec) => {
-                            if (t.isImportSpecifier(spec)) {
+                            if (t2.isImportSpecifier(spec)) {
                               const name = spec.imported.name;
                               if (name === buttonModel && !useButtonModel) {
                                 changed = true;
@@ -44208,7 +44384,7 @@ var require_modify = __commonJS({
                                 return false;
                               }
                             }
-                            if (t.isImportDefaultSpecifier(spec) && spec.local.name === buttonModel && !useButtonModel) {
+                            if (t2.isImportDefaultSpecifier(spec) && spec.local.name === buttonModel && !useButtonModel) {
                               changed = true;
                               return false;
                             }
@@ -44269,14 +44445,14 @@ var require_modify = __commonJS({
                     const code = generate(path2.node).code;
                     if (oldGet === "ALL") {
                       if (code.includes(
-                        `const [${toLower(oldModel)}, set${oldModel}]`
+                        `const [${oldModel.toLowerCase()}, set${oldModel}]`
                       ) && code.includes(`useState<${oldModel}[]>`)) {
                         path2.remove();
                       }
                     }
                     if (oldGet === "ID") {
                       if (code.includes(
-                        `const [${toLower(oldModel)}, set${oldModel}]`
+                        `const [${oldModel.toLowerCase()}, set${oldModel}]`
                       ) && code.includes(`useState<${oldModel}>`)) {
                         path2.remove();
                       }
@@ -44291,9 +44467,7 @@ var require_modify = __commonJS({
                     }
                     if (oldGet === "ID") {
                       if (code.includes("useEffect") && code.includes(
-                        `${oldModel}Service.get${oldModel}ById(${toLower(
-                          oldModel
-                        )}Id)`
+                        `${oldModel}Service.get${oldModel}ById(${oldModel.toLowerCase()}Id)`
                       )) {
                         path2.remove();
                       }
@@ -44302,18 +44476,18 @@ var require_modify = __commonJS({
                 });
               }
               if (hasNewGet && hasNewModel) {
-                const lowerNewModel = toLower(newModel);
+                const lowerNewModel = newModel.toLowerCase();
                 const modelParam = `${lowerNewModel}Id`;
                 let modelParamFound = false;
                 safeTraverse(ast, {
                   VariableDeclarator(path2) {
                     if (!path2 || !path2.node)
                       return;
-                    if (t.isObjectPattern(path2.node.id) && t.isCallExpression(path2.node.init) && t.isIdentifier(path2.node.init.callee, {
+                    if (t2.isObjectPattern(path2.node.id) && t2.isCallExpression(path2.node.init) && t2.isIdentifier(path2.node.init.callee, {
                       name: "useParams"
                     })) {
                       const hasParam = path2.node.id.properties.some(
-                        (prop) => t.isObjectProperty(prop) && t.isIdentifier(prop.key, { name: modelParam })
+                        (prop) => t2.isObjectProperty(prop) && t2.isIdentifier(prop.key, { name: modelParam })
                       );
                       if (hasParam) {
                         modelParamFound = true;
@@ -44396,13 +44570,13 @@ var require_modify = __commonJS({
                   safeTraverse(ast, {
                     ExpressionStatement(path2) {
                       const expr = path2.node.expression;
-                      if (t.isCallExpression(expr) && t.isIdentifier(expr.callee, {
+                      if (t2.isCallExpression(expr) && t2.isIdentifier(expr.callee, {
                         name: "useEffect"
-                      }) && expr.arguments.length === 2 && t.isArrayExpression(expr.arguments[1])) {
+                      }) && expr.arguments.length === 2 && t2.isArrayExpression(expr.arguments[1])) {
                         const deps = expr.arguments[1].elements;
-                        const modelIdName = `${toLower(oldModel)}Id`;
+                        const modelIdName = `${oldModel.toLowerCase()}Id`;
                         const hasTargetDep = deps.some(
-                          (el) => t.isIdentifier(el) && el.name === modelIdName
+                          (el) => t2.isIdentifier(el) && el.name === modelIdName
                         );
                         if (hasTargetDep) {
                           path2.remove();
@@ -44438,7 +44612,7 @@ var require_modify = __commonJS({
                   methodService = "update";
                 if (newMethod === "POST")
                   methodService = "create";
-                const lowNewModel = toLower(newModel);
+                const lowNewModel = newModel.toLowerCase();
                 const modelParam = `${lowNewModel}Id`;
                 let effectCodeUpdate = null;
                 if (newMethod === "PUT") {
@@ -44455,11 +44629,11 @@ var require_modify = __commonJS({
                 let modelParamFound = false;
                 safeTraverse(ast, {
                   VariableDeclarator(path2) {
-                    if (t.isObjectPattern(path2.node.id) && t.isCallExpression(path2.node.init) && t.isIdentifier(path2.node.init.callee, {
+                    if (t2.isObjectPattern(path2.node.id) && t2.isCallExpression(path2.node.init) && t2.isIdentifier(path2.node.init.callee, {
                       name: "useParams"
                     })) {
                       const hasParam = path2.node.id.properties.some(
-                        (prop) => t.isObjectProperty(prop) && t.isIdentifier(prop.key, { name: modelParam })
+                        (prop) => t2.isObjectProperty(prop) && t2.isIdentifier(prop.key, { name: modelParam })
                       );
                       if (hasParam) {
                         modelParamFound = true;
@@ -44540,7 +44714,7 @@ var require_modify = __commonJS({
                 });
               }
             }
-            path.replaceWith(t.cloneNode(fragmentAst, true));
+            path.replaceWith(t2.cloneNode(fragmentAst, true));
             if ((modelWasAdded || modelWasReplaced) && hasNewModel) {
               checkMissingImports(ast, newModel);
             }
@@ -44578,7 +44752,7 @@ var require_modify = __commonJS({
                   if (src === `../models/${oldModel}`) {
                     let changed = false;
                     path2.node.specifiers = path2.node.specifiers.filter((spec) => {
-                      if (t.isImportSpecifier(spec)) {
+                      if (t2.isImportSpecifier(spec)) {
                         const key = spec.imported.name;
                         if (key === oldModel && !usesOldModel) {
                           changed = true;
@@ -44589,7 +44763,7 @@ var require_modify = __commonJS({
                           return false;
                         }
                       }
-                      if (t.isImportDefaultSpecifier(spec) && spec.local.name === oldModel && !usesOldModel) {
+                      if (t2.isImportDefaultSpecifier(spec) && spec.local.name === oldModel && !usesOldModel) {
                         changed = true;
                         return false;
                       }
@@ -44624,24 +44798,49 @@ var require_modify = __commonJS({
 var require_delete = __commonJS({
   "transforms/delete.js"(exports2, module2) {
     var {
-      t,
-      parser,
+      t: t2,
       safeTraverse,
       generate,
       getAttrValue,
       extractObjectName,
-      toCapitalize
+      toCapitalize,
+      isCustomComponent
     } = require_utils2();
+    var deletedCustomComponents = /* @__PURE__ */ new Set();
+    function processDivSubtree(path, ast, referenceId2) {
+      const node = path.node;
+      const model = getAttrValue(node, "data-rwf-model");
+      if (model) {
+        removeModelHooks(path, ast, model, referenceId2);
+      }
+      for (const childPath of path.get("children")) {
+        if (!childPath.isJSXElement())
+          continue;
+        const childName = childPath.node.openingElement.name.name;
+        if (isCustomComponent(childName)) {
+          deletedCustomComponents.add(childName);
+        }
+        if (childName === "div") {
+          const childReferenceId = getAttrValue(childPath.node, "data-id");
+          processDivSubtree(childPath, ast, childReferenceId);
+        } else if (childName === "form") {
+          const childModel = getAttrValue(childPath.node, "data-rwf-model");
+          const childMethod = getAttrValue(childPath.node, "data-rwf-method");
+          if (childModel && childMethod) {
+            removeFormLogic(ast, childModel, childMethod);
+          }
+        }
+        if (childName === "button") {
+          removeButtonLogic(childPath, ast);
+        }
+      }
+    }
     function cleanupModelImports(ast, model) {
-      const newAst = parser.parse(generate(ast).code, {
-        sourceType: "module",
-        plugins: ["jsx", "typescript"]
-      });
       const defaults = `${model}Defaults`;
       let usesOldModel = false;
       let usesDefaultModel = false;
       let usesOldModelService = false;
-      safeTraverse(newAst, {
+      safeTraverse(ast, {
         Identifier(path) {
           if (path.findParent((p) => p.isImportDeclaration()))
             return;
@@ -44666,7 +44865,7 @@ var require_delete = __commonJS({
           }
           if (src === `../models/${model}`) {
             path.node.specifiers = path.node.specifiers.filter((spec) => {
-              if (t.isImportSpecifier(spec)) {
+              if (t2.isImportSpecifier(spec)) {
                 const name = spec.imported.name;
                 if (name === model && !usesOldModel) {
                   return false;
@@ -44675,7 +44874,7 @@ var require_delete = __commonJS({
                   return false;
                 }
               }
-              if (t.isImportDefaultSpecifier(spec) && spec.local.name === model && !usesOldModel) {
+              if (t2.isImportDefaultSpecifier(spec) && spec.local.name === model && !usesOldModel) {
                 return false;
               }
               return true;
@@ -44701,7 +44900,7 @@ var require_delete = __commonJS({
             }
           }
         });
-        cleanupCustomComponentImports(ast, model);
+        cleanupModelImports(ast, model);
       }
     }
     function removeModelHooks(mainPath, ast, model, referenceId2) {
@@ -44754,6 +44953,7 @@ var require_delete = __commonJS({
           }
         });
       }
+      cleanupModelImports(ast, model);
     }
     function removeFormLogic(ast, model, method) {
       const capitalizeMethod = toCapitalize(method);
@@ -44761,11 +44961,11 @@ var require_delete = __commonJS({
       safeTraverse(ast, {
         ExpressionStatement(path) {
           const expr = path.node.expression;
-          if (t.isCallExpression(expr) && t.isIdentifier(expr.callee, { name: "useEffect" }) && expr.arguments.length === 2 && t.isArrayExpression(expr.arguments[1])) {
+          if (t2.isCallExpression(expr) && t2.isIdentifier(expr.callee, { name: "useEffect" }) && expr.arguments.length === 2 && t2.isArrayExpression(expr.arguments[1])) {
             const deps = expr.arguments[1].elements;
             const modelIdName = `${model.toLowerCase()}Id`;
             const hasTargetDep = deps.some(
-              (el) => t.isIdentifier(el) && el.name === modelIdName
+              (el) => t2.isIdentifier(el) && el.name === modelIdName
             );
             if (hasTargetDep) {
               path.remove();
@@ -44789,8 +44989,31 @@ var require_delete = __commonJS({
           }
         }
       });
+      cleanupModelImports(ast, model);
     }
-    function cleanupCustomComponentImports(ast, name) {
+    function cleanupCustomComponentImports(ast, componentName) {
+      let found = false;
+      safeTraverse(ast, {
+        JSXElement(path) {
+          if (path.node.openingElement.name.type === "JSXIdentifier" && path.node.openingElement.name.name === componentName) {
+            found = true;
+            path.stop();
+          }
+        }
+      });
+      if (!found) {
+        safeTraverse(ast, {
+          ImportDeclaration(path) {
+            const importPath = path.node.source.value;
+            const isTargetImport = path.node.specifiers.some(
+              (spec) => spec.type === "ImportDefaultSpecifier" && spec.local.name === componentName
+            );
+            if (importPath.includes(`../components/${componentName}`) && isTargetImport) {
+              path.remove();
+            }
+          }
+        });
+      }
     }
     function del(ast, opts) {
       const { referenceId: referenceId2 } = opts;
@@ -44804,10 +45027,8 @@ var require_delete = __commonJS({
             );
             if (!attr || attr.value.value !== referenceId2)
               return;
-            let deletedComponentName = null;
-            if (path.node.openingElement.name.type === "JSXIdentifier") {
-              deletedComponentName = path.node.openingElement.name.name;
-            }
+            const deletedComponentName = path.node.type === "JSXElement" && path.node.openingElement.name.type === "JSXIdentifier" ? path.node.openingElement.name.name : null;
+            const isCustComp = isCustomComponent(deletedComponentName);
             const model = getAttrValue(path.node, "data-rwf-model");
             const method = getAttrValue(path.node, "data-rwf-method");
             const isDiv = path.node.openingElement.name.name === "div";
@@ -44815,40 +45036,21 @@ var require_delete = __commonJS({
             const isButton = path.node.openingElement.name.name === "button";
             if (isButton)
               removeButtonLogic(path, ast);
-            if (model) {
-              if (isDiv)
-                removeModelHooks(path, ast, model, referenceId2);
-              if (isForm && method)
-                removeFormLogic(ast, model, method);
+            if (isForm && model && method) {
+              removeFormLogic(ast, model, method);
+            }
+            if (isDiv) {
+              processDivSubtree(path, ast, referenceId2);
             }
             path.remove();
-            if (model)
-              cleanupModelImports(ast, model);
-            if (deletedComponentName) {
-              let found = false;
-              safeTraverse(ast, {
-                JSXElement(path2) {
-                  if (path2.node.openingElement.name.type === "JSXIdentifier" && path2.node.openingElement.name.name === deletedComponentName) {
-                    found = true;
-                    path2.stop();
-                  }
-                }
-              });
-              if (!found) {
-                safeTraverse(ast, {
-                  ImportDeclaration(path2) {
-                    const importPath = path2.node.source.value;
-                    const isTargetImport = path2.node.specifiers.some(
-                      (spec) => spec.type === "ImportDefaultSpecifier" && spec.local.name === deletedComponentName
-                    );
-                    if (importPath.includes(
-                      `../components/${deletedComponentName}`
-                    ) && isTargetImport) {
-                      path2.remove();
-                    }
-                  }
-                });
+            if (isDiv) {
+              for (const componentName of deletedCustomComponents) {
+                cleanupCustomComponentImports(ast, componentName);
               }
+              deletedCustomComponents.clear();
+            }
+            if (isCustComp) {
+              cleanupCustomComponentImports(ast, deletedComponentName);
             }
             if (path && typeof path.stop === "function") {
               path.stop();
@@ -44866,7 +45068,7 @@ var require_delete = __commonJS({
 // transforms/refactor-delete.js
 var require_refactor_delete = __commonJS({
   "transforms/refactor-delete.js"(exports2, module2) {
-    var { t, safeTraverse } = require_utils2();
+    var { t: t2, safeTraverse } = require_utils2();
     function refactorDelete(ast, opts) {
       const { referenceId: referenceId2, position } = opts;
       const importName = referenceId2;
@@ -44879,11 +45081,11 @@ var require_refactor_delete = __commonJS({
             }
           },
           CallExpression(path) {
-            if (t.isMemberExpression(path.node.callee) && t.isIdentifier(path.node.callee.object, { name: "React" }) && t.isIdentifier(path.node.callee.property, { name: "lazy" })) {
+            if (t2.isMemberExpression(path.node.callee) && t2.isIdentifier(path.node.callee.object, { name: "React" }) && t2.isIdentifier(path.node.callee.property, { name: "lazy" })) {
               const [firstArg] = path.node.arguments;
-              if (t.isArrowFunctionExpression(firstArg) && t.isCallExpression(firstArg.body) && t.isImport(firstArg.body.callee)) {
+              if (t2.isArrowFunctionExpression(firstArg) && t2.isCallExpression(firstArg.body) && t2.isImport(firstArg.body.callee)) {
                 const importArg = firstArg.body.arguments[0];
-                if (t.isStringLiteral(importArg) && importArg.value === `./views/${importName}`) {
+                if (t2.isStringLiteral(importArg) && importArg.value === `./views/${importName}`) {
                   const varDecl = path.findParent((p) => p.isVariableDeclaration());
                   if (varDecl) {
                     varDecl.remove();
@@ -44927,7 +45129,7 @@ var require_refactor_delete = __commonJS({
 // transforms/create.js
 var require_create = __commonJS({
   "transforms/create.js"(exports2, module2) {
-    var { t, parser, safeTraverse } = require_utils2();
+    var { t: t2, parser, safeTraverse } = require_utils2();
     var template = require_lib7().default;
     function create(ast, opts) {
       const { referenceId: referenceId2, position } = opts;
@@ -44948,7 +45150,7 @@ var require_create = __commonJS({
             return;
           let lastImport = 0;
           path.node.body.forEach((n, i) => {
-            if (t.isImportDeclaration(n))
+            if (t2.isImportDeclaration(n))
               lastImport = i;
           });
           const importNode = template.statement.ast(
@@ -44988,7 +45190,7 @@ var require_create = __commonJS({
 // transforms/reorder.js
 var require_reorder = __commonJS({
   "transforms/reorder.js"(exports2, module2) {
-    var { t, safeTraverse } = require_utils2();
+    var { t: t2, safeTraverse } = require_utils2();
     function reorder(ast) {
       safeTraverse(ast, {
         FunctionDeclaration(path) {
@@ -45012,23 +45214,23 @@ var require_reorder = __commonJS({
           };
           for (const stmtPath of body) {
             const node = stmtPath.node;
-            if (t.isVariableDeclaration(node) && node.declarations[0].init?.callee?.name?.match(/^use[A-Z]/)) {
+            if (t2.isVariableDeclaration(node) && node.declarations[0].init?.callee?.name?.match(/^use[A-Z]/)) {
               groups.router.push(node);
               continue;
             }
-            if (t.isVariableDeclaration(node) && node.declarations[0].init?.callee?.name === "useState") {
+            if (t2.isVariableDeclaration(node) && node.declarations[0].init?.callee?.name === "useState") {
               groups.state.push(node);
               continue;
             }
-            if (t.isVariableDeclaration(node) && node.declarations[0].init?.callee?.name === "useEffect" || t.isExpressionStatement(node) && node.expression.callee?.name === "useEffect") {
+            if (t2.isVariableDeclaration(node) && node.declarations[0].init?.callee?.name === "useEffect" || t2.isExpressionStatement(node) && node.expression.callee?.name === "useEffect") {
               groups.effect.push(node);
               continue;
             }
-            if (t.isVariableDeclaration(node) && (t.isArrowFunctionExpression(node.declarations[0].init) || t.isFunctionExpression(node.declarations[0].init))) {
+            if (t2.isVariableDeclaration(node) && (t2.isArrowFunctionExpression(node.declarations[0].init) || t2.isFunctionExpression(node.declarations[0].init))) {
               groups.handler.push(node);
               continue;
             }
-            if (t.isReturnStatement(node)) {
+            if (t2.isReturnStatement(node)) {
               groups.render.push(node);
               continue;
             }
@@ -45042,7 +45244,7 @@ var require_reorder = __commonJS({
             ...groups.other,
             ...groups.render
           ];
-          path.get("body").node.body = ordered.map((n) => t.cloneDeep(n));
+          path.get("body").node.body = ordered.map((n) => t2.cloneDeep(n));
         }
       });
     }

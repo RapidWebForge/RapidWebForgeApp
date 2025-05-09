@@ -359,7 +359,7 @@ std::string renderComponent(inja::Environment &env,
 
         bool modelIsValid = !model.empty();
 
-        if (!method.empty()) {
+        if (!method.empty() && modelIsValid) {
             if (method == "POST" || method == "PUT") {
                 std::string methodCapitalize;
 
@@ -429,7 +429,7 @@ std::string renderComponent(inja::Environment &env,
 
 std::string renderComponentCallback(inja::Environment &env, inja::Arguments &args)
 {
-    if (args.empty() || !args[0]->is_object()) {
+    if (args.empty() || !args[0]->is_object() || !args[1]->is_string()) {
         fmt::print(stderr, "Invalid argument passed to renderComponentCallback.\n");
         return {};
     }

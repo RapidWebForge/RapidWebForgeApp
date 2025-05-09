@@ -22,6 +22,8 @@ FrontendGenerator::FrontendGenerator(const std::string &projectPath)
     : projectPath(projectPath)
     , frontendRoot(std::make_shared<GenericNode>("FrontendRoot"))
 {
+    this->env.set_trim_blocks(true);
+    this->env.set_lstrip_blocks(true);
     try {
         env.add_callback("render_component", [this](inja::Arguments &args) -> std::string {
             return RenderCallback::renderComponentCallback(this->env, args);
