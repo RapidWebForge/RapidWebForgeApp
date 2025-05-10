@@ -162,9 +162,20 @@ void DeployManager::start()
 void DeployManager::kill()
 {
 #ifdef Q_OS_WIN
-    // Mata TODOS los procesos nginx.exe
+    // 1) Intentar parada amigable si está instalado como servicio
+    QProcess::execute("net", {"stop", "nginx"}); // si corre como Windows Service
+
+    // 2) Si sigue vivo, forzar el cierre
     QProcess::execute("taskkill", {"/F", "/IM", "nginx.exe"});
 #else
+    // 1) Intentar una parada ordenada
+    //    -s quit le dice a nginx que cierre sus workers y luego termine
+    QProcess::execute(QString::fromStdString(ngInxPath), {"-s", "quit"});
+
+    // 2) Pequeña espera para que se cierre
+    QThread::sleep(1);
+
+    // 3) Si aún queda alguno, forzar
     QProcess::execute("pkill", {"-9", "nginx"});
 #endif
 }
