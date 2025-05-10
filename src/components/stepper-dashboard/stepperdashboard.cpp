@@ -231,6 +231,8 @@ void StepperDashboard::onFrontendSchemaLoaded()
 
 StepperDashboard::~StepperDashboard()
 {
+    killNgInx();
+
     if (ui) {
         delete ui;
     }
@@ -557,6 +559,21 @@ void StepperDashboard::toggleMenuButtons(bool active)
     ui->versionsButton->setEnabled(active);
 }
 
+bool StepperDashboard::killNgInx()
+{
+    // Detener Nginx al cerrar el proyecto
+    try {
+        DeployManager deployManager;
+        deployManager.kill();
+        return true;
+    } catch (const std::exception &e) {
+        QMessageBox::warning(this,
+                             "Warning",
+                             "Failed to stop Nginx: " + QString::fromStdString(e.what()));
+        return false;
+    }
+}
+
 void StepperDashboard::onSaveChanges()
 {
     if (isProgressSaved()) {
@@ -710,7 +727,7 @@ void StepperDashboard::onDeployProject()
     CustomProgressDialog *progressDialog = new CustomProgressDialog(deployMessage, this);
     progressDialog->show();
 
-    DeployWorker *worker = new DeployWorker(project.getPath(), ngInxPath, bunPath);
+    DeployWorker *worker = new DeployWorker(project.getPath());
 
     QThread *deployThread = new QThread;
 
@@ -753,18 +770,8 @@ void StepperDashboard::onProjectChange()
         }
     }
 
-    ConfigurationManager configurationManager;
-    // Detener Nginx al cerrar el proyecto
-    try {
-        DeployManager deployManager(project.getPath(),
-                                    configurationManager.getConfiguration().getNgInxPath(),
-                                    configurationManager.getConfiguration().getBunPath());
-        deployManager.kill();
-    } catch (const std::exception &e) {
-        QMessageBox::warning(this,
-                             "Warning",
-                             "Failed to stop Nginx: " + QString::fromStdString(e.what()));
-    }
+    if (!killNgInx())
+        return;
 
     // Cerrar el StepperDashboard
     this->close();
@@ -784,6 +791,9 @@ void StepperDashboard::onCreateProject()
             return;
         }
     }
+
+    if (!killNgInx())
+        return;
 
     // Cerrar el StepperDashboard
     this->close();

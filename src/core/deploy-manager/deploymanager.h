@@ -11,10 +11,8 @@ class DeployManager : public QObject
     Q_OBJECT
 
 public:
-    DeployManager(const std::string &projectPath,
-                  const std::string &ngInxPath,
-                  const std::string &bunPath,
-                  QObject *parent = nullptr);
+    DeployManager(const std::string &projectPath, QObject *parent = nullptr);
+    DeployManager(QObject *parent = nullptr);
     ~DeployManager();
 
     void start();

@@ -10,10 +10,7 @@ class DeployWorker : public QObject
     Q_OBJECT
 
 public:
-    explicit DeployWorker(const std::string &projectPath,
-                          const std::string &ngInxPath,
-                          const std::string &bunPath,
-                          QObject *parent = nullptr);
+    explicit DeployWorker(const std::string &projectPath, QObject *parent = nullptr);
 
     DeployManager &getDeployManager();
 

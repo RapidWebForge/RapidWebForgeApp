@@ -8,6 +8,7 @@
 #include <QTcpSocket>
 #include <QTextStream>
 #include <QThread>
+#include "../../core/configuration-manager/configurationmanager.h"
 #include "../../utils/file/fileutiils.h"
 #include <filesystem>
 #include <fmt/core.h>
@@ -15,21 +16,33 @@
 #include <iostream>
 #include <string>
 
-DeployManager::DeployManager(const std::string &projectPath,
-                             const std::string &ngInxPath,
-                             const std::string &bunPath,
-                             QObject *parent)
+DeployManager::DeployManager(const std::string &projectPath, QObject *parent)
     : QObject(parent)
     , projectPath(projectPath)
-    , ngInxPath(ngInxPath)
-    , bunPath(bunPath)
     , configFilePath(QDir(QString::fromStdString(projectPath)).filePath("nginx.conf"))
     , ngInxDirectory(QFileInfo(configFilePath).absolutePath())
-{}
+{
+    ConfigurationManager confMg;
+
+    ngInxPath = confMg.getConfiguration().getNgInxPath();
+    bunPath = confMg.getConfiguration().getBunPath();
+}
+
+DeployManager::DeployManager(QObject *parent)
+    : QObject(parent)
+    , projectPath("")
+    , configFilePath()
+    , ngInxDirectory()
+{
+    ConfigurationManager confMg;
+
+    ngInxPath = confMg.getConfiguration().getNgInxPath();
+    bunPath = confMg.getConfiguration().getBunPath();
+}
 
 DeployManager::~DeployManager()
 {
-    // kill();
+    kill();
 }
 
 bool isNginxRunning()
@@ -152,8 +165,7 @@ void DeployManager::kill()
     // Mata TODOS los procesos nginx.exe
     QProcess::execute("taskkill", {"/F", "/IM", "nginx.exe"});
 #else
-    QStringList args = {"-s", "stop"};
-    QProcess::execute(QString::fromStdString(ngInxPath), args);
+    QProcess::execute("pkill", {"-9", "nginx"});
 #endif
 }
 

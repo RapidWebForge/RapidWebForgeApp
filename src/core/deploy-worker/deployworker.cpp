@@ -1,12 +1,9 @@
 #include "deployworker.h"
 #include <QMessageBox>
 
-DeployWorker::DeployWorker(const std::string &projectPath,
-                           const std::string &ngInxPath,
-                           const std::string &bunPath,
-                           QObject *parent)
+DeployWorker::DeployWorker(const std::string &projectPath, QObject *parent)
     : QObject(parent)
-    , deployManager(DeployManager(projectPath, ngInxPath, bunPath))
+    , deployManager(DeployManager(projectPath))
 {}
 
 void DeployWorker::process()

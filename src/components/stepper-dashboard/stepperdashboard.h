@@ -67,6 +67,7 @@ private slots:
     void onBackendSchemaLoaded();
     void onFrontendSchemaLoaded();
     void onSaveChanges();
+    bool killNgInx();
     void onCreateVersion();
     void onChangeVersion();
     void onVersionHistory();
