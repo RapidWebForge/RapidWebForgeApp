@@ -130,7 +130,6 @@ std::string renderComponent(inja::Environment &env,
             output += " value=" + inputValue;
 
         if (parentProps.is_object() && !parentProps.empty()) {
-            qDebug().noquote() << parentProps.dump(2);
             std::string model = parentProps.value("model", "");
             std::string method = parentProps.value("method", "");
 
@@ -328,8 +327,9 @@ std::string renderComponent(inja::Environment &env,
                 try {
                     nlohmann::json contextWithNested;
                     contextWithNested["nestedComponent"] = nestedComponent;
+                    contextWithNested["parentProps"] = parentProps;
 
-                    output += env.render(R"({{ render_component(nestedComponent, {}) }})",
+                    output += env.render(R"({{ render_component(nestedComponent, parentProps) }})",
                                          contextWithNested);
                 } catch (const std::exception &e) {
                     fmt::print(stderr, "Error rendering nested component: {}\n", e.what());

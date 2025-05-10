@@ -613,6 +613,32 @@ bool FrontendGenerator::generateInitialFrontendCode()
     return true;
 }
 
+void FrontendGenerator::collectFormContext(const std::shared_ptr<BaseNode> &node,
+                                           const nlohmann::json &currentProps)
+{
+    // 1) Si este nodo es un Form, extrae sus props y los conviertes en JSON
+    nlohmann::json nextProps = currentProps;
+
+    if (node->getNodeType() == "Component") {
+        auto component = std::dynamic_pointer_cast<Component>(node);
+        if (component && componentTypeToString(component->getType()) == "Form") {
+            nlohmann::json componentJson = processComponentToJson(component);
+            nlohmann::json props = componentJson.value("props", nlohmann::json::object());
+            if (!props.value("model", "").empty() && !props.value("method", "").empty()) {
+                nextProps = props;
+            }
+        }
+    }
+
+    // 2) Guarda en el mapa para este nodo cuál es el parentProps efectivo
+    formContext[boost::uuids::to_string(node->getId())] = nextProps;
+
+    // 3) Recorre hijos, pasando nextProps “como heredado”
+    for (auto &child : node->getChildren()) {
+        collectFormContext(child, nextProps);
+    }
+}
+
 bool FrontendGenerator::updateFrontendCode()
 {
     auto oldViews = getChildByType(oldRoot, "Views");
@@ -628,6 +654,10 @@ bool FrontendGenerator::updateFrontendCode()
         qDebug() << "No changes detected, skipping frontend generation.";
         return true;
     }
+
+    // Paso 0: crear el contexto de formularios antes de procesar cambios
+    formContext.clear();
+    collectFormContext(frontendRoot, nlohmann::json::object());
 
     std::vector<NodeOperation> deletes, modifies, inserts;
     // Aplicar cada operación de forma incremental
@@ -884,7 +914,8 @@ std::string FrontendGenerator::getFilePathForNode(std::shared_ptr<BaseNode> &nod
 
 std::string FrontendGenerator::generateNodeFragment(std::shared_ptr<BaseNode> &node)
 {
-    nlohmann::json data, parentProps = nlohmann::json::object();
+    nlohmann::json data;
+    nlohmann::json parentProps = formContext[boost::uuids::to_string(node->getId())];
     std::string templateString = "{{ render_component(data, parentProps) }}";
 
     // Determinar qué tipo de nodo es y cargar el JSON y plantilla adecuada
@@ -903,32 +934,6 @@ std::string FrontendGenerator::generateNodeFragment(std::shared_ptr<BaseNode> &n
             return "";
         }
         data = processComponentToJson(component);
-
-        if (componentTypeToString(component->getType()) == "Input") {
-            // Subir por los ancestros hasta encontrar un Form
-            auto ancestor = component->getParent();
-            std::shared_ptr<Component> formParent = nullptr;
-            while (ancestor) {
-                auto compParent = std::dynamic_pointer_cast<Component>(ancestor);
-                if (compParent && componentTypeToString(compParent->getType()) == "Form") {
-                    formParent = compParent;
-                    break;
-                }
-                ancestor = ancestor->getParent();
-            }
-            if (formParent) {
-                // Procesar sólo si existe un Form en la cadena de padres
-                nlohmann::json parentJson = processComponentToJson(formParent);
-                if (parentJson.contains("props")) {
-                    auto props = parentJson.value("props", nlohmann::json::object());
-                    std::string model = props.value("model", "");
-                    std::string method = props.value("method", "");
-                    if (!model.empty() && !method.empty()) {
-                        parentProps = props;
-                    }
-                }
-            }
-        }
     } else {
         fmt::print(stderr,
                    "generateNodeFragment: Tipo de nodo no soportado para generación de "

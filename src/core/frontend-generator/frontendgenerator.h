@@ -7,6 +7,7 @@
 #include <inja/inja.hpp>
 #include <nlohmann/json.hpp>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 class FrontendGenerator
@@ -32,8 +33,11 @@ private:
     std::shared_ptr<BaseNode> frontendRoot;
     std::shared_ptr<BaseNode> oldRoot;
     inja::Environment env;
+    std::unordered_map<std::string, nlohmann::json> formContext;
 
     void initializeCustomComponentsCache();
+    void collectFormContext(const std::shared_ptr<BaseNode> &node,
+                            const nlohmann::json &currentProps);
 
     void generateCodeForNode(const std::shared_ptr<BaseNode> &node);
     // Schema
