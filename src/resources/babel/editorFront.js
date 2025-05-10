@@ -12,14 +12,14 @@ var require_lib = __commonJS({
     function _objectWithoutPropertiesLoose(r, e) {
       if (null == r)
         return {};
-      var t2 = {};
+      var t = {};
       for (var n in r)
         if ({}.hasOwnProperty.call(r, n)) {
           if (-1 !== e.indexOf(n))
             continue;
-          t2[n] = r[n];
+          t[n] = r[n];
         }
-      return t2;
+      return t;
     }
     var Position = class {
       constructor(line, col, index) {
@@ -6946,7 +6946,7 @@ var require_lib = __commonJS({
       }
       tsParseTypeOrTypePredicateAnnotation(returnToken) {
         return this.tsInType(() => {
-          const t2 = this.startNode();
+          const t = this.startNode();
           this.expect(returnToken);
           const node = this.startNode();
           const asserts = !!this.tsTryParse(this.tsParseTypePredicateAsserts.bind(this));
@@ -6961,26 +6961,26 @@ var require_lib = __commonJS({
               this.resetStartLocationFromNode(thisTypePredicate, node);
               thisTypePredicate.asserts = true;
             }
-            t2.typeAnnotation = thisTypePredicate;
-            return this.finishNode(t2, "TSTypeAnnotation");
+            t.typeAnnotation = thisTypePredicate;
+            return this.finishNode(t, "TSTypeAnnotation");
           }
           const typePredicateVariable = this.tsIsIdentifier() && this.tsTryParse(this.tsParseTypePredicatePrefix.bind(this));
           if (!typePredicateVariable) {
             if (!asserts) {
-              return this.tsParseTypeAnnotation(false, t2);
+              return this.tsParseTypeAnnotation(false, t);
             }
             node.parameterName = this.parseIdentifier();
             node.asserts = asserts;
             node.typeAnnotation = null;
-            t2.typeAnnotation = this.finishNode(node, "TSTypePredicate");
-            return this.finishNode(t2, "TSTypeAnnotation");
+            t.typeAnnotation = this.finishNode(node, "TSTypePredicate");
+            return this.finishNode(t, "TSTypeAnnotation");
           }
           const type = this.tsParseTypeAnnotation(false);
           node.parameterName = typePredicateVariable;
           node.typeAnnotation = type;
           node.asserts = asserts;
-          t2.typeAnnotation = this.finishNode(node, "TSTypePredicate");
-          return this.finishNode(t2, "TSTypeAnnotation");
+          t.typeAnnotation = this.finishNode(node, "TSTypePredicate");
+          return this.finishNode(t, "TSTypeAnnotation");
         });
       }
       tsTryParseTypeOrTypePredicateAnnotation() {
@@ -7017,13 +7017,13 @@ var require_lib = __commonJS({
         }
         return true;
       }
-      tsParseTypeAnnotation(eatColon = true, t2 = this.startNode()) {
+      tsParseTypeAnnotation(eatColon = true, t = this.startNode()) {
         this.tsInType(() => {
           if (eatColon)
             this.expect(14);
-          t2.typeAnnotation = this.tsParseType();
+          t.typeAnnotation = this.tsParseType();
         });
-        return this.finishNode(t2, "TSTypeAnnotation");
+        return this.finishNode(t, "TSTypeAnnotation");
       }
       tsParseType() {
         assert(this.state.inType);
@@ -8919,7 +8919,7 @@ var require_lib = __commonJS({
           }
           const topicToken = pluginsMap.get("pipelineOperator").topicToken;
           if (!TOPIC_TOKENS.includes(topicToken)) {
-            const tokenList = TOPIC_TOKENS.map((t2) => `"${t2}"`).join(", ");
+            const tokenList = TOPIC_TOKENS.map((t) => `"${t}"`).join(", ");
             throw new Error(`"pipelineOperator" in "proposal": "hack" mode also requires a "topicToken" option whose value must be one of: ${tokenList}.`);
           }
           {
@@ -32552,7 +32552,7 @@ var require_typescript2 = __commonJS({
       this.tokenChar(60);
       let printTrailingSeparator = parent.type === "ArrowFunctionExpression" && node.params.length === 1;
       if (this.tokenMap && node.start != null && node.end != null) {
-        printTrailingSeparator && (printTrailingSeparator = !!this.tokenMap.find(node, (t2) => this.tokenMap.matchesOriginal(t2, ",")));
+        printTrailingSeparator && (printTrailingSeparator = !!this.tokenMap.find(node, (t) => this.tokenMap.matchesOriginal(t, ",")));
         printTrailingSeparator || (printTrailingSeparator = this.shouldPrintTrailingComma(">"));
       }
       this.printList(node.params, printTrailingSeparator);
@@ -35457,8 +35457,8 @@ var require_renamer = __commonJS({
       value: true
     });
     exports2.default = void 0;
-    var t2 = require_lib4();
-    var _t = t2;
+    var t = require_lib4();
+    var _t = t;
     var _traverseNode = require_traverse_node();
     var _visitors = require_visitors();
     var _context = require_context2();
@@ -35526,7 +35526,7 @@ var require_renamer = __commonJS({
           const {
             declaration
           } = maybeExportDeclar.node;
-          if (t2.isDeclaration(declaration) && !declaration.id) {
+          if (t.isDeclaration(declaration) && !declaration.id) {
             return;
           }
         }
@@ -35562,11 +35562,11 @@ var require_renamer = __commonJS({
         const skipKeys = {
           discriminant: true
         };
-        if (t2.isMethod(blockToTraverse)) {
+        if (t.isMethod(blockToTraverse)) {
           if (blockToTraverse.computed) {
             skipKeys.key = true;
           }
-          if (!t2.isObjectMethod(blockToTraverse)) {
+          if (!t.isObjectMethod(blockToTraverse)) {
             skipKeys.decorators = true;
           }
         }
@@ -37307,7 +37307,7 @@ var require_scope = __commonJS({
     var _binding = require_binding();
     var _globals = require_globals2();
     var _t = require_lib4();
-    var t2 = _t;
+    var t = _t;
     var _cache = require_cache();
     var {
       assignmentExpression,
@@ -37515,7 +37515,7 @@ var require_scope = __commonJS({
         parent.registerDeclaration(path);
       },
       ReferencedIdentifier(path, state) {
-        if (t2.isTSQualifiedName(path.parent) && path.parent.right === path.node) {
+        if (t.isTSQualifiedName(path.parent) && path.parent.right === path.node) {
           return;
         }
         if (path.parentPath.isTSImportEqualsDeclaration())
@@ -37941,7 +37941,7 @@ var require_scope = __commonJS({
         } else if (isCallExpression(node)) {
           return matchesPattern(node.callee, "Symbol.for") && !this.hasBinding("Symbol", {
             noGlobals: true
-          }) && node.arguments.length === 1 && t2.isStringLiteral(node.arguments[0]);
+          }) && node.arguments.length === 1 && t.isStringLiteral(node.arguments[0]);
         } else {
           return isPureish(node);
         }
@@ -40652,14 +40652,14 @@ var require_options = __commonJS({
     function _objectWithoutPropertiesLoose(r, e) {
       if (null == r)
         return {};
-      var t2 = {};
+      var t = {};
       for (var n in r)
         if ({}.hasOwnProperty.call(r, n)) {
           if (-1 !== e.indexOf(n))
             continue;
-          t2[n] = r[n];
+          t[n] = r[n];
         }
-      return t2;
+      return t;
     }
     function merge(a, b) {
       const {
@@ -42706,7 +42706,7 @@ var require_path = __commonJS({
     var _index = require_lib8();
     var _index2 = require_scope();
     var _t = require_lib4();
-    var t2 = _t;
+    var t = _t;
     var cache = require_cache();
     var _generator = require_lib5();
     var NodePath_ancestry = require_ancestry();
@@ -42982,9 +42982,9 @@ var require_path = __commonJS({
         _getPattern: NodePath_family._getPattern
       });
     }
-    for (const type of t2.TYPES) {
+    for (const type of t.TYPES) {
       const typeKey = `is${type}`;
-      const fn = t2[typeKey];
+      const fn = t[typeKey];
       NodePath_Final.prototype[typeKey] = function(opts) {
         return fn(this.node, opts);
       };
@@ -42998,8 +42998,8 @@ var require_path = __commonJS({
     for (const type of Object.keys(virtualTypes)) {
       if (type[0] === "_")
         continue;
-      if (!t2.TYPES.includes(type))
-        t2.TYPES.push(type);
+      if (!t.TYPES.includes(type))
+        t.TYPES.push(type);
     }
   }
 });
@@ -43204,7 +43204,7 @@ var require_context2 = __commonJS({
     var _traverseNode = require_traverse_node();
     var _index = require_path();
     var _removal = require_removal();
-    var t2 = require_lib4();
+    var t = require_lib4();
     function call(key) {
       const opts = this.opts;
       this.debug(key);
@@ -43409,7 +43409,7 @@ var require_context2 = __commonJS({
         context,
         node
       } = this;
-      if (!t2.isPrivate(node) && node.computed) {
+      if (!t.isPrivate(node) && node.computed) {
         context.maybeQueue(this.get("key"));
       }
       if (node.decorators) {
@@ -43555,7 +43555,7 @@ var require_utils2 = __commonJS({
     var parser = require_lib();
     var generate = require_lib5().default;
     var traverse = require_lib8().default;
-    var t2 = require_lib4();
+    var t = require_lib4();
     var safeTraverse = (ast, visitor) => {
       try {
         traverse(ast, visitor);
@@ -43598,48 +43598,48 @@ var require_utils2 = __commonJS({
         (node) => node.type === "ImportDeclaration" && node.source.value === `../services/${model}Service`
       );
       const importDeclIndex = ast.program.body.findIndex(
-        (node) => t2.isImportDeclaration(node) && node.source.value === `../models/${model}`
+        (node) => t.isImportDeclaration(node) && node.source.value === `../models/${model}`
       );
       if (importDeclIndex !== -1) {
         const importDecl = ast.program.body[importDeclIndex];
-        const hasDefault = importDecl.specifiers.some(t2.isImportDefaultSpecifier);
+        const hasDefault = importDecl.specifiers.some(t.isImportDefaultSpecifier);
         if (!hasDefault) {
           importDecl.specifiers = importDecl.specifiers.filter(
-            (spec) => !(t2.isImportSpecifier(spec) && spec.imported.name === model)
+            (spec) => !(t.isImportSpecifier(spec) && spec.imported.name === model)
           );
           importDecl.specifiers.unshift(
-            t2.importDefaultSpecifier(t2.identifier(model))
+            t.importDefaultSpecifier(t.identifier(model))
           );
         }
         const defaultsName = `${model}Defaults`;
         const hasDefaults = importDecl.specifiers.some(
-          (spec) => t2.isImportSpecifier(spec) && spec.imported.name === defaultsName
+          (spec) => t.isImportSpecifier(spec) && spec.imported.name === defaultsName
         );
         if (!hasDefaults) {
           importDecl.specifiers.push(
-            t2.importSpecifier(
-              t2.identifier(defaultsName),
-              t2.identifier(defaultsName)
+            t.importSpecifier(
+              t.identifier(defaultsName),
+              t.identifier(defaultsName)
             )
           );
         }
       } else {
-        const newImport = t2.importDeclaration(
+        const newImport = t.importDeclaration(
           [
-            t2.importDefaultSpecifier(t2.identifier(model)),
-            t2.importSpecifier(
-              t2.identifier(`${model}Defaults`),
-              t2.identifier(`${model}Defaults`)
+            t.importDefaultSpecifier(t.identifier(model)),
+            t.importSpecifier(
+              t.identifier(`${model}Defaults`),
+              t.identifier(`${model}Defaults`)
             )
           ],
-          t2.stringLiteral(`../models/${model}`)
+          t.stringLiteral(`../models/${model}`)
         );
         ast.program.body.unshift(newImport);
       }
       if (!serviceImportExists) {
-        const svcImport = t2.importDeclaration(
-          [t2.importDefaultSpecifier(t2.identifier(`${model}Service`))],
-          t2.stringLiteral(`../services/${model}Service`)
+        const svcImport = t.importDeclaration(
+          [t.importDefaultSpecifier(t.identifier(`${model}Service`))],
+          t.stringLiteral(`../services/${model}Service`)
         );
         ast.program.body.unshift(svcImport);
       }
@@ -43710,7 +43710,7 @@ var require_utils2 = __commonJS({
       return insertedComponentName && /^[A-Z]/.test(insertedComponentName) && !nativeElements.has(insertedComponentName);
     };
     module2.exports = {
-      t: t2,
+      t,
       generate,
       parser,
       nativeElements,
@@ -43800,7 +43800,7 @@ var require_generateGetEffect = __commonJS({
 var require_insertDivLogic = __commonJS({
   "transforms/handlers/insertDivLogic.js"(exports2, module2) {
     var {
-      t: t2,
+      t,
       safeTraverse,
       getAttrValue,
       checkMissingImports,
@@ -43818,9 +43818,9 @@ var require_insertDivLogic = __commonJS({
         VariableDeclarator(path) {
           if (!path || !path.node)
             return;
-          if (t2.isObjectPattern(path.node.id) && t2.isCallExpression(path.node.init) && t2.isIdentifier(path.node.init.callee, { name: "useParams" })) {
+          if (t.isObjectPattern(path.node.id) && t.isCallExpression(path.node.init) && t.isIdentifier(path.node.init.callee, { name: "useParams" })) {
             const hasParam = path.node.id.properties.some(
-              (prop) => t2.isObjectProperty(prop) && t2.isIdentifier(prop.key, { name: modelParam })
+              (prop) => t.isObjectProperty(prop) && t.isIdentifier(prop.key, { name: modelParam })
             );
             if (hasParam) {
               modelParamFound = true;
@@ -43951,6 +43951,7 @@ var require_generateHandleSubmit = __commonJS({
 var require_insertFormLogic = __commonJS({
   "transforms/handlers/insertFormLogic.js"(exports2, module2) {
     var {
+      t,
       safeTraverse,
       checkMissingImports,
       ensureReactHooksImport,
@@ -44125,7 +44126,7 @@ var require_insertCustomComponentLogic = __commonJS({
 var require_insert = __commonJS({
   "transforms/insert.js"(exports2, module2) {
     var {
-      t: t2,
+      t,
       safeTraverse,
       getAttrValue,
       isCustomComponent
@@ -44146,12 +44147,12 @@ var require_insert = __commonJS({
         const ret = lastReturnPath.node;
         const arg = ret.argument;
         if (arg == null) {
-          ret.argument = t2.cloneNode(fragmentAst, true);
+          ret.argument = t.cloneNode(fragmentAst, true);
           console.log(
             "\u2705 Fragment insertado como \xFAnico argumento del \xFAltimo return."
           );
-        } else if (t2.isJSXElement(arg) && (t2.isJSXIdentifier(arg.openingElement.name, { name: "div" }) || t2.isJSXIdentifier(arg.openingElement.name, { name: "form" }))) {
-          arg.children.push(t2.cloneNode(fragmentAst, true));
+        } else if (t.isJSXElement(arg) && (t.isJSXIdentifier(arg.openingElement.name, { name: "div" }) || t.isJSXIdentifier(arg.openingElement.name, { name: "form" }))) {
+          arg.children.push(t.cloneNode(fragmentAst, true));
           console.log(
             `\u2705 Fragment insertado como hijo de <${arg.openingElement.name.name}> en el \xFAltimo return.`
           );
@@ -44163,13 +44164,13 @@ var require_insert = __commonJS({
         handleDivInsertion(ast, fragmentAst, model, fileName);
       }
       for (const childNode of fragmentAst.children) {
-        if (!t2.isJSXElement(childNode))
+        if (!t.isJSXElement(childNode))
           continue;
         const childName = childNode.openingElement.name.name;
         if (isCustomComponent(childName)) {
           addedCustomComponents.add(childName);
         }
-        const childFrag = t2.cloneNode(childNode, true);
+        const childFrag = t.cloneNode(childNode, true);
         const childModel = getAttrValue(childNode, "data-rwf-model");
         const childMethod = getAttrValue(childNode, "data-rwf-method");
         if (childName === "div") {
@@ -44223,13 +44224,13 @@ var require_insert = __commonJS({
               );
               switch (position) {
                 case "before":
-                  path.insertBefore(t2.cloneNode(fragmentAst, true));
+                  path.insertBefore(t.cloneNode(fragmentAst, true));
                   break;
                 case "after":
-                  path.insertAfter(t2.cloneNode(fragmentAst, true));
+                  path.insertAfter(t.cloneNode(fragmentAst, true));
                   break;
                 case "inner":
-                  path.node.children.push(t2.cloneNode(fragmentAst, true));
+                  path.node.children.push(t.cloneNode(fragmentAst, true));
                   break;
                 default:
                   console.error("\u274C Unknown insert position:", position);
@@ -44260,7 +44261,7 @@ var require_insert = __commonJS({
 var require_modify = __commonJS({
   "transforms/modify.js"(exports2, module2) {
     var {
-      t: t2,
+      t,
       parser,
       safeTraverse,
       generate,
@@ -44373,7 +44374,7 @@ var require_modify = __commonJS({
                         let changed = false;
                         path2.node.specifiers = path2.node.specifiers.filter(
                           (spec) => {
-                            if (t2.isImportSpecifier(spec)) {
+                            if (t.isImportSpecifier(spec)) {
                               const name = spec.imported.name;
                               if (name === buttonModel && !useButtonModel) {
                                 changed = true;
@@ -44384,7 +44385,7 @@ var require_modify = __commonJS({
                                 return false;
                               }
                             }
-                            if (t2.isImportDefaultSpecifier(spec) && spec.local.name === buttonModel && !useButtonModel) {
+                            if (t.isImportDefaultSpecifier(spec) && spec.local.name === buttonModel && !useButtonModel) {
                               changed = true;
                               return false;
                             }
@@ -44483,11 +44484,11 @@ var require_modify = __commonJS({
                   VariableDeclarator(path2) {
                     if (!path2 || !path2.node)
                       return;
-                    if (t2.isObjectPattern(path2.node.id) && t2.isCallExpression(path2.node.init) && t2.isIdentifier(path2.node.init.callee, {
+                    if (t.isObjectPattern(path2.node.id) && t.isCallExpression(path2.node.init) && t.isIdentifier(path2.node.init.callee, {
                       name: "useParams"
                     })) {
                       const hasParam = path2.node.id.properties.some(
-                        (prop) => t2.isObjectProperty(prop) && t2.isIdentifier(prop.key, { name: modelParam })
+                        (prop) => t.isObjectProperty(prop) && t.isIdentifier(prop.key, { name: modelParam })
                       );
                       if (hasParam) {
                         modelParamFound = true;
@@ -44570,13 +44571,13 @@ var require_modify = __commonJS({
                   safeTraverse(ast, {
                     ExpressionStatement(path2) {
                       const expr = path2.node.expression;
-                      if (t2.isCallExpression(expr) && t2.isIdentifier(expr.callee, {
+                      if (t.isCallExpression(expr) && t.isIdentifier(expr.callee, {
                         name: "useEffect"
-                      }) && expr.arguments.length === 2 && t2.isArrayExpression(expr.arguments[1])) {
+                      }) && expr.arguments.length === 2 && t.isArrayExpression(expr.arguments[1])) {
                         const deps = expr.arguments[1].elements;
                         const modelIdName = `${oldModel.toLowerCase()}Id`;
                         const hasTargetDep = deps.some(
-                          (el) => t2.isIdentifier(el) && el.name === modelIdName
+                          (el) => t.isIdentifier(el) && el.name === modelIdName
                         );
                         if (hasTargetDep) {
                           path2.remove();
@@ -44629,11 +44630,11 @@ var require_modify = __commonJS({
                 let modelParamFound = false;
                 safeTraverse(ast, {
                   VariableDeclarator(path2) {
-                    if (t2.isObjectPattern(path2.node.id) && t2.isCallExpression(path2.node.init) && t2.isIdentifier(path2.node.init.callee, {
+                    if (t.isObjectPattern(path2.node.id) && t.isCallExpression(path2.node.init) && t.isIdentifier(path2.node.init.callee, {
                       name: "useParams"
                     })) {
                       const hasParam = path2.node.id.properties.some(
-                        (prop) => t2.isObjectProperty(prop) && t2.isIdentifier(prop.key, { name: modelParam })
+                        (prop) => t.isObjectProperty(prop) && t.isIdentifier(prop.key, { name: modelParam })
                       );
                       if (hasParam) {
                         modelParamFound = true;
@@ -44714,7 +44715,7 @@ var require_modify = __commonJS({
                 });
               }
             }
-            path.replaceWith(t2.cloneNode(fragmentAst, true));
+            path.replaceWith(t.cloneNode(fragmentAst, true));
             if ((modelWasAdded || modelWasReplaced) && hasNewModel) {
               checkMissingImports(ast, newModel);
             }
@@ -44752,7 +44753,7 @@ var require_modify = __commonJS({
                   if (src === `../models/${oldModel}`) {
                     let changed = false;
                     path2.node.specifiers = path2.node.specifiers.filter((spec) => {
-                      if (t2.isImportSpecifier(spec)) {
+                      if (t.isImportSpecifier(spec)) {
                         const key = spec.imported.name;
                         if (key === oldModel && !usesOldModel) {
                           changed = true;
@@ -44763,7 +44764,7 @@ var require_modify = __commonJS({
                           return false;
                         }
                       }
-                      if (t2.isImportDefaultSpecifier(spec) && spec.local.name === oldModel && !usesOldModel) {
+                      if (t.isImportDefaultSpecifier(spec) && spec.local.name === oldModel && !usesOldModel) {
                         changed = true;
                         return false;
                       }
@@ -44798,7 +44799,7 @@ var require_modify = __commonJS({
 var require_delete = __commonJS({
   "transforms/delete.js"(exports2, module2) {
     var {
-      t: t2,
+      t,
       safeTraverse,
       generate,
       getAttrValue,
@@ -44865,7 +44866,7 @@ var require_delete = __commonJS({
           }
           if (src === `../models/${model}`) {
             path.node.specifiers = path.node.specifiers.filter((spec) => {
-              if (t2.isImportSpecifier(spec)) {
+              if (t.isImportSpecifier(spec)) {
                 const name = spec.imported.name;
                 if (name === model && !usesOldModel) {
                   return false;
@@ -44874,7 +44875,7 @@ var require_delete = __commonJS({
                   return false;
                 }
               }
-              if (t2.isImportDefaultSpecifier(spec) && spec.local.name === model && !usesOldModel) {
+              if (t.isImportDefaultSpecifier(spec) && spec.local.name === model && !usesOldModel) {
                 return false;
               }
               return true;
@@ -44961,11 +44962,11 @@ var require_delete = __commonJS({
       safeTraverse(ast, {
         ExpressionStatement(path) {
           const expr = path.node.expression;
-          if (t2.isCallExpression(expr) && t2.isIdentifier(expr.callee, { name: "useEffect" }) && expr.arguments.length === 2 && t2.isArrayExpression(expr.arguments[1])) {
+          if (t.isCallExpression(expr) && t.isIdentifier(expr.callee, { name: "useEffect" }) && expr.arguments.length === 2 && t.isArrayExpression(expr.arguments[1]) && method === "PUT") {
             const deps = expr.arguments[1].elements;
             const modelIdName = `${model.toLowerCase()}Id`;
             const hasTargetDep = deps.some(
-              (el) => t2.isIdentifier(el) && el.name === modelIdName
+              (el) => t.isIdentifier(el) && el.name === modelIdName
             );
             if (hasTargetDep) {
               path.remove();
@@ -45068,7 +45069,7 @@ var require_delete = __commonJS({
 // transforms/refactor-delete.js
 var require_refactor_delete = __commonJS({
   "transforms/refactor-delete.js"(exports2, module2) {
-    var { t: t2, safeTraverse } = require_utils2();
+    var { t, safeTraverse } = require_utils2();
     function refactorDelete(ast, opts) {
       const { referenceId: referenceId2, position } = opts;
       const importName = referenceId2;
@@ -45081,11 +45082,11 @@ var require_refactor_delete = __commonJS({
             }
           },
           CallExpression(path) {
-            if (t2.isMemberExpression(path.node.callee) && t2.isIdentifier(path.node.callee.object, { name: "React" }) && t2.isIdentifier(path.node.callee.property, { name: "lazy" })) {
+            if (t.isMemberExpression(path.node.callee) && t.isIdentifier(path.node.callee.object, { name: "React" }) && t.isIdentifier(path.node.callee.property, { name: "lazy" })) {
               const [firstArg] = path.node.arguments;
-              if (t2.isArrowFunctionExpression(firstArg) && t2.isCallExpression(firstArg.body) && t2.isImport(firstArg.body.callee)) {
+              if (t.isArrowFunctionExpression(firstArg) && t.isCallExpression(firstArg.body) && t.isImport(firstArg.body.callee)) {
                 const importArg = firstArg.body.arguments[0];
-                if (t2.isStringLiteral(importArg) && importArg.value === `./views/${importName}`) {
+                if (t.isStringLiteral(importArg) && importArg.value === `./views/${importName}`) {
                   const varDecl = path.findParent((p) => p.isVariableDeclaration());
                   if (varDecl) {
                     varDecl.remove();
@@ -45129,7 +45130,7 @@ var require_refactor_delete = __commonJS({
 // transforms/create.js
 var require_create = __commonJS({
   "transforms/create.js"(exports2, module2) {
-    var { t: t2, parser, safeTraverse } = require_utils2();
+    var { t, parser, safeTraverse } = require_utils2();
     var template = require_lib7().default;
     function create(ast, opts) {
       const { referenceId: referenceId2, position } = opts;
@@ -45150,7 +45151,7 @@ var require_create = __commonJS({
             return;
           let lastImport = 0;
           path.node.body.forEach((n, i) => {
-            if (t2.isImportDeclaration(n))
+            if (t.isImportDeclaration(n))
               lastImport = i;
           });
           const importNode = template.statement.ast(
@@ -45190,7 +45191,7 @@ var require_create = __commonJS({
 // transforms/reorder.js
 var require_reorder = __commonJS({
   "transforms/reorder.js"(exports2, module2) {
-    var { t: t2, safeTraverse } = require_utils2();
+    var { t, safeTraverse } = require_utils2();
     function reorder(ast) {
       safeTraverse(ast, {
         FunctionDeclaration(path) {
@@ -45214,23 +45215,23 @@ var require_reorder = __commonJS({
           };
           for (const stmtPath of body) {
             const node = stmtPath.node;
-            if (t2.isVariableDeclaration(node) && node.declarations[0].init?.callee?.name?.match(/^use[A-Z]/)) {
+            if (t.isVariableDeclaration(node) && node.declarations[0].init?.callee?.name?.match(/^use[A-Z]/)) {
               groups.router.push(node);
               continue;
             }
-            if (t2.isVariableDeclaration(node) && node.declarations[0].init?.callee?.name === "useState") {
+            if (t.isVariableDeclaration(node) && node.declarations[0].init?.callee?.name === "useState") {
               groups.state.push(node);
               continue;
             }
-            if (t2.isVariableDeclaration(node) && node.declarations[0].init?.callee?.name === "useEffect" || t2.isExpressionStatement(node) && node.expression.callee?.name === "useEffect") {
+            if (t.isVariableDeclaration(node) && node.declarations[0].init?.callee?.name === "useEffect" || t.isExpressionStatement(node) && node.expression.callee?.name === "useEffect") {
               groups.effect.push(node);
               continue;
             }
-            if (t2.isVariableDeclaration(node) && (t2.isArrowFunctionExpression(node.declarations[0].init) || t2.isFunctionExpression(node.declarations[0].init))) {
+            if (t.isVariableDeclaration(node) && (t.isArrowFunctionExpression(node.declarations[0].init) || t.isFunctionExpression(node.declarations[0].init))) {
               groups.handler.push(node);
               continue;
             }
-            if (t2.isReturnStatement(node)) {
+            if (t.isReturnStatement(node)) {
               groups.render.push(node);
               continue;
             }
@@ -45244,7 +45245,7 @@ var require_reorder = __commonJS({
             ...groups.other,
             ...groups.render
           ];
-          path.get("body").node.body = ordered.map((n) => t2.cloneDeep(n));
+          path.get("body").node.body = ordered.map((n) => t.cloneDeep(n));
         }
       });
     }

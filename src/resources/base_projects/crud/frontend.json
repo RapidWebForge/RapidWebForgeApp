@@ -23,7 +23,7 @@
                         "text": "PRODUCTS"
                       },
                       "type": "Header H1",
-                      "updatedOn": "2025-05-05T23:07:32"
+                      "updatedOn": "2025-05-09T23:08:32"
                     },
                     {
                       "createdOn": "2025-05-05T22:41:09",
@@ -36,21 +36,21 @@
                         "text": "Create"
                       },
                       "type": "Hyperlink",
-                      "updatedOn": "2025-05-05T23:07:32"
+                      "updatedOn": "2025-05-09T23:08:32"
                     }
                   ],
                   "props": {
                     "class": "justify-between items-center mx-4"
                   },
                   "type": "Horizontal Layout",
-                  "updatedOn": "2025-05-05T23:18:26"
+                  "updatedOn": "2025-05-09T23:08:32"
                 }
               ],
               "props": {
                 "class": "gap-10 max-w-4xl w-full"
               },
               "type": "Vertical Layout",
-              "updatedOn": "2025-05-05T23:18:23"
+              "updatedOn": "2025-05-09T23:08:32"
             },
             {
               "createdOn": "2025-05-05T22:42:00",
@@ -68,7 +68,7 @@
                         "text": "Id"
                       },
                       "type": "Paragraph",
-                      "updatedOn": "2025-05-05T23:16:33"
+                      "updatedOn": "2025-05-09T23:08:32"
                     },
                     {
                       "createdOn": "2025-05-05T23:16:09",
@@ -78,14 +78,14 @@
                         "text": "Name"
                       },
                       "type": "Paragraph",
-                      "updatedOn": "2025-05-05T23:16:37"
+                      "updatedOn": "2025-05-09T23:08:32"
                     }
                   ],
                   "props": {
                     "class": "gap-5"
                   },
                   "type": "Horizontal Layout",
-                  "updatedOn": "2025-05-05T23:18:41"
+                  "updatedOn": "2025-05-09T23:08:32"
                 },
                 {
                   "createdOn": "2025-05-05T22:42:50",
@@ -107,7 +107,7 @@
                                 "text": "{obj.id}"
                               },
                               "type": "Paragraph",
-                              "updatedOn": "2025-05-05T23:15:30"
+                              "updatedOn": "2025-05-09T23:08:32"
                             },
                             {
                               "createdOn": "2025-05-05T22:45:01",
@@ -117,14 +117,14 @@
                                 "text": "{obj.name}"
                               },
                               "type": "Paragraph",
-                              "updatedOn": "2025-05-05T23:14:52"
+                              "updatedOn": "2025-05-09T23:08:32"
                             }
                           ],
                           "props": {
                             "class": "flex items-center gap-5"
                           },
                           "type": "Layout",
-                          "updatedOn": "2025-05-05T23:15:26"
+                          "updatedOn": "2025-05-09T23:08:32"
                         },
                         {
                           "createdOn": "2025-05-05T22:44:51",
@@ -141,7 +141,7 @@
                                 "text": "Update"
                               },
                               "type": "Hyperlink",
-                              "updatedOn": "2025-05-05T23:07:32"
+                              "updatedOn": "2025-05-09T23:08:32"
                             },
                             {
                               "createdOn": "2025-05-05T22:45:18",
@@ -153,21 +153,21 @@
                                 "type": "button"
                               },
                               "type": "Button",
-                              "updatedOn": "2025-05-05T23:07:32"
+                              "updatedOn": "2025-05-09T23:08:32"
                             }
                           ],
                           "props": {
                             "class": "flex items-center gap-5"
                           },
                           "type": "Layout",
-                          "updatedOn": "2025-05-05T23:15:54"
+                          "updatedOn": "2025-05-09T23:08:32"
                         }
                       ],
                       "props": {
                         "class": "gap-5 mt-2 items-center justify-between"
                       },
                       "type": "Horizontal Layout",
-                      "updatedOn": "2025-05-05T23:15:42"
+                      "updatedOn": "2025-05-09T23:08:32"
                     }
                   ],
                   "props": {
@@ -176,21 +176,21 @@
                     "model": "Products"
                   },
                   "type": "Model Layout",
-                  "updatedOn": "2025-05-05T23:17:44"
+                  "updatedOn": "2025-05-09T23:08:32"
                 }
               ],
               "props": {
                 "class": "max-w-4xl w-full py-5 px-10 border border-gray-400 rounded-lg  mt-10"
               },
               "type": "Layout",
-              "updatedOn": "2025-05-05T23:18:02"
+              "updatedOn": "2025-05-09T23:08:32"
             }
           ],
           "props": {
             "class": "py-20 flex flex-col justify-center items-center bg-blue-200 h-screen w-full"
           },
           "type": "Layout",
-          "updatedOn": "2025-05-05T23:07:32"
+          "updatedOn": "2025-05-09T23:08:32"
         }
       ],
       "createdOn": "2025-04-27T17:29:53",
@@ -206,53 +206,163 @@
           "id": "62303635-3636-6234-3465-656630303263",
           "nestedComponents": [
             {
+              "createdOn": "2025-05-09T21:21:53",
+              "id": "63336662-3833-6538-6164-616133663631",
+              "props": {
+                "class": "text-2xl",
+                "text": "Create Products"
+              },
+              "type": "Header H2",
+              "updatedOn": "2025-05-09T23:08:32"
+            },
+            {
               "createdOn": "2025-05-03T14:24:28",
               "id": "33366266-3664-6630-3862-356265333931",
               "nestedComponents": [
                 {
-                  "createdOn": "2025-05-03T14:24:49",
-                  "id": "30656665-6635-3631-6163-616339303364",
+                  "createdOn": "2025-05-07T22:34:41",
+                  "id": "66353866-6562-6233-6638-313536643737",
+                  "nestedComponents": [
+                    {
+                      "createdOn": "2025-05-07T22:34:46",
+                      "id": "39643533-3636-3432-3435-393031333133",
+                      "props": {
+                        "class": "font-semibold text-sm",
+                        "for": "name",
+                        "text": "Name"
+                      },
+                      "type": "Label",
+                      "updatedOn": "2025-05-09T23:08:32"
+                    },
+                    {
+                      "createdOn": "2025-05-07T22:34:57",
+                      "id": "62383561-6631-3864-3939-313735303365",
+                      "props": {
+                        "class": "border border-black/80 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-gray-400",
+                        "inputid": "name",
+                        "maxlength": "",
+                        "minlength": "",
+                        "name": "name",
+                        "placeholder": "Enter name",
+                        "required": "true",
+                        "type": "text",
+                        "value": "{postProducts.name}"
+                      },
+                      "type": "Input",
+                      "updatedOn": "2025-05-09T23:11:10"
+                    }
+                  ],
                   "props": {
-                    "class": "",
-                    "inputid": "name",
-                    "maxlength": "",
-                    "minlength": "5",
-                    "name": "name",
-                    "placeholder": "Enter name",
-                    "required": "true",
-                    "type": "text",
-                    "value": "{postProducts.name}"
+                    "class": "gap-5 items-center justify-between w-full"
                   },
-                  "type": "Input",
-                  "updatedOn": "2025-05-05T23:07:32"
+                  "type": "Horizontal Layout",
+                  "updatedOn": "2025-05-09T23:08:32"
+                },
+                {
+                  "createdOn": "2025-05-09T21:16:00",
+                  "id": "37656463-6566-3963-3937-646161383036",
+                  "nestedComponents": [
+                    {
+                      "createdOn": "2025-05-09T21:16:08",
+                      "id": "37303163-3436-3564-3934-633261323634",
+                      "props": {
+                        "class": "font-semibold text-sm",
+                        "for": "description",
+                        "text": "Description"
+                      },
+                      "type": "Label",
+                      "updatedOn": "2025-05-09T23:08:32"
+                    },
+                    {
+                      "createdOn": "2025-05-09T21:16:41",
+                      "id": "66306431-3863-3164-3637-666532343964",
+                      "props": {
+                        "class": "border border-black/80 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-gray-400",
+                        "inputid": "description",
+                        "maxlength": "",
+                        "minlength": "",
+                        "name": "description",
+                        "placeholder": "Enter description",
+                        "required": "true",
+                        "type": "text",
+                        "value": "{postProducts.description}"
+                      },
+                      "type": "Input",
+                      "updatedOn": "2025-05-09T23:10:45"
+                    }
+                  ],
+                  "props": {
+                    "class": "gap-5 items-center justify-between w-full"
+                  },
+                  "type": "Horizontal Layout",
+                  "updatedOn": "2025-05-09T23:08:32"
+                },
+                {
+                  "createdOn": "2025-05-09T21:19:36",
+                  "id": "32613964-6436-6366-6466-346439353765",
+                  "nestedComponents": [
+                    {
+                      "createdOn": "2025-05-09T21:19:39",
+                      "id": "39616439-6438-3735-3936-353032353863",
+                      "props": {
+                        "class": "font-semibold text-sm",
+                        "for": "amount",
+                        "text": "Amount"
+                      },
+                      "type": "Label",
+                      "updatedOn": "2025-05-09T23:08:32"
+                    },
+                    {
+                      "createdOn": "2025-05-09T21:19:42",
+                      "id": "61383465-3533-3061-3734-643631366539",
+                      "props": {
+                        "class": "border border-black/80 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-gray-400",
+                        "inputid": "amount",
+                        "maxlength": "",
+                        "minlength": "",
+                        "name": "amount",
+                        "placeholder": "Enter amount",
+                        "required": "true",
+                        "type": "number",
+                        "value": "{postProducts.amount}"
+                      },
+                      "type": "Input",
+                      "updatedOn": "2025-05-09T23:10:56"
+                    }
+                  ],
+                  "props": {
+                    "class": "gap-5 items-center justify-between w-full"
+                  },
+                  "type": "Horizontal Layout",
+                  "updatedOn": "2025-05-09T23:08:32"
                 },
                 {
                   "createdOn": "2025-05-03T14:25:06",
                   "id": "65643134-3438-3832-3830-643465623935",
                   "props": {
-                    "class": "px-4 py-2 bg-blue-800 text-white cursor-pointer",
+                    "class": "px-4 py-2 bg-blue-800 text-white rounded-lg cursor-pointer mt-5",
                     "click": "",
                     "text": "Enviar",
                     "type": "submit"
                   },
                   "type": "Button",
-                  "updatedOn": "2025-05-05T23:07:32"
+                  "updatedOn": "2025-05-09T23:08:32"
                 }
               ],
               "props": {
-                "class": "",
+                "class": "flex flex-col items-center w-full max-w-sm gap-5 mt-5",
                 "method": "POST",
                 "model": "Products"
               },
               "type": "Form",
-              "updatedOn": "2025-05-05T23:07:32"
+              "updatedOn": "2025-05-09T23:08:32"
             }
           ],
           "props": {
-            "class": ""
+            "class": "py-20 flex flex-col justify-center items-center bg-blue-200 h-screen w-full"
           },
           "type": "Layout",
-          "updatedOn": "2025-05-05T23:07:32"
+          "updatedOn": "2025-05-09T23:08:32"
         }
       ],
       "createdOn": "2025-05-03T14:24:18",
@@ -268,53 +378,163 @@
           "id": "64626362-3134-6335-3464-633064306465",
           "nestedComponents": [
             {
+              "createdOn": "2025-05-09T23:15:30",
+              "id": "63623031-6365-3039-6639-613630363331",
+              "props": {
+                "class": "text-2xl",
+                "text": "Update Product"
+              },
+              "type": "Header H2",
+              "updatedOn": "2025-05-09T23:15:34"
+            },
+            {
               "createdOn": "2025-05-03T14:33:40",
               "id": "37356265-3861-3733-3161-663564323332",
               "nestedComponents": [
                 {
-                  "createdOn": "2025-05-03T14:34:16",
-                  "id": "66373239-6530-3639-6665-373534386162",
+                  "createdOn": "2025-05-07T22:37:44",
+                  "id": "61316139-3832-6630-6661-336235333335",
+                  "nestedComponents": [
+                    {
+                      "createdOn": "2025-05-07T22:37:54",
+                      "id": "32616363-6130-6333-6434-386262323566",
+                      "props": {
+                        "class": "font-semibold text-sm",
+                        "for": "name",
+                        "text": "Name"
+                      },
+                      "type": "Label",
+                      "updatedOn": "2025-05-09T23:16:36"
+                    },
+                    {
+                      "createdOn": "2025-05-07T22:37:56",
+                      "id": "66313337-3763-3435-3338-643438616434",
+                      "props": {
+                        "class": "border border-black/80 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-gray-400",
+                        "inputid": "name",
+                        "maxlength": "",
+                        "minlength": "",
+                        "name": "name",
+                        "placeholder": "Name",
+                        "required": "false",
+                        "type": "text",
+                        "value": "{putProducts.name}"
+                      },
+                      "type": "Input",
+                      "updatedOn": "2025-05-09T23:08:32"
+                    }
+                  ],
                   "props": {
-                    "class": "",
-                    "inputid": "name",
-                    "maxlength": "",
-                    "minlength": "",
-                    "name": "name",
-                    "placeholder": "Enter text",
-                    "required": "",
-                    "type": "text",
-                    "value": "{putProducts.name}"
+                    "class": "gap-5 items-center justify-between w-full"
                   },
-                  "type": "Input",
-                  "updatedOn": "2025-05-05T23:07:32"
+                  "type": "Horizontal Layout",
+                  "updatedOn": "2025-05-09T23:19:07"
+                },
+                {
+                  "createdOn": "2025-05-09T23:16:55",
+                  "id": "37336637-6235-6532-6639-336434356339",
+                  "nestedComponents": [
+                    {
+                      "createdOn": "2025-05-09T23:17:01",
+                      "id": "38623761-3635-3538-3437-633833363530",
+                      "props": {
+                        "class": "font-semibold text-sm",
+                        "for": "description",
+                        "text": "Description"
+                      },
+                      "type": "Label",
+                      "updatedOn": "2025-05-09T23:17:40"
+                    },
+                    {
+                      "createdOn": "2025-05-09T23:16:58",
+                      "id": "65396537-3264-3837-3239-633836313138",
+                      "props": {
+                        "class": "border border-black/80 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-gray-400",
+                        "inputid": "description",
+                        "maxlength": "",
+                        "minlength": "",
+                        "name": "description",
+                        "placeholder": "Description",
+                        "required": "false",
+                        "type": "text",
+                        "value": "{putProducts.description}"
+                      },
+                      "type": "Input",
+                      "updatedOn": "2025-05-09T23:18:10"
+                    }
+                  ],
+                  "props": {
+                    "class": "gap-5 items-center justify-between w-full"
+                  },
+                  "type": "Horizontal Layout",
+                  "updatedOn": "2025-05-09T23:19:11"
+                },
+                {
+                  "createdOn": "2025-05-09T23:17:08",
+                  "id": "38353632-3239-6533-3837-363134663938",
+                  "nestedComponents": [
+                    {
+                      "createdOn": "2025-05-09T23:17:16",
+                      "id": "31336437-3063-3439-6230-653137393138",
+                      "props": {
+                        "class": "font-semibold text-sm",
+                        "for": "amount",
+                        "text": "Amount"
+                      },
+                      "type": "Label",
+                      "updatedOn": "2025-05-09T23:18:34"
+                    },
+                    {
+                      "createdOn": "2025-05-09T23:17:18",
+                      "id": "37633435-3632-3337-6633-303831316537",
+                      "props": {
+                        "class": "border border-black/80 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-gray-400",
+                        "inputid": "amount",
+                        "maxlength": "",
+                        "minlength": "",
+                        "name": "amount",
+                        "placeholder": "Amount",
+                        "required": "false",
+                        "type": "text",
+                        "value": "{putProducts.amount}"
+                      },
+                      "type": "Input",
+                      "updatedOn": "2025-05-09T23:18:52"
+                    }
+                  ],
+                  "props": {
+                    "class": "gap-5 items-center justify-between w-full"
+                  },
+                  "type": "Horizontal Layout",
+                  "updatedOn": "2025-05-09T23:19:14"
                 },
                 {
                   "createdOn": "2025-05-03T14:35:54",
                   "id": "61303665-6537-3831-6333-333936333564",
                   "props": {
-                    "class": "px-4 py-2 bg-blue-800 text-white",
+                    "class": "px-4 py-2 bg-blue-800 text-white rounded-lg cursor-pointer mt-5",
                     "click": "",
                     "text": "Update",
                     "type": "submit"
                   },
                   "type": "Button",
-                  "updatedOn": "2025-05-05T23:07:32"
+                  "updatedOn": "2025-05-09T23:13:18"
                 }
               ],
               "props": {
-                "class": "",
+                "class": "flex flex-col items-center w-full max-w-sm gap-5 mt-5",
                 "method": "PUT",
                 "model": "Products"
               },
               "type": "Form",
-              "updatedOn": "2025-05-05T23:07:32"
+              "updatedOn": "2025-05-09T23:15:11"
             }
           ],
           "props": {
-            "class": ""
+            "class": "py-20 flex flex-col justify-center items-center bg-blue-200 h-screen w-full"
           },
           "type": "Layout",
-          "updatedOn": "2025-05-05T23:07:32"
+          "updatedOn": "2025-05-09T23:08:32"
         }
       ],
       "createdOn": "2025-05-03T14:33:20",
