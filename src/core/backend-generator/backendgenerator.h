@@ -47,10 +47,10 @@ private:
     void parseJson(const nlohmann::json &jsonSchema);
     // Funciones Auxiliares para modificaciones
     std::vector<TransactionOperation> diffVecs();
-    void runEditorScript(const std::vector<std::string> &stdArgs);
-    void applyInsertion(Transaction &transaction);
-    void applyModification(Transaction &transaction);
-    void applyDeletion(Transaction &transaction);
+    bool runEditorScript(const std::vector<std::string> &stdArgs);
+    bool applyInsertion(Transaction &transaction);
+    bool applyModification(Transaction &transaction);
+    bool applyDeletion(Transaction &transaction);
 };
 
 #endif // BACKENDGENERATOR_H
