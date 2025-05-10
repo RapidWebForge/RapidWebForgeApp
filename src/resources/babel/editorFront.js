@@ -43750,12 +43750,12 @@ var require_format = __commonJS({
 var require_generateGetState = __commonJS({
   "transforms/generators/generateGetState.js"(exports2, module2) {
     var template = require_lib7().default;
-    function generateGetState(lowerModelName, modelName, get) {
+    function generateGetState(lowerModelName, modelName2, get) {
       let stateCode;
       if (get === "ALL") {
-        stateCode = `const [${lowerModelName}, set${modelName}] = useState<${modelName}[]>([]);`;
+        stateCode = `const [${lowerModelName}, set${modelName2}] = useState<${modelName2}[]>([]);`;
       } else if (get === "ID") {
-        stateCode = `const [${lowerModelName}, set${modelName}] = useState<${modelName}>();`;
+        stateCode = `const [${lowerModelName}, set${modelName2}] = useState<${modelName2}>();`;
       }
       return template.ast(stateCode, {
         plugins: ["jsx", "typescript"]
@@ -43769,22 +43769,22 @@ var require_generateGetState = __commonJS({
 var require_generateGetEffect = __commonJS({
   "transforms/generators/generateGetEffect.js"(exports2, module2) {
     var template = require_lib7().default;
-    function generateGetEffect(modelName, modelParam, get) {
+    function generateGetEffect(modelName2, modelParam, get) {
       let effectCode;
       if (get === "ALL") {
         effectCode = `
     useEffect(() => {
-        ${modelName}Service.getAll${modelName}()
-        .then(response => set${modelName}(response))
-        .catch(error => console.error("Error fetching ${modelName} data:", error));
+        ${modelName2}Service.getAll${modelName2}()
+        .then(response => set${modelName2}(response))
+        .catch(error => console.error("Error fetching ${modelName2} data:", error));
     }, []);
     `.trim();
       } else if (get === "ID") {
         effectCode = `
     useEffect(() => {
-        ${modelName}Service.get${modelName}ById(${modelParam})
-        .then(response => set${modelName}(response))
-        .catch(error => console.error("Error fetching ${modelName} by id:", error));
+        ${modelName2}Service.get${modelName2}ById(${modelParam})
+        .then(response => set${modelName2}(response))
+        .catch(error => console.error("Error fetching ${modelName2} by id:", error));
     }, [${modelParam}]);
     `.trim();
       }
@@ -43853,14 +43853,14 @@ var require_insertDivLogic = __commonJS({
 var require_generateGetEffectById = __commonJS({
   "transforms/generators/generateGetEffectById.js"(exports2, module2) {
     var template = require_lib7().default;
-    function generateGetEffectById(modelName, modelParam, capitalizeMethod) {
+    function generateGetEffectById(modelName2, modelParam, capitalizeMethod2) {
       const effectCodeUpdate = `useEffect(() => {
-    ${modelName}Service.get${modelName}ById(${modelParam})
+    ${modelName2}Service.get${modelName2}ById(${modelParam})
         .then((response) => {
-            set${capitalizeMethod}${modelName}(response);
+            set${capitalizeMethod2}${modelName2}(response);
         })
         .catch((error) => {
-        console.error("Error fetching ${modelName} data by id:", error);
+        console.error("Error fetching ${modelName2} data by id:", error);
         });
     }, [${modelParam}]);`;
       return template.ast(effectCodeUpdate, {
@@ -43875,8 +43875,8 @@ var require_generateGetEffectById = __commonJS({
 var require_generateFormState = __commonJS({
   "transforms/generators/generateFormState.js"(exports2, module2) {
     var template = require_lib7().default;
-    function generateFormState(modelName, lowerMethod, capitalizeMethod) {
-      const formStateCode = `const [${lowerMethod}${modelName}, set${capitalizeMethod}${modelName}] = useState<${modelName}>(${modelName}Defaults.default${capitalizeMethod}${modelName});`;
+    function generateFormState(modelName2, lowerMethod, capitalizeMethod2) {
+      const formStateCode = `const [${lowerMethod}${modelName2}, set${capitalizeMethod2}${modelName2}] = useState<${modelName2}>(${modelName2}Defaults.default${capitalizeMethod2}${modelName2});`;
       return template.ast(formStateCode, {
         plugins: ["jsx", "typescript"]
       });
@@ -43889,10 +43889,10 @@ var require_generateFormState = __commonJS({
 var require_generateHandleChange = __commonJS({
   "transforms/generators/generateHandleChange.js"(exports2, module2) {
     var template = require_lib7().default;
-    function generateHandleChange(modelName, capitalizeMethod) {
-      const handleChangeCode = `const handleChange${capitalizeMethod}${modelName} = (e: any) => {
+    function generateHandleChange(modelName2, capitalizeMethod2) {
+      const handleChangeCode = `const handleChange${capitalizeMethod2}${modelName2} = (e: any) => {
     const { name, value } = e.target;
-    set${capitalizeMethod}${modelName}((prevData) => ({
+    set${capitalizeMethod2}${modelName2}((prevData) => ({
         ...prevData,
         [name]: value,
     }));
@@ -43909,32 +43909,35 @@ var require_generateHandleChange = __commonJS({
 var require_generateHandleSubmit = __commonJS({
   "transforms/generators/generateHandleSubmit.js"(exports2, module2) {
     var template = require_lib7().default;
-    function generateHandleChange(modelName, method, lowerMethod, methodService, capitalizeMethod) {
+    function generateHandleChange(modelName2, method, lowerMethod, methodService, capitalizeMethod2) {
       let handleSubmitCode;
       if (method === "PUT")
-        handleSubmitCode = `const handleSubmit${capitalizeMethod}${modelName} = async (e: React.FormEvent) => {
+        handleSubmitCode = `const handleSubmit${capitalizeMethod2}${modelName2} = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!${lowerMethod}${modelName}) {
+        if (!${lowerMethod}${modelName2}) {
         console.error("Data is undefined");
         return;
         }
         try {
-        const response = await ${modelName}Service.${methodService}${modelName}ById(${lowerMethod}${modelName}.id, ${lowerMethod}${modelName});
+        const response = await ${modelName2}Service.${methodService}${modelName2}ById(${lowerMethod}${modelName2}.id, ${lowerMethod}${modelName2});
         console.log("Form submitted successfully:", response);
+        alert("Element updated successfully");
         } catch (error) {
         console.error("Error submitting form:", error);
         }
     };`;
       if (method === "POST")
-        handleSubmitCode = `const handleSubmit${capitalizeMethod}${modelName} = async (e: React.FormEvent) => {
+        handleSubmitCode = `const handleSubmit${capitalizeMethod2}${modelName2} = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!${lowerMethod}${modelName}) {
+        if (!${lowerMethod}${modelName2}) {
         console.error("Data is undefined");
         return;
         }
         try {
-        const response = await ${modelName}Service.${methodService}${modelName}(${lowerMethod}${modelName});
+        const response = await ${modelName2}Service.${methodService}${modelName2}(${lowerMethod}${modelName2});
         console.log("Form submitted successfully:", response);
+        alert("Element created successfully");
+        set${capitalizeMethod2}${modelName2}(${modelName2}Defaults.${capitalizeMethod2}${modelName2});
         } catch (error) {
         console.error("Error submitting form:", error);
         }
@@ -43966,7 +43969,7 @@ var require_insertFormLogic = __commonJS({
       const lowerMethod = method.toLowerCase();
       const lowerModel = model.toLowerCase();
       const modelParam = `${lowerModel}Id`;
-      const capitalizeMethod = toCapitalize(method);
+      const capitalizeMethod2 = toCapitalize(method);
       let methodService = null;
       if (method === "PUT")
         methodService = "update";
@@ -43996,22 +43999,22 @@ var require_insertFormLogic = __commonJS({
             const stateNodeNew = generateFormState(
               model,
               lowerMethod,
-              capitalizeMethod
+              capitalizeMethod2
             );
-            const changeNodeNew = generateHandleChange(model, capitalizeMethod);
+            const changeNodeNew = generateHandleChange(model, capitalizeMethod2);
             const submitNodeNew = generateHandleSubmit(
               model,
               method,
               lowerMethod,
               methodService,
-              capitalizeMethod
+              capitalizeMethod2
             );
             let effectNodeNew = null;
             if (modelParamFound && method === "PUT") {
               effectNodeNew = generateGetEffectById(
                 model,
                 modelParam,
-                capitalizeMethod
+                capitalizeMethod2
               );
             }
             path.node.body.body.unshift(stateNodeNew);
@@ -44032,10 +44035,10 @@ var require_insertFormLogic = __commonJS({
 var require_generateDeleteByIdFn = __commonJS({
   "transforms/generators/generateDeleteByIdFn.js"(exports2, module2) {
     var template = require_lib7().default;
-    function generateDeleteByIdFn(modelName) {
-      const code = `const delete${modelName}ById = async (id: number) => {
+    function generateDeleteByIdFn(modelName2) {
+      const code = `const delete${modelName2}ById = async (id: number) => {
     try {
-      const response = await ${modelName}Service.delete${modelName}ById(id);
+      const response = await ${modelName2}Service.delete${modelName2}ById(id);
       console.log("Element deleted successfully:", response);
     } catch (error) {
       console.error("Error deleting element:", error);
@@ -44667,6 +44670,7 @@ var require_modify = __commonJS({
                         try {
                           const response = await ${newModel}Service.${methodService}${newModel}ById(${lowNewMtd}${newModel}.id, ${lowNewMtd}${newModel});
                           console.log("Form submitted successfully:", response);
+                          alert("Element updated successfully");
                         } catch (error) {
                           console.error("Error submitting form:", error);
                         }
@@ -44683,6 +44687,8 @@ var require_modify = __commonJS({
                         try {
                           const response = await ${newModel}Service.${methodService}${newModel}(${lowNewMtd}${newModel});
                           console.log("Form submitted successfully:", response);
+                          alert("Element created successfully");
+                          set${capitalizeMethod}${modelName}(${modelName}Defaults.${capitalizeMethod}${modelName});
                         } catch (error) {
                           console.error("Error submitting form:", error);
                         }
@@ -44957,7 +44963,7 @@ var require_delete = __commonJS({
       cleanupModelImports(ast, model);
     }
     function removeFormLogic(ast, model, method) {
-      const capitalizeMethod = toCapitalize(method);
+      const capitalizeMethod2 = toCapitalize(method);
       const lowerMethod = method.toLowerCase();
       safeTraverse(ast, {
         ExpressionStatement(path) {
@@ -44976,13 +44982,13 @@ var require_delete = __commonJS({
         VariableDeclaration(path) {
           const code = generate(path.node).code;
           if (code.includes(
-            `const [${lowerMethod}${model}, set${capitalizeMethod}${model}]`
+            `const [${lowerMethod}${model}, set${capitalizeMethod2}${model}]`
           ) && code.includes(
-            `useState<${model}>(${model}Defaults.default${capitalizeMethod}${model})`
+            `useState<${model}>(${model}Defaults.default${capitalizeMethod2}${model})`
           )) {
             path.remove();
           }
-          if (code.includes("const handleChange") && code.includes(`set${capitalizeMethod}${model}`) && code.includes("[name]: value")) {
+          if (code.includes("const handleChange") && code.includes(`set${capitalizeMethod2}${model}`) && code.includes("[name]: value")) {
             path.remove();
           }
           if (code.includes("const handleSubmit") && code.includes(`${model}Service.`)) {

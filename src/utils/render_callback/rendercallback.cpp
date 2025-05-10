@@ -753,6 +753,10 @@ std::string renderHandleFoosCallback(inja::Environment &env, inja::Arguments &ar
                 if (method == "POST")
                     handleSubmit += "(" + lowerMethod + modelName + ");\n";
                 handleSubmit += "    console.log(\"Form submitted successfully:\", response);\n";
+                handleSubmit += "alert(\"Element" + methodService + "d successfully\");\n";
+                if (method == "POST")
+                    handleSubmit += "set" + methodCapitalize + modelName + "(" + modelName
+                                    + "Defaults.default" + methodCapitalize + modelName + " );\n";
                 handleChange += "};\n\n";
                 handleSubmit += "  } catch (error) {\n";
                 handleSubmit += "    console.error(\"Error submitting form:\", error);\n";
@@ -904,7 +908,7 @@ std::string renderRequestsCallback(inja::Environment &env, inja::Arguments &args
                     output += " data by id:\", error);\n";
                 output += "    });\n";
                 if (get == "ALL")
-                    output += "}, []); // Empty dependency array to run once\n";
+                    output += "}, []);";
                 if (get == "ID")
                     output += "}, [" + lowerModelParam + "]);\n";
             }

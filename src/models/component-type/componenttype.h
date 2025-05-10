@@ -30,7 +30,7 @@ const std::map<ComponentType, std::map<std::string, std::string>> componentPrope
     {ComponentType::HeaderH1, {{"class", "text-4xl"}, {"text", "Default Header"}}},
     {ComponentType::HeaderH2, {{"class", "text-2xl"}, {"text", "Default Header 2"}}},
     {ComponentType::HeaderH3, {{"class", "text-lg"}, {"text", "Default Header 3"}}},
-    {ComponentType::Paragraph, {{"class", ""}, {"text", "Default Paragraph"}}},
+    {ComponentType::Paragraph, {{"class", "text-sm"}, {"text", "Default Paragraph"}}},
     {ComponentType::Input,
      {{"class",
        "border border-black/80 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 "
