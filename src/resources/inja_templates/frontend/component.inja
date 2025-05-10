@@ -9,7 +9,7 @@ export default function {{ name }}() {
   {%- if length(components) > 0 -%}
     return (
   {%- for comp in components -%}
-      {{- render_component(comp, "") -}}
+      {{- render_component(comp, {}) -}}
   {%- endfor -%}
     );
   {%- else -%}

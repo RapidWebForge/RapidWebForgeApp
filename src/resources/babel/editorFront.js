@@ -44174,7 +44174,7 @@ var require_insert = __commonJS({
         const childMethod = getAttrValue(childNode, "data-rwf-method");
         if (childName === "div") {
           processDivSubtree(ast, childFrag, childModel, fileName);
-        } else if (childName === "form") {
+        } else if (childName === "form" && childModel && childMethod) {
           handleFormInsertion(ast, childModel, childMethod, fileName);
         } else if (childName === "button") {
           handleButtonInsertion(ast, childFrag, fileName);
@@ -44190,7 +44190,7 @@ var require_insert = __commonJS({
       const insertedComponentName = fragmentAst.type === "JSXElement" && fragmentAst.openingElement.name.type === "JSXIdentifier" ? fragmentAst.openingElement.name.name : null;
       const isCustComp = isCustomComponent(insertedComponentName);
       if (isCustComp)
-        handleCustomComponentInsertion(insertedComponentName);
+        handleCustomComponentInsertion(ast, insertedComponentName);
       if (insertedComponentName === "button")
         handleButtonInsertion(ast, fragmentAst, fileName);
       if (insertedComponentName === "form" && method && model) {

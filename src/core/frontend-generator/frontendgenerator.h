@@ -46,18 +46,17 @@ private:
     // Funciones Auxiliares para modificaciones
     std::vector<NodeOperation> diffTrees(std::shared_ptr<BaseNode> &oldNode,
                                          std::shared_ptr<BaseNode> &newNode);
-    void runEditorScript(const std::vector<std::string> stdArgs);
-    void applyInsertion(std::shared_ptr<BaseNode> &node);
-    void applyModification(std::shared_ptr<BaseNode> &node);
-    void applyDeletion(std::shared_ptr<BaseNode> &node);
+    bool runEditorScript(const std::vector<std::string> stdArgs);
+    bool applyInsertion(std::shared_ptr<BaseNode> &node);
+    bool applyModification(std::shared_ptr<BaseNode> &node);
+    bool applyDeletion(std::shared_ptr<BaseNode> &node);
+    bool applyRefactorForDeletedSection(const std::string &sectionName,
+                                        const std::string &sectionType);
     std::string getFilePathForNode(std::shared_ptr<BaseNode> &node);
     std::string generateNodeFragment(std::shared_ptr<BaseNode> &node);
     void getReferenceForInsertion(std::string &referenceId,
                                   std::string &position,
                                   std::shared_ptr<BaseNode> &node);
-    void applyRefactorForDeletedSection(const std::string &sectionName,
-                                        const std::string &sectionType);
-
 };
 
 #endif // FRONTENDGENERATOR_H

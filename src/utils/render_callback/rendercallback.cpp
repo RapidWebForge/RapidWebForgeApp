@@ -31,7 +31,7 @@ std::string renderCustomComponent(const nlohmann::json componentJson)
         output = "<" + componentName + " data-id=\"" + id + "\" />";
     } else {
         fmt::print(stderr, "Unsupported custom component: {}\n", componentName);
-        output = "<!-- Unsupported custom component: " + componentName + " -->";
+        output = {};
     }
     return output;
 }
@@ -46,7 +46,7 @@ std::string renderComponent(inja::Environment &env,
     const auto &props = componentJson["props"];
     if (!props.is_object()) {
         fmt::print(stderr, "Invalid props format: must be an object.\n");
-        return "<!-- Invalid props format -->";
+        return {};
     }
 
     std::string id, className, value;
@@ -70,7 +70,7 @@ std::string renderComponent(inja::Environment &env,
 
         } else {
             fmt::print(stderr, "Unsupported component type: {}\n", type);
-            output = "<!-- Unsupported component type: " + type + " -->";
+            output = {};
         }
     } else if (type == "Paragraph") {
         value = props.value("text", "Default Header");
@@ -329,7 +329,7 @@ std::string renderComponent(inja::Environment &env,
                     nlohmann::json contextWithNested;
                     contextWithNested["nestedComponent"] = nestedComponent;
 
-                    output += env.render("{{ render_component(nestedComponent, \"\") }}",
+                    output += env.render(R"({{ render_component(nestedComponent, {}) }})",
                                          contextWithNested);
                 } catch (const std::exception &e) {
                     fmt::print(stderr, "Error rendering nested component: {}\n", e.what());
@@ -357,9 +357,7 @@ std::string renderComponent(inja::Environment &env,
         std::string model = props.value("model", "");
         std::string method = props.value("method", "");
 
-        bool modelIsValid = !model.empty();
-
-        if (!method.empty() && modelIsValid) {
+        if (!method.empty() && !model.empty()) {
             if (method == "POST" || method == "PUT") {
                 std::string methodCapitalize;
 
@@ -384,7 +382,7 @@ std::string renderComponent(inja::Environment &env,
             output += " data-rwf-method=\"" + method + "\"";
         }
 
-        if (modelIsValid)
+        if (!model.empty())
             output += " data-rwf-model=\"" + model + "\"";
         else {
             sendProps = false;
@@ -402,16 +400,14 @@ std::string renderComponent(inja::Environment &env,
                     if (sendProps) {
                         contextWithNested["parentProps"] = props;
                     } else {
-                        contextWithNested["parentProps"] = "";
+                        contextWithNested["parentProps"] = nlohmann::json::object();
                     }
 
-                    output += env.render(R"(
-                            {{ render_component(nestedComponent, parentProps) }}
-                            )",
+                    output += env.render(R"({{ render_component(nestedComponent, parentProps) }})",
                                          contextWithNested);
                 } catch (const std::exception &e) {
                     fmt::print(stderr, "Error rendering nested component: {}", e.what());
-                    output += "<!-- Error rendering nested component -->";
+                    output += {};
                 }
             }
         } else {
@@ -429,7 +425,7 @@ std::string renderComponent(inja::Environment &env,
 
 std::string renderComponentCallback(inja::Environment &env, inja::Arguments &args)
 {
-    if (args.empty() || !args[0]->is_object() || !args[1]->is_string()) {
+    if (args.empty() || !args[0]->is_object() || !args[1]->is_object()) {
         fmt::print(stderr, "Invalid argument passed to renderComponentCallback.\n");
         return {};
     }
