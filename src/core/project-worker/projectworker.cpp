@@ -1,4 +1,5 @@
 #include "projectworker.h"
+#include <QDebug>
 #include "../code-generator/codegenerator.h"
 #include "../project-manager/projectmanager.h"
 #include "../version-manager/versionmanager.h"
@@ -18,8 +19,9 @@ void ProjectWorker::process()
 
     CodeGenerator codeGenerator(newProject);
     if (codeGenerator.createRunEditor()) {
-        codeGenerator.createBaseBackendProject();
-        codeGenerator.createBaseFrontendProject();
+        if (codeGenerator.createBaseBackendProject())
+            if (codeGenerator.createBaseFrontendProject() && !newProject.getBaseProject().empty())
+                codeGenerator.createApplication();
     }
 
     // Inicializar repositorio Git si versions está habilitado

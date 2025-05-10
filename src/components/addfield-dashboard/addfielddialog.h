@@ -5,9 +5,9 @@
 #include <QComboBox>
 #include <QDialog>
 #include <QString>
-#include "../../core/logging/actionloggerjson.h" // Para manejar logs en formato .json
+#include "../../core/logging/actionloggerjson.h"
 #include "../../models/field/field.h"
-#include "../../models/transaction/transaction.h" // Incluir el modelo de transacción
+#include "../../models/transaction/transaction.h"
 #include <vector>
 
 namespace Ui {

@@ -29,6 +29,7 @@
         <file>recent2.png</file>
         <file>exp.png</file>
         <file>Icono React.webp</file>
+        <file>template.png</file>
     </qresource>
     <qresource prefix="/inja/backend">
         <file alias="controllers">inja_templates/backend/controllers.inja</file>
@@ -40,14 +41,15 @@
     </qresource>
     <qresource prefix="/project_templates">
         <file alias="runEditor">project_templates/runEditor.js</file>
-        <file alias="frontend">project_templates/frontend_template.zip</file>
         <file alias="backend">project_templates/backend_template.zip</file>
+        <file alias="frontend">project_templates/frontend_template.zip</file>
     </qresource>
     <qresource prefix="/inja/frontend">
         <file alias="app">inja_templates/frontend/app.inja</file>
         <file alias="view">inja_templates/frontend/view.inja</file>
         <file alias="model">inja_templates/frontend/model.inja</file>
         <file alias="service">inja_templates/frontend/service.inja</file>
+        <file alias="component">inja_templates/frontend/component.inja</file>
     </qresource>
     <qresource prefix="/inja/nginx">
         <file alias="nginx_conf">inja_templates/nginx/nginx_template.inja</file>
@@ -64,8 +66,6 @@
         <file>loading.gif</file>
     </qresource>
     <qresource prefix="/resources">
-        <file>log_tutorials/begginer.json</file>
-        <file>log_tutorials/intermedium.json</file>
         <file>log_tutorials/begginer/begginer-tutorial-1.json</file>
         <file>log_tutorials/begginer/begginer-tutorial-2.json</file>
         <file>log_tutorials/begginer/begginer-tutorial-3.json</file>
@@ -75,9 +75,15 @@
         <file>log_tutorials/intermedium/intermediate-tutorial-1.json</file>
         <file>log_tutorials/intermedium/intermediate-tutorial-2.json</file>
         <file>log_tutorials/intermedium/intermediate-tutorial-3.json</file>
+        <file>log_tutorials/intermedium/intermediate-tutorial-4.json</file>
+        <file>log_tutorials/intermedium/intermediate-tutorial-5.json</file>
     </qresource>
     <qresource prefix="/babel">
         <file alias="editorFrontend">babel/editorFront.js</file>
         <file alias="editorBackend">babel/editorBack.js</file>
+    </qresource>
+    <qresource prefix="/base_projects/crud">
+        <file alias="backend">base_projects/crud/backend.json</file>
+        <file alias="frontend">base_projects/crud/frontend.json</file>
     </qresource>
 </RCC>

@@ -45,7 +45,7 @@ void CreateTableDialog::on_createButton_clicked()
 
     emit transactionSaved(transaction);
     // Log de la creación del modelo (concatenación directa)
-    loggerJson.logAction("create-new-model", "Modelo creado con nombre " + transactionName);
+    loggerJson.logAction("create-new-model", "Model create with name " + transactionName);
     // Limpiar el campo de texto después de crear la transacción
     ui->tableNameLineEdit->clear(); // Esto limpia el input de la tabla
     accept();

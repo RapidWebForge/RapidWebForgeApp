@@ -1,13 +1,29 @@
 {
   "title": "React: Creando nuevas vistas",
-  "description": "Diferenciar el contenido de nuestra aplicación web con distintas vistas es una de las funciones más importantes a llevar a cabo para poder permitirle al usuario centrarse solo en el contenido que desea ver. Además, es útil en caso se requiera limitar la información que se mostrará.",
+  "description": "En este tutorial aprenderás a crear nuevas vistas dentro de tu aplicación y diferenciarlas claramente de los componentes.",
   "steps": [
     {
-      "goal": "Visualizar distintas vistas en la aplicación web",
-      "comment": "Para crear una nueva vista da click en el botón 'New Section', activa el checkbox de 'Is it a view?' y completa los campos, el nombre de la nueva vista y la url la cual se tendrá que ingresar para acceder al contenido. Luego podrás seleccionarla y añadirle etiquetas HTML al igual que funcionamiento.",
-      "help": "No confundas las vistas con los componentes, las vistas poseen una url para poder acceder en la aplicación web. Por otro lado, los componentes pueden ser reutilizados en cualquier lado y no tienen un acceso determinado a su contenido.",
-      "reference": "",
+      "goal": "Crear una nueva vista",
+      "comment": "Haz clic en 'New Section', activa el checkbox 'Is it a view?', y completa los campos requeridos (nombre y URL).",
+      "help": "Esto generará una nueva ruta accesible desde la aplicación web.",
+      "reference": "https://www.w3schools.com/react/react_router.asp",
       "log": "create-react-view",
+      "completed": "false"
+    },
+    {
+      "goal": "Agregar contenido a la vista",
+      "comment": "Agrega etiquetas HTML desde el Árbol de Componentes a la nueva vista para construir su contenido.",
+      "help": "Piensa en la vista como una página completa, no un fragmento reutilizable.",
+      "reference": "https://www.w3schools.com/react/react_router.asp",
+      "log": "add-html-to-view",
+      "completed": "false"
+    },
+    {
+      "goal": "Navegar entre vistas",
+      "comment": "Prueba tu vista accediendo a la URL definida en el navegador o usando un enlace interno (`<a href='/ruta'>`).",
+      "help": "Asegúrate de que la URL esté bien escrita en el formulario de creación.",
+      "reference": "https://www.w3schools.com/react/react_router.asp",
+      "log": "navigate-between-views",
       "completed": "false"
     }
   ]

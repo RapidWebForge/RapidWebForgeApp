@@ -4,6 +4,7 @@
 #include <QScroller>
 #include <QVBoxLayout>
 #include "../../core/project-manager/projectmanager.h"
+#include "../edit-project/editproject.h"
 #include "../project-preview/projectpreview.h"
 #include "../stepper-dashboard/stepperdashboard.h"
 #include "ui_overviewpanel.h"
@@ -16,12 +17,16 @@ OverviewPanel::OverviewPanel(QWidget *parent)
     ui->setupUi(this);
 
     // Modificar los labels desde el código
-    ui->label_2->setText("Tutorials");
     ui->label_2->setStyleSheet("font-size: 18px; font-weight: bold; color: #333; padding: 5px;");
 
-    ui->label->setText("Recents");
     ui->label->setStyleSheet("font-size: 18px; font-weight: bold; color: #333; padding: 5px;");
 }
+
+OverviewPanel::~OverviewPanel()
+{
+    delete ui;
+}
+
 void OverviewPanel::setupProjects(const std::vector<Project> &projects)
 {
     this->projects = projects;
@@ -52,8 +57,7 @@ void OverviewPanel::setupProjects(const std::vector<Project> &projects)
 
     // Lista de tutoriales con sus rutas
     QMap<QString, QString> tutorials
-        = {
-           {"Beginner: HTML - Introducción a las etiquetas",
+        = {{"Beginner: HTML - Introducción a las etiquetas",
             ":/resources/log_tutorials/begginer/begginer-tutorial-1.json"},
            {"Beginner: HTML - Atributos de las etiquetas",
             ":/resources/log_tutorials/begginer/begginer-tutorial-2.json"},
@@ -65,12 +69,20 @@ void OverviewPanel::setupProjects(const std::vector<Project> &projects)
             ":/resources/log_tutorials/begginer/begginer-tutorial-5.json"},
            {"Beginner: React - Creando nuevas vistas",
             ":/resources/log_tutorials/begginer/begginer-tutorial-6.json"},
-           {"Intermediate: Base de datos - Creando nuestros modelos",
+           {"Intermediate: HTML: Insertar imágenes",
             ":/resources/log_tutorials/intermedium/intermediate-tutorial-1.json"},
-           {"Intermediate: Base de Datos - Relaciones SQL",
+           {"Intermediate: HTML: Crear enlaces",
             ":/resources/log_tutorials/intermedium/intermediate-tutorial-2.json"},
+           {"Intermediate: Base de datos - Creando nuestros modelos",
+            ":/resources/log_tutorials/intermedium/intermediate-tutorial-3.json"},
+           {"Intermediate: Base de Datos - Relaciones SQL",
+            ":/resources/log_tutorials/intermedium/intermediate-tutorial-4.json"},
            {"Intermediate: ORM - Entendiendo el ORM",
-            ":/resources/log_tutorials/intermedium/intermediate-tutorial-3.json"}};
+            ":/resources/log_tutorials/intermedium/intermediate-tutorial-5.json"},
+           {"Advanced: React: Creando formularios",
+            ":/resources/log_tutorials/advanced/advanced-tutorial-1.json"},
+           {"Advanced: React: Recuperando información",
+            ":/resources/log_tutorials/advanced/advanced-tutorial-2.json"}};
 
     int row1 = 0;
     for (auto it = tutorials.begin(); it != tutorials.end(); ++it) {
@@ -179,6 +191,10 @@ void OverviewPanel::setupProjects(const std::vector<Project> &projects)
                 &ProjectPreview::deleteRequested,
                 this,
                 &OverviewPanel::onDeleteProjectRequested);
+        connect(projectPreview,
+                &ProjectPreview::editRequested,
+                this,
+                &OverviewPanel::onEditProjectRequested);
 
         gridLayout->addWidget(projectPreview, row, column);
 
@@ -218,11 +234,11 @@ void OverviewPanel::onAddProjectClicked()
     stepper->show();
 
     // Show when create assistant is closed
-    connect(stepper, &Stepper::destroyed, this, &OverviewPanel::show);
+    connect(stepper, &Stepper::destroyed, projectsPanel, &QWidget::show);
 
-    connect(stepper, &Stepper::backToProjectsPanel, this, [this, stepper]() {
+    connect(stepper, &Stepper::backToProjectsPanel, this, [this, stepper, projectsPanel]() {
         stepper->close();
-        this->show();
+        projectsPanel->show();
     });
 }
 
@@ -249,6 +265,23 @@ void OverviewPanel::onDeleteProjectRequested(int projectId)
                  << "ha sido eliminado exitosamente de la base de datos.";
     } else {
         qDebug() << "Eliminación cancelada para el proyecto con ID:" << projectId;
+    }
+}
+
+void OverviewPanel::onEditProjectRequested(int projectId)
+{
+    qDebug() << "Editando el proyecto con ID:" << projectId;
+
+    ProjectManager projectManager;
+
+    if (auto projectOpt = projectManager.getProjectById(projectId)) {
+        Project project = projectOpt.value();
+
+        EditProject dialog(project, this);
+        dialog.exec();
+    } else {
+        qWarning() << "No se encontró el proyecto con ID:" << projectId;
+        QMessageBox::critical(this, "Error on edit request", "Project id was not found");
     }
 }
 
@@ -321,8 +354,4 @@ void OverviewPanel::onTutorialClicked(const QString &tutorialPath)
     connect(stprDashboard, &StepperDashboard::destroyed, projectsPanel, [projectsPanel]() {
         projectsPanel->show();
     });
-}
-OverviewPanel::~OverviewPanel()
-{
-    delete ui;
 }

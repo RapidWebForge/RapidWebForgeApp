@@ -31,8 +31,10 @@ void ProjectPreview::mousePressEvent(QMouseEvent *event)
 void ProjectPreview::contextMenuEvent(QContextMenuEvent *event)
 {
     QMenu contextMenu(this); // Crea el menú en la pila
+    QAction *editAction = contextMenu.addAction("Editar");
     QAction *deleteAction = contextMenu.addAction("Eliminar");
 
+    connect(editAction, &QAction::triggered, [this]() { emit editRequested(project.getId()); });
     connect(deleteAction, &QAction::triggered, [this]() { emit deleteRequested(project.getId()); });
 
     contextMenu.exec(event->globalPos()); // Ejecuta el menú contextual

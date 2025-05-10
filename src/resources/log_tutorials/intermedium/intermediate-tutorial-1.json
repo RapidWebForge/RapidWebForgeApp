@@ -1,21 +1,21 @@
 {
-  "title": "Base de datos: Creando nuestros modelos",
-  "description": "La gran mayoría de aplicación web utiliza información en su contenido y para poder gestionar ese contenido eficientemente es necesario definir los modelos que se emplearán. Estos modelos estarán compuestos por un nombre que los definirá y sus campos correspondientes. Además, de las relaciones que tendrán con otros modelos.",
+  "title": "HTML: Insertar imágenes",
+  "description": "Agregar imágenes en tu aplicación es esencial para mejorar la experiencia visual y enriquecer el contenido. En este tutorial aprenderás cómo insertar imágenes usando la etiqueta HTML `<img>` y personalizar sus atributos.",
   "steps": [
     {
-      "goal": "Definir cuales serán tus modelos",
-      "comment": "Para poder crear tus modelos utiliza el botón 'New model' y define el nombre que llevará. Es común que los nombres de las tablas sean en plural ya que definirán el conjunto de tus elementos.",
-      "help": "En caso hayas cometido algún error podrás modificar o eliminar dicha tabla.",
-      "reference": "https://database.guide/what-is-a-table/",
-      "log": "create-new-model",
+      "goal": "Agregar una etiqueta de imagen",
+      "comment": "Desde el Árbol de Componentes, selecciona 'Imagen' y arrástralo al árbol de tu vista. Esto insertará una etiqueta `<img>` en tu aplicación.",
+      "help": "Coloca la imagen dentro de un contenedor si deseas alinear o controlar su posición fácilmente.",
+      "reference": "https://www.w3schools.com/html/html_images.asp",
+      "log": "insert-image-tag",
       "completed": "false"
     },
     {
-      "goal": "Agregar campos a los modelos",
-      "comment": "Para poder añadir campos a tus modelos, en primer lugar, selecciona algún modelo. Luego, utiliza el botón 'Add field' y completa los datos necesarios, el tipo de dato, si posee algún constraint y si es alguna llave foránea. En primera instancia, tus campos no deberían llevar llaves foráneas, eso lo veremos en el siguiente tutorial!",
-      "help": "Recuerda que cada tipo de dato es adecuado según el contexto de tu campo a crear. Ten en cuenta como se usarán o a que hacen referencia tus campos para designarles tipos de datos adecuados.",
-      "reference": "https://www.geeksforgeeks.org/components-of-table-in-database/",
-      "log": "add-field-to-model",
+      "goal": "Configurar atributos de la imagen",
+      "comment": "Selecciona la imagen insertada y accede a la configuración para agregar atributos como `src` (ruta de la imagen), `alt` (texto alternativo) y clases de estilo como tamaño o bordes.",
+      "help": "Si la imagen no aparece, asegúrate de que la ruta en `src` sea válida o prueba con una URL pública.",
+      "reference": "https://developer.mozilla.org/en-US/docs/Web/HTML/Element/img",
+      "log": "configure-image-properties",
       "completed": "false"
     }
   ]

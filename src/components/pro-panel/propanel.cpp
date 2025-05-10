@@ -3,17 +3,19 @@
 #include <QMessageBox>
 #include <QVBoxLayout>
 #include "../../core/project-manager/projectmanager.h"
+#include "../edit-project/editproject.h"
 #include "../project-preview/projectpreview.h"
 #include "../stepper-dashboard/stepperdashboard.h"
 #include "ui_propanel.h"
 #include <string>
 
 ProPanel::ProPanel(QWidget *parent)
-    : QDialog(parent)
+    : QWidget(parent)
     , ui(new Ui::ProPanel)
 {
     ui->setupUi(this);
 }
+
 void ProPanel::setupProjects(const std::vector<Project> &projects)
 {
     this->projects = projects;
@@ -86,6 +88,10 @@ void ProPanel::setupProjects(const std::vector<Project> &projects)
                 &ProjectPreview::deleteRequested,
                 this,
                 &ProPanel::onDeleteProjectRequested);
+        connect(projectPreview,
+                &ProjectPreview::editRequested,
+                this,
+                &ProPanel::onEditProjectRequested);
 
         gridLayout->addWidget(projectPreview, row, column);
 
@@ -114,20 +120,25 @@ void ProPanel::onAddProjectClicked()
         return;
     }
 
-    this->hide();
+    QWidget *projectsPanel = this;
+    while (projectsPanel->parentWidget() != nullptr) {
+        projectsPanel = projectsPanel->parentWidget();
+    }
+    projectsPanel->hide();
 
     // When the "+" button is clicked, open the Stepper window
     Stepper *stepper = new Stepper();
     stepper->show();
 
     // Show when create assistant is closed
-    connect(stepper, &Stepper::destroyed, this, &ProPanel::show);
+    connect(stepper, &Stepper::destroyed, projectsPanel, &QWidget::show);
 
-    connect(stepper, &Stepper::backToProjectsPanel, this, [this, stepper]() {
+    connect(stepper, &Stepper::backToProjectsPanel, this, [this, stepper, projectsPanel]() {
         stepper->close();
-        this->show();
+        projectsPanel->show();
     });
 }
+
 void ProPanel::onDeleteProjectRequested(int projectId)
 {
     qDebug() << "Intentando eliminar el proyecto con ID:" << projectId;
@@ -151,6 +162,23 @@ void ProPanel::onDeleteProjectRequested(int projectId)
                  << "ha sido eliminado exitosamente de la base de datos.";
     } else {
         qDebug() << "Eliminación cancelada para el proyecto con ID:" << projectId;
+    }
+}
+
+void ProPanel::onEditProjectRequested(int projectId)
+{
+    qDebug() << "Editando el proyecto con ID:" << projectId;
+
+    ProjectManager projectManager;
+
+    if (auto projectOpt = projectManager.getProjectById(projectId)) {
+        Project project = projectOpt.value();
+
+        EditProject dialog(project, this);
+        dialog.exec();
+    } else {
+        qWarning() << "No se encontró el proyecto con ID:" << projectId;
+        QMessageBox::critical(this, "Error on edit request", "Project id was not found");
     }
 }
 

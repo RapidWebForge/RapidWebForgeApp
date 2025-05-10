@@ -45,6 +45,7 @@ public:
 
     ComponentType getType() const;
     const std::map<std::string, std::string> &getProps() const;
+    std::map<std::string, std::string> &getProps();
     bool isAllowingItems() const;
 
     void setType(ComponentType type);

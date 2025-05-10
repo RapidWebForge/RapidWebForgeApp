@@ -2,21 +2,28 @@
 #include <QFile>
 #include "ui_deleteversion.h"
 
-DeleteVersion::DeleteVersion(QWidget *parent)
+DeleteVersion::DeleteVersion(VersionManager *versionManager, QWidget *parent)
     : QDialog(parent)
     , ui(new Ui::DeleteVersion)
+    , versionManager(versionManager)
     , model(new QStandardItemModel(this))
 {
     ui->setupUi(this);
 
-    // Configurar el modelo para el QListView
-    ui->versionsListView->setModel(model);
-
-    // Conectar el botón de "Delete" para aceptar el diálogo
-    connect(ui->deleteButton, &QPushButton::clicked, this, &QDialog::accept);
-
     // Conectar el botón de "Cancel" para cerrar el diálogo sin cambios
     connect(ui->cancelButton, &QPushButton::clicked, this, &QDialog::reject);
+
+    model->clear();
+
+    // Agregar las versiones al modelo
+    std::vector<std::string> versions = versionManager->listVersions();
+    for (const auto &version : versions) {
+        QStandardItem *item = new QStandardItem(QString::fromStdString(version));
+        model->appendRow(item);
+    }
+
+    // Configurar el modelo para el QListView
+    ui->versionsListView->setModel(model);
 
     applyStyles();
 }
@@ -40,22 +47,21 @@ void DeleteVersion::applyStyles()
     }
 }
 
-void DeleteVersion::setVersions(const std::vector<std::string> &versions)
+void DeleteVersion::on_deleteButton_clicked()
 {
-    model->clear(); // Limpiar el modelo antes de añadir versiones nuevas
+    QString selectedVersion;
 
-    // Agregar las versiones al modelo
-    for (const auto &version : versions) {
-        QStandardItem *item = new QStandardItem(QString::fromStdString(version));
-        model->appendRow(item);
-    }
-}
-
-QString DeleteVersion::getSelectedVersion() const
-{
     QModelIndexList selectedIndexes = ui->versionsListView->selectionModel()->selectedIndexes();
     if (!selectedIndexes.isEmpty()) {
-        return selectedIndexes.first().data().toString();
+        selectedVersion = selectedIndexes.first().data().toString();
     }
-    return QString();
+
+    if (selectedVersion.isEmpty())
+        return;
+
+    // Llamar a VersionManager para crear la versión
+    versionManager->deleteVersion(selectedVersion.toStdString());
+
+    // Cerrar el diálogo
+    accept();
 }

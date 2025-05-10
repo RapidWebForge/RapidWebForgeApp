@@ -1,0 +1,22 @@
+{
+  "title": "React: Recuperando información",
+  "description": "Los ModelLayout permite hacer peticiones GET para recuperar datos del backend de forma automática en RapidWebForge.",
+  "steps": [
+    {
+      "goal": "Ingresar una etiqueta ModelLayout",
+      "comment": "Desde el Árbol de Componentes, inserta un ModelLayout, define el modelo a recuperar y como ejecutará el método GET, por `ID` o para todos `ALL`.",
+      "help": "Sin el campo model, no sabrá de qué entidad recuperar datos. Y sin el campo get no sabrá cómo realizar la recuperación de datos.",
+      "reference": "https://reactjsguru.com/how-to-use-http-get-method-in-react-js/",
+      "log": "insert-model-layout",
+      "completed": "false"
+    },
+    {
+      "goal": "Anidar un componente y mostrar los valores",
+      "comment": "Dentro de ModelLayout inserta un componente (por ejemplo, <p>) para interpolar datos. En el caso sea un método get `ALL` puedes usar {obj.field} y si es un `ID` puedes usar {model.field}",
+      "help": "Puedes consultar los nombres de los campos desde el dashboard backend.",
+      "reference": "https://reactjsguru.com/how-to-use-http-get-method-in-react-js/",
+      "log": "display-model-values",
+      "completed": "false"
+    }
+  ]
+}

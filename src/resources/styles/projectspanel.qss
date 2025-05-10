@@ -33,6 +33,15 @@ QPushButton#projectButton{
     text-align: left; /* Alineación del texto dentro del botón */
 }
 
+QPushButton#templatesButton {
+    font-size: 14px;
+    color: #000000;
+    background-color: #ffffff;
+    border-radius: 5px;
+    padding: 7px 7px;
+    text-align: left; /* Alineación del texto dentro del botón */
+}
+
 QPushButton#configurationButton {
     font-size: 14px;
     color: #000000;
@@ -43,25 +52,19 @@ QPushButton#configurationButton {
 }
 
 
-QPushButton#recentsButton:hover, QPushButton#configurationButton:hover {
+QPushButton#recentsButton:hover,
+QPushButton#tutorialButton:hover,
+QPushButton#projectButton:hover,
+QPushButton#templatesButton:hover,
+QPushButton#configurationButton:hover {
     background-color: #f0f0f0;
 }
 
-QPushButton#recentsButton:pressed, QPushButton#configurationButton:pressed {
-    background-color: #e0e0e0;
-}
-QPushButton#tutorialButton:hover, QPushButton#configurationButton:hover {
-    background-color: #f0f0f0;
-}
-
-QPushButton#tutorialButton:pressed, QPushButton#configurationButton:pressed {
-    background-color: #e0e0e0;
-}
-QPushButton#projectButton:hover, QPushButton#configurationButton:hover {
-    background-color: #f0f0f0;
-}
-
-QPushButton#projectButton:pressed, QPushButton#configurationButton:pressed {
+QPushButton#recentsButton:pressed,
+QPushButton#tutorialButton:pressed,
+QPushButton#projectButton:pressed,
+QPushButton#templatesButton:pressed,
+QPushButton#configurationButton:pressed {
     background-color: #e0e0e0;
 }
 

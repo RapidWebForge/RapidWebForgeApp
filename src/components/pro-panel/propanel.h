@@ -15,7 +15,7 @@ namespace Ui {
 class ProPanel;
 }
 
-class ProPanel : public QDialog
+class ProPanel : public QWidget
 {
     Q_OBJECT
 
@@ -23,7 +23,7 @@ public:
     explicit ProPanel(QWidget *parent = nullptr);
     ~ProPanel();
 
-    void setupProjects(const std::vector<Project> &projects); // 🚀 Agregamos esta función
+    void setupProjects(const std::vector<Project> &projects);
 
 private:
     Ui::ProPanel *ui;
@@ -35,11 +35,12 @@ private slots:
     void onAddProjectClicked();
     void onProjectPreviewClicked(const Project &project);
     void onDeleteProjectRequested(int projectId);
+    void onEditProjectRequested(int projectId);
 
 signals:
-    void projectCreationRequested();
     void projectClicked(const Project &project);
     void deleteRequested(int projectId);
+    void editRequested(int projectId);
 };
 
 #endif // PROPANEL_H

@@ -2,6 +2,7 @@
 #define CONFIGURATIONVIEW_H
 
 #include <QDialog>
+#include <QLineEdit>
 #include "../../core/configuration-manager/configurationmanager.h"
 
 namespace Ui {
@@ -18,6 +19,10 @@ public:
 
 private slots:
     void on_ngInxPathButton_clicked();
+    void on_nodePathButton_clicked();
+    void on_bunPathButton_clicked();
+    void on_mysqlPathButton_clicked();
+
     void on_testButton_clicked();
     void on_saveButton_clicked();
 
@@ -25,6 +30,7 @@ private:
     Ui::ConfigurationView *ui;
     ConfigurationManager configManager;
     bool checkPathValid(const std::string &path, const std::string &versionFlag);
+    void selectDirectoryAndSetUI(QPushButton *button, QLineEdit *lineEdit, const QString &title);
 };
 
 #endif // CONFIGURATIONVIEW_H

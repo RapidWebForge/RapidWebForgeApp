@@ -3,6 +3,7 @@
 
 #include <QKeyEvent>
 #include <QWidget>
+#include <string>
 #include "../../models/project/project.h"
 #include "../backend-assistant/backendassistant.h"
 #include "../creation-assistant/creationassistant.h"
@@ -19,7 +20,7 @@ class Stepper : public QWidget
     Q_OBJECT
 
 public:
-    explicit Stepper(QWidget *parent = nullptr);
+    explicit Stepper(QWidget *parent = nullptr, const std::string& projectTemplate = "");
     ~Stepper();
 
 signals:
@@ -39,6 +40,7 @@ private:
     SummaryAssistant *summaryAssistant;
 
     Project newProject;
+    std::string projectTemplate;
 };
 
 #endif // STEPPER_H

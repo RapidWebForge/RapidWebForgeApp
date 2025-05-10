@@ -1,12 +1,12 @@
 #include "customprogressdialog.h"
 
-CustomProgressDialog::CustomProgressDialog(QWidget *parent)
+CustomProgressDialog::CustomProgressDialog(QString message, QWidget *parent)
     : QDialog(parent)
 {
     setWindowTitle("Loading");
 
     // Crear el mensaje
-    label = new QLabel("Creating project, please wait...", this);
+    label = new QLabel(message, this);
     label->setAlignment(Qt::AlignCenter); // Centrar el texto
 
     // Crear la barra de progreso

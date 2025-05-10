@@ -22,12 +22,20 @@ FrontendGenerator::FrontendGenerator(const std::string &projectPath)
     : projectPath(projectPath)
     , frontendRoot(std::make_shared<GenericNode>("FrontendRoot"))
 {
+    this->env.set_trim_blocks(true);
+    this->env.set_lstrip_blocks(true);
     try {
         env.add_callback("render_component", [this](inja::Arguments &args) -> std::string {
             return RenderCallback::renderComponentCallback(this->env, args);
         });
+        env.add_callback("render_import_params", 1, [this](inja::Arguments &args) -> std::string {
+            return RenderCallback::renderImportParamsCallback(args);
+        });
         env.add_callback("render_imports", 1, [this](inja::Arguments &args) -> std::string {
             return RenderCallback::renderImportsCallback(this->env, args);
+        });
+        env.add_callback("render_params", 1, [this](inja::Arguments &args) -> std::string {
+            return RenderCallback::renderParamsCallback(args);
         });
         env.add_callback("render_states", 1, [this](inja::Arguments &args) -> std::string {
             return RenderCallback::renderStatesCallback(this->env, args);
@@ -35,7 +43,7 @@ FrontendGenerator::FrontendGenerator(const std::string &projectPath)
         env.add_callback("render_handles", 1, [this](inja::Arguments &args) -> std::string {
             return RenderCallback::renderHandleFoosCallback(this->env, args);
         });
-        env.add_callback("render_requests", 1, [this](inja::Arguments &args) -> std::string {
+        env.add_callback("render_requests", [this](inja::Arguments &args) -> std::string {
             return RenderCallback::renderRequestsCallback(this->env, args);
         });
     } catch (const std::exception &e) {
@@ -286,12 +294,6 @@ bool FrontendGenerator::loadSchema()
     return true;
 }
 
-bool allowsNestedComponents(ComponentType type)
-{
-    return type == ComponentType::Form || type == ComponentType::HorizontalLayout
-           || type == ComponentType::VerticalLayout || type == ComponentType::ModelLayout;
-}
-
 nlohmann::json processComponentToJson(const std::shared_ptr<Component> &component)
 {
     nlohmann::json componentJson;
@@ -427,91 +429,18 @@ bool FrontendGenerator::updateSchema()
     return true;
 }
 
-std::shared_ptr<Section> FrontendGenerator::findViewByName(const std::string &viewName)
-{
-    // Encontrar el nodo "Views" en el AST
-    auto viewsNode = getChildByType(frontendRoot, "Views");
-    if (!viewsNode) {
-        fmt::print(stderr, "Error: 'Views' node not found in the AST.\n");
-        return nullptr;
-    }
-
-    // Convertir el nodo "Views" a GenericNode
-    auto sectionNode = std::dynamic_pointer_cast<GenericNode>(viewsNode);
-    if (!sectionNode) {
-        fmt::print(stderr, "Error: 'Views' node is not a GenericNode.\n");
-        return nullptr;
-    }
-
-    // Usar std::find_if para buscar la vista por nombre
-    auto it = std::find_if(sectionNode->getChildren().begin(),
-                           sectionNode->getChildren().end(),
-                           [&viewName](const std::shared_ptr<BaseNode> &node) {
-                               auto section = std::dynamic_pointer_cast<Section>(node);
-                               return section && section->getName() == viewName;
-                           });
-
-    // Verificar si se encontró la vista
-    if (it != sectionNode->getChildren().end()) {
-        return std::dynamic_pointer_cast<Section>(*it);
-    }
-
-    return nullptr; // No se encontró la vista
-}
-
-std::shared_ptr<Section> FrontendGenerator::findCustomComponentByName(const std::string &viewName)
-{
-    // Encontrar el nodo "CustomComponents" en el AST
-    auto custCompNode = getChildByType(frontendRoot, "CustomComponents");
-    if (!custCompNode) {
-        fmt::print(stderr, "Error: 'CustomComponents' node not found in the AST.\n");
-        return nullptr;
-    }
-
-    // Convertir el nodo "CustomComponents" a GenericNode
-    auto sectionNode = std::dynamic_pointer_cast<GenericNode>(custCompNode);
-    if (!sectionNode) {
-        fmt::print(stderr, "Error: 'CustomComponents' node is not a GenericNode.\n");
-        return nullptr;
-    }
-
-    // Usar std::find_if para buscar el custom component por nombre
-    auto it = std::find_if(sectionNode->getChildren().begin(),
-                           sectionNode->getChildren().end(),
-                           [&viewName](const std::shared_ptr<BaseNode> &node) {
-                               auto section = std::dynamic_pointer_cast<Section>(node);
-                               return section && section->getName() == viewName;
-                           });
-
-    // Verificar si se encontró la vista
-    if (it != sectionNode->getChildren().end()) {
-        return std::dynamic_pointer_cast<Section>(*it);
-    }
-
-    return nullptr; // No se encontró el custom component
-}
-
-bool FrontendGenerator::generateView(const std::string &viewName)
+bool FrontendGenerator::generateView(const std::shared_ptr<Section> &view)
 {
     nlohmann::json data;
 
     // Inserta el nombre del componente en el contexto de Inja
 
-    auto view = findViewByName(viewName);
-
     if (!view) {
-        qDebug() << "View " << viewName << " wasn't found\n";
+        qDebug() << "View " << view->getName() << " wasn't found\n";
         return false;
     }
 
-    auto viewNode = std::dynamic_pointer_cast<Section>(view);
-
-    if (!viewNode) {
-        qDebug() << "View " << viewName << " couldn't be casted\n";
-        return false;
-    }
-
-    data = processSectionToJson(viewNode);
+    data = processSectionToJson(view);
 
     // qDebug().noquote() << data.dump(2);
 
@@ -529,42 +458,33 @@ bool FrontendGenerator::generateView(const std::string &viewName)
     file.close();
 
     std::string templateString = templateContent.toStdString();
-    std::string outputPath = projectPath + "/frontend/src/views/" + viewName + ".tsx";
+    std::string outputPath = projectPath + "/frontend/src/views/" + view->getName() + ".tsx";
 
     try {
         // Renderizar con Inja usando el contenido del archivo como una cadena
         std::string result = env.render(templateString, data);
         FileUtils::writeFile(outputPath, result);
     } catch (const std::exception &e) {
-        fmt::print(stderr, "Error generating view {}: {}\n", viewName, e.what());
+        fmt::print(stderr, "Error generating view {}: {}\n", view->getName(), e.what());
         return false;
     }
 
-    fmt::print("View generated successfully for {}\n", viewName);
+    fmt::print("View generated successfully for {}\n", view->getName());
     return true;
 }
 
-bool FrontendGenerator::generateCustomComponent(const std::string &custComponentName)
+bool FrontendGenerator::generateCustomComponent(const std::shared_ptr<Section> &custComp)
 {
     nlohmann::json data;
 
-    auto custComp = findCustomComponentByName(custComponentName);
-
     if (!custComp) {
-        qDebug() << "Custom Component " << custComponentName << " wasn't found\n";
+        qDebug() << "Custom Component " << custComp->getName() << " couldn't be casted\n";
         return false;
     }
 
-    auto custCompNode = std::dynamic_pointer_cast<Section>(custComp);
+    data = processSectionToJson(custComp);
 
-    if (!custCompNode) {
-        qDebug() << "Custom Component " << custComponentName << " couldn't be casted\n";
-        return false;
-    }
-
-    data = processSectionToJson(custCompNode);
-
-    std::string templatePath = ":/inja/frontend/view";
+    std::string templatePath = ":/inja/frontend/component";
 
     // Cargar el template
     QFile file(QString::fromStdString(templatePath));
@@ -578,7 +498,8 @@ bool FrontendGenerator::generateCustomComponent(const std::string &custComponent
     file.close();
 
     std::string templateString = templateContent.toStdString();
-    std::string outputPath = projectPath + "/frontend/src/components/" + custComponentName + ".tsx";
+    std::string outputPath = projectPath + "/frontend/src/components/" + custComp->getName()
+                             + ".tsx";
 
     try {
         // Renderizar con Inja usando el contenido del archivo como una cadena
@@ -587,78 +508,12 @@ bool FrontendGenerator::generateCustomComponent(const std::string &custComponent
     } catch (const std::exception &e) {
         fmt::print(stderr,
                    "Error generating custom component {}: {}\n",
-                   custComponentName,
+                   custComp->getName(),
                    e.what());
         return false;
     }
 
-    fmt::print("Custom component generated successfully for {}\n", custComponentName);
-    return true;
-}
-
-bool FrontendGenerator::generateFrontendCode()
-{
-    initializeCustomComponentsCache();
-    nlohmann::json data;
-    data["routes"] = nlohmann::json::array();
-
-    auto viewsNode = getChildByType(frontendRoot, "Views");
-
-    auto viewsPtr = std::dynamic_pointer_cast<GenericNode>(viewsNode);
-
-    for (const auto &view : viewsPtr->getChildren()) {
-        auto section = std::dynamic_pointer_cast<Section>(view);
-        if (section) {
-            if (!generateView(section->getName())) {
-                fmt::print(stderr, "Failed to generate component base for {}\n", section->getName());
-                return false;
-            } else {
-                nlohmann::json routeJson;
-                routeJson["component"] = section->getName();
-                routeJson["path"] = section->getPath();
-                data["routes"].push_back(routeJson);
-            }
-        }
-    }
-
-    auto customComponentsNode = getChildByType(frontendRoot, "CustomComponents");
-
-    auto customComponentPtr = std::dynamic_pointer_cast<GenericNode>(customComponentsNode);
-
-    for (const auto &custComp : customComponentPtr->getChildren()) {
-        auto section = std::dynamic_pointer_cast<Section>(custComp);
-        if (section) {
-            if (!generateCustomComponent(section->getName())) {
-                fmt::print(stderr, "Failed to generate component base for {}\n", section->getName());
-                return false;
-            }
-        }
-    }
-
-    std::string templatePath = ":/inja/frontend/app";
-
-    QFile file(QString::fromStdString(templatePath));
-    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        fmt::print(stderr, "Unable to open template file from resource: {}\n", templatePath);
-        return false;
-    }
-
-    QTextStream in(&file);
-    QString templateContent = in.readAll();
-    file.close();
-
-    std::string templateString = templateContent.toStdString();
-
-    std::string outputPath = projectPath + "/frontend/src/App.tsx";
-
-    try {
-        std::string result = env.render(templateString, data);
-        FileUtils::writeFile(outputPath, result);
-    } catch (const std::exception &e) {
-        fmt::print(stderr, "Error generating App.tsx: {}\n", e.what());
-        return false;
-    }
-
+    fmt::print("Custom component generated successfully for {}\n", custComp->getName());
     return true;
 }
 
@@ -701,12 +556,16 @@ std::vector<NodeOperation> FrontendGenerator::diffTrees(std::shared_ptr<BaseNode
         // NO contar los custom components `importados` que no tengan el custom component
         // en el nodo `CustomComponents` porque seria sumar operaciones Delete innecesarias
         // El script de Babel ya elimina las importaciones
-        auto subSection = std::dynamic_pointer_cast<Section>(pair.second);
-        if (subSection && subSection->getPath().empty()
-            && RenderCallback::customComponentsCache.find(subSection->getName())
-                   == RenderCallback::customComponentsCache.end()) {
-            continue;
-        }
+        auto section = std::dynamic_pointer_cast<Section>(pair.second);
+        // Se debe revisar que no se haga esa validación en el nodo padre `Custom Components`
+        // puesto que ahí no se validan subsecciones sino secciones, en este caso custom componentes,
+        // como tal. En caso se realice la validación impedirá la eliminación de componentes personalizados
+        if (type != "CustomComponents")
+            if (section && section->getPath().empty()
+                && RenderCallback::customComponentsCache.find(section->getName())
+                       == RenderCallback::customComponentsCache.end()) {
+                continue;
+            }
         ops.push_back(NodeOperation(OperationType::Delete, pair.second));
     }
 
@@ -721,6 +580,63 @@ std::shared_ptr<BaseNode> FrontendGenerator::getChildByType(const std::shared_pt
             return child;
     }
     return nullptr;
+}
+
+bool FrontendGenerator::generateInitialFrontendCode()
+{
+    if (!loadSchema()) {
+        fmt::print(stderr, "generateInitialFrontendCode: Failed to load schema.\n");
+        return false;
+    }
+
+    auto viewsNode = getChildByType(frontendRoot, "Views");
+    auto customComponentsNode = getChildByType(frontendRoot, "CustomComponents");
+
+    if (customComponentsNode) {
+        for (auto &custComp : customComponentsNode->getChildren()) {
+            if (!applyInsertion(custComp)) {
+                fmt::print(stderr, "❌ Failed generating custom component\n");
+                return false;
+            }
+        }
+    }
+
+    if (viewsNode) {
+        for (auto &view : viewsNode->getChildren()) {
+            if (!applyInsertion(view)) {
+                fmt::print(stderr, "❌ Failed generating view\n");
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+
+void FrontendGenerator::collectFormContext(const std::shared_ptr<BaseNode> &node,
+                                           const nlohmann::json &currentProps)
+{
+    // 1) Si este nodo es un Form, extrae sus props y los conviertes en JSON
+    nlohmann::json nextProps = currentProps;
+
+    if (node->getNodeType() == "Component") {
+        auto component = std::dynamic_pointer_cast<Component>(node);
+        if (component && componentTypeToString(component->getType()) == "Form") {
+            nlohmann::json componentJson = processComponentToJson(component);
+            nlohmann::json props = componentJson.value("props", nlohmann::json::object());
+            if (!props.value("model", "").empty() && !props.value("method", "").empty()) {
+                nextProps = props;
+            }
+        }
+    }
+
+    // 2) Guarda en el mapa para este nodo cuál es el parentProps efectivo
+    formContext[boost::uuids::to_string(node->getId())] = nextProps;
+
+    // 3) Recorre hijos, pasando nextProps “como heredado”
+    for (auto &child : node->getChildren()) {
+        collectFormContext(child, nextProps);
+    }
 }
 
 bool FrontendGenerator::updateFrontendCode()
@@ -739,23 +655,38 @@ bool FrontendGenerator::updateFrontendCode()
         return true;
     }
 
+    // Paso 0: crear el contexto de formularios antes de procesar cambios
+    formContext.clear();
+    collectFormContext(frontendRoot, nlohmann::json::object());
+
+    std::vector<NodeOperation> deletes, modifies, inserts;
     // Aplicar cada operación de forma incremental
     for (auto op : operations) {
         switch (op.type) {
         case OperationType::Insert:
-            // Ubicar posición mediante op.node->id (data-id) y generar fragmento
-            applyInsertion(op.node);
+            inserts.push_back(op);
             break;
         case OperationType::Modify:
-            // Buscar en el archivo el fragmento con data-id y actualizarlo
-            applyModification(op.node);
+            modifies.push_back(op);
             break;
         case OperationType::Delete:
-            // Eliminar el fragmento con el data-id del nodo eliminado
-            applyDeletion(op.node);
+            deletes.push_back(op);
             break;
         }
     }
+
+    // Buscar en el archivo el fragmento con data-id y actualizarlo
+    for (auto &op : modifies)
+        if (!applyModification(op.node))
+            return false;
+    // Ubicar posición mediante op.node->id (data-id) y generar fragmento
+    for (auto &op : inserts)
+        if (!applyInsertion(op.node))
+            return false;
+    // Eliminar el fragmento con el data-id del nodo eliminado
+    for (auto &op : deletes)
+        if (!applyDeletion(op.node))
+            return false;
 
     if (!updateSchema()) {
         qDebug() << "Error on Updating Schema";
@@ -767,14 +698,14 @@ bool FrontendGenerator::updateFrontendCode()
     return true;
 }
 
-void FrontendGenerator::runEditorScript(const std::vector<std::string> stdArgs)
+bool FrontendGenerator::runEditorScript(const std::vector<std::string> stdArgs)
 {
     // 1. Volcar el recurso interno a un archivo temporal
     const QString resourcePath = ":/babel/editorFrontend";
     QFile resourceFile(resourcePath);
     if (!resourceFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
         fmt::print(stderr, "❌ Unable to open resource: {}\n", resourcePath.toStdString());
-        return;
+        return false;
     }
 
     const QString tempDir = QStandardPaths::writableLocation(QStandardPaths::TempLocation);
@@ -782,7 +713,7 @@ void FrontendGenerator::runEditorScript(const std::vector<std::string> stdArgs)
     QFile tempFile(tempFilePath);
     if (!tempFile.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text)) {
         fmt::print(stderr, "❌ Unable to write temporary editorFront.js\n");
-        return;
+        return false;
     }
     tempFile.write(resourceFile.readAll());
     tempFile.close();
@@ -813,12 +744,18 @@ void FrontendGenerator::runEditorScript(const std::vector<std::string> stdArgs)
     proc.start();
     if (!proc.waitForFinished(-1)) {
         qWarning() << "El proceso no terminó correctamente.";
+        return false;
     } else {
-        qDebug() << "Proceso terminado con código:" << proc.exitCode();
+        // qDebug() << "Proceso terminado con código:" << proc.exitCode();
+        // Error
+        if (proc.exitCode() == 1)
+            return false;
+        else
+            return true;
     }
 }
 
-void FrontendGenerator::applyInsertion(std::shared_ptr<BaseNode> &node)
+bool FrontendGenerator::applyInsertion(std::shared_ptr<BaseNode> &node)
 {
     // Si se quiere agregar un nuevo view o custom component
     if (node->getNodeType() == "Section" && node->getParent()->getNodeType() != "Section"
@@ -826,14 +763,23 @@ void FrontendGenerator::applyInsertion(std::shared_ptr<BaseNode> &node)
         auto section = std::dynamic_pointer_cast<Section>(node);
         if (!section) {
             fmt::print(stderr, "Error: nodo identificado como section pero falla el cast.\n");
-            return;
+            return false;
         }
         if (section->getPath().empty()) {
-            if (generateCustomComponent(section->getName()))
-                return;
+            if (generateCustomComponent(section))
+                return true;
         } else {
-            if (generateView(section->getName()))
-                return;
+            if (generateView(section)) {
+                std::string filePath = projectPath + "/frontend/src/App.tsx";
+
+                std::vector<std::string> args = {filePath,
+                                                 "create",
+                                                 section->getName(),
+                                                 section->getPath()};
+
+                // Run script
+                return runEditorScript(args);
+            }
         }
     } else {
         // Determinar en qué archivo se debe insertar el nodo
@@ -845,19 +791,18 @@ void FrontendGenerator::applyInsertion(std::shared_ptr<BaseNode> &node)
 
         // Generar el fragmento de código usando la plantilla Inja
         std::string jsxFragment = generateNodeFragment(node);
-        std::string payloadJson = nlohmann::json(jsxFragment).dump();
 
         // Escribir el payload a archivo temporal
         QString tempPath = QStandardPaths::writableLocation(QStandardPaths::TempLocation);
-        QString payloadPath = tempPath + "/payload.json";
+        QString payloadPath = tempPath + "/payload.jsxfrag";
         QFile payloadFile(payloadPath);
         if (payloadFile.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text)) {
             QTextStream out(&payloadFile);
-            out << QString::fromStdString(payloadJson);
+            out << QString::fromStdString(jsxFragment);
             payloadFile.close();
         } else {
             fmt::print(stderr, "❌ Unable to write temporary payload.json\n");
-            return;
+            return false;
         }
 
         std::vector<std::string> args = {filePath,
@@ -867,15 +812,15 @@ void FrontendGenerator::applyInsertion(std::shared_ptr<BaseNode> &node)
                                          payloadPath.toStdString()};
 
         // Run script
-        runEditorScript(args);
+        return runEditorScript(args);
     }
 }
 
-void FrontendGenerator::applyModification(std::shared_ptr<BaseNode> &node)
+bool FrontendGenerator::applyModification(std::shared_ptr<BaseNode> &node)
 {
     // Si la modificación es en un view o custom component
     if (node->getNodeType() == "Section")
-        return;
+        return true;
 
     // Si la modificación es en un Component
 
@@ -887,28 +832,27 @@ void FrontendGenerator::applyModification(std::shared_ptr<BaseNode> &node)
 
     // Generar el fragmento de código usando la plantilla Inja
     std::string jsxFragment = generateNodeFragment(node);
-    std::string payloadJson = nlohmann::json(jsxFragment).dump();
 
     // Escribir el payload a archivo temporal
     QString tempPath = QStandardPaths::writableLocation(QStandardPaths::TempLocation);
-    QString payloadPath = tempPath + "/payload.json";
+    QString payloadPath = tempPath + "/payload.jsxfrag";
     QFile payloadFile(payloadPath);
     if (payloadFile.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text)) {
         QTextStream out(&payloadFile);
-        out << QString::fromStdString(payloadJson);
+        out << QString::fromStdString(jsxFragment);
         payloadFile.close();
     } else {
         fmt::print(stderr, "❌ Unable to write temporary payload.json\n");
-        return;
+        return false;
     }
 
-    std::vector<std::string> args = {filePath, "modify", dataId, "", payloadPath.toStdString()};
+    std::vector<std::string> args = {filePath, "modify", dataId, payloadPath.toStdString()};
 
     // Run script
-    runEditorScript(args);
+    return runEditorScript(args);
 }
 
-void FrontendGenerator::applyDeletion(std::shared_ptr<BaseNode> &node)
+bool FrontendGenerator::applyDeletion(std::shared_ptr<BaseNode> &node)
 {
     // Si la modificación es un section
     // Y si es un view o un custom component
@@ -923,11 +867,10 @@ void FrontendGenerator::applyDeletion(std::shared_ptr<BaseNode> &node)
                                          + QString::fromStdString(sectionName) + ".tsx");
 
         FileUtils::deleteFile(filePath);
-        applyRefactorForDeletedSection(sectionName,
-                                       node->getParent()->getNodeType() == "Views"
-                                           ? "View"
-                                           : "CustomComponent");
-        return;
+        return applyRefactorForDeletedSection(sectionName,
+                                              node->getParent()->getNodeType() == "Views"
+                                                  ? "View"
+                                                  : "CustomComponent");
     }
 
     // Si la modificación es en un Component
@@ -938,10 +881,10 @@ void FrontendGenerator::applyDeletion(std::shared_ptr<BaseNode> &node)
     // Obtener la el dataId
     std::string dataId = boost::uuids::to_string(node->getId());
 
-    std::vector<std::string> args = {filePath, "delete", dataId, "", ""};
+    std::vector<std::string> args = {filePath, "delete", dataId};
 
     // Run script
-    runEditorScript(args);
+    return runEditorScript(args);
 }
 
 std::string FrontendGenerator::getFilePathForNode(std::shared_ptr<BaseNode> &node)
@@ -972,7 +915,8 @@ std::string FrontendGenerator::getFilePathForNode(std::shared_ptr<BaseNode> &nod
 std::string FrontendGenerator::generateNodeFragment(std::shared_ptr<BaseNode> &node)
 {
     nlohmann::json data;
-    std::string templatePath, templateString = "{{ render_component(data, \"\") }}";
+    nlohmann::json parentProps = formContext[boost::uuids::to_string(node->getId())];
+    std::string templateString = "{{ render_component(data, parentProps) }}";
 
     // Determinar qué tipo de nodo es y cargar el JSON y plantilla adecuada
     if (node->getNodeType() == "Section") {
@@ -998,8 +942,8 @@ std::string FrontendGenerator::generateNodeFragment(std::shared_ptr<BaseNode> &n
     }
 
     try {
-        // Renderizar el fragmento usando Inja
-        std::string result = env.render(templateString, {{"data", data}});
+        std::string result = env.render(templateString,
+                                        {{"data", data}, {"parentProps", parentProps}});
         return result;
     } catch (const std::exception &e) {
         fmt::print(stderr,
@@ -1019,12 +963,11 @@ void FrontendGenerator::getReferenceForInsertion(std::string &referenceId,
 
     auto parent = node->getParent();
     auto children = parent->getChildren();
+    auto section = std::dynamic_pointer_cast<Section>(parent);
 
-    if (children.empty()) {
-        if (auto section = std::dynamic_pointer_cast<Section>(parent)) {
-            referenceId = "none";
-            position = "inner";
-        }
+    if (children.empty() || section) {
+        referenceId = "none";
+        position = "inner";
         return;
     }
 
@@ -1039,7 +982,8 @@ void FrontendGenerator::getReferenceForInsertion(std::string &referenceId,
 
     if (children.size() == 1) {
         // Único hijo, se inserta dentro del padre (opcional)
-        referenceId = "none";
+        // referenceId = "none";
+        referenceId = boost::uuids::to_string(parent->getId());
         position = "inner";
     } else if (index == 0) {
         // Es el primero, usar el segundo como referencia con "before"
@@ -1052,7 +996,7 @@ void FrontendGenerator::getReferenceForInsertion(std::string &referenceId,
     }
 }
 
-void FrontendGenerator::applyRefactorForDeletedSection(const std::string &sectionName,
+bool FrontendGenerator::applyRefactorForDeletedSection(const std::string &sectionName,
                                                        const std::string &sectionType)
 {
     namespace fs = std::filesystem;
@@ -1083,8 +1027,11 @@ void FrontendGenerator::applyRefactorForDeletedSection(const std::string &sectio
         std::vector<std::string> args = {filePath, "refactor-delete", sectionName, sectionType};
 
         // Run script
-        runEditorScript(args);
+        if (!runEditorScript(args))
+            return false;
     }
+
+    return true;
 }
 
 // Getters

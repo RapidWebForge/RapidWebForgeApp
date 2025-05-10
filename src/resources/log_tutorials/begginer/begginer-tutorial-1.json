@@ -5,7 +5,7 @@
     {
       "goal": "Añadir una nueva etiqueta",
       "comment": "Para agregar una nueva etiqueta en tu vista actual solo arrastra uno de los elementos del 'Árbol de componentes' al árbol de tu vista actual. El cambio se verá reflejado al guardar el proyecto y desplegar la aplicación.",
-      "help": "Puedes pasar el puntero por encima de algún componente para obtener una breve descripción del mismo.",
+      "help": "Arrastra un componente y observa cómo aparece en la vista para entender su función básica.",
       "reference": "https://developer.mozilla.org/en-US/docs/Web/HTML/Element",
       "log": "add-new-tag",
       "completed": "false"
@@ -13,7 +13,7 @@
     {
       "goal": "Anidar una etiqueta",
       "comment": "Todas las etiquetas pueden anidar a otras, pero para mantener buenas prácticas solo algunas tienen permitidas está función en RapidWebForge. Para poder anidar una etiqueta en otra escoge una nueva etiqueta del 'Árbol de componentes' y arrastrala al árbol de tu vista actual dentro de una etiqueta existente.",
-      "help": "Pasar el puntero por un componente también revelará si este componente permite la anidación de otras etiquetas.",
+      "help": "Puedes anidar una etiqueta dentro de otra si el diseño lo permite; prueba organizarlas de forma jerárquica.",
       "reference": "https://certidevs.com/tutorial-html-etiquetas-anidadas",
       "log": "nest-tag",
       "completed": "false"

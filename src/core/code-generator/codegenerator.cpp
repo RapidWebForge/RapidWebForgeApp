@@ -3,6 +3,7 @@
 #include <QDir>
 #include <QFile>
 #include "../../models/time-chrono/timechrono.h"
+#include "../../utils/file/fileutiils.h"
 #include "../../utils/ziphelper/ziphelper.h"
 #include <boost/uuid/uuid_io.hpp>
 #include <filesystem>
@@ -100,6 +101,53 @@ bool CodeGenerator::createRunEditor()
     return true;
 }
 
+// Function to create a JSON file from a template resource
+bool CodeGenerator::createJsonFromTemplate(const std::string &projectComponent)
+{
+    const std::string &projectTemplate = this->project.getBaseProject();
+
+    // Validate that projectComponent is either "backend" or "frontend"
+    if (projectComponent != "backend" && projectComponent != "frontend") {
+        fmt::print(stderr,
+                   "Invalid project component: {}. Must be 'backend' or 'frontend'.\n",
+                   projectComponent);
+        return false;
+    }
+
+    // Create resource path
+    QString resourcePath = QString(":/base_projects/%1/%2")
+                               .arg(QString::fromStdString(projectTemplate))
+                               .arg(QString::fromStdString(projectComponent));
+
+    // Create destination path
+    QString destinationPath = QDir(QString::fromStdString(this->project.getPath()))
+                                  .filePath(QString::fromStdString(projectComponent) + ".json");
+
+    // Read from resource and write to destination
+    QFile sourceFile(resourcePath);
+    if (!sourceFile.open(QIODevice::ReadOnly)) {
+        fmt::print(stderr, "Failed to open template resource: {}\n", resourcePath.toStdString());
+        return false;
+    }
+
+    QFile destFile(destinationPath);
+    if (!destFile.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+        fmt::print(stderr, "Failed to create destination file: {}\n", destinationPath.toStdString());
+        sourceFile.close();
+        return false;
+    }
+
+    // Copy content
+    destFile.write(sourceFile.readAll());
+
+    // Close files
+    sourceFile.close();
+    destFile.close();
+
+    fmt::print("{}.json created successfully from template.\n", projectComponent);
+    return true;
+}
+
 // Creación del proyecto base de backend
 bool CodeGenerator::createBaseBackendProject()
 {
@@ -164,11 +212,17 @@ bool CodeGenerator::createBaseBackendProject()
     }
 
     // Crear el backend.json
-    nlohmann::json backendJson;
-    backendJson["transactions"] = nlohmann::json::array();
+    if (!project.getBaseProject().empty()) {
+        if (!createJsonFromTemplate("backend")) {
+            return false;
+        }
+    } else {
+        nlohmann::json backendJson;
+        backendJson["transactions"] = nlohmann::json::array();
 
-    if (!createJsonFile(this->project.getPath() + "/backend.json", backendJson)) {
-        return false;
+        if (!createJsonFile(this->project.getPath() + "/backend.json", backendJson)) {
+            return false;
+        }
     }
 
     fmt::print("Base Backend project created successfully\n");
@@ -188,34 +242,98 @@ bool CodeGenerator::createBaseFrontendProject()
         return false;
     }
 
-    // Crear el frontend.json
-    nlohmann::json frontendJson;
-    frontendJson["views"] = nlohmann::json::array();
-    frontendJson["custom"] = nlohmann::json::array();
+    if (!project.getBaseProject().empty()) {
+        if (!createJsonFromTemplate("frontend")) {
+            return false;
+        }
+    } else {
+        // Crear el frontend.json
+        nlohmann::json frontendJson;
+        frontendJson["views"] = nlohmann::json::array();
+        frontendJson["custom"] = nlohmann::json::array();
 
-    // Rutas iniciales
+        // Rutas iniciales
 
-    // Vista inicial
-    nlohmann::json homeViewJson;
-    // Components vacio
-    homeViewJson["components"] = nlohmann::json::array();
+        // Vista inicial
+        nlohmann::json homeViewJson;
+        // Components vacio
+        homeViewJson["components"] = nlohmann::json::array();
 
-    Section homeView("Home", "/");
+        Section homeView("Home", "/");
 
-    homeViewJson["path"] = homeView.getPath();
-    homeViewJson["name"] = homeView.getName();
-    homeViewJson["id"] = boost::uuids::to_string(homeView.getId());
-    homeViewJson["createdOn"] = timePointToString(homeView.getCreatedOn());
-    homeViewJson["updatedOn"] = timePointToString(homeView.getUpdatedOn());
+        homeViewJson["path"] = homeView.getPath();
+        homeViewJson["name"] = homeView.getName();
+        homeViewJson["id"] = boost::uuids::to_string(homeView.getId());
+        homeViewJson["createdOn"] = timePointToString(homeView.getCreatedOn());
+        homeViewJson["updatedOn"] = timePointToString(homeView.getUpdatedOn());
 
-    frontendJson["views"].push_back(homeViewJson);
+        Component mainDiv(ComponentType::Layout);
+        std::map<std::string, std::string> &props = mainDiv.getProps();
+        props.at("class")
+            = "h-screen w-full py-20 flex flex-col justify-center items-center bg-blue-200";
 
-    if (!createJsonFile(this->project.getPath() + "/frontend.json", frontendJson)) {
-        return false;
+        nlohmann::json mainDivJson;
+        mainDivJson["id"] = boost::uuids::to_string(mainDiv.getId());
+        mainDivJson["createdOn"] = timePointToString(mainDiv.getCreatedOn());
+        mainDivJson["updatedOn"] = timePointToString(mainDiv.getUpdatedOn());
+        mainDivJson["type"] = componentTypeToString(mainDiv.getType());
+        mainDivJson["props"] = nlohmann::json::object();
+        // Class
+        for (const auto &pair : props) {
+            mainDivJson["props"][pair.first] = pair.second;
+        }
+
+        mainDivJson["nestedComponents"] = nlohmann::json::array();
+
+        homeViewJson["components"].push_back(mainDivJson);
+
+        frontendJson["views"].push_back(homeViewJson);
+
+        if (!createJsonFile(this->project.getPath() + "/frontend.json", frontendJson)) {
+            return false;
+        }
+
+        // Creando Home view
+
+        nlohmann::json data;
+
+        data["id"] = boost::uuids::to_string(mainDiv.getId());
+        auto it = props.find("class");
+        if (it != props.end()) {
+            data["class"] = it->second;
+        }
+        std::string outputPath = this->project.getPath() + "/frontend/src/views/Home.tsx";
+
+        try {
+            // Renderizar con Inja usando el contenido del archivo como una cadena
+            inja::Environment env;
+            std::string result = env.render(R"(import React from "react";
+
+export default function Home() {
+  return (
+    <div
+      data-id="{{id}}"
+      className="{{class}}"
+    ></div>
+  );
+})",
+                                            data);
+            FileUtils::writeFile(outputPath, result);
+        } catch (const std::exception &e) {
+            fmt::print(stderr, "Error generating Home view: {}\n", e.what());
+            return false;
+        }
     }
 
     fmt::print("Base Frontend project created successfully\n");
     return true;
+}
+
+bool CodeGenerator::createApplication()
+{
+    if (backendGenerator.generateInitialBackendCode())
+        return frontendGenerator.generateInitialFrontendCode();
+    return false;
 }
 
 // Get

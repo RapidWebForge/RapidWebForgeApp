@@ -1,20 +1,20 @@
 import React, { useEffect, useState } from "react";
 
-{{ render_imports(components) }}
+{{- render_import_params(path) -}}
+{{- render_imports(components) -}}
 
 export default function {{ name }}() {
-
-  {{ render_states(components) }}
-
-  {{ render_handles(components) }}
-
-  {{ render_requests(components) }}
-
-  return (
-    <div>
-      {% for comp in components %}
-        {{ render_component(comp, "") }}
-      {% endfor %}
-    </div>
-  );
+  {{- render_params(path) -}}
+  {{- render_states(components) -}}
+  {{- render_handles(components) -}}
+  {{- render_requests(components, path) -}}
+  {%- if length(components) > 0 -%}
+    return (
+  {%- for comp in components -%}
+      {{- render_component(comp, {}) -}}
+  {%- endfor -%}
+    );
+  {%- else -%}
+    return;
+  {%- endif -%}
 }

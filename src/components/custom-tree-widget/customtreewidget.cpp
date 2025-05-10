@@ -117,6 +117,12 @@ void CustomTreeWidget::dropEvent(QDropEvent *event)
     if ((tempComponent.isAllowingItems() || (targetIsSection && isTopLevel))
         && pos.y() > itemRect.top() + itemRect.height() / 3
         && pos.y() < itemRect.bottom() - itemRect.height() / 3) {
+        if (targetIsSection && isTopLevel && targetItem->childCount() >= 1) {
+            qDebug() << "❌ No se puede anidar más de un componente en un Section toplevel.";
+            event->ignore();
+            return;
+        }
+
         // Caso 3: Insertar como hijo
         parentItem = targetItem;
         dropIndex = 0; // Insertar como el primer hijo
@@ -124,8 +130,27 @@ void CustomTreeWidget::dropEvent(QDropEvent *event)
         // Log para "nest-tag"
         QString sourceTagName = sourceItem->text(0); // Nombre del componente arrastrado
         QString targetTagName = targetItem->text(0); // Nombre del componente destino
+
+        if (sourceTagName.toStdString() == "Vertical Layout"
+            || sourceTagName.toStdString() == "Horizontal Layout")
+            loggerJson.logAction("use-layout-tailwind",
+                                 "Layout added to components tree: " + sourceTagName.toStdString());
+        if (sourceTagName.toStdString() == "Image")
+            loggerJson.logAction("insert-image-tag", "Image tag added to components tree");
+        if (sourceTagName.toStdString() == "Hyperlink")
+            loggerJson.logAction("insert-link-tag", "Hyperlink tag added to components tree");
+        if (sourceTagName.toStdString() == "Form")
+            loggerJson.logAction("insert-form-tag", "Form tag added to components tree");
+        if (sourceTagName.toStdString() == "Model Layout")
+            loggerJson.logAction("insert-model-layout", "Model Layout tag added to components tree");
+
+        if (targetTagName.toStdString() == "Model Layout")
+            loggerJson.logAction("display-model-values", "Nested tags on Model Layout");
+
+        loggerJson.logAction("add-new-tag",
+                             "Tag added to components tree: " + sourceTagName.toStdString());
         loggerJson.logAction("nest-tag",
-                             "Etiqueta " + sourceTagName.toStdString() + " anidada dentro de "
+                             "Tag " + sourceTagName.toStdString() + " nested inside "
                                  + targetTagName.toStdString());
         logAction = "nest-tag";
 
@@ -133,10 +158,37 @@ void CustomTreeWidget::dropEvent(QDropEvent *event)
         // Caso 1: Insertar encima
         parentItem = targetItem->parent() ? targetItem->parent() : invisibleRootItem();
         dropIndex = parentItem->indexOfChild(targetItem);
+
+        // Validación extra para no permitir múltiples hijos en Section toplevel
+        if (parentItem && parentItem != invisibleRootItem()) {
+            std::string parentComponentTypeStr = parentItem->text(0).toStdString();
+            ComponentType parentType = stringToComponentType(parentComponentTypeStr);
+            bool parentIsSection = (componentTypeToString(parentType) == "Undefined");
+            bool parentIsTopLevel = (parentItem->parent() == nullptr);
+
+            if (parentIsSection && parentIsTopLevel && parentItem->childCount() >= 1) {
+                qDebug() << "❌ No se puede agregar más de un hijo a un Section toplevel.";
+                event->ignore();
+                return;
+            }
+        }
     } else if (pos.y() > itemRect.bottom() - itemRect.height() / 3) {
         // Caso 2: Insertar debajo
         parentItem = targetItem->parent() ? targetItem->parent() : invisibleRootItem();
         dropIndex = parentItem->indexOfChild(targetItem) + 1;
+
+        if (parentItem && parentItem != invisibleRootItem()) {
+            std::string parentComponentTypeStr = parentItem->text(0).toStdString();
+            ComponentType parentType = stringToComponentType(parentComponentTypeStr);
+            bool parentIsSection = (componentTypeToString(parentType) == "Undefined");
+            bool parentIsTopLevel = (parentItem->parent() == nullptr);
+
+            if (parentIsSection && parentIsTopLevel && parentItem->childCount() >= 1) {
+                qDebug() << "❌ No se puede agregar más de un hijo a un Section toplevel.";
+                event->ignore();
+                return;
+            }
+        }
     } else {
         event->ignore();
         return;
@@ -157,7 +209,7 @@ void CustomTreeWidget::dropEvent(QDropEvent *event)
         }
     }
     if (!logAction.isEmpty()) {
-        loggerJson.logAction(logAction.toStdString(), "Componente movido");
+        loggerJson.logAction(logAction.toStdString(), "Move component");
     }
     // Oculta el indicador después del drop
     showDropIndicator = false;

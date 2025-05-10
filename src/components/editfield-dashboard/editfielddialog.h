@@ -2,6 +2,7 @@
 #define EDITFIELDDIALOG_H
 
 #include <QDialog>
+#include "../../core/logging/actionloggerjson.h"
 #include "../../models/field/field.h"
 
 namespace Ui {
@@ -31,6 +32,7 @@ private slots:
 private:
     Ui::EditFieldDialog *ui;
     Field *currentField = nullptr;
+    ActionLoggerJson loggerJson;
 
     void setUpWidget();
 };

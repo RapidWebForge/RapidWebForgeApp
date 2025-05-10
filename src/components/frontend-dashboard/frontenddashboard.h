@@ -40,6 +40,9 @@ private slots:
     void onCurrentSectionTreeItemSelected(QTreeWidgetItem *item, int column);
     void onItemDropped(QTreeWidgetItem *parentItem, QTreeWidgetItem *droppedItem, int dropIndex);
     void onPropertyValueChanged(int row, int column);
+    void onPropertyComboBoxChanged(int row,
+                                   const std::string &propertyName,
+                                   const QString &newValue);
 
     // void on_saveButton_clicked();
     void on_deleteButton_clicked();
@@ -104,7 +107,7 @@ private:
     std::shared_ptr<BaseNode> frontendRoot;
     std::shared_ptr<Section> currentSection;
     std::shared_ptr<Component> currentComponent;
-    ActionLoggerJson loggerJson; // Logs en formato .json
+    ActionLoggerJson loggerJson;
 };
 
 #endif // FRONTENDDASHBOARD_H

@@ -24,6 +24,10 @@ public:
     void updateProject(const Project &project);
     void deleteProjectById(int id);
 
+    // Funciones de revision para creacion de nuevos proyectos
+    bool isProjectAvailable(const std::string &projectName);
+    bool isDatabaseAvailable(const std::string &databaseName);
+
 private:
     void createTable();
     void createDatabasesTable();

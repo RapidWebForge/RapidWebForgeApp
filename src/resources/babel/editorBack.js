@@ -177,8 +177,15 @@ const [, , basePath, operation, transactionName] = process.argv;
             TSInterfaceDeclaration(path) {
               // Solo nos interesa la interfaz Tasks (payload.name)
               if (path.node.id.name === modelName) {
+                // Agregar id?:number
+                const idProp = t.tsPropertySignature(
+                  t.identifier("id"),
+                  t.tsTypeAnnotation(t.tsNumberKeyword()),
+                );
+                idProp.optional = true;
+
                 // Reconstruir los miembros de la interfaz con payload.fields
-                const members = payload.fields.map((field) => {
+                const fieldProps = payload.fields.map((field) => {
                   // Mapear el tipo de Sequelize a TS
                   let tsTypeNode;
                   switch (field.type) {
@@ -226,8 +233,67 @@ const [, , basePath, operation, transactionName] = process.argv;
                 });
 
                 // Reemplazar el array de miembros
-                path.node.body.body = members;
-                path.stop();
+                path.node.body.body = [idProp, ...fieldProps];
+              }
+            },
+
+            VariableDeclaration(path) {
+              const decl = path.node.declarations[0];
+              if (
+                t.isIdentifier(decl.id) &&
+                decl.init &&
+                t.isObjectExpression(decl.init)
+              ) {
+                const name = decl.id.name;
+                // Sólo nos interesan defaultPost<ModelName> y defaultPut<ModelName>
+                if (
+                  name === `defaultPost${modelName}` ||
+                  name === `defaultPut${modelName}`
+                ) {
+                  const props = [];
+
+                  // Si es defaultPut, primero forzamos id: 0
+                  if (name === `defaultPut${modelName}`) {
+                    props.push(
+                      t.objectProperty(t.identifier("id"), t.numericLiteral(0)),
+                    );
+                  }
+
+                  // Ahora los campos según payload.fields
+                  for (const field of payload.fields) {
+                    let defaultNode;
+                    switch (field.type) {
+                      case "STRING":
+                      case "TEXT":
+                      case "CHAR":
+                      case "DATE":
+                      case "DATEONLY":
+                      case "TIME":
+                        defaultNode = t.stringLiteral("");
+                        break;
+                      case "BOOLEAN":
+                        defaultNode = t.booleanLiteral(false);
+                        break;
+                      case "INTEGER":
+                      case "BIGINT":
+                      case "FLOAT":
+                      case "DOUBLE":
+                      case "DECIMAL":
+                        defaultNode = t.numericLiteral(0);
+                        break;
+                      default:
+                        // JSON, ENUM, BLOB, etc.
+                        defaultNode = t.nullLiteral();
+                    }
+                    props.push(
+                      t.objectProperty(t.identifier(field.name), defaultNode),
+                    );
+                  }
+
+                  // Reemplazamos el init({ … }) por nuestro nuevo objectExpression
+                  decl.init = t.objectExpression(props);
+                  modified = true;
+                }
               }
             },
           });
@@ -615,7 +681,7 @@ const [, , basePath, operation, transactionName] = process.argv;
           plugins: ["jsx", "typescript"],
         });
 
-        if (filePath.includes("models/index.js")) {
+        if (filePath.includes("models")) {
           if (operation === "insert") {
             // 1. Verificar si ya existe el import del mdoelo
             const importExists = ast.program.body.some(
@@ -706,7 +772,7 @@ const [, , basePath, operation, transactionName] = process.argv;
           modified = true;
         }
 
-        if (filePath.includes("routes/index.js")) {
+        if (filePath.includes("routes")) {
           if (operation === "insert") {
             // 1. Preparar nombres
             const importExists = ast.program.body.some(

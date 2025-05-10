@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1958</width>
-    <height>670</height>
+    <width>1011</width>
+    <height>639</height>
    </rect>
   </property>
   <property name="font">
@@ -163,7 +163,7 @@
         </font>
        </property>
        <property name="text">
-        <string>Para agregar una nueva etiqueta en tu vista actual solo arrastra uno de los elementos del 'Árbol de componentes' al árbol de tu vista actual. El cambio se verá reflejado al guardar el proyecto y desplegar la aplicación.</string>
+        <string/>
        </property>
        <property name="alignment">
         <set>Qt::AlignmentFlag::AlignCenter</set>

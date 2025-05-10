@@ -72,18 +72,45 @@ ConfigurationView::~ConfigurationView()
     delete ui;
 }
 
+void ConfigurationView::selectDirectoryAndSetUI(QPushButton *button,
+                                                QLineEdit *lineEdit,
+                                                const QString &title)
+{
+    QFileDialog dialog(this);
+    dialog.setWindowTitle(title);
+    dialog.setFileMode(QFileDialog::Directory);
+    dialog.setOption(QFileDialog::ShowDirsOnly, true);
+    dialog.setOption(QFileDialog::DontResolveSymlinks, true);
+    dialog.setOption(QFileDialog::DontUseNativeDialog, true);
+    dialog.setDirectory(QDir::homePath());
+
+    if (dialog.exec() == QDialog::Accepted) {
+        QString dir = dialog.selectedFiles().first();
+        if (!dir.isEmpty()) {
+            button->setText(dir);
+            lineEdit->setText(dir);
+        }
+    }
+}
+
 void ConfigurationView::on_ngInxPathButton_clicked()
 {
-    QString dir = QFileDialog::getExistingDirectory(this,
-                                                    tr("Select NgInx Location"),
-                                                    QDir::homePath(),
-                                                    QFileDialog::ShowDirsOnly
-                                                        | QFileDialog::DontResolveSymlinks);
-    if (!dir.isEmpty()) {
-        // Actualiza tanto el botón como el QLineEdit
-        ui->ngInxPathButton->setText(dir);
-        ui->ngInxPathLineEdit->setText(dir);
-    }
+    selectDirectoryAndSetUI(ui->ngInxPathButton, ui->ngInxPathLineEdit, tr("Select NgInx Location"));
+}
+
+void ConfigurationView::on_nodePathButton_clicked()
+{
+    selectDirectoryAndSetUI(ui->nodePathButton, ui->nodePathLineEdit, tr("Select Node Location"));
+}
+
+void ConfigurationView::on_bunPathButton_clicked()
+{
+    selectDirectoryAndSetUI(ui->bunPathButton, ui->bunPathLineEdit, tr("Select Bun Location"));
+}
+
+void ConfigurationView::on_mysqlPathButton_clicked()
+{
+    selectDirectoryAndSetUI(ui->mysqlPathButton, ui->mysqlPathLineEdit, tr("Select MySQL Location"));
 }
 
 void ConfigurationView::on_testButton_clicked()

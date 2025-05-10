@@ -20,7 +20,7 @@ BackendGenerator::BackendGenerator(const std::string &projectPath, const Databas
     , databaseData(databaseData)
 {}
 
-// Loading database schema from JSON file
+// Cargar el backend.json
 bool BackendGenerator::loadSchema()
 {
     std::ifstream file(projectPath + "/backend.json");
@@ -218,6 +218,25 @@ bool BackendGenerator::updateSchema()
     return true;
 }
 
+// Generar backend a partir de un JSON (usado principalmente para generar el código inicial en un template)
+bool BackendGenerator::generateInitialBackendCode()
+{
+    if (!loadSchema()) {
+        fmt::print(stderr, "generateInitialBackendCode: Failed to load schema.\n");
+        return false;
+    }
+
+    // Generar los archivos de backend
+    for (auto &transaction : transactions) {
+        if (!applyInsertion(transaction)) {
+            fmt::print(stderr, "❌ Failed generating transaction\n");
+            return false;
+        }
+    }
+
+    return true;
+}
+
 // Regenerate backend with new information
 bool BackendGenerator::updateBackendCode()
 {
@@ -252,14 +271,14 @@ bool BackendGenerator::updateBackendCode()
     return true;
 }
 
-void BackendGenerator::runEditorScript(const std::vector<std::string> &stdArgs)
+bool BackendGenerator::runEditorScript(const std::vector<std::string> &stdArgs)
 {
     // 1. Volcar recurso interno a un archivo temporal
     const QString resourcePath = ":/babel/editorBackend";
     QFile resourceFile(resourcePath);
     if (!resourceFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
         fmt::print(stderr, "❌ Unable to open resource: {}\n", resourcePath.toStdString());
-        return;
+        return false;
     }
 
     const QString tempDir = QStandardPaths::writableLocation(QStandardPaths::TempLocation);
@@ -267,7 +286,7 @@ void BackendGenerator::runEditorScript(const std::vector<std::string> &stdArgs)
     QFile tempFile(tempFilePath);
     if (!tempFile.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text)) {
         fmt::print(stderr, "❌ Unable to write temporary editorBack.js\n");
-        return;
+        return false;
     }
     tempFile.write(resourceFile.readAll());
     tempFile.close();
@@ -296,12 +315,17 @@ void BackendGenerator::runEditorScript(const std::vector<std::string> &stdArgs)
     proc.start();
     if (!proc.waitForFinished(-1)) {
         qWarning() << "El proceso no terminó correctamente.";
+        return false;
     } else {
-        qDebug() << "Proceso backend terminado con código:" << proc.exitCode();
+        // qDebug() << "Proceso backend terminado con código:" << proc.exitCode();
+        if (proc.exitCode() == 1)
+            return false;
+        else
+            return true;
     }
 }
 
-void BackendGenerator::applyInsertion(Transaction &transaction)
+bool BackendGenerator::applyInsertion(Transaction &transaction)
 {
     // Generar controlador, modelo y ruta para el backend
     generateController(transaction);
@@ -315,10 +339,10 @@ void BackendGenerator::applyInsertion(Transaction &transaction)
     std::vector<std::string> args = {backendPath.toStdString(), "insert", transaction.getName()};
 
     // Run script
-    runEditorScript(args);
+    return runEditorScript(args);
 }
 
-void BackendGenerator::applyModification(Transaction &transaction)
+bool BackendGenerator::applyModification(Transaction &transaction)
 {
     // Transaction a JSON
     nlohmann::json transactionJson;
@@ -359,17 +383,17 @@ void BackendGenerator::applyModification(Transaction &transaction)
         payloadFile.close();
     } else {
         fmt::print(stderr, "❌ Unable to write temporary payload.json\n");
-        return;
+        return false;
     }
 
     // Editor.js
     std::vector<std::string> args = {projectPath, "modify", payloadPath.toStdString()};
 
     // Run script
-    runEditorScript(args);
+    return runEditorScript(args);
 }
 
-void BackendGenerator::applyDeletion(Transaction &transaction)
+bool BackendGenerator::applyDeletion(Transaction &transaction)
 {
     auto toQString = [](const std::string &s) { return QString::fromStdString(s); };
     auto buildPath = [](const QString &base, const QString &subdir, const QString &file) {
@@ -404,7 +428,7 @@ void BackendGenerator::applyDeletion(Transaction &transaction)
     std::vector<std::string> args = {backendPath.toStdString(), "delete", transaction.getName()};
 
     // Run script
-    runEditorScript(args);
+    return runEditorScript(args);
 }
 
 void BackendGenerator::generateFile(const Transaction &transaction,
@@ -495,8 +519,11 @@ void BackendGenerator::generateFrontendModel(const Transaction &transaction)
         env.add_callback("render_type", 1, [&env](inja::Arguments &args) -> std::string {
             return RenderCallback::renderTypeFrontendModel(env, args);
         });
+        env.add_callback("render_default_type", 1, [&env](inja::Arguments &args) -> std::string {
+            return RenderCallback::renderDefaultTypeFrontendModel(env, args);
+        });
     } catch (const std::exception &e) {
-        fmt::print(stderr, "Error adding callback: {}\n", e.what());
+        fmt::print(stderr, "Error adding callbacks: {}\n", e.what());
     }
 
     std::string modelTemplatePath = ":/inja/frontend/model";

@@ -4,6 +4,7 @@
 #include <QDialog>
 #include <QLabel>
 #include <QProgressBar>
+#include <QString>
 #include <QVBoxLayout>
 
 class CustomProgressDialog : public QDialog
@@ -11,7 +12,7 @@ class CustomProgressDialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit CustomProgressDialog(QWidget *parent = nullptr);
+    explicit CustomProgressDialog(QString message, QWidget *parent = nullptr);
 
 private:
     QLabel *label;

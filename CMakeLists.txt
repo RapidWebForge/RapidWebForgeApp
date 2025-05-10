@@ -120,6 +120,12 @@ set(PROJECT_SOURCES
         src/components/overview-panel/overviewpanel.h
         src/components/overview-panel/overviewpanel.cpp
         src/components/overview-panel/overviewpanel.ui
+        src/components/edit-project/editproject.h
+        src/components/edit-project/editproject.cpp
+        src/components/edit-project/editproject.ui
+        src/components/templates-panel/templatespanel.h
+        src/components/templates-panel/templatespanel.cpp
+        src/components/templates-panel/templatespanel.ui
         # Core
         src/core/project-manager/projectmanager.h
         src/core/project-manager/projectmanager.cpp
@@ -141,6 +147,10 @@ set(PROJECT_SOURCES
         src/core/logging/actionloggerjson.cpp
         src/core/logging/stepvalidator.h
         src/core/logging/stepvalidator.cpp
+        src/core/code-worker/codeworker.h
+        src/core/code-worker/codeworker.cpp
+        src/core/deploy-worker/deployworker.h
+        src/core/deploy-worker/deployworker.cpp
         # Models
         src/models/project/project.h
         src/models/project/project.cpp
@@ -177,6 +187,8 @@ set(PROJECT_SOURCES
         src/utils/vscode/fileopener.cpp
         src/utils/ui/codeviewer.h
         src/utils/ui/codeviewer.cpp
+        src/utils/logger_util/loggerutils.h
+        src/utils/logger_util/loggerutils.cpp
         # Resources
         src/resources/resources.qrc
 )

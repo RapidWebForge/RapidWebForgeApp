@@ -161,7 +161,7 @@ void BackendDashboard::setupFieldsTable()
 void BackendDashboard::setupMethodsList()
 {
     // Crear una lista de métodos
-    QStringList methods = {"View Tasks", "Add Tasks", "Edit Tasks", "Delete Tasks"};
+    QStringList methods = {"Get All", "Get By Id", "Create", "Update By Id", "Delete"};
 
     // Crear el elemento "Method type" como el primer elemento sin QCheckBox
     QListWidgetItem *headerItem = new QListWidgetItem(ui->tasksMethodsListWidget);
@@ -445,6 +445,10 @@ void BackendDashboard::on_deleteField_clicked()
     if (reply == QMessageBox::Yes) {
         // Eliminar el campo del currentTransaction
         currentTransaction->removeFieldByName(currentField->getName());
+
+        if (currentField->isForeignKey())
+            loggerJson.logAction("remove-relationship",
+                                 "Eliminando llave foranea :" + currentField->getName());
 
         // Actualizar la tabla visual (QTableWidget)
         updateFieldsTable();

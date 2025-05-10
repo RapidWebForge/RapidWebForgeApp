@@ -4,6 +4,7 @@
 #include <QCheckBox>
 #include <QTreeWidgetItem>
 #include <QWidget>
+#include "../../core/logging/actionloggerjson.h"
 #include "../../models/transaction/transaction.h"
 #include "../addfield-dashboard/addfielddialog.h"
 #include "../create-table-dashboard/createtabledialog.h"
@@ -58,6 +59,8 @@ private:
     Transaction *currentTransaction = nullptr;
     Field *currentField = nullptr;
     EditFieldDialog *editFieldDialog;
+
+    ActionLoggerJson loggerJson;
 };
 
 #endif // BACKENDDASHBOARD_H

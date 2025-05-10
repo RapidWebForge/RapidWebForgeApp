@@ -16,11 +16,12 @@
 #include <QWidget>
 #include "../../core/code-generator/codegenerator.h"
 #include "../../core/configuration-manager/configurationmanager.h"
+#include "../../core/logging/actionloggerjson.h"
 #include "../../core/logging/stepvalidator.h"
 #include "../../core/version-manager/versionmanager.h"
 #include "../../models/project/project.h"
-#include "../../utils/file/filewatcher.h"  // Detectar archivos modificados
-#include "../../utils/vscode/fileopener.h" // Abrir VS Code
+#include "../../utils/file/filewatcher.h"
+#include "../../utils/vscode/fileopener.h"
 #include "../backend-dashboard/backenddashboard.h"
 #include "../custom-tree-widget/customtreewidget.h"
 #include "../frontend-dashboard/frontenddashboard.h"
@@ -66,6 +67,7 @@ private slots:
     void onBackendSchemaLoaded();
     void onFrontendSchemaLoaded();
     void onSaveChanges();
+    bool killNgInx();
     void onCreateVersion();
     void onChangeVersion();
     void onVersionHistory();
@@ -80,6 +82,7 @@ private slots:
     void showTutorialIntro(QString tutorialTitle, QString tutorialDescription);
     void onUserActionPerformed();
     bool isProgressSaved();
+    void toggleMenuButtons(bool active);
 
 private:
     Ui::StepperDashboard *ui;
@@ -138,6 +141,9 @@ private:
     // Version Manager
     VersionManager *versionManager;
 
+    // Log Manager
+    ActionLoggerJson loggerJson;
+
     // Project
     Project project;
     int currentStepIndex = 0; // Inicializa el índice en 0
@@ -152,6 +158,8 @@ private:
     QString currentReference;
 
     FileWatcher *fileWatcher;
+
+    bool initialized = false;
 };
 
 #endif // STEPPERDASHBOARD_H

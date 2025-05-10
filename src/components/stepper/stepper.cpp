@@ -16,7 +16,7 @@
 #include <cstdlib>
 #include <iostream>
 
-Stepper::Stepper(QWidget *parent)
+Stepper::Stepper(QWidget *parent, const std::string& projectTemplate)
     : QWidget(parent)
     , ui(new Ui::Stepper)
     , creationAssistant(new CreationAssistant())
@@ -33,6 +33,10 @@ Stepper::Stepper(QWidget *parent)
     ui->stepsWidget->addWidget(frontendAssistant);
     ui->stepsWidget->addWidget(backendAssistant);
     ui->stepsWidget->addWidget(summaryAssistant);
+    
+    if (!projectTemplate.empty())
+        newProject.setBaseProject(projectTemplate);
+    
     applyStyles(); // Aplicar todos los estilos
     ui->stepsWidget->setCurrentWidget(creationAssistant);
 }
@@ -74,7 +78,7 @@ void Stepper::on_nextButton_clicked()
         ui->backButton->hide();
     }
 
-    if (message != "") {
+    if (!message.empty()) {
         QMessageBox::warning(this, "Warning", QString::fromStdString(message));
         return; // Stop here
     }
@@ -86,8 +90,11 @@ void Stepper::on_nextButton_clicked()
 
     // Create Project before Summary
     if (currentIndex == ui->stepsWidget->count() - 2) {
+        ui->nextButton->hide();
+
         // Crear y mostrar el diálogo personalizado
-        CustomProgressDialog* progressDialog = new CustomProgressDialog(this);
+        QString createProject = "Creating project, please wait...";
+        CustomProgressDialog *progressDialog = new CustomProgressDialog(createProject, this);
         progressDialog->show();
 
         // New thread to execute the project creation
@@ -108,31 +115,29 @@ void Stepper::on_nextButton_clicked()
         connect(worker, &ProjectWorker::finished, this, [=]() {
             QMessageBox::information(this, "Successful", "Your project has been created successfully!");
             ui->nextButton->setEnabled(true);
-            workerThread->quit(); // Stop thread
-            workerThread->deleteLater(); // Clean memory
-            worker->deleteLater(); // Clean memory
+            workerThread->quit();
+            workerThread->wait();
+            workerThread->deleteLater();
+            worker->deleteLater();
+
+            // Show dashboard
+            StepperDashboard *stprDashboard = new StepperDashboard(nullptr, this->newProject);
+            stprDashboard->show();
+
+            this->hide();
+
+            // Show when dashboard is closed
+            connect(stprDashboard, &StepperDashboard::destroyed, this, &Stepper::show);
+
+            // Realizar el commit inicial al pasar al summary o finalizar el proyecto
+            if (this->newProject.getVersions()) {
+                VersionManager versionManager(this->newProject.getPath());
+                versionManager.saveChanges(); // Aquí se realiza el commit inicial
+            }
         });
 
         // Iniciar el hilo
         workerThread->start();
-    }
-
-    // Show dashboard
-    if (currentIndex == ui->stepsWidget->count() - 1) {
-        this->hide();
-
-        // When a project is clicked, open the StepperDashboard for that project
-        StepperDashboard *stprDashboard = new StepperDashboard(nullptr, this->newProject);
-        stprDashboard->show();
-
-        // Show when dashboard is closed
-        connect(stprDashboard, &StepperDashboard::destroyed, this, &Stepper::show);
-
-        // Realizar el commit inicial al pasar al summary o finalizar el proyecto
-        if (this->newProject.getVersions()) {
-            VersionManager versionManager(this->newProject.getPath());
-            versionManager.saveChanges(); // Aquí se realiza el commit inicial
-        }
     }
 }
 
@@ -157,7 +162,7 @@ void Stepper::applyStyles()
     ui->nextButton->setStyleSheet(
         "border: 1px solid #cccccc; border-radius: 7px; margin-left: 0px; padding: 6px 20px; "
         "font-weight: semi-bold;"
-        "background-color: #0F66DE; color: #ffffff; font-size: 16px; margin-inline: 20px;");
+        "background-color: #0F66DE; color: #ffffff; font-size: 16px;");
     ui->backButton->setStyleSheet(
         "border: 1px solid #cccccc; border-radius: 7px; padding: 6px 20px; font-weight: semi-bold;"
         "background-color: #f5f5f5; color: #333333; font-size: 16px;");

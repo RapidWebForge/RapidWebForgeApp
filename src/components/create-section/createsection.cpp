@@ -4,8 +4,6 @@
 #include "../../core/logging/actionloggerjson.h"
 #include "../../models/component-type/componenttype.h"
 #include "ui_createsection.h"
-#include <boost/algorithm/string.hpp>
-
 CreateSection::CreateSection(QWidget *parent)
     : QDialog(parent)
     , ui(new Ui::CreateSection)
@@ -51,9 +49,7 @@ void CreateSection::on_createButton_clicked()
         std::string path = ui->viewRouteLineEdit->text().toStdString();
 
         if (!sectionName.empty() && !path.empty() && isView) {
-            const std::shared_ptr<Section> view = std::make_shared<Section>(sectionName,
-                                                                            boost::to_lower_copy(
-                                                                                path));
+            const std::shared_ptr<Section> view = std::make_shared<Section>(sectionName, path);
 
             emit onSectionSaved(view);
 
