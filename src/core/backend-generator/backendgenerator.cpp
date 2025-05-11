@@ -247,20 +247,30 @@ bool BackendGenerator::updateBackendCode()
         return true;
     }
 
-    // Aplicar cada operación de forma incremental
+    std::vector<TransactionOperation> deletes, modifies, inserts;
     for (auto op : operations) {
         switch (op.type) {
         case OperationType::Insert:
-            applyInsertion(op.transaction);
+            inserts.push_back(op);
             break;
         case OperationType::Modify:
-            applyModification(op.transaction);
+            modifies.push_back(op);
             break;
         case OperationType::Delete:
-            applyDeletion(op.transaction);
+            deletes.push_back(op);
             break;
         }
     }
+
+    for (auto &op : modifies)
+        if (!applyModification(op.transaction))
+            return false;
+    for (auto &op : inserts)
+        if (!applyInsertion(op.transaction))
+            return false;
+    for (auto &op : deletes)
+        if (!applyDeletion(op.transaction))
+            return false;
 
     if (!updateSchema()) {
         qDebug() << "Error on Updating Schema";
@@ -327,6 +337,14 @@ bool BackendGenerator::runEditorScript(const std::vector<std::string> &stdArgs)
 
 bool BackendGenerator::applyInsertion(Transaction &transaction)
 {
+    // Editor.js
+    QString backendPath = QDir(QString::fromStdString(projectPath)).filePath("backend");
+    std::vector<std::string> args = {backendPath.toStdString(), "insert", transaction.getName()};
+
+    // Run script
+    if (!runEditorScript(args))
+        return false;
+
     // Generar controlador, modelo y ruta para el backend
     generateController(transaction);
     generateModel(transaction);
@@ -334,12 +352,8 @@ bool BackendGenerator::applyInsertion(Transaction &transaction)
     // Generar modelos y servicios para el frontend
     generateFrontendModel(transaction);
     generateFrontendService(transaction);
-    // Editor.js
-    QString backendPath = QDir(QString::fromStdString(projectPath)).filePath("backend");
-    std::vector<std::string> args = {backendPath.toStdString(), "insert", transaction.getName()};
 
-    // Run script
-    return runEditorScript(args);
+    return true;
 }
 
 bool BackendGenerator::applyModification(Transaction &transaction)
@@ -408,6 +422,13 @@ bool BackendGenerator::applyDeletion(Transaction &transaction)
     QString frontendPath = QDir(toQString(projectPath)).filePath("frontend");
     QString frontendSrc = QDir(frontendPath).filePath("src");
 
+    // Editor.js
+    std::vector<std::string> args = {backendPath.toStdString(), "delete", transaction.getName()};
+
+    // Run script
+    if (!runEditorScript(args))
+        return false;
+
     // Backend
     // controllers
     FileUtils::deleteFile(
@@ -424,11 +445,7 @@ bool BackendGenerator::applyDeletion(Transaction &transaction)
     // services
     FileUtils::deleteFile(buildPath(frontendSrc, "services", transactionNameQString + "Service.ts"));
 
-    // Editor.js
-    std::vector<std::string> args = {backendPath.toStdString(), "delete", transaction.getName()};
-
-    // Run script
-    return runEditorScript(args);
+    return true;
 }
 
 void BackendGenerator::generateFile(const Transaction &transaction,

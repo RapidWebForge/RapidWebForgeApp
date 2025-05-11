@@ -660,7 +660,6 @@ bool FrontendGenerator::updateFrontendCode()
     collectFormContext(frontendRoot, nlohmann::json::object());
 
     std::vector<NodeOperation> deletes, modifies, inserts;
-    // Aplicar cada operación de forma incremental
     for (auto op : operations) {
         switch (op.type) {
         case OperationType::Insert:
