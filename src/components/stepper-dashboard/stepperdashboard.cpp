@@ -795,13 +795,22 @@ void StepperDashboard::onCreateProject()
     if (!killNgInx())
         return;
 
+    QWidget *dashboard = this;
     // Cerrar el StepperDashboard
-    this->close();
+    dashboard->close();
 
     // Crear y mostrar el ProjectsPanel
     Stepper *createProjects = new Stepper();
     createProjects->setAttribute(Qt::WA_DeleteOnClose); // Liberar memoria automáticamente al cerrar
     createProjects->show();
+
+    // Show when create assistant is closed
+    connect(createProjects, &Stepper::destroyed, dashboard, &QWidget::show);
+
+    connect(createProjects, &Stepper::backToProjectsPanel, this, [this, createProjects, dashboard]() {
+        createProjects->close();
+        dashboard->show();
+    });
 }
 
 void StepperDashboard::initializeTutorialBar()

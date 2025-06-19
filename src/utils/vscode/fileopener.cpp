@@ -1,6 +1,7 @@
 #include "fileopener.h"
 #include <QDebug>
 #include <QFileInfo>
+#include <QMessageBox>
 #include <QOperatingSystemVersion>
 #include <QProcess>
 
@@ -31,6 +32,9 @@ bool FileOpener::openInVSCode(const std::string &folderPath, const std::string &
     bool launched = QProcess::startDetached(program, arguments);
     if (!launched) {
         qWarning() << "❌ No se pudo iniciar VSCode en" << program;
+        QMessageBox::critical(nullptr,
+                              "ERROR",
+                              "No tienes instalado VSCode para visualizar el código");
     }
     return launched;
 }
