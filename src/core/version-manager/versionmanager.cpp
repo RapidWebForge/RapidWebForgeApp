@@ -230,6 +230,7 @@ void VersionManager::deleteVersion(const std::string &versionName)
     if (error != 0) {
         std::cerr << "Failed to find branch: " << git_error_last()->message << std::endl;
         git_repository_free(repo);
+        QMessageBox::critical(nullptr, "Delete Version", "Version wasn't found");
         return;
     }
 

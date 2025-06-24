@@ -1,5 +1,6 @@
 #include "deleteversion.h"
 #include <QFile>
+#include <QMessageBox>
 #include "ui_deleteversion.h"
 
 DeleteVersion::DeleteVersion(VersionManager *versionManager, QWidget *parent)
@@ -50,6 +51,21 @@ void DeleteVersion::applyStyles()
 void DeleteVersion::on_deleteButton_clicked()
 {
     QString selectedVersion;
+
+    QMessageBox msgBox;
+    msgBox.setStyleSheet(
+        "QPushButton { background-color: #f0f0f0; color: black; padding: 5px 10px; }"
+        "QMessageBox { background-color: white; }");
+
+    msgBox.setWindowTitle("Delete Version");
+    msgBox.setText("Are you sure you want to delete the selected version?");
+    msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
+    msgBox.setDefaultButton(QMessageBox::No);
+
+    int reply = msgBox.exec();
+
+    if (reply == QMessageBox::No)
+        return;
 
     QModelIndexList selectedIndexes = ui->versionsListView->selectionModel()->selectedIndexes();
     if (!selectedIndexes.isEmpty()) {

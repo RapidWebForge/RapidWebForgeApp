@@ -2,6 +2,7 @@
 #include <QFile>
 #include <QMessageBox>
 #include "ui_createversion.h"
+#include <qregularexpression.h>
 
 CreateVersion::CreateVersion(VersionManager *versionManager, QWidget *parent)
     : QDialog(parent)
@@ -39,6 +40,11 @@ void CreateVersion::on_registerButton_clicked()
     // Obtener el nombre de la versión y los comentarios del usuario
     QString versionName = ui->versionNameLineEdit->text();
 
+    QRegularExpression invalidChars(R"([\\/:*?"<>|])");
+    if (invalidChars.match(versionName).hasMatch()) {
+        QMessageBox::warning(this, "Invalid name", "Version name have invalid characters.");
+        return;
+    }
     if (versionName.isEmpty()) {
         QMessageBox::warning(this, "Warning", "Version name cannot be empty.");
         return;

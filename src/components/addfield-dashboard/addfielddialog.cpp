@@ -146,6 +146,16 @@ void AddFieldDialog::on_addButton_clicked()
     Field field;
     std::string fieldName = ui->fieldNameLineEdit->text().toStdString();
 
+    QRegularExpression invalidChars(R"([\\/:*?"<>|])");
+    if (invalidChars.match(QString::fromStdString(fieldName)).hasMatch()) {
+        QMessageBox::warning(this, "Invalid name", "Field name have invalid characters.");
+        return;
+    }
+    if (fieldName.empty()) {
+        QMessageBox::warning(this, "Error", "Field name cannot be empty.");
+        return;
+    }
+
     bool isCreatedBefore = false;
 
     for (auto field : currentTransaction->getFields()) {
