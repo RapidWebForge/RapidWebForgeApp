@@ -3,6 +3,7 @@
 #include <QTimer>
 #include "../../core/project-manager/projectmanager.h"
 #include "ui_editproject.h"
+#include <qregularexpression.h>
 
 EditProject::EditProject(Project &project, QWidget *parent)
     : QDialog(parent)
@@ -26,6 +27,11 @@ void EditProject::on_buttonBox_accepted()
 
     // QString name = ui->projectNameLineEdit->text();
     QString description = ui->descriptionPlainTextEdit->toPlainText();
+    QRegularExpression invalidChars(R"([\\/:*?"<>|])");
+    if (invalidChars.match(description).hasMatch()) {
+        QMessageBox::warning(this, "Error", "Your description have invalid characters.");
+        return;
+    }
 
     // if (name.isEmpty()) {
     //     QMessageBox::warning(this, "Error", "Project name cannot be empty.");

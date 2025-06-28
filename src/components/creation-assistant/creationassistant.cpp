@@ -1,5 +1,8 @@
 #include "creationassistant.h"
+#include <QDebug>
 #include <QFileDialog>
+#include <QMessageBox>
+#include <QRegularExpression>
 #include "../../core/project-manager/projectmanager.h"
 #include "ui_creationassistant.h"
 
@@ -31,6 +34,9 @@ std::string CreationAssistant::isValid(Project &project)
     if (projectName.empty()) {
         return "Give a name for the project";
     } else {
+        QRegularExpression invalidChars(R"([\\/:*?"<>|])");
+        if (invalidChars.match(QString::fromStdString(projectName)).hasMatch())
+            return "Invalid project name";
         if (projectManager.isProjectAvailable(projectName))
             project.setName(projectName);
         else

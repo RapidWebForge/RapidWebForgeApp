@@ -637,6 +637,30 @@ void FrontendDashboard::onPropertyValueChanged(int row, int column)
         QString propertyName = ui->propertiesTable->item(row, 0)->text();
         QString newValue = ui->propertiesTable->item(row, 1)->text();
 
+        QRegularExpression invalidChars(R"(\\/%?"$@<>¿|)");
+        if (invalidChars.match(newValue).hasMatch()) {
+            QMessageBox::warning(this, "Invalid propertie", "Property have invalid characters.");
+
+            QString previousValue = QString::fromStdString(
+                currentComponent->getProps()[propertyName.toStdString()]);
+
+            disconnect(ui->propertiesTable,
+                       &QTableWidget::cellChanged,
+                       this,
+                       &FrontendDashboard::onPropertyValueChanged);
+
+            // Restaurar el valor anterior
+            ui->propertiesTable->item(row, 1)->setText(previousValue);
+
+            // Volver a conectar la señal
+            connect(ui->propertiesTable,
+                    &QTableWidget::cellChanged,
+                    this,
+                    &FrontendDashboard::onPropertyValueChanged);
+
+            return;
+        }
+
         // Actualizar las propiedades en `currentComponent`
         std::map<std::string, std::string> currentProps = currentComponent->getProps();
         currentProps[propertyName.toStdString()] = newValue.toStdString();

@@ -84,7 +84,6 @@ void OverviewPanel::setupProjects(const std::vector<Project> &projects)
            {"Advanced: React: Recuperando información",
             ":/resources/log_tutorials/advanced/advanced-tutorial-2.json"}};
 
-    int row1 = 0;
     for (auto it = tutorials.begin(); it != tutorials.end(); ++it) {
         QPushButton *tutorialButton = new QPushButton(this);
         tutorialButton->setFixedSize(202, 122);
@@ -112,6 +111,7 @@ void OverviewPanel::setupProjects(const std::vector<Project> &projects)
         layout->setAlignment(Qt::AlignCenter);
 
         QString tutorialPath = it.value();
+        qDebug() << tutorialPath;
 
         // Conectar el botón con la señal `openTutorial()`
         connect(tutorialButton, &QPushButton::clicked, this, [this, tutorialPath]() {
@@ -119,8 +119,8 @@ void OverviewPanel::setupProjects(const std::vector<Project> &projects)
         });
 
         tutorialLayout->addWidget(tutorialButton);
-        row1++;
     }
+
     QGridLayout *gridLayout = ui->gridLayout;
     gridLayout->setSpacing(10);
 

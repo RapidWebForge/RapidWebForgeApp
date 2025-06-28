@@ -1,4 +1,5 @@
 #include "editfielddialog.h"
+#include <QMessageBox>
 #include "../../core/logging/actionloggerjson.h"
 #include "ui_editfielddialog.h"
 
@@ -99,8 +100,20 @@ void EditFieldDialog::on_foreignKeyCheckBox_stateChanged(int state)
 
 void EditFieldDialog::on_acceptButton_clicked()
 {
+    QString fieldName = ui->fieldNameLineEdit->text();
+
+    QRegularExpression invalidChars(R"([\\/%:*?"<>|])");
+    if (invalidChars.match(fieldName).hasMatch()) {
+        QMessageBox::warning(this, "Invalid name", "Field name have invalid characters.");
+        return;
+    }
+    if (fieldName.toStdString().empty()) {
+        QMessageBox::warning(this, "Error", "Field name cannot be empty.");
+        return;
+    }
+
     // Actualizar los valores del field actual con los datos del diálogo
-    currentField->setName(ui->fieldNameLineEdit->text().toStdString());
+    currentField->setName(fieldName.toStdString());
     currentField->setType(ui->fieldTypeComboBox->currentText().toStdString());
     currentField->setIsPrimaryKey(ui->primaryKeyCheckBox->isChecked());
     currentField->setIsForeignKey(ui->foreignKeyCheckBox->isChecked());

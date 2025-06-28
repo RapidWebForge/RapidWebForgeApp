@@ -1,7 +1,9 @@
 #include "createtabledialog.h"
 #include <QFile>
+#include <QMessageBox>
 #include "ui_createtabledialog.h"
 #include <boost/algorithm/string.hpp>
+#include <qregularexpression.h>
 
 CreateTableDialog::CreateTableDialog(QWidget *parent)
     : QDialog(parent)
@@ -39,6 +41,16 @@ void CreateTableDialog::applyStyles()
 void CreateTableDialog::on_createButton_clicked()
 {
     std::string transactionName = ui->tableNameLineEdit->text().toStdString();
+
+    QRegularExpression invalidChars(R"([\\/:*?"<>|])");
+    if (invalidChars.match(QString::fromStdString(transactionName)).hasMatch()) {
+        QMessageBox::warning(this, "Invalid name", "Table name have invalid characters.");
+        return;
+    }
+    if (transactionName.empty()) {
+        QMessageBox::warning(this, "Error", "Table name cannot be empty.");
+        return;
+    }
     // TODO: Ensure capitalize
     transaction.setName(transactionName);
     transaction.setNameConst(boost::to_lower_copy(transactionName));
