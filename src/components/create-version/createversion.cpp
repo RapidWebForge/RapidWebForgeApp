@@ -2,6 +2,7 @@
 #include <QFile>
 #include <QMessageBox>
 #include "ui_createversion.h"
+#include <qregularexpression.h>
 
 CreateVersion::CreateVersion(VersionManager *versionManager, QWidget *parent)
     : QDialog(parent)
@@ -10,12 +11,7 @@ CreateVersion::CreateVersion(VersionManager *versionManager, QWidget *parent)
 {
     ui->setupUi(this);
 
-    // Conectar el botón "Registrar" al slot para aceptar el diálogo
-    connect(ui->registerButton, &QPushButton::clicked, this, &CreateVersion::accept);
-    connect(ui->cancelButton,
-            &QPushButton::clicked,
-            this,
-            &CreateVersion::reject); // Cerrar el diálogo al cancelar
+    connect(ui->cancelButton, &QPushButton::clicked, this, &CreateVersion::reject);
 
     applyStyles();
 }
@@ -39,12 +35,16 @@ void CreateVersion::applyStyles()
     }
 }
 
-void CreateVersion::onRegisterButtonClicked()
+void CreateVersion::on_registerButton_clicked()
 {
     // Obtener el nombre de la versión y los comentarios del usuario
     QString versionName = ui->versionNameLineEdit->text();
-    QString comments = ui->commentsTextEdit->toPlainText();
 
+    QRegularExpression invalidChars(R"([\\/:*?"<>|])");
+    if (invalidChars.match(versionName).hasMatch()) {
+        QMessageBox::warning(this, "Invalid name", "Version name have invalid characters.");
+        return;
+    }
     if (versionName.isEmpty()) {
         QMessageBox::warning(this, "Warning", "Version name cannot be empty.");
         return;
@@ -53,14 +53,6 @@ void CreateVersion::onRegisterButtonClicked()
     // Llamar a VersionManager para crear la versión
     versionManager->createVersion(versionName.toStdString());
 
-    // Mostrar un mensaje de éxito
-    QMessageBox::information(this, "Success", "Version created successfully.");
-
     // Cerrar el diálogo
     accept();
-}
-// Método para obtener el nombre de la versión ingresado por el usuario
-QString CreateVersion::getVersionName() const
-{
-    return ui->versionNameLineEdit->text();
 }

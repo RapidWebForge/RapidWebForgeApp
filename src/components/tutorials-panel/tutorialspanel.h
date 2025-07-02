@@ -1,0 +1,41 @@
+#ifndef TUTORIALSPANEL_H
+#define TUTORIALSPANEL_H
+
+#include <QDialog>
+#include <QGridLayout>
+#include <QLabel>
+#include <QPushButton>
+#include <QWidget>
+#include "../../core/configuration-manager/configurationmanager.h"
+#include "../../models/project/project.h"
+#include "../stepper/stepper.h"
+#include <vector>
+
+namespace Ui {
+class TutorialsPanel;
+}
+
+class TutorialsPanel : public QWidget
+{
+    Q_OBJECT
+
+public:
+    explicit TutorialsPanel(QWidget *parent = nullptr);
+    ~TutorialsPanel();
+    void setupTutorials();
+
+private:
+    Ui::TutorialsPanel *ui;
+    QGridLayout *gridLayout;
+    std::vector<Project> projects;
+    ConfigurationManager *confManager = nullptr;
+
+private slots:
+    // Nuevo slot para manejar cuando se hace clic en un tutorial
+    void onTutorialClicked(const QString &tutorialPath);
+
+signals:
+    void openTutorial(const QString &tutorialPath, int projectId);
+};
+
+#endif // TUTORIALSPANEL_H

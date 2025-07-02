@@ -1,97 +1,219 @@
 #include "deploymanager.h"
 #include <QDebug>
+#include <QDir>
+#include <QElapsedTimer>
 #include <QFile>
+#include <QFileInfo>
+#include <QHostAddress>
+#include <QTcpSocket>
 #include <QTextStream>
+#include <QThread>
+#include "../../core/configuration-manager/configurationmanager.h"
 #include "../../utils/file/fileutiils.h"
 #include <filesystem>
 #include <fmt/core.h>
 #include <inja/inja.hpp>
 #include <iostream>
 #include <string>
-#include <thread>
 
-DeployManager::DeployManager(const std::string projectPath, const std::string ngInxPath)
-    : projectPath(projectPath)
-    , ngInxPath(ngInxPath)
-    , ngInxDirectory(std::filesystem::path(ngInxPath).parent_path().string())
-    , configFilePath(ngInxDirectory + "\\conf\\nginx.conf")
-{}
+DeployManager::DeployManager(const std::string &projectPath, QObject *parent)
+    : QObject(parent)
+    , projectPath(projectPath)
+    , configFilePath(QDir(QString::fromStdString(projectPath)).filePath("nginx.conf"))
+    , ngInxDirectory(QFileInfo(configFilePath).absolutePath())
+{
+    ConfigurationManager confMg;
+
+    ngInxPath = confMg.getConfiguration().getNgInxPath();
+    bunPath = confMg.getConfiguration().getBunPath();
+}
+
+DeployManager::DeployManager(QObject *parent)
+    : QObject(parent)
+    , projectPath("")
+    , configFilePath()
+    , ngInxDirectory()
+{
+    ConfigurationManager confMg;
+
+    ngInxPath = confMg.getConfiguration().getNgInxPath();
+    bunPath = confMg.getConfiguration().getBunPath();
+}
 
 DeployManager::~DeployManager()
 {
-    // kill();
-}
-
-bp::child DeployManager::runBackend(const std::string bunPath)
-{
-    std::string command = bunPath + " run ./server.js";
-    return bp::child(command, bp::start_dir = this->projectPath + "\\backend");
-}
-
-bp::child DeployManager::runFrontend(const std::string bunPath)
-{
-    std::string command = bunPath + " run dev";
-    return bp::child(command, bp::start_dir = this->projectPath + "\\frontend");
-}
-
-bp::child DeployManager::runNgInx()
-{
-    return bp::child(ngInxPath, bp::start_dir = ngInxDirectory);
+    kill();
 }
 
 bool isNginxRunning()
 {
-    bp::ipstream pipe_stream;
-    bp::child c("tasklist /fi \"imagename eq nginx.exe\"", bp::std_out > pipe_stream);
-    c.wait();
+    QProcess process;
+#ifdef _WIN32
+    // process.start("tasklist", {"/fi", "imagename eq nginx.exe"});
+    process.start("cmd.exe", {"/c", "tasklist | findstr /i nginx"});
+#elif defined(__APPLE__) || defined(__linux__)
+    process.start("pgrep", {"nginx"});
+#else
+    return false;
+#endif
+    process.waitForFinished();
+    QString output = process.readAllStandardOutput();
+    return !output.trimmed().isEmpty();
+}
 
-    std::string line;
-    while (std::getline(pipe_stream, line)) {
-        if (line.find("nginx.exe") != std::string::npos) {
-            // Si encontramos "nginx.exe" en la salida, significa que el proceso está en ejecución
+bool waitForPort(const QHostAddress &host, quint16 port, int timeoutMs = 10000)
+{
+    QElapsedTimer timer;
+    timer.start();
+
+    while (timer.elapsed() < timeoutMs) {
+        QTcpSocket socket;
+        socket.connectToHost(host, port);
+        if (socket.waitForConnected(100)) {
+            socket.disconnectFromHost();
             return true;
         }
+        QThread::msleep(200);
     }
     return false;
 }
 
-void DeployManager::start(const std::string bunPath)
+bool DeployManager::spawnServer(const QString &dir, quint16 port, QProcess *&handle)
 {
+    handle = new QProcess(this);
+    handle->setWorkingDirectory(dir);
+    handle->start(QString::fromStdString(bunPath), {"run", "dev"});
+    if (!handle->waitForStarted(10'000))
+        return false;
+    return waitForPort(QHostAddress::LocalHost, port, 15'000);
+}
+
+void DeployManager::spawnTerminal(const QString &dir)
+{
+    QString script = QString("tell application \"Terminal\"\n"
+                             "  do script \"cd '%1' && %2\"\n"
+                             "  activate\n"
+                             "end tell")
+                         .arg(dir, QString::fromStdString(bunPath) + " run dev");
+    QProcess::startDetached("/usr/bin/osascript", {"-e", script});
+}
+
+void DeployManager::start()
+{
+#ifdef Q_OS_WIN
+    // 1. Matar posibles servidores backend y frontend en puertos 3000 y 9000 (WINDOWS)
+    QString portBackend = QString("$conn = Get-NetTCPConnection -LocalPort 3000; "
+                                  "if ($conn) { Stop-Process -Id $conn.OwningProcess -Force }");
+
+    QProcess::execute("powershell.exe", {"-NoProfile", "-Command", portBackend});
+
+    QString portFrontend = QString("$conn = Get-NetTCPConnection -LocalPort 9000; "
+                                   "if ($conn) { Stop-Process -Id $conn.OwningProcess -Force }");
+
+    QProcess::execute("powershell.exe", {"-NoProfile", "-Command", portFrontend});
+#endif
+
+    // 2. Matar nginx (usando el viejo config)
+    kill();
+    // 3. Crear nuevo archivo nginx.conf
     createNginxConfig(9000, 3000);
 
-    if (!isNginxRunning()) {
-        qDebug() << "Nginx no está en ejecución, iniciando Nginx...";
-        try {
-            bp::child nginx = runNgInx(); // Asegúrate de tener esta función implementada
-            nginx.detach();
-        } catch (const std::exception &e) {
-            qDebug() << "Error al iniciar Nginx:" << e.what();
-        }
-    } else {
-        qDebug() << "Nginx ya está en ejecución.";
+    QString backendDir = QDir(QString::fromStdString(projectPath)).filePath("backend");
+    QString frontendDir = QDir(QString::fromStdString(projectPath)).filePath("frontend");
+
+#ifdef Q_OS_WIN
+    if (!spawnServer(backendDir, 3000, backProcess)) {
+        return;
     }
+    if (!spawnServer(frontendDir, 9000, frontProcess)) {
+        return;
+    }
+#elif defined(Q_OS_MAC)
+    spawnTerminal(backendDir);
+    spawnTerminal(frontendDir);
+#endif
 
-    // Lanza el backend en un hilo
-    bp::child backend(runBackend(bunPath));
-    std::thread([backend = std::move(backend)]() mutable { backend.detach(); }).detach();
+    // NgInx
+    if (!isNginxRunning()) {
+        qDebug() << "Nginx is not running, starting Nginx...";
 
-    // Lanza el frontend en un hilo
-    bp::child frontend(runFrontend(bunPath));
-    std::thread([frontend = std::move(frontend)]() mutable { frontend.detach(); }).detach();
+        nginxProcess = new QProcess(this);
+        QString fixedConfigPath = QDir::toNativeSeparators(configFilePath);
+        QString prefix = QDir::toNativeSeparators(ngInxDirectory);
+
+        nginxProcess->setWorkingDirectory(ngInxDirectory);
+        nginxProcess->start(QString::fromStdString(ngInxPath),
+                            {"-p", prefix, "-c", fixedConfigPath});
+
+        if (!nginxProcess->waitForStarted(5'000)) {
+            qWarning() << "nginx no arrancó en 5 s";
+            qWarning() << nginxProcess->readAllStandardError();
+        }
+
+        connect(nginxProcess, &QProcess::readyReadStandardError, [=]() {
+            qWarning() << nginxProcess->readAllStandardError().trimmed();
+        });
+
+    } else {
+        qDebug() << "Nginx is already running.";
+    }
 }
 
 void DeployManager::kill()
 {
-    bp::system(ngInxPath + " -c " + configFilePath + " -p " + ngInxDirectory + " -s stop");
-}
+#ifdef Q_OS_WIN
+    // 1) Intentar parada amigable si está instalado como servicio
+    QProcess::execute("net", {"stop", "nginx"}); // si corre como Windows Service
 
-void DeployManager::reload()
-{
-    bp::system(ngInxPath + " -c " + configFilePath + " -p " + ngInxDirectory + " -s reload");
+    // 2) Si sigue vivo, forzar el cierre
+    QProcess::execute("taskkill", {"/F", "/IM", "nginx.exe"});
+#else
+    // 1) Intentar una parada ordenada
+    //    -s quit le dice a nginx que cierre sus workers y luego termine
+    QProcess::execute(QString::fromStdString(ngInxPath), {"-s", "quit"});
+
+    // 2) Pequeña espera para que se cierre
+    QThread::sleep(1);
+
+    // 3) Si aún queda alguno, forzar
+    QProcess::execute("pkill", {"-9", "nginx"});
+#endif
 }
 
 void DeployManager::createNginxConfig(int frontendPort, int backendPort)
 {
+    // Base: directorio donde vamos a colocar nginx.conf, logs/, temp/, etc.
+    QString baseDir = QFileInfo(configFilePath).absolutePath();
+
+    // 1) Crear logs/
+    QString logsPath = QDir(baseDir).filePath("logs");
+    if (QDir().mkpath(logsPath)) {
+        qDebug() << "✅ Directorio logs/ creado en:" << logsPath;
+    } else {
+        qDebug() << "📁 Directorio logs/ ya existe o no se pudo crear en:" << logsPath;
+    }
+
+    // 2) Crear todas las carpetas temp que nginx espera
+    QStringList tempSubs = {"temp/client_body_temp",
+                            "temp/proxy_temp",
+                            "temp/fastcgi_temp",
+                            "temp/uwsgi_temp",
+                            "temp/scgi_temp"};
+    for (const QString &sub : tempSubs) {
+        QString fullPath = QDir(baseDir).filePath(sub);
+        if (QDir().mkpath(fullPath)) {
+            qDebug() << "✅ Creada carpeta nginx temp:" << fullPath;
+        } else {
+            qWarning() << "❌ No se pudo crear carpeta nginx temp:" << fullPath;
+        }
+    }
+
+    QFile configFile(configFilePath);
+    if (configFile.exists()) {
+        qDebug() << "nginx.conf already exists in:" << configFilePath;
+        return; // No volver a crear
+    }
+
     inja::Environment env;
     std::string templatePath = ":/inja/nginx/nginx_conf";
 
@@ -108,16 +230,22 @@ void DeployManager::createNginxConfig(int frontendPort, int backendPort)
     std::string templateString = templateContent.toStdString();
 
     try {
-        // Definir los valores de las variables en un json
         nlohmann::json data;
         data["frontend_port"] = frontendPort;
         data["backend_port"] = backendPort;
 
-        // Renderizar la plantilla con los datos
         std::string result = env.render(templateString, data);
 
-        FileUtils::writeFile(configFilePath, result);
+        // Asegurarse de que el directorio exista
+        QDir().mkpath(QFileInfo(configFilePath).absolutePath());
+
+        FileUtils::writeFile(configFilePath.toStdString(), result);
+        qDebug() << "nginx.conf create in:" << configFilePath;
     } catch (const std::exception &e) {
-        std::cerr << "Error al procesar la plantilla: " << e.what() << std::endl;
+        std::cerr << "Error to process the template: " << e.what() << std::endl;
     }
 }
+
+// QString fixedDir = QDir::toNativeSeparators(dir);
+// QString fullCommand = QString("cd '%1'; %2").arg(fixedDir, cmd);
+// QProcess::startDetached("powershell.exe", {"-NoExit", "-Command", fullCommand});

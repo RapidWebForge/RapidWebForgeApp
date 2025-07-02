@@ -2,8 +2,9 @@
 #define BACKENDDASHBOARD_H
 
 #include <QCheckBox>
-#include <QDialog>
 #include <QTreeWidgetItem>
+#include <QWidget>
+#include "../../core/logging/actionloggerjson.h"
 #include "../../models/transaction/transaction.h"
 #include "../addfield-dashboard/addfielddialog.h"
 #include "../create-table-dashboard/createtabledialog.h"
@@ -14,54 +15,52 @@ namespace Ui {
 class BackendDashboard;
 }
 
-class BackendDashboard : public QDialog
+class BackendDashboard : public QWidget
 {
     Q_OBJECT
 
 public:
     explicit BackendDashboard(QWidget *parent = nullptr);
     ~BackendDashboard();
-    // Getters
-    const std::vector<Transaction> &getTransactions() const;
-    std::vector<Transaction> &getTransactions();
     // Setters
-    void setTransactions(const std::vector<Transaction> &newTransactions);
-    void setCurrentTransaction(Transaction &transaction);
+    void setTransactions(std::vector<Transaction> *transactionsRef);
+    void setCurrentTransaction(Transaction *transaction);
+    void setCurrentField(Field &field);
     void setDatabaseLabel(const std::string &dbName);
 
 public slots:
-    void onFieldSaved(const Field &field);
+    void onFieldSaved();
     void onTransactionSaved(const Transaction &transaction);
     void onTableSelected(QTreeWidgetItem *item, int column);
+    void onFieldSelected(int row, int column);
     void onTableNameChanged(QTreeWidgetItem *item, int column);
-    void onFieldUpdated(const Field &updatedField);
 
 private slots:
-    void showAddFieldDialog();
+    void on_deleteField_clicked();
+    void on_addField_clicked();
+    void on_editField_clicked();
 
-    void on_editButton_clicked();
-    void on_deleteButton_clicked();
-    void on_editDB_clicked();
-    void on_deleteFieldButton_clicked();
-    void on_createTableButton_clicked();
+    void on_deleteTable_clicked();
+    void on_createTable_clicked();
+    void on_editTable_clicked();
 
 private:
     Ui::BackendDashboard *ui;
     void applyStylesBack();
-    void setupTasksTable();
-    void setupTasksMethodsList();
-    void updateTasksTable(const Transaction &transaction);
+    void setupFieldsTable();
+    void setupMethodsList();
+    void updateFieldsTable();
+    void updateTablesTree();
 
     CreateTableDialog *createTableDialog;
     AddFieldDialog *addFieldDialog;
     QTreeWidgetItem *rootItem;
-    std::vector<Transaction> transactions;
-    Transaction currentTransaction;
-    EditFieldDialog *editFieldDialog; // Añadir el puntero a la clase de diálogo de edición
+    std::vector<Transaction> *transactions;
+    Transaction *currentTransaction = nullptr;
+    Field *currentField = nullptr;
+    EditFieldDialog *editFieldDialog;
 
-signals:
-    void transactionNameChanged(); // Señal emitida cuando se cambie el nombre de una transacción
-    void fieldEdited(const Field &field); // Señal que se emite cuando un campo es editado
+    ActionLoggerJson loggerJson;
 };
 
 #endif // BACKENDDASHBOARD_H

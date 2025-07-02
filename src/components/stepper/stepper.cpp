@@ -11,11 +11,12 @@
 #include "../../core/code-generator/codegenerator.h"
 #include "../customprogress-dialog/customprogressdialog.h"
 #include "../stepper-dashboard/stepperdashboard.h"
+#include "../../core/project-worker/projectworker.h"
 #include "ui_stepper.h"
 #include <cstdlib>
 #include <iostream>
 
-Stepper::Stepper(QWidget *parent)
+Stepper::Stepper(QWidget *parent, const std::string& projectTemplate)
     : QWidget(parent)
     , ui(new Ui::Stepper)
     , creationAssistant(new CreationAssistant())
@@ -24,7 +25,6 @@ Stepper::Stepper(QWidget *parent)
     , backendAssistant(new BackendAssistant())
     , summaryAssistant(new SummaryAssistant())
     , newProject()
-    , projectManager()
 {
     ui->setupUi(this);
 
@@ -33,6 +33,10 @@ Stepper::Stepper(QWidget *parent)
     ui->stepsWidget->addWidget(frontendAssistant);
     ui->stepsWidget->addWidget(backendAssistant);
     ui->stepsWidget->addWidget(summaryAssistant);
+    
+    if (!projectTemplate.empty())
+        newProject.setBaseProject(projectTemplate);
+    
     applyStyles(); // Aplicar todos los estilos
     ui->stepsWidget->setCurrentWidget(creationAssistant);
 }
@@ -74,7 +78,7 @@ void Stepper::on_nextButton_clicked()
         ui->backButton->hide();
     }
 
-    if (message != "") {
+    if (!message.empty()) {
         QMessageBox::warning(this, "Warning", QString::fromStdString(message));
         return; // Stop here
     }
@@ -86,51 +90,54 @@ void Stepper::on_nextButton_clicked()
 
     // Create Project before Summary
     if (currentIndex == ui->stepsWidget->count() - 2) {
+        ui->nextButton->hide();
+
         // Crear y mostrar el diálogo personalizado
-        CustomProgressDialog progressDialog(this);
-        progressDialog.setWindowModality(Qt::WindowModal);
-        progressDialog.show();
+        QString createProject = "Creating project, please wait...";
+        CustomProgressDialog *progressDialog = new CustomProgressDialog(createProject, this);
+        progressDialog->show();
 
-        // Procesar eventos para mostrar el diálogo
-        QCoreApplication::processEvents();
+        // New thread to execute the project creation
+        QThread *workerThread = new QThread;
+        ProjectWorker *worker = new ProjectWorker(this->newProject);
 
-        // Ejecutar tareas de creación de proyecto en segundo plano
-        projectManager.createProject(this->newProject);
+        worker->moveToThread(workerThread);
 
-        // Copy folder template to choose path
-        CodeGenerator codeGenerator(this->newProject);
-        codeGenerator.createBaseBackendProject();
-        codeGenerator.createBaseFrontendProject();
+        ui->nextButton->setEnabled(false);
 
-        // Cerrar el diálogo al finalizar las tareas
-        progressDialog.close();
+        // Connect `started()` signal from thread with `process()` signal from worker
+        connect(workerThread, &QThread::started, worker, &ProjectWorker::process);
 
-        QString message = "Your project has been created successfully!";
-        QMessageBox::information(this, "Successful", message);
+        // Connect `finished()` worker's signal to close the dialog
+        connect(worker, &ProjectWorker::finished, progressDialog, &CustomProgressDialog::close);
 
-        // Inicializar repositorio Git si versions está habilitado
-        if (this->newProject.getVersions()) {
-            VersionManager versionManager(this->newProject.getPath());
-            versionManager.initializeRepository();
-        }
-    }
+        // Connect `finished()` worker's signal to show a message and clean
+        connect(worker, &ProjectWorker::finished, this, [=]() {
+            QMessageBox::information(this, "Successful", "Your project has been created successfully!");
+            ui->nextButton->setEnabled(true);
+            workerThread->quit();
+            workerThread->wait();
+            workerThread->deleteLater();
+            worker->deleteLater();
 
-    // Show dashboard
-    if (currentIndex == ui->stepsWidget->count() - 1) {
-        this->hide();
+            // Show dashboard
+            StepperDashboard *stprDashboard = new StepperDashboard(nullptr, this->newProject);
+            stprDashboard->show();
 
-        // When a project is clicked, open the StepperDashboard for that project
-        StepperDashboard *stprDashboard = new StepperDashboard(nullptr, this->newProject);
-        stprDashboard->show();
+            this->hide();
 
-        // Show when dashboard is closed
-        connect(stprDashboard, &StepperDashboard::destroyed, this, &Stepper::show);
+            // Show when dashboard is closed
+            connect(stprDashboard, &StepperDashboard::destroyed, this, &Stepper::show);
 
-        // Realizar el commit inicial al pasar al summary o finalizar el proyecto
-        if (this->newProject.getVersions()) {
-            VersionManager versionManager(this->newProject.getPath());
-            versionManager.saveChanges(); // Aquí se realiza el commit inicial
-        }
+            // Realizar el commit inicial al pasar al summary o finalizar el proyecto
+            if (this->newProject.getVersions()) {
+                VersionManager versionManager(this->newProject.getPath());
+                versionManager.saveChanges(); // Aquí se realiza el commit inicial
+            }
+        });
+
+        // Iniciar el hilo
+        workerThread->start();
     }
 }
 
@@ -155,7 +162,7 @@ void Stepper::applyStyles()
     ui->nextButton->setStyleSheet(
         "border: 1px solid #cccccc; border-radius: 7px; margin-left: 0px; padding: 6px 20px; "
         "font-weight: semi-bold;"
-        "background-color: #0F66DE; color: #ffffff; font-size: 16px; margin-inline: 20px;");
+        "background-color: #0F66DE; color: #ffffff; font-size: 16px;");
     ui->backButton->setStyleSheet(
         "border: 1px solid #cccccc; border-radius: 7px; padding: 6px 20px; font-weight: semi-bold;"
         "background-color: #f5f5f5; color: #333333; font-size: 16px;");

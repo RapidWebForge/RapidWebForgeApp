@@ -1,14 +1,14 @@
 #ifndef BACKENDASSISTANT_H
 #define BACKENDASSISTANT_H
 
-#include <QDialog>
+#include <QWidget>
 #include "../../models/project/project.h"
 
 namespace Ui {
 class BackendAssistant;
 }
 
-class BackendAssistant : public QDialog
+class BackendAssistant : public QWidget
 {
     Q_OBJECT
 

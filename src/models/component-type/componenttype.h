@@ -3,6 +3,7 @@
 
 #include <map>
 #include <string>
+#include <unordered_map>
 
 enum class ComponentType {
     Undefined,
@@ -11,29 +12,64 @@ enum class ComponentType {
     HeaderH3,
     Paragraph,
     Input,
+    Label,
     TextArea,
     Button,
+    Hyperlink,
     Form,
     HorizontalLayout,
     VerticalLayout,
     ModelLayout,
+    Layout,
+    Image,
+    Iframe,
 };
 
 // Mapa de propiedades predeterminadas
-const std::map<ComponentType, std::map<std::string, std::string>> componentPropertiesMap
-    = {{ComponentType::HeaderH1, {{"class", ""}, {"text", "Default Header"}}},
-       {ComponentType::HeaderH2, {{"class", ""}, {"text", "Default Header 2"}}},
-       {ComponentType::HeaderH3, {{"class", ""}, {"text", "Default Header 3"}}},
-       {ComponentType::Paragraph, {{"class", ""}, {"text", "Default Paragraph"}}},
-       {ComponentType::Input,
-        {{"class", ""}, {"placeholder", "Enter text"}, {"type", "text"}, {"value", ""}}},
-       {ComponentType::TextArea, {{"class", ""}, {"placeholder", "Enter text"}}},
-       {ComponentType::Button,
-        {{"class", ""}, {"text", "Default Button"}, {"type", "button"}, {"click", ""}}},
-       {ComponentType::Form, {{"class", ""}, {"method", ""}, {"model", ""}}},
-       {ComponentType::HorizontalLayout, {{"class", ""}}},
-       {ComponentType::VerticalLayout, {{"class", ""}}},
-       {ComponentType::ModelLayout, {{"class", ""}, {"model", ""}}}};
+const std::map<ComponentType, std::map<std::string, std::string>> componentPropertiesMap = {
+    {ComponentType::HeaderH1, {{"class", "text-4xl"}, {"text", "Default Header"}}},
+    {ComponentType::HeaderH2, {{"class", "text-2xl"}, {"text", "Default Header 2"}}},
+    {ComponentType::HeaderH3, {{"class", "text-lg"}, {"text", "Default Header 3"}}},
+    {ComponentType::Paragraph, {{"class", "text-sm"}, {"text", "Default Paragraph"}}},
+    {ComponentType::Input,
+     {{"class",
+       "border border-black/80 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 "
+       "focus:ring-blue-500 placeholder:text-gray-400"},
+      {"placeholder", "Enter text"},
+      {"type", "text"},
+      {"value", ""},
+      {"inputid", ""},
+      {"name", ""},
+      {"minlength", ""},
+      {"maxlength", ""},
+      {"required", "false"}}},
+    {ComponentType::Label,
+     {{"class", "font-semibold text-sm"}, {"text", "Default Label"}, {"for", ""}}},
+    {ComponentType::TextArea,
+     {{"class",
+       "border border-black/80 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 "
+       "focus:ring-blue-500 placeholder:text-gray-400"},
+      {"placeholder", "Enter text"},
+      {"minlength", ""},
+      {"maxlength", ""}}},
+    {ComponentType::Button,
+     {{"class",
+       "bg-blue-600 rounded-lg text-white text-sm font-semibold hover:bg-blue-800 px-4 py-2 "
+       "cursor-pointer"},
+      {"text", "Default Button"},
+      {"type", "button"},
+      {"click", ""}}},
+    {ComponentType::Hyperlink,
+     {{"class", ""}, {"text", "Default Hyperlink"}, {"href", ""}, {"target", "_self"}, {"rel", ""}}},
+    {ComponentType::Form,
+     {{"class", "flex flex-col items-center"}, {"method", "POST"}, {"model", ""}}},
+    {ComponentType::HorizontalLayout, {{"class", ""}}},
+    {ComponentType::VerticalLayout, {{"class", ""}}},
+    {ComponentType::ModelLayout,
+     {{"class", "flex flex-col items-center"}, {"model", ""}, {"get", "ALL"}}},
+    {ComponentType::Layout, {{"class", ""}}},
+    {ComponentType::Image, {{"class", ""}, {"src", ""}, {"alt", ""}, {"width", ""}, {"height", ""}}},
+    {ComponentType::Iframe, {{"class", ""}, {"src", ""}, {"title", ""}}}};
 
 // Función para convertir ComponentType a std::string
 inline std::string componentTypeToString(ComponentType type)
@@ -49,10 +85,14 @@ inline std::string componentTypeToString(ComponentType type)
         return "Paragraph";
     case ComponentType::Input:
         return "Input";
+    case ComponentType::Label:
+        return "Label";
     case ComponentType::TextArea:
         return "Text Area";
     case ComponentType::Button:
         return "Button";
+    case ComponentType::Hyperlink:
+        return "Hyperlink";
     case ComponentType::Form:
         return "Form";
     case ComponentType::HorizontalLayout:
@@ -61,6 +101,12 @@ inline std::string componentTypeToString(ComponentType type)
         return "Vertical Layout";
     case ComponentType::ModelLayout:
         return "Model Layout";
+    case ComponentType::Layout:
+        return "Layout";
+    case ComponentType::Image:
+        return "Image";
+    case ComponentType::Iframe:
+        return "Iframe";
     default:
         return "Undefined";
     }
@@ -69,29 +115,27 @@ inline std::string componentTypeToString(ComponentType type)
 // Función para convertir std::string a ComponentType
 inline ComponentType stringToComponentType(const std::string &typeStr)
 {
-    if (typeStr == "Header H1")
-        return ComponentType::HeaderH1;
-    if (typeStr == "Header H2")
-        return ComponentType::HeaderH2;
-    if (typeStr == "Header H3")
-        return ComponentType::HeaderH3;
-    if (typeStr == "Paragraph")
-        return ComponentType::Paragraph;
-    if (typeStr == "Input")
-        return ComponentType::Input;
-    if (typeStr == "Text Area")
-        return ComponentType::TextArea;
-    if (typeStr == "Button")
-        return ComponentType::Button;
-    if (typeStr == "Form")
-        return ComponentType::Form;
-    if (typeStr == "Horizontal Layout")
-        return ComponentType::HorizontalLayout;
-    if (typeStr == "Vertical Layout")
-        return ComponentType::VerticalLayout;
-    if (typeStr == "Model Layout")
-        return ComponentType::ModelLayout;
-    return ComponentType::Undefined;
+    static const std::unordered_map<std::string, ComponentType> typeMap = {
+        {"Header H1", ComponentType::HeaderH1},
+        {"Header H2", ComponentType::HeaderH2},
+        {"Header H3", ComponentType::HeaderH3},
+        {"Paragraph", ComponentType::Paragraph},
+        {"Input", ComponentType::Input},
+        {"Label", ComponentType::Label},
+        {"Text Area", ComponentType::TextArea},
+        {"Button", ComponentType::Button},
+        {"Hyperlink", ComponentType::Hyperlink},
+        {"Form", ComponentType::Form},
+        {"Horizontal Layout", ComponentType::HorizontalLayout},
+        {"Vertical Layout", ComponentType::VerticalLayout},
+        {"Model Layout", ComponentType::ModelLayout},
+        {"Layout", ComponentType::Layout},
+        {"Image", ComponentType::Image},
+        {"Iframe", ComponentType::Iframe},
+    };
+
+    auto it = typeMap.find(typeStr);
+    return (it != typeMap.end()) ? it->second : ComponentType::Undefined;
 }
 
 #endif // COMPONENTTYPE_H

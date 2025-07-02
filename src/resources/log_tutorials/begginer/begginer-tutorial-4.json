@@ -1,0 +1,38 @@
+{
+  "title": "CSS: Diseño responsive",
+  "description": "Con TailwindCSS puedes hacer que tu aplicación se vea bien en cualquier dispositivo, desde celulares hasta monitores grandes, usando utilidades responsive.",
+  "steps": [
+    {
+      "goal": "Usar clases responsive básicas",
+      "comment": "Aplica clases como `bg-red-500 sm:bg-blue-500` para cambiar estilos según el tamaño de pantalla.",
+      "help": "Las clases sin prefijo aplican al diseño móvil por defecto.",
+      "reference": "https://tailwindcss.com/docs/responsive-design",
+      "log": "responsive-design",
+      "completed": "false"
+    },
+    {
+      "goal": "Controlar visibilidad por tamaño de pantalla",
+      "comment": "Utiliza clases como `hidden md:block` para mostrar u ocultar contenido según el tamaño.",
+      "help": "Esto permite adaptar el contenido visible al espacio disponible.",
+      "reference": "https://tailwindcss.com/docs/display",
+      "log": "responsive-visibility",
+      "completed": "false"
+    },
+    {
+      "goal": "Aplicar diseños de columnas adaptativas",
+      "comment": "Aplica clases como grid grid-cols-1 md:grid-cols-2 para distribuir elementos en columnas adaptativas. Asegúrate de incluir la clase `grid` antes de usar cualquier utilidad como grid-cols-*, ya que sin ella no se aplicará correctamente.",
+      "help": "Esto mejora la estructura visual en dispositivos grandes.",
+      "reference": "https://tailwindcss.com/docs/grid-template-columns",
+      "log": "responsive-columns",
+      "completed": "false"
+    },
+    {
+      "goal": "Modificar tamaños de texto en distintos dispositivos",
+      "comment": "Prueba clases como `text-base md:text-xl` para ajustar el tamaño del texto de forma responsive.",
+      "help": "Asegúrate de que el texto se mantenga legible en todos los tamaños de pantalla.",
+      "reference": "https://tailwindcss.com/docs/font-size",
+      "log": "responsive-text",
+      "completed": "false"
+    }
+  ]
+}

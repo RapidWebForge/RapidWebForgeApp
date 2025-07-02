@@ -1,0 +1,22 @@
+{
+  "title": "HTML: Insertar imágenes",
+  "description": "Agregar imágenes en tu aplicación es esencial para mejorar la experiencia visual y enriquecer el contenido. En este tutorial aprenderás cómo insertar imágenes usando la etiqueta HTML `<img>` y personalizar sus atributos.",
+  "steps": [
+    {
+      "goal": "Agregar una etiqueta de imagen",
+      "comment": "Desde el Árbol de Componentes, selecciona 'Imagen' y arrástralo al árbol de tu vista. Esto insertará una etiqueta `<img>` en tu aplicación.",
+      "help": "Coloca la imagen dentro de un contenedor si deseas alinear o controlar su posición fácilmente.",
+      "reference": "https://www.w3schools.com/html/html_images.asp",
+      "log": "insert-image-tag",
+      "completed": "false"
+    },
+    {
+      "goal": "Configurar atributos de la imagen",
+      "comment": "Selecciona la imagen insertada y accede a la configuración para agregar atributos como `src` (ruta de la imagen), `alt` (texto alternativo) y clases de estilo como tamaño o bordes.",
+      "help": "Si la imagen no aparece, asegúrate de que la ruta en `src` sea válida o prueba con una URL pública.",
+      "reference": "https://developer.mozilla.org/en-US/docs/Web/HTML/Element/img",
+      "log": "configure-image-properties",
+      "completed": "false"
+    }
+  ]
+}

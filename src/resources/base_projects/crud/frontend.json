@@ -1,0 +1,631 @@
+{
+  "custom": [
+    {
+      "components": [
+        {
+          "createdOn": "2025-05-11T21:56:44",
+          "id": "37666538-3931-6334-6237-663531336431",
+          "nestedComponents": [
+            {
+              "createdOn": "2025-05-11T22:03:24",
+              "id": "39643335-6639-3931-6662-353031636434",
+              "props": {
+                "class": "text-white text-lg font-semibold",
+                "href": "/",
+                "rel": "",
+                "target": "_self",
+                "text": "Home"
+              },
+              "type": "Hyperlink",
+              "updatedOn": "2025-05-11T22:05:44"
+            },
+            {
+              "createdOn": "2025-05-11T22:03:27",
+              "id": "35363735-3836-3334-3963-303731623631",
+              "props": {
+                "class": "text-white text-lg font-semibold",
+                "href": "/create",
+                "rel": "",
+                "target": "_self",
+                "text": "Create"
+              },
+              "type": "Hyperlink",
+              "updatedOn": "2025-05-11T22:05:47"
+            }
+          ],
+          "props": {
+            "class": "bg-blue-800 gap-10 py-5 px-10 w-full"
+          },
+          "type": "Horizontal Layout",
+          "updatedOn": "2025-05-11T22:07:27"
+        }
+      ],
+      "createdOn": "2025-05-11T21:56:35",
+      "id": "30376432-6663-6331-6531-643131306564",
+      "name": "Header",
+      "updatedOn": "2025-05-11T21:56:35"
+    }
+  ],
+  "views": [
+    {
+      "components": [
+        {
+          "createdOn": "2025-05-02T00:15:16",
+          "id": "64653261-3830-6662-3230-633935303335",
+          "nestedComponents": [
+            {
+              "createdOn": "2025-05-11T22:04:08",
+              "id": "32623465-6539-6661-3766-333962613934",
+              "name": "Header",
+              "updatedOn": "2025-05-11T22:04:08"
+            },
+            {
+              "createdOn": "2025-05-05T22:40:48",
+              "id": "34326335-3135-3030-3239-663830393438",
+              "nestedComponents": [
+                {
+                  "createdOn": "2025-05-05T22:41:01",
+                  "id": "36353066-3832-3037-3231-343165626335",
+                  "nestedComponents": [
+                    {
+                      "createdOn": "2025-05-05T22:41:03",
+                      "id": "31323263-6238-6462-3334-646439366231",
+                      "props": {
+                        "class": "text-2xl font-bold",
+                        "text": "PRODUCTS"
+                      },
+                      "type": "Header H1",
+                      "updatedOn": "2025-05-11T21:56:26"
+                    },
+                    {
+                      "createdOn": "2025-05-05T22:41:09",
+                      "id": "66633636-3739-3839-3964-323565663433",
+                      "props": {
+                        "class": "px-4 py-2 bg-blue-800 text-white rounded-lg",
+                        "href": "/create",
+                        "rel": "",
+                        "target": "_blank",
+                        "text": "Create"
+                      },
+                      "type": "Hyperlink",
+                      "updatedOn": "2025-05-11T21:56:26"
+                    }
+                  ],
+                  "props": {
+                    "class": "justify-between items-center mx-4"
+                  },
+                  "type": "Horizontal Layout",
+                  "updatedOn": "2025-05-11T22:07:07"
+                }
+              ],
+              "props": {
+                "class": "md:mt-20 mt-5 gap-10 max-w-4xl w-full"
+              },
+              "type": "Vertical Layout",
+              "updatedOn": "2025-05-11T22:08:21"
+            },
+            {
+              "createdOn": "2025-05-05T22:42:00",
+              "id": "65623036-3036-6665-6462-643031316333",
+              "nestedComponents": [
+                {
+                  "createdOn": "2025-05-05T22:42:09",
+                  "id": "35356364-3631-6437-3331-346433323137",
+                  "nestedComponents": [
+                    {
+                      "createdOn": "2025-05-05T23:16:12",
+                      "id": "37346536-6666-6139-3237-353963366433",
+                      "props": {
+                        "class": "font-bold text-lg",
+                        "text": "Id"
+                      },
+                      "type": "Paragraph",
+                      "updatedOn": "2025-05-11T21:56:26"
+                    },
+                    {
+                      "createdOn": "2025-05-05T23:16:09",
+                      "id": "61313535-3363-6237-3630-373262663130",
+                      "props": {
+                        "class": "font-bold text-lg min-w-24 text-center",
+                        "text": "Name"
+                      },
+                      "type": "Paragraph",
+                      "updatedOn": "2025-05-11T21:56:26"
+                    },
+                    {
+                      "createdOn": "2025-05-09T23:50:59",
+                      "id": "33623637-3061-6263-6134-636262613665",
+                      "props": {
+                        "class": "font-bold text-lg min-w-24 text-center",
+                        "text": "Amount"
+                      },
+                      "type": "Paragraph",
+                      "updatedOn": "2025-05-11T21:56:26"
+                    }
+                  ],
+                  "props": {
+                    "class": "gap-5"
+                  },
+                  "type": "Horizontal Layout",
+                  "updatedOn": "2025-05-11T21:56:26"
+                },
+                {
+                  "createdOn": "2025-05-05T22:42:50",
+                  "id": "31353962-6565-3662-6664-316662386366",
+                  "nestedComponents": [
+                    {
+                      "createdOn": "2025-05-05T22:44:43",
+                      "id": "62623139-3430-3363-3462-393935323537",
+                      "nestedComponents": [
+                        {
+                          "createdOn": "2025-05-05T22:44:57",
+                          "id": "63666335-3864-3534-6663-363462383539",
+                          "nestedComponents": [
+                            {
+                              "createdOn": "2025-05-05T22:45:02",
+                              "id": "35646466-3932-6361-6263-363135653337",
+                              "props": {
+                                "class": "text-sm font-bold",
+                                "text": "{obj.id}"
+                              },
+                              "type": "Paragraph",
+                              "updatedOn": "2025-05-11T21:56:26"
+                            },
+                            {
+                              "createdOn": "2025-05-05T22:45:01",
+                              "id": "62393062-3336-3037-6562-653439316334",
+                              "props": {
+                                "class": "text-sm min-w-24 text-center",
+                                "text": "{obj.name}"
+                              },
+                              "type": "Paragraph",
+                              "updatedOn": "2025-05-11T21:56:26"
+                            },
+                            {
+                              "createdOn": "2025-05-09T23:50:37",
+                              "id": "61306431-3433-6538-6432-343961373438",
+                              "props": {
+                                "class": "text-sm min-w-24 text-center italic",
+                                "text": "{obj.amount}"
+                              },
+                              "type": "Paragraph",
+                              "updatedOn": "2025-05-11T21:56:26"
+                            }
+                          ],
+                          "props": {
+                            "class": "flex items-center gap-5"
+                          },
+                          "type": "Layout",
+                          "updatedOn": "2025-05-11T21:56:26"
+                        },
+                        {
+                          "createdOn": "2025-05-05T22:44:51",
+                          "id": "63336665-3064-3138-3665-363232303230",
+                          "nestedComponents": [
+                            {
+                              "createdOn": "2025-05-05T22:45:11",
+                              "id": "36666637-3736-3663-6634-333133313930",
+                              "props": {
+                                "class": "px-4 py-2 bg-green-800 text-white rounded-lg",
+                                "href": "{`/update/${obj.id}`}",
+                                "rel": "",
+                                "target": "_blank",
+                                "text": "Update"
+                              },
+                              "type": "Hyperlink",
+                              "updatedOn": "2025-05-11T21:56:26"
+                            },
+                            {
+                              "createdOn": "2025-05-05T22:45:18",
+                              "id": "31363633-3533-6235-3332-383532393561",
+                              "props": {
+                                "class": "px-4 py-2 bg-red-800 text-white rounded-lg cursor-pointer",
+                                "click": "deleteProductsById(obj.id)",
+                                "text": "Delete",
+                                "type": "button"
+                              },
+                              "type": "Button",
+                              "updatedOn": "2025-05-11T21:56:26"
+                            }
+                          ],
+                          "props": {
+                            "class": "flex items-center gap-5"
+                          },
+                          "type": "Layout",
+                          "updatedOn": "2025-05-11T21:56:26"
+                        }
+                      ],
+                      "props": {
+                        "class": "gap-5 mt-2 items-center justify-between"
+                      },
+                      "type": "Horizontal Layout",
+                      "updatedOn": "2025-05-11T21:56:26"
+                    }
+                  ],
+                  "props": {
+                    "class": "",
+                    "get": "ALL",
+                    "model": "Products"
+                  },
+                  "type": "Model Layout",
+                  "updatedOn": "2025-05-11T21:56:26"
+                }
+              ],
+              "props": {
+                "class": "max-w-4xl w-full py-5 px-10 border border-gray-400 rounded-lg  mt-10"
+              },
+              "type": "Layout",
+              "updatedOn": "2025-05-11T21:56:26"
+            }
+          ],
+          "props": {
+            "class": "flex flex-col items-center bg-blue-200 h-screen w-full"
+          },
+          "type": "Layout",
+          "updatedOn": "2025-05-11T22:06:21"
+        }
+      ],
+      "createdOn": "2025-04-27T17:29:53",
+      "id": "61323934-3763-3964-6434-636433333835",
+      "name": "Home",
+      "path": "/",
+      "updatedOn": "2025-04-27T17:29:53"
+    },
+    {
+      "components": [
+        {
+          "createdOn": "2025-05-03T14:24:24",
+          "id": "62303635-3636-6234-3465-656630303263",
+          "nestedComponents": [
+            {
+              "createdOn": "2025-05-11T22:08:46",
+              "id": "36623630-6531-3164-6661-636639643638",
+              "name": "Header",
+              "updatedOn": "2025-05-11T22:08:46"
+            },
+            {
+              "createdOn": "2025-05-09T21:21:53",
+              "id": "63336662-3833-6538-6164-616133663631",
+              "props": {
+                "class": "text-2xl md:mt-20 mt-5",
+                "text": "Create Products"
+              },
+              "type": "Header H2",
+              "updatedOn": "2025-05-11T22:09:18"
+            },
+            {
+              "createdOn": "2025-05-03T14:24:28",
+              "id": "33366266-3664-6630-3862-356265333931",
+              "nestedComponents": [
+                {
+                  "createdOn": "2025-05-07T22:34:41",
+                  "id": "66353866-6562-6233-6638-313536643737",
+                  "nestedComponents": [
+                    {
+                      "createdOn": "2025-05-07T22:34:46",
+                      "id": "39643533-3636-3432-3435-393031333133",
+                      "props": {
+                        "class": "font-semibold text-sm",
+                        "for": "name",
+                        "text": "Name"
+                      },
+                      "type": "Label",
+                      "updatedOn": "2025-05-11T21:56:26"
+                    },
+                    {
+                      "createdOn": "2025-05-07T22:34:57",
+                      "id": "62383561-6631-3864-3939-313735303365",
+                      "props": {
+                        "class": "border border-black/80 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-gray-400",
+                        "inputid": "name",
+                        "maxlength": "",
+                        "minlength": "",
+                        "name": "name",
+                        "placeholder": "Enter name",
+                        "required": "true",
+                        "type": "text",
+                        "value": "{postProducts.name}"
+                      },
+                      "type": "Input",
+                      "updatedOn": "2025-05-11T21:56:26"
+                    }
+                  ],
+                  "props": {
+                    "class": "gap-5 items-center justify-between w-full"
+                  },
+                  "type": "Horizontal Layout",
+                  "updatedOn": "2025-05-11T21:56:26"
+                },
+                {
+                  "createdOn": "2025-05-09T21:16:00",
+                  "id": "37656463-6566-3963-3937-646161383036",
+                  "nestedComponents": [
+                    {
+                      "createdOn": "2025-05-09T21:16:08",
+                      "id": "37303163-3436-3564-3934-633261323634",
+                      "props": {
+                        "class": "font-semibold text-sm",
+                        "for": "description",
+                        "text": "Description"
+                      },
+                      "type": "Label",
+                      "updatedOn": "2025-05-11T21:56:26"
+                    },
+                    {
+                      "createdOn": "2025-05-09T21:16:41",
+                      "id": "66306431-3863-3164-3637-666532343964",
+                      "props": {
+                        "class": "border border-black/80 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-gray-400",
+                        "inputid": "description",
+                        "maxlength": "",
+                        "minlength": "",
+                        "name": "description",
+                        "placeholder": "Enter description",
+                        "required": "true",
+                        "type": "text",
+                        "value": "{postProducts.description}"
+                      },
+                      "type": "Input",
+                      "updatedOn": "2025-05-11T21:56:26"
+                    }
+                  ],
+                  "props": {
+                    "class": "gap-5 items-center justify-between w-full"
+                  },
+                  "type": "Horizontal Layout",
+                  "updatedOn": "2025-05-11T21:56:26"
+                },
+                {
+                  "createdOn": "2025-05-09T21:19:36",
+                  "id": "32613964-6436-6366-6466-346439353765",
+                  "nestedComponents": [
+                    {
+                      "createdOn": "2025-05-09T21:19:39",
+                      "id": "39616439-6438-3735-3936-353032353863",
+                      "props": {
+                        "class": "font-semibold text-sm",
+                        "for": "amount",
+                        "text": "Amount"
+                      },
+                      "type": "Label",
+                      "updatedOn": "2025-05-11T21:56:26"
+                    },
+                    {
+                      "createdOn": "2025-05-09T21:19:42",
+                      "id": "61383465-3533-3061-3734-643631366539",
+                      "props": {
+                        "class": "border border-black/80 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-gray-400",
+                        "inputid": "amount",
+                        "maxlength": "",
+                        "minlength": "",
+                        "name": "amount",
+                        "placeholder": "Enter amount",
+                        "required": "true",
+                        "type": "number",
+                        "value": "{postProducts.amount}"
+                      },
+                      "type": "Input",
+                      "updatedOn": "2025-05-11T21:56:26"
+                    }
+                  ],
+                  "props": {
+                    "class": "gap-5 items-center justify-between w-full"
+                  },
+                  "type": "Horizontal Layout",
+                  "updatedOn": "2025-05-11T21:56:26"
+                },
+                {
+                  "createdOn": "2025-05-03T14:25:06",
+                  "id": "65643134-3438-3832-3830-643465623935",
+                  "props": {
+                    "class": "px-4 py-2 bg-blue-800 text-white rounded-lg cursor-pointer mt-5",
+                    "click": "",
+                    "text": "Enviar",
+                    "type": "submit"
+                  },
+                  "type": "Button",
+                  "updatedOn": "2025-05-11T21:56:26"
+                }
+              ],
+              "props": {
+                "class": "flex flex-col items-center w-full max-w-sm gap-5 mt-5",
+                "method": "POST",
+                "model": "Products"
+              },
+              "type": "Form",
+              "updatedOn": "2025-05-11T21:56:26"
+            }
+          ],
+          "props": {
+            "class": "flex flex-col items-center bg-blue-200 h-screen w-full"
+          },
+          "type": "Layout",
+          "updatedOn": "2025-05-11T22:09:04"
+        }
+      ],
+      "createdOn": "2025-05-03T14:24:18",
+      "id": "65383632-6264-6436-3130-636466366161",
+      "name": "CreateProduct",
+      "path": "/create",
+      "updatedOn": "2025-05-03T14:24:18"
+    },
+    {
+      "components": [
+        {
+          "createdOn": "2025-05-03T14:33:28",
+          "id": "64626362-3134-6335-3464-633064306465",
+          "nestedComponents": [
+            {
+              "createdOn": "2025-05-11T22:08:34",
+              "id": "38346635-3333-6233-3865-643362643763",
+              "name": "Header",
+              "updatedOn": "2025-05-11T22:08:34"
+            },
+            {
+              "createdOn": "2025-05-09T23:15:30",
+              "id": "63623031-6365-3039-6639-613630363331",
+              "props": {
+                "class": "md:mt-20 mt-5 text-2xl",
+                "text": "Update Product"
+              },
+              "type": "Header H2",
+              "updatedOn": "2025-05-11T22:10:41"
+            },
+            {
+              "createdOn": "2025-05-03T14:33:40",
+              "id": "37356265-3861-3733-3161-663564323332",
+              "nestedComponents": [
+                {
+                  "createdOn": "2025-05-07T22:37:44",
+                  "id": "61316139-3832-6630-6661-336235333335",
+                  "nestedComponents": [
+                    {
+                      "createdOn": "2025-05-07T22:37:54",
+                      "id": "32616363-6130-6333-6434-386262323566",
+                      "props": {
+                        "class": "font-semibold text-sm",
+                        "for": "name",
+                        "text": "Name"
+                      },
+                      "type": "Label",
+                      "updatedOn": "2025-05-11T21:56:26"
+                    },
+                    {
+                      "createdOn": "2025-05-07T22:37:56",
+                      "id": "66313337-3763-3435-3338-643438616434",
+                      "props": {
+                        "class": "border border-black/80 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-gray-400",
+                        "inputid": "name",
+                        "maxlength": "",
+                        "minlength": "",
+                        "name": "name",
+                        "placeholder": "Name",
+                        "required": "false",
+                        "type": "text",
+                        "value": "{putProducts.name}"
+                      },
+                      "type": "Input",
+                      "updatedOn": "2025-05-11T21:56:26"
+                    }
+                  ],
+                  "props": {
+                    "class": "gap-5 items-center justify-between w-full"
+                  },
+                  "type": "Horizontal Layout",
+                  "updatedOn": "2025-05-11T21:56:26"
+                },
+                {
+                  "createdOn": "2025-05-09T23:16:55",
+                  "id": "37336637-6235-6532-6639-336434356339",
+                  "nestedComponents": [
+                    {
+                      "createdOn": "2025-05-09T23:17:01",
+                      "id": "38623761-3635-3538-3437-633833363530",
+                      "props": {
+                        "class": "font-semibold text-sm",
+                        "for": "description",
+                        "text": "Description"
+                      },
+                      "type": "Label",
+                      "updatedOn": "2025-05-11T21:56:26"
+                    },
+                    {
+                      "createdOn": "2025-05-09T23:16:58",
+                      "id": "65396537-3264-3837-3239-633836313138",
+                      "props": {
+                        "class": "border border-black/80 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-gray-400",
+                        "inputid": "description",
+                        "maxlength": "",
+                        "minlength": "",
+                        "name": "description",
+                        "placeholder": "Description",
+                        "required": "false",
+                        "type": "text",
+                        "value": "{putProducts.description}"
+                      },
+                      "type": "Input",
+                      "updatedOn": "2025-05-11T21:56:26"
+                    }
+                  ],
+                  "props": {
+                    "class": "gap-5 items-center justify-between w-full"
+                  },
+                  "type": "Horizontal Layout",
+                  "updatedOn": "2025-05-11T21:56:26"
+                },
+                {
+                  "createdOn": "2025-05-09T23:17:08",
+                  "id": "38353632-3239-6533-3837-363134663938",
+                  "nestedComponents": [
+                    {
+                      "createdOn": "2025-05-09T23:17:16",
+                      "id": "31336437-3063-3439-6230-653137393138",
+                      "props": {
+                        "class": "font-semibold text-sm",
+                        "for": "amount",
+                        "text": "Amount"
+                      },
+                      "type": "Label",
+                      "updatedOn": "2025-05-11T21:56:26"
+                    },
+                    {
+                      "createdOn": "2025-05-09T23:17:18",
+                      "id": "37633435-3632-3337-6633-303831316537",
+                      "props": {
+                        "class": "border border-black/80 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-gray-400",
+                        "inputid": "amount",
+                        "maxlength": "",
+                        "minlength": "",
+                        "name": "amount",
+                        "placeholder": "Amount",
+                        "required": "false",
+                        "type": "text",
+                        "value": "{putProducts.amount}"
+                      },
+                      "type": "Input",
+                      "updatedOn": "2025-05-11T21:56:26"
+                    }
+                  ],
+                  "props": {
+                    "class": "gap-5 items-center justify-between w-full"
+                  },
+                  "type": "Horizontal Layout",
+                  "updatedOn": "2025-05-11T21:56:26"
+                },
+                {
+                  "createdOn": "2025-05-03T14:35:54",
+                  "id": "61303665-6537-3831-6333-333936333564",
+                  "props": {
+                    "class": "px-4 py-2 bg-blue-800 text-white rounded-lg cursor-pointer mt-5",
+                    "click": "",
+                    "text": "Update",
+                    "type": "submit"
+                  },
+                  "type": "Button",
+                  "updatedOn": "2025-05-11T21:56:26"
+                }
+              ],
+              "props": {
+                "class": "flex flex-col items-center w-full max-w-sm gap-5 mt-5",
+                "method": "PUT",
+                "model": "Products"
+              },
+              "type": "Form",
+              "updatedOn": "2025-05-11T21:56:26"
+            }
+          ],
+          "props": {
+            "class": "flex flex-col items-center bg-blue-200 h-screen w-full"
+          },
+          "type": "Layout",
+          "updatedOn": "2025-05-11T22:10:30"
+        }
+      ],
+      "createdOn": "2025-05-03T14:33:20",
+      "id": "38653263-3163-3439-6539-376461643661",
+      "name": "UpdateProduct",
+      "path": "/update/:productsId",
+      "updatedOn": "2025-05-03T14:33:20"
+    }
+  ]
+}

@@ -1,6 +1,11 @@
 #include "codegenerator.h"
+#include <QDebug>
+#include <QDir>
 #include <QFile>
+#include "../../models/time-chrono/timechrono.h"
+#include "../../utils/file/fileutiils.h"
 #include "../../utils/ziphelper/ziphelper.h"
+#include <boost/uuid/uuid_io.hpp>
 #include <filesystem>
 #include <fmt/core.h>
 #include <fstream>
@@ -26,6 +31,7 @@ bool CodeGenerator::createDirectory(const std::string &path)
             return false;
         }
     }
+
     return true; // El directorio ya existe
 }
 
@@ -69,6 +75,79 @@ bool CodeGenerator::createJsonFile(const std::string &filePath, const nlohmann::
     return true;
 }
 
+bool CodeGenerator::createRunEditor()
+{
+    // Create runEditor.js
+    QString resourcePath = ":/project_templates/runEditor";
+    QString destinationPath = QDir(QString::fromStdString(this->project.getPath()))
+                                  .filePath("runEditor.js");
+
+    QFile file(resourcePath);
+    if (file.open(QIODevice::ReadOnly)) {
+        QFile outFile(destinationPath);
+        if (outFile.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+            outFile.write(file.readAll());
+            outFile.close();
+        } else {
+            qWarning() << "❌ Could not open output file:" << destinationPath;
+            return false;
+        }
+        file.close();
+    } else {
+        qWarning() << "❌ Could not open resource file:" << resourcePath;
+        return false;
+    }
+
+    return true;
+}
+
+// Function to create a JSON file from a template resource
+bool CodeGenerator::createJsonFromTemplate(const std::string &projectComponent)
+{
+    const std::string &projectTemplate = this->project.getBaseProject();
+
+    // Validate that projectComponent is either "backend" or "frontend"
+    if (projectComponent != "backend" && projectComponent != "frontend") {
+        fmt::print(stderr,
+                   "Invalid project component: {}. Must be 'backend' or 'frontend'.\n",
+                   projectComponent);
+        return false;
+    }
+
+    // Create resource path
+    QString resourcePath = QString(":/base_projects/%1/%2")
+                               .arg(QString::fromStdString(projectTemplate))
+                               .arg(QString::fromStdString(projectComponent));
+
+    // Create destination path
+    QString destinationPath = QDir(QString::fromStdString(this->project.getPath()))
+                                  .filePath(QString::fromStdString(projectComponent) + ".json");
+
+    // Read from resource and write to destination
+    QFile sourceFile(resourcePath);
+    if (!sourceFile.open(QIODevice::ReadOnly)) {
+        fmt::print(stderr, "Failed to open template resource: {}\n", resourcePath.toStdString());
+        return false;
+    }
+
+    QFile destFile(destinationPath);
+    if (!destFile.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+        fmt::print(stderr, "Failed to create destination file: {}\n", destinationPath.toStdString());
+        sourceFile.close();
+        return false;
+    }
+
+    // Copy content
+    destFile.write(sourceFile.readAll());
+
+    // Close files
+    sourceFile.close();
+    destFile.close();
+
+    fmt::print("{}.json created successfully from template.\n", projectComponent);
+    return true;
+}
+
 // Creación del proyecto base de backend
 bool CodeGenerator::createBaseBackendProject()
 {
@@ -82,12 +161,68 @@ bool CodeGenerator::createBaseBackendProject()
         return false;
     }
 
-    // Crear el backend.json
-    nlohmann::json backendJson;
-    backendJson["transactions"] = nlohmann::json::array();
+    // Crear el .env
+    std::string templatePath = ":/inja/backend/env";
+    std::string outputPath = this->project.getPath() + "/backend/.env";
 
-    if (!createJsonFile(this->project.getPath() + "/backend.json", backendJson)) {
+    inja::Environment env;
+    nlohmann::json data;
+
+    data["database"] = this->project.getDatabaseData().getDatabaseName();
+    data["user"] = this->project.getDatabaseData().getUser();
+    data["password"] = this->project.getDatabaseData().getPassword();
+    data["port"] = this->project.getBackendPort();
+
+    QFile file(QString::fromStdString(templatePath));
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        fmt::print(stderr, "Unable to open template file from resource: {}\n", templatePath);
         return false;
+    }
+
+    QTextStream in(&file);
+    QString templateContent = in.readAll();
+    file.close();
+
+    // Convertir el contenido a std::string para usarlo con Inja
+    std::string templateString = templateContent.toStdString();
+
+    try {
+        // Renderizar con Inja usando el contenido del archivo como una cadena
+        std::string result = env.render(templateString, data);
+        // Open file in write mode
+        std::ofstream file(outputPath);
+
+        // Check open file
+        if (!file.is_open()) {
+            fmt::print(stderr, "Unable to open file for writing: {}\n", outputPath);
+            return false;
+        }
+
+        // Write content
+        file << result;
+
+        file.close();
+
+        // Optional verification
+        if (file.fail()) {
+            fmt::print(stderr, "Error while writing and closing the file: {}\n", outputPath);
+        }
+    } catch (const std::exception &e) {
+        fmt::print(stderr, "Error generating file {}: {}\n", ".env", e.what());
+    }
+
+    // Crear el backend.json
+    if (!project.getBaseProject().empty()) {
+        if (!createJsonFromTemplate("backend")) {
+            return false;
+        }
+    } else {
+        nlohmann::json backendJson;
+        backendJson["transactions"] = nlohmann::json::array();
+
+        if (!createJsonFile(this->project.getPath() + "/backend.json", backendJson)) {
+            return false;
+        }
     }
 
     fmt::print("Base Backend project created successfully\n");
@@ -107,36 +242,98 @@ bool CodeGenerator::createBaseFrontendProject()
         return false;
     }
 
-    // Crear el frontend.json
-    nlohmann::json frontendJson;
-    frontendJson["routes"] = nlohmann::json::array();
-    frontendJson["views"] = nlohmann::json::array();
+    if (!project.getBaseProject().empty()) {
+        if (!createJsonFromTemplate("frontend")) {
+            return false;
+        }
+    } else {
+        // Crear el frontend.json
+        nlohmann::json frontendJson;
+        frontendJson["views"] = nlohmann::json::array();
+        frontendJson["custom"] = nlohmann::json::array();
 
-    // Rutas iniciales
-    nlohmann::json homeRouteJson;
-    homeRouteJson["path"] = "/";
-    homeRouteJson["component"] = "Home";
-    frontendJson["routes"].push_back(homeRouteJson);
+        // Rutas iniciales
 
-    // Vista inicial
-    nlohmann::json homeViewJson;
-    nlohmann::json homeComponentsJson;
-    nlohmann::json homeH1Json;
-    nlohmann::json homePropsJson;
-    homeComponentsJson["components"] = nlohmann::json::array();
-    homeH1Json["type"] = "Header H1";
-    homePropsJson["text"] = "Home View";
-    homeH1Json["props"] = homePropsJson;
-    homeComponentsJson["components"].push_back(homeH1Json);
-    homeViewJson["Home"] = homeComponentsJson;
-    frontendJson["views"].push_back(homeViewJson);
+        // Vista inicial
+        nlohmann::json homeViewJson;
+        // Components vacio
+        homeViewJson["components"] = nlohmann::json::array();
 
-    if (!createJsonFile(this->project.getPath() + "/frontend.json", frontendJson)) {
-        return false;
+        Section homeView("Home", "/");
+
+        homeViewJson["path"] = homeView.getPath();
+        homeViewJson["name"] = homeView.getName();
+        homeViewJson["id"] = boost::uuids::to_string(homeView.getId());
+        homeViewJson["createdOn"] = timePointToString(homeView.getCreatedOn());
+        homeViewJson["updatedOn"] = timePointToString(homeView.getUpdatedOn());
+
+        Component mainDiv(ComponentType::Layout);
+        std::map<std::string, std::string> &props = mainDiv.getProps();
+        props.at("class")
+            = "h-screen w-full py-20 flex flex-col justify-center items-center bg-blue-200";
+
+        nlohmann::json mainDivJson;
+        mainDivJson["id"] = boost::uuids::to_string(mainDiv.getId());
+        mainDivJson["createdOn"] = timePointToString(mainDiv.getCreatedOn());
+        mainDivJson["updatedOn"] = timePointToString(mainDiv.getUpdatedOn());
+        mainDivJson["type"] = componentTypeToString(mainDiv.getType());
+        mainDivJson["props"] = nlohmann::json::object();
+        // Class
+        for (const auto &pair : props) {
+            mainDivJson["props"][pair.first] = pair.second;
+        }
+
+        mainDivJson["nestedComponents"] = nlohmann::json::array();
+
+        homeViewJson["components"].push_back(mainDivJson);
+
+        frontendJson["views"].push_back(homeViewJson);
+
+        if (!createJsonFile(this->project.getPath() + "/frontend.json", frontendJson)) {
+            return false;
+        }
+
+        // Creando Home view
+
+        nlohmann::json data;
+
+        data["id"] = boost::uuids::to_string(mainDiv.getId());
+        auto it = props.find("class");
+        if (it != props.end()) {
+            data["class"] = it->second;
+        }
+        std::string outputPath = this->project.getPath() + "/frontend/src/views/Home.tsx";
+
+        try {
+            // Renderizar con Inja usando el contenido del archivo como una cadena
+            inja::Environment env;
+            std::string result = env.render(R"(import React from "react";
+
+export default function Home() {
+  return (
+    <div
+      data-id="{{id}}"
+      className="{{class}}"
+    ></div>
+  );
+})",
+                                            data);
+            FileUtils::writeFile(outputPath, result);
+        } catch (const std::exception &e) {
+            fmt::print(stderr, "Error generating Home view: {}\n", e.what());
+            return false;
+        }
     }
 
     fmt::print("Base Frontend project created successfully\n");
     return true;
+}
+
+bool CodeGenerator::createApplication()
+{
+    if (backendGenerator.generateInitialBackendCode())
+        return frontendGenerator.generateInitialFrontendCode();
+    return false;
 }
 
 // Get

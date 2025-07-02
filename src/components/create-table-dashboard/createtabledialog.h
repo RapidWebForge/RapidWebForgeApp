@@ -2,8 +2,8 @@
 #define CREATETABLEDIALOG_H
 
 #include <QDialog>
+#include "../../core/logging/actionloggerjson.h"
 #include "../../models/transaction/transaction.h"
-#include "../addfield-dashboard/addfielddialog.h"
 
 namespace Ui {
 class CreateTableDialog;
@@ -20,18 +20,13 @@ public:
 signals:
     void transactionSaved(const Transaction &transaction);
 
-public slots:
-    void onFieldSaved(const Field &field);
-
 private slots:
-    void showAddFieldDialog();
-
     void on_createButton_clicked();
 
 private:
     Ui::CreateTableDialog *ui;
-    AddFieldDialog *addFieldDialog;
     Transaction transaction;
+    ActionLoggerJson loggerJson; // Logs en formato .json
 
     void applyStyles();
 };

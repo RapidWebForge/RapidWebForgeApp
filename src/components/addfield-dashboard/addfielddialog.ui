@@ -67,12 +67,57 @@
         </item>
         <item>
          <property name="text">
+          <string>TEXT</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>CHAR</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
           <string>INTEGER</string>
          </property>
         </item>
         <item>
          <property name="text">
+          <string>BIGINT</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>FLOAT</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>DOUBLE</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>DECIMAL</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>BOOLEAN</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
           <string>DATE</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>DATEONLY</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>TIME</string>
          </property>
         </item>
        </widget>
@@ -133,6 +178,9 @@
          </item>
          <item>
           <widget class="QCheckBox" name="checkCheckBox">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
            <property name="text">
             <string>CHECK</string>
            </property>
@@ -140,6 +188,9 @@
          </item>
          <item>
           <widget class="QCheckBox" name="defaultCheckBox">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
            <property name="text">
             <string>DEFAULT</string>
            </property>

@@ -9,6 +9,7 @@ class VersionManager
 public:
     VersionManager(const std::string &projectPath);
     void initializeRepository();
+    bool createGitignore() const;
     void createVersion(const std::string &versionName);
     void deleteVersion(const std::string &versionName);
     void changeVersion(const std::string &versionName);

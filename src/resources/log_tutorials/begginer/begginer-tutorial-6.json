@@ -1,0 +1,30 @@
+{
+  "title": "React: Creando nuevas vistas",
+  "description": "En este tutorial aprenderás a crear nuevas vistas dentro de tu aplicación y diferenciarlas claramente de los componentes.",
+  "steps": [
+    {
+      "goal": "Crear una nueva vista",
+      "comment": "Haz clic en 'New Section', activa el checkbox 'Is it a view?', y completa los campos requeridos (nombre y URL).",
+      "help": "Esto generará una nueva ruta accesible desde la aplicación web.",
+      "reference": "https://www.w3schools.com/react/react_router.asp",
+      "log": "create-react-view",
+      "completed": "false"
+    },
+    {
+      "goal": "Agregar contenido a la vista",
+      "comment": "Agrega etiquetas HTML desde el Árbol de Componentes a la nueva vista para construir su contenido.",
+      "help": "Piensa en la vista como una página completa, no un fragmento reutilizable.",
+      "reference": "https://www.w3schools.com/react/react_router.asp",
+      "log": "add-html-to-view",
+      "completed": "false"
+    },
+    {
+      "goal": "Navegar entre vistas",
+      "comment": "Prueba tu vista accediendo a la URL definida en el navegador o usando un enlace interno (`<a href='/ruta'>`).",
+      "help": "Asegúrate de que la URL esté bien escrita en el formulario de creación.",
+      "reference": "https://www.w3schools.com/react/react_router.asp",
+      "log": "navigate-between-views",
+      "completed": "false"
+    }
+  ]
+}

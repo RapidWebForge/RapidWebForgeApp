@@ -3,28 +3,32 @@
 #include <QDropEvent>
 #include <QFile>
 #include <QMessageBox>
+#include "../../core/logging/actionloggerjson.h"
 #include "../../models/component-type/componenttype.h"
+#include "../../models/generic-node/genericnode.h"
+#include "../../utils/logger_util/loggerutils.h"
+#include "../../utils/render_callback/rendercallback.h"
 #include "ui_frontenddashboard.h"
+#include <boost/uuid/uuid_io.hpp>
+#include <cassert>
+#include <fmt/core.h>
 
 FrontendDashboard::FrontendDashboard(QWidget *parent)
-    : QDialog(parent)
+    : QWidget(parent)
     , ui(new Ui::FrontendDashboard)
-    , createViewDialog(nullptr)
+    , createSectionDialog(nullptr)
+
 {
     ui->setupUi(this);
 
-    connect(ui->currentViewTree,
+    connect(ui->currentSectionTree,
             &CustomTreeWidget::itemDropped,
             this,
             &FrontendDashboard::onItemDropped);
-    connect(ui->addSectionButton,
-            &QPushButton::clicked,
-            this,
-            &FrontendDashboard::showCreateViewDialog);
-    connect(ui->currentViewTree,
+    connect(ui->currentSectionTree,
             &QTreeWidget::itemClicked,
             this,
-            &FrontendDashboard::onCurrentViewTreeItemSelected);
+            &FrontendDashboard::onCurrentSectionTreeItemSelected);
     connect(ui->propertiesTable,
             &QTableWidget::cellChanged,
             this,
@@ -51,11 +55,11 @@ void FrontendDashboard::applyStylesFront()
     ui->titleLabel->setStyleSheet("font-size: 35px; color: #27292A; padding-top: 10px; "
                                   "padding-left: 40px; padding-bottom: 20px;");
 
-    QFile primaryButtonstyleFile(":/styles/primarybutton");
-    if (primaryButtonstyleFile.open(QFile::ReadOnly)) {
-        QString styleSheet = QLatin1String(primaryButtonstyleFile.readAll());
-        ui->saveButton->setStyleSheet(styleSheet);
-    }
+    // QFile primaryButtonstyleFile(":/styles/primarybutton");
+    // if (primaryButtonstyleFile.open(QFile::ReadOnly)) {
+    //     QString styleSheet = QLatin1String(primaryButtonstyleFile.readAll());
+    //     ui->saveButton->setStyleSheet(styleSheet);
+    // }
     QFile secondaryButtonstyleFile(":/styles/secondarybutton");
     if (secondaryButtonstyleFile.open(QFile::ReadOnly)) {
         QString styleSheet = QLatin1String(secondaryButtonstyleFile.readAll());
@@ -79,10 +83,43 @@ void FrontendDashboard::configureTreeWidget(CustomTreeWidget *treeWidget,
 void FrontendDashboard::setUpTreeWidgets()
 {
     configureTreeWidget(ui->componentsTree, false, QAbstractItemView::DragOnly);
-    configureTreeWidget(ui->currentViewTree, true, QAbstractItemView::DropOnly);
+    configureTreeWidget(ui->currentSectionTree, true, QAbstractItemView::DropOnly);
 }
 
-// Draggable settings
+// Inicio de las funciones auxiliares generales
+
+QTreeWidgetItem *FrontendDashboard::createTreeItem(const QString &text,
+                                                   CustomTreeWidget *treeWidget,
+                                                   QTreeWidgetItem *parentItem)
+{
+    QTreeWidgetItem *item = new QTreeWidgetItem();
+
+    if (treeWidget) {
+        // Si el parent es un QTreeWidget, agregar el item como nivel superior
+        treeWidget->addTopLevelItem(item);
+    } else if (parentItem) {
+        // Si el parent es un QTreeWidgetItem, agregarlo como hijo
+        parentItem->addChild(item);
+    }
+
+    item->setText(0, text);
+    return item;
+}
+
+std::string FrontendDashboard::getComponentIdFromTree(QTreeWidgetItem *item) const
+{
+    // Retrieve the ID from the item using Qt::UserRole
+    QVariant idData = item->data(0, Qt::UserRole);
+    if (idData.isValid()) {
+        return idData.toString().toStdString();
+    }
+
+    return {};
+}
+
+// Final de las funciones auxiliares generales
+
+// Configuraciones de arrastre
 
 void FrontendDashboard::setDraggableFlags(QTreeWidgetItem *item, bool isDraggable)
 {
@@ -107,192 +144,397 @@ void FrontendDashboard::setComponentsDraggable()
     }
 }
 
-// Auxiliar functions to onItemDropped
-
-QTreeWidgetItem *FrontendDashboard::createTreeItem(const QString &text)
+void FrontendDashboard::addCustomComponentsOnComponentsTree()
 {
-    QTreeWidgetItem *item = new QTreeWidgetItem();
-    item->setText(0, text);
-    return item;
+    QList<QTreeWidgetItem *> items = ui->componentsTree->findItems("Custom",
+                                                                   Qt::MatchExactly
+                                                                       | Qt::MatchRecursive,
+                                                                   0);
+
+    if (items.isEmpty()) {
+        qDebug() << "No se encontró el nodo 'Custom'.";
+        return;
+    }
+
+    QTreeWidgetItem *customItem = items.first();
+
+    auto customComponentsNode = getMainNode("CustomComponents");
+
+    if (customComponentsNode) {
+        auto sectionNode = std::dynamic_pointer_cast<GenericNode>(customComponentsNode);
+
+        for (const auto &custComponent : sectionNode->getChildren()) {
+            auto sectionPtr = std::dynamic_pointer_cast<Section>(custComponent);
+            QString ccName = QString::fromStdString(sectionPtr->getName());
+            createTreeItem(ccName, nullptr, customItem);
+        }
+    }
 }
 
-void FrontendDashboard::insertComponentInView(Component &newComponent,
+// ComboBox Sections
+
+void FrontendDashboard::fillAvailableSections()
+{
+    // Limpia el combo box antes de rellenarlo
+    ui->sectionComboBox->clear();
+
+    // Itera sobre las vistas
+    auto viewsNode = getMainNode("Views");
+
+    if (viewsNode) {
+        auto genericNode = std::dynamic_pointer_cast<GenericNode>(viewsNode);
+
+        for (const auto &view : genericNode->getChildren()) {
+            auto sectionPtr = std::dynamic_pointer_cast<Section>(view);
+            if (sectionPtr) {
+                ui->sectionComboBox->addItem(QString::fromStdString(sectionPtr->getName()));
+                // qDebug() << "added " << QString::fromStdString(sectionPtr->getName());
+            }
+        }
+    }
+
+    // Itera sobre los custom components
+    auto customComponentsNode = getMainNode("CustomComponents");
+
+    if (customComponentsNode) {
+        auto genericNode = std::dynamic_pointer_cast<GenericNode>(customComponentsNode);
+
+        for (const auto &cc : genericNode->getChildren()) {
+            auto sectionPtr = std::dynamic_pointer_cast<Section>(cc);
+            if (sectionPtr) {
+                ui->sectionComboBox->addItem(QString::fromStdString(sectionPtr->getName()));
+            }
+        }
+    }
+}
+
+void FrontendDashboard::on_sectionComboBox_currentIndexChanged(int index)
+{
+    // Obtener el nombre del section elegido
+    std::string newSectionSelected = ui->sectionComboBox->currentText().toStdString();
+
+    // Buscar en views
+    auto viewsNode = getMainNode("Views");
+
+    if (!viewsNode) {
+        qDebug() << "Views node not found on CURRENT INDEX CHANGED";
+        return;
+    }
+
+    auto sectionNode = std::dynamic_pointer_cast<GenericNode>(viewsNode);
+
+    if (sectionNode) {
+        auto it = std::find_if(sectionNode->getChildren().begin(),
+                               sectionNode->getChildren().end(),
+                               [&newSectionSelected](const std::shared_ptr<BaseNode> &node) {
+                                   auto section = std::dynamic_pointer_cast<Section>(node);
+                                   return section && section->getName() == newSectionSelected;
+                               });
+
+        if (it != sectionNode->getChildren().end()) {
+            setCurrentSection(*it);
+            return;
+        }
+    }
+
+    // Buscar en customComponents
+
+    auto customComponentsNode = getMainNode("CustomComponents");
+
+    if (!customComponentsNode) {
+        qDebug() << "Custom Components node not found on CURRENT INDEX CHANGED";
+        return;
+    }
+
+    sectionNode = std::dynamic_pointer_cast<GenericNode>(customComponentsNode);
+
+    if (sectionNode) {
+        auto it = std::find_if(sectionNode->getChildren().begin(),
+                               sectionNode->getChildren().end(),
+                               [&newSectionSelected](const std::shared_ptr<BaseNode> &node) {
+                                   auto section = std::dynamic_pointer_cast<Section>(node);
+                                   return section && section->getName() == newSectionSelected;
+                               });
+
+        if (it != sectionNode->getChildren().end()) {
+            setCurrentSection(*it);
+            return;
+        }
+    }
+
+    QMessageBox::warning(this,
+                         "Section Error",
+                         "The view or custom component selected wasn't found.");
+}
+
+// Inicio de populate current section tree
+
+void FrontendDashboard::populateCurrentSectionTree()
+{
+    ui->currentSectionTree->clear();
+
+    // Verifica si currentSection es un Section
+    auto sectionPtr = std::dynamic_pointer_cast<Section>(currentSection);
+    if (!sectionPtr) {
+        fmt::print(stderr, "Error: Current section is not a valid Section.\n");
+        return;
+    }
+
+    // Agrega currentSection como un elemento de primer nivel
+    QTreeWidgetItem *sectionItem = createTreeItem(QString::fromStdString(sectionPtr->getName()),
+                                                  ui->currentSectionTree);
+
+    // Agrega los componentes del Section
+    for (const auto &child : sectionPtr->getChildren()) {
+        if (auto componentPtr = std::dynamic_pointer_cast<Component>(child)) {
+            // Si es un Component, crea un elemento del árbol
+            QTreeWidgetItem *componentItem = createTreeItem(QString::fromStdString(
+                                                                componentTypeToString(
+                                                                    componentPtr->getType())),
+                                                            nullptr,
+                                                            sectionItem);
+            componentItem->setData(0,
+                                   Qt::UserRole,
+                                   QString::fromStdString(
+                                       boost::uuids::to_string(componentPtr->getId())));
+
+            // Verifica si tiene subcomponentes
+            if (componentPtr->isAllowingItems() && !componentPtr->getChildren().empty()) {
+                populateNestedItems(componentItem, componentPtr->getChildren());
+            }
+        } else if (auto subSectionPtr = std::dynamic_pointer_cast<Section>(child)) {
+            QTreeWidgetItem *subSectionItem = createTreeItem(QString::fromStdString(
+                                                                 subSectionPtr->getName()),
+                                                             nullptr,
+                                                             sectionItem);
+            subSectionItem->setData(0,
+                                    Qt::UserRole,
+                                    QString::fromStdString(
+                                        boost::uuids::to_string(subSectionPtr->getId())));
+        }
+    }
+
+    ui->currentSectionTree->expandAll();
+}
+
+void FrontendDashboard::populateNestedItems(
+    QTreeWidgetItem *parentItem, const std::vector<std::shared_ptr<BaseNode>> &nestedComponents)
+{
+    for (const auto &nestedComponent : nestedComponents) {
+        if (auto nestedComponentPtr = std::dynamic_pointer_cast<Component>(nestedComponent)) {
+            QTreeWidgetItem *nestedItem = createTreeItem(QString::fromStdString(
+                                                             componentTypeToString(
+                                                                 nestedComponentPtr->getType())),
+                                                         nullptr,
+                                                         parentItem);
+            nestedItem->setData(0,
+                                Qt::UserRole,
+                                QString::fromStdString(
+                                    boost::uuids::to_string(nestedComponentPtr->getId())));
+
+            if (nestedComponentPtr->isAllowingItems()
+                && !nestedComponentPtr->getChildren().empty()) {
+                populateNestedItems(nestedItem, nestedComponentPtr->getChildren());
+            }
+        } else if (auto subSectionPtr = std::dynamic_pointer_cast<Section>(nestedComponent)) {
+            QTreeWidgetItem *nestedItem = createTreeItem(QString::fromStdString(
+                                                             subSectionPtr->getName()),
+                                                         nullptr,
+                                                         parentItem);
+            nestedItem->setData(0,
+                                Qt::UserRole,
+                                QString::fromStdString(
+                                    boost::uuids::to_string(subSectionPtr->getId())));
+        }
+    }
+}
+
+// Fin de populate current section tree
+
+// Funciones auxiliares para onItemDropped
+
+void FrontendDashboard::insertComponentInSection(std::shared_ptr<BaseNode> &newComponent,
+                                                 QTreeWidgetItem *parentItem,
+                                                 int dropIndex)
+{
+    auto sectionPtr = std::dynamic_pointer_cast<Section>(currentSection);
+    if (!sectionPtr) {
+        QMessageBox::warning(this, "Error", "Current section is not valid.");
+        return;
+    }
+
+    const std::vector<std::shared_ptr<BaseNode>> &components = sectionPtr->getChildren();
+    dropIndex = std::clamp(dropIndex, 0, static_cast<int>(components.size()));
+    sectionPtr->insertChild(dropIndex, newComponent);
+
+    if (auto componentPtr = std::dynamic_pointer_cast<Component>(newComponent)) {
+        std::string componentType = componentTypeToString(componentPtr->getType());
+        QTreeWidgetItem *newItem = createTreeItem(QString::fromStdString(componentType));
+        newItem->setData(0,
+                         Qt::UserRole,
+                         QString::fromStdString(boost::uuids::to_string(componentPtr->getId())));
+        parentItem->insertChild(dropIndex, newItem);
+    } else if (auto newSectionPtr = std::dynamic_pointer_cast<Section>(newComponent)) {
+        QTreeWidgetItem *newItem = createTreeItem(QString::fromStdString(newSectionPtr->getName()));
+        newItem->setData(0,
+                         Qt::UserRole,
+                         QString::fromStdString(boost::uuids::to_string(newSectionPtr->getId())));
+        parentItem->insertChild(dropIndex, newItem);
+        loggerJson.logAction("use-component-in-view",
+                             "Custom Component añadido a una vista o componente personalizado");
+    }
+}
+
+void FrontendDashboard::insertNestedComponent(std::shared_ptr<Component> &parentComponent,
+                                              std::shared_ptr<BaseNode> &newComponent,
                                               QTreeWidgetItem *parentItem,
                                               int dropIndex)
 {
-    std::vector<Component> &components = currentView.getComponents();
-    dropIndex = std::clamp(dropIndex, 0, static_cast<int>(components.size()));
-    components.insert(components.begin() + dropIndex, newComponent);
+    auto componentPtr = std::dynamic_pointer_cast<Component>(parentComponent);
+    if (!componentPtr || !componentPtr->isAllowingItems()) {
+        QMessageBox::warning(this, "Invalid Operation", "This component does not allow nesting.");
+        return;
+    }
 
-    QTreeWidgetItem *newItem = createTreeItem(
-        QString::fromStdString(componentTypeToString(newComponent.getType())));
-    if (parentItem == ui->currentViewTree->invisibleRootItem()) {
-        ui->currentViewTree->insertTopLevelItem(dropIndex, newItem);
-    } else {
+    dropIndex = std::clamp(dropIndex, 0, static_cast<int>(componentPtr->getChildren().size()));
+    componentPtr->insertChild(dropIndex, newComponent);
+
+    if (auto newComponentPtr = std::dynamic_pointer_cast<Component>(newComponent)) {
+        QTreeWidgetItem *newItem = createTreeItem(
+                QString::fromStdString(componentTypeToString(newComponentPtr->getType())));
+        newItem->setData(0,
+                         Qt::UserRole,
+                         QString::fromStdString(boost::uuids::to_string(newComponentPtr->getId())));
+        parentItem->insertChild(dropIndex, newItem);
+    } else if (auto newSectionPtr = std::dynamic_pointer_cast<Section>(newComponent)) {
+        QTreeWidgetItem *newItem = createTreeItem(QString::fromStdString(newSectionPtr->getName()));
+        newItem->setData(0,
+                         Qt::UserRole,
+                         QString::fromStdString(boost::uuids::to_string(newSectionPtr->getId())));
         parentItem->insertChild(dropIndex, newItem);
     }
 }
 
-void FrontendDashboard::insertNestedComponent(Component *parentComponent,
-                                              Component &newComponent,
-                                              QTreeWidgetItem *parentItem,
-                                              int dropIndex)
-{
-    if (!parentComponent->isAllowingItems()) {
-        QMessageBox::warning(this, "Invalid Operation", "This component does not allow nesting.");
-        return;
-    }
-    std::vector<Component> &nestedComponents = parentComponent->getNestedComponents();
-    dropIndex = std::clamp(dropIndex, 0, static_cast<int>(nestedComponents.size()));
-    nestedComponents.insert(nestedComponents.begin() + dropIndex, newComponent);
-
-    QTreeWidgetItem *newItem = createTreeItem(
-        QString::fromStdString(componentTypeToString(newComponent.getType())));
-    parentItem->insertChild(dropIndex, newItem);
-}
-
-// End of Auxiliar functions to onItemDropped
-
-bool FrontendDashboard::isParentView(QTreeWidgetItem *item) const
+bool FrontendDashboard::isView(QTreeWidgetItem *item) const
 {
     std::string itemType = item->text(0).toStdString();
-    return std::any_of(views.begin(), views.end(), [&](const auto &v) {
-        return v.getName() == itemType;
-    });
+
+    auto viewsNode = getMainNode("Views");
+
+    if (!viewsNode) {
+        qDebug() << "Views node not found on IS VIEW";
+        return false;
+    }
+
+    auto sectionNode = std::dynamic_pointer_cast<GenericNode>(viewsNode);
+
+    return std::any_of(sectionNode->getChildren().begin(),
+                       sectionNode->getChildren().end(),
+                       [&](const auto &v) {
+                           auto section = std::dynamic_pointer_cast<Section>(v);
+                           return section->getName() == itemType;
+                       });
 }
+
+bool FrontendDashboard::isCustomComponent(QTreeWidgetItem *item) const
+{
+    std::string itemType = item->text(0).toStdString();
+
+    auto customComponentsNode = getMainNode("CustomComponents");
+
+    if (!customComponentsNode) {
+        qDebug() << "Custom Components node not found on IS CUSTOM COMPONENT";
+        return false;
+    }
+
+    auto sectionNode = std::dynamic_pointer_cast<GenericNode>(customComponentsNode);
+
+    return std::any_of(sectionNode->getChildren().begin(),
+                       sectionNode->getChildren().end(),
+                       [&](const auto &cc) {
+                           auto section = std::dynamic_pointer_cast<Section>(cc);
+                           return section->getName() == itemType;
+                       });
+}
+
+std::shared_ptr<BaseNode> FrontendDashboard::convertItemToBaseNode(QTreeWidgetItem *item)
+{
+    if (!item) {
+        return nullptr;
+    }
+
+    QString itemText = item->text(0);
+
+    if (isView(item) || isCustomComponent(item)) {
+        auto section = std::make_shared<Section>(itemText.toStdString());
+        return section;
+    } else {
+        auto component = std::make_shared<Component>(stringToComponentType(itemText.toStdString()));
+        return component;
+    }
+}
+
+// Funciones auxiliares para onItemDropped
 
 void FrontendDashboard::onItemDropped(QTreeWidgetItem *parentItem,
                                       QTreeWidgetItem *droppedItem,
-                                      int dropIndex)
-{
+                                      int dropIndex) {
     if (!parentItem || !droppedItem) {
         qDebug() << "Error: null items in onItemDropped";
         return;
     }
 
-    bool isView = isParentView(parentItem);
+    auto newNode = convertItemToBaseNode(droppedItem);
 
-    Component newComponent = convertItemToComponent(droppedItem);
+    if (!newNode) {
+        QMessageBox::warning(this, "Component Error", "Failed to convert dropped item.");
+        return;
+    }
 
-    if (isView) {
-        insertComponentInView(newComponent, parentItem, dropIndex);
+    bool isCc = isCustomComponent(parentItem);
+    bool isVw = isView(parentItem);
+
+    if (isCc)
+        loggerJson.logAction("add-html-to-component", "Html tags added to a custom component.");
+    if (isVw)
+        loggerJson.logAction("add-html-to-view", "Html tags added to a view.");
+
+    if (isVw || isCc) {
+        insertComponentInSection(newNode, parentItem, dropIndex);
     } else {
-        Component *parentComponent = findComponentInTree(currentView, parentItem);
+        auto parentComponent = findComponentInTree(currentSection, parentItem);
 
         if (!parentComponent) {
-            QMessageBox::warning(this, "Component error", "Parent wasn't found.");
+            QMessageBox::warning(this, "Component Error", "Parent wasn't found.");
             return;
         }
 
-        insertNestedComponent(parentComponent, newComponent, parentItem, dropIndex);
+        insertNestedComponent(parentComponent, newNode, parentItem, dropIndex);
     }
 }
 
-void FrontendDashboard::populateCurrentViewTree()
+void FrontendDashboard::cleanPropertiesTable()
 {
-    ui->currentViewTree->clear();
-
-    // Iterar sobre todas las vistas
-    for (const auto &view : views) {
-        // Añadir cada vista como un item de primer nivel
-        QTreeWidgetItem *viewItem = new QTreeWidgetItem(ui->currentViewTree);
-        viewItem->setText(0, QString::fromStdString(view.getName()));
-
-        // Añadir los componentes de la vista actual
-        for (const auto &component : view.getComponents()) {
-            QTreeWidgetItem *componentItem = new QTreeWidgetItem(viewItem);
-            componentItem->setText(0,
-                                   QString::fromStdString(
-                                       componentTypeToString(component.getType())));
-
-            // Verificar si el componente permite anidar y tiene subcomponentes
-            if (component.isAllowingItems() && !component.getNestedComponents().empty()) {
-                populateNestedItems(componentItem, component.getNestedComponents());
-            }
-        }
-    }
-
-    ui->currentViewTree->expandAll();
+    // Limpiar la tabla de propiedades y ajustar el número de filas
+    ui->propertiesTable->clearContents();
+    ui->propertiesTable->setRowCount(0);
 }
 
-void FrontendDashboard::populateNestedItems(QTreeWidgetItem *parentItem,
-                                            const std::vector<Component> &nestedComponents)
-{
-    for (const auto &subcomponent : nestedComponents) {
-        QTreeWidgetItem *subItem = new QTreeWidgetItem(parentItem);
-        subItem->setText(0, QString::fromStdString(componentTypeToString(subcomponent.getType())));
-
-        if (subcomponent.isAllowingItems() && !subcomponent.getNestedComponents().empty()) {
-            populateNestedItems(subItem, subcomponent.getNestedComponents());
-        }
-    }
-}
-
-void FrontendDashboard::convertTreeToViews()
-{
-    std::string viewName = currentView.getName();
-    auto it = std::find_if(views.begin(), views.end(), [&viewName](const View &v) {
-        return v.getName() == viewName;
-    });
-
-    if (it != views.end()) {
-        *it = currentView;
-    }
-}
-
-Component FrontendDashboard::convertItemToComponent(QTreeWidgetItem *item)
-{
-    std::string componentTypeStr = item->text(0).toStdString();
-    ComponentType componentType = stringToComponentType(componentTypeStr);
-    Component newComponent(componentType);
-
-    // Verificar si el componente permite anidación y tiene hijos
-    if (item->childCount() > 0 && newComponent.isAllowingItems()) {
-        std::vector<Component> nestedComponents;
-        for (int i = 0; i < item->childCount(); ++i) {
-            QTreeWidgetItem *childItem = item->child(i);
-            nestedComponents.push_back(
-                convertItemToComponent(childItem)); // Conversión recursiva para anidamiento
-        }
-        newComponent.setNestedComponents(nestedComponents);
-    }
-
-    return newComponent;
-}
-
-void FrontendDashboard::on_saveButton_clicked()
-{
-    convertTreeToViews();
-
-    QMessageBox::information(this, "Successful", "View updated");
-}
-
-void FrontendDashboard::onCurrentViewTreeItemSelected(QTreeWidgetItem *item, int column)
+void FrontendDashboard::onCurrentSectionTreeItemSelected(QTreeWidgetItem *item, int column)
 {
     if (!item) {
         qDebug() << "Selected item is null.";
         return;
     }
 
-    // Obtener el nombre del elemento seleccionado
-    std::string selectedItemName = item->text(0).toStdString();
+    qDebug() << "Finding:" << item->text(0);
 
-    // Verificar si el elemento seleccionado es una vista
-    auto viewIt = std::find_if(views.begin(), views.end(), [&selectedItemName](const View &view) {
-        return view.getName() == selectedItemName;
-    });
-
-    if (viewIt != views.end()) {
-        // Si el elemento seleccionado es una vista, actualizar `currentView`
-        currentView = *viewIt;
-        qDebug() << "Current view updated to:" << QString::fromStdString(currentView.getName());
-
-        ui->currentViewLabel->setText(
-            QString::fromStdString("Current View: " + currentView.getName()));
+    if (isView(item) || isCustomComponent(item)) {
+        cleanPropertiesTable();
         return;
     }
 
-    // Si el elemento seleccionado no es una vista, buscar el componente en `currentView`
+    // Si no es una view o un custom component, revisar en la section actual
 
     // Usamos una pila de QTreeWidgetItem para guardar la jerarquía completa hasta el item actual
     std::vector<QTreeWidgetItem *> hierarchy;
@@ -302,55 +544,25 @@ void FrontendDashboard::onCurrentViewTreeItemSelected(QTreeWidgetItem *item, int
         currentItem = currentItem->parent();
     }
 
-    // Buscar el componente en `currentView` usando la jerarquía de items
-    Component *foundComponent = findComponentByHierarchy(currentView.getComponents(), hierarchy, 1);
+    auto currentSectionPtr = std::dynamic_pointer_cast<Section>(currentSection);
+    // Buscar el componente en `currentSection` usando la jerarquía de items
+    auto foundComponent = findComponentByHierarchy(currentSectionPtr->getChildren(),
+                                                   hierarchy,
+                                                   getComponentIdFromTree(item),
+                                                   1);
 
     if (foundComponent) {
-        currentComponent = *foundComponent;
-        qDebug() << "Found Component:"
-                 << QString::fromStdString(componentTypeToString(currentComponent.getType()));
+        currentComponent = foundComponent;
+
+        auto currentComponentPtr = std::dynamic_pointer_cast<Component>(currentComponent);
 
         // Llenar la tabla de propiedades con las propiedades del componente
         populatePropertiesTable(currentComponent);
-    } else {
-        qDebug() << "Component of type" << QString::fromStdString(item->text(0).toStdString())
-                 << "not found.";
-    }
+    } else
+        cleanPropertiesTable();
 }
 
-// Función recursiva que busca el componente utilizando la jerarquía
-Component *FrontendDashboard::findComponentByHierarchy(
-    std::vector<Component> &components, const std::vector<QTreeWidgetItem *> &hierarchy, int level)
-{
-    if (level >= hierarchy.size()) {
-        return nullptr;
-    }
-
-    const std::string type = hierarchy[level]->text(0).toStdString();
-
-    for (auto &component : components) {
-        if (componentTypeToString(component.getType()) == type) {
-            // Si estamos en el último nivel de la jerarquía, devolvemos el componente encontrado
-            if (level == hierarchy.size() - 1) {
-                return &component;
-            }
-
-            // Si hay más niveles, continuamos buscando en los nestedComponents
-            if (component.isAllowingItems()) {
-                Component *nested = findComponentByHierarchy(component.getNestedComponents(),
-                                                             hierarchy,
-                                                             level + 1);
-                if (nested) {
-                    return nested;
-                }
-            }
-        }
-    }
-
-    return nullptr;
-}
-
-void FrontendDashboard::populatePropertiesTable(const Component &component)
+void FrontendDashboard::populatePropertiesTable(const std::shared_ptr<Component> &component)
 {
     // Desconectar temporalmente onPropertyValueChanged para evitar bucles
     disconnect(ui->propertiesTable,
@@ -358,11 +570,11 @@ void FrontendDashboard::populatePropertiesTable(const Component &component)
                this,
                &FrontendDashboard::onPropertyValueChanged);
 
-    // Limpiar la tabla de propiedades y ajustar el número de filas
-    ui->propertiesTable->clearContents();
-    ui->propertiesTable->setRowCount(0);
+    cleanPropertiesTable();
 
-    const auto &props = component.getProps();
+    auto componentPtr = std::dynamic_pointer_cast<Component>(component);
+
+    const auto &props = componentPtr->getProps();
 
     if (props.empty()) {
         qDebug() << "No properties found for this component.";
@@ -372,15 +584,42 @@ void FrontendDashboard::populatePropertiesTable(const Component &component)
     // Ajustar el número de filas
     ui->propertiesTable->setRowCount(props.size());
 
+    const std::unordered_map<std::string, QStringList> restrictedProps
+        = {{"get:Model Layout", {"ALL", "ID"}},
+           {"method:Form", {"POST", "PUT"}},
+           {"type:Button", {"button", "submit"}},
+           {"type:Input",
+            {"text", "email", "number", "password", "submit", "button", "checkbox", "color", "date"}},
+           {"required:Input", {"false", "true"}},
+           {"target:Hyperlink", {"_self", "_blank"}}};
+
     int row = 0;
     for (const auto &prop : props) {
         QTableWidgetItem *keyItem = new QTableWidgetItem(QString::fromStdString(prop.first));
-        QTableWidgetItem *valueItem = new QTableWidgetItem(QString::fromStdString(prop.second));
-
         keyItem->setFlags(keyItem->flags() & ~Qt::ItemIsEditable);
-
         ui->propertiesTable->setItem(row, 0, keyItem);
-        ui->propertiesTable->setItem(row, 1, valueItem);
+
+        std::string key = prop.first;
+        std::string componentType = componentTypeToString(componentPtr->getType());
+
+        std::string mapKey = key + ":" + componentType;
+
+        if (restrictedProps.find(mapKey) != restrictedProps.end()) {
+            const auto &options = restrictedProps.at(mapKey);
+
+            QComboBox *comboBox = new QComboBox();
+            comboBox->addItems(options);
+            comboBox->setCurrentText(QString::fromStdString(prop.second));
+
+            connect(comboBox, &QComboBox::currentTextChanged, this, [=](const QString &newText) {
+                onPropertyComboBoxChanged(row, prop.first, newText);
+            });
+
+            ui->propertiesTable->setCellWidget(row, 1, comboBox);
+        } else {
+            QTableWidgetItem *valueItem = new QTableWidgetItem(QString::fromStdString(prop.second));
+            ui->propertiesTable->setItem(row, 1, valueItem);
+        }
 
         ++row;
     }
@@ -398,43 +637,90 @@ void FrontendDashboard::onPropertyValueChanged(int row, int column)
         QString propertyName = ui->propertiesTable->item(row, 0)->text();
         QString newValue = ui->propertiesTable->item(row, 1)->text();
 
+        QRegularExpression invalidChars(R"(\\/%?"$@<>¿|)");
+        if (invalidChars.match(newValue).hasMatch()) {
+            QMessageBox::warning(this, "Invalid propertie", "Property have invalid characters.");
+
+            QString previousValue = QString::fromStdString(
+                currentComponent->getProps()[propertyName.toStdString()]);
+
+            disconnect(ui->propertiesTable,
+                       &QTableWidget::cellChanged,
+                       this,
+                       &FrontendDashboard::onPropertyValueChanged);
+
+            // Restaurar el valor anterior
+            ui->propertiesTable->item(row, 1)->setText(previousValue);
+
+            // Volver a conectar la señal
+            connect(ui->propertiesTable,
+                    &QTableWidget::cellChanged,
+                    this,
+                    &FrontendDashboard::onPropertyValueChanged);
+
+            return;
+        }
+
         // Actualizar las propiedades en `currentComponent`
-        std::map<std::string, std::string> currentProps = currentComponent.getProps();
+        std::map<std::string, std::string> currentProps = currentComponent->getProps();
         currentProps[propertyName.toStdString()] = newValue.toStdString();
-        currentComponent.setProps(currentProps);
+        currentComponent->setProps(currentProps);
 
-        // Actualizar el componente en `currentView` usando el método `findComponentInTree`
-        Component *componentInView = findComponentInTree(currentView,
-                                                         ui->currentViewTree->currentItem());
+        std::string componentType = componentTypeToString(currentComponent->getType());
 
-        if (componentInView) {
-            componentInView->setProps(currentComponent.getProps());
-            qDebug() << "Property updated in currentView. Updated Properties:";
-            for (const auto &prop : componentInView->getProps()) {
+        // Logs
+        LoggerUtils::logPropertyChange(loggerJson, propertyName, newValue, componentType);
+
+        // Actualizar el componente en `currentSection` usando el método `findComponentInTree`
+        if (currentComponent) {
+            qDebug() << "Property updated in currentSection. Updated Properties:";
+            for (const auto &prop : currentComponent->getProps()) {
                 qDebug() << "  " << QString::fromStdString(prop.first) << "="
                          << QString::fromStdString(prop.second);
             }
         } else {
-            qDebug() << "Could not find component in currentView.";
-        }
-
-        // Reflejar el currentView en views
-        auto it = std::find_if(views.begin(), views.end(), [this](const View &view) {
-            return view.getName() == currentView.getName();
-        });
-
-        if (it != views.end()) {
-            *it = currentView;
-            qDebug() << "Current view updated in views.";
-
-        } else {
-            qDebug() << "Could not update current view in views.";
+            qDebug() << "Could not find component in currentSection.";
         }
     }
 }
 
-Component *FrontendDashboard::findComponentInTree(View &view, QTreeWidgetItem *item)
+void FrontendDashboard::onPropertyComboBoxChanged(int row,
+                                                  const std::string &propertyName,
+                                                  const QString &newValue)
 {
+    auto currentProps = currentComponent->getProps();
+    currentProps[propertyName] = newValue.toStdString();
+    currentComponent->setProps(currentProps);
+
+    std::string componentType = componentTypeToString(currentComponent->getType());
+
+    LoggerUtils::logPropertyChange(loggerJson,
+                                   QString::fromStdString(propertyName),
+                                   newValue,
+                                   componentType);
+
+    loggerJson.logAction("combo-change",
+                         "Changed " + propertyName + " to " + newValue.toStdString());
+
+    if (currentComponent) {
+        qDebug() << "Property updated in currentSection. Updated Properties:";
+        for (const auto &prop : currentComponent->getProps()) {
+            qDebug() << "  " << QString::fromStdString(prop.first) << "="
+                     << QString::fromStdString(prop.second);
+        }
+    } else {
+        qDebug() << "Could not find component in currentSection.";
+    }
+}
+
+std::shared_ptr<Component> FrontendDashboard::findComponentInTree(const std::shared_ptr<BaseNode> &section,
+                                                                  QTreeWidgetItem *item)
+{
+    if (!section) {
+        qDebug() << "Section is null.";
+        return nullptr;
+    }
+
     // Usamos la jerarquía completa de item para realizar una búsqueda exacta
     std::vector<QTreeWidgetItem *> hierarchy;
     QTreeWidgetItem *currentItem = item;
@@ -445,194 +731,428 @@ Component *FrontendDashboard::findComponentInTree(View &view, QTreeWidgetItem *i
         currentItem = currentItem->parent();
     }
 
-    // Comprobamos que el primer nivel en hierarchy es la vista
-    if (hierarchy.size() > 0 && hierarchy[0]->text(0).toStdString() == view.getName()) {
-        // Ignorar el nivel de la vista y comenzar desde el siguiente
-        return findComponentByHierarchy(view.getComponents(), hierarchy, 1);
-    } else {
-        qDebug() << "Error: La vista no coincide con el nivel superior de hierarchy.";
+    auto sectionPtr = std::dynamic_pointer_cast<Section>(section);
+    if (!sectionPtr) {
+        qDebug() << "Error: currentSection no es una Section.";
         return nullptr;
     }
+
+    // Comprobamos que el primer nivel en hierarchy es la seccion
+    if (!hierarchy.empty() && hierarchy[0]->text(0).toStdString() == sectionPtr->getName()) {
+        // Ignorar el nivel de la vista y comenzar desde el siguiente
+        return findComponentByHierarchy(sectionPtr->getChildren(),
+                                        hierarchy,
+                                        getComponentIdFromTree(item),
+                                        1);
+    }
+
+    qDebug() << "Error: La vista no coincide con el nivel superior de hierarchy.";
+    return nullptr;
 }
 
-Component *FrontendDashboard::findNestedComponent(Component &parent, QTreeWidgetItem *item)
+// Función recursiva que busca el componente utilizando la jerarquía
+std::shared_ptr<Component> FrontendDashboard::findComponentByHierarchy(
+    const std::vector<std::shared_ptr<BaseNode>> &components,
+    const std::vector<QTreeWidgetItem *> &hierarchy,
+    const std::string &id,
+    int level)
 {
-    const std::string type = item->text(0).toStdString();
-    std::vector<Component> &nestedComponents = parent.getNestedComponents();
+    if (level >= hierarchy.size())
+        return nullptr; // Hemos recorrido toda la jerarquía sin encontrar el componente
 
-    qDebug() << "Searching for nested component of type" << QString::fromStdString(type);
+    for (const auto &component : components) {
+        auto componentPtr = std::dynamic_pointer_cast<Component>(component);
 
-    for (auto &nestedComponent : nestedComponents) {
-        qDebug() << "Checking nested component of type"
-                 << QString::fromStdString(componentTypeToString(nestedComponent.getType()));
-
-        if (componentTypeToString(nestedComponent.getType()) == type && !item->parent()) {
-            qDebug() << "Nested component found.";
-            return &nestedComponent;
+        if (!componentPtr) {
+            continue; // Si no se puede convertir a Component, lo ignoramos
         }
 
-        // Si el `QTreeWidgetItem` tiene más niveles, sigue buscando en niveles más profundos
-        if (nestedComponent.isAllowingItems() && item->parent()) {
-            Component *deepNested = findNestedComponent(nestedComponent, item->parent());
-            if (deepNested) {
-                return deepNested;
+        if (boost::uuids::to_string(componentPtr->getId()) == id
+            && componentTypeToString(componentPtr->getType())
+                   == hierarchy[level]->text(0).toStdString()) {
+            // Si estamos en el último nivel de la jerarquía, devolvemos el componente encontrado
+            if (level == hierarchy.size() - 1) {
+                return componentPtr;
+            }
+        }
+
+        // Si hay más niveles, continuamos buscando en los nestedComponents
+        if (componentPtr->isAllowingItems()) {
+            auto nestedComponent = findComponentByHierarchy(componentPtr->getChildren(),
+                                                            hierarchy,
+                                                            id,
+                                                            level + 1);
+            if (nestedComponent) {
+                return nestedComponent;
             }
         }
     }
 
-    qDebug() << "Nested component of type" << QString::fromStdString(type) << "not found.";
     return nullptr;
 }
 
-void FrontendDashboard::showCreateViewDialog()
+void FrontendDashboard::onSectionSaved(const std::shared_ptr<Section> &section)
 {
-    if (!createViewDialog) {
-        createViewDialog = new CreateView(this);
+    // Custom Component
+    auto customComponentsNode = getMainNode("CustomComponents");
 
-        connect(createViewDialog, &CreateView::routeSaved, this, &FrontendDashboard::onRouteSaved);
+    // Views
+    auto viewsNode = getMainNode("Views");
+
+    if (!viewsNode) {
+        qDebug() << "Views node not found.";
+        return;
     }
-    createViewDialog->exec();
-}
 
-void FrontendDashboard::onRouteSaved(const Route &route)
-{
-    // Agregar la ruta a `routes`
-    routes.push_back(route);
-
-    // Crear un nuevo QTreeWidgetItem para la vista y agregarlo al `currentViewTree`
-    QTreeWidgetItem *viewItem = new QTreeWidgetItem(ui->currentViewTree);
-    viewItem->setText(0, QString::fromStdString(route.getComponent()));
-    ui->currentViewTree->addTopLevelItem(viewItem);
-
-    // Crear una nueva vista y un componente `Header H1` predeterminado
-    View view(route.getComponent());
-    Component headerComponent(ComponentType::HeaderH1);
-
-    // Asignar propiedades predeterminadas al `Header H1`
-    headerComponent.setProps({{"class", ""}, {"text", "Default Header"}});
-
-    // Agregar `Header H1` a los componentes de la vista
-    view.getComponents().push_back(headerComponent);
-    view.setComponents(view.getComponents());
-
-    // Sincronizar la vista con `currentView` y `views`
-    if (route.getComponent() == currentView.getName()) {
-        currentView = view;
+    if (!customComponentsNode) {
+        qDebug() << "Custom Components node not found.";
+        return;
     }
-    views.push_back(view);
 
-    // Asociar el `QTreeWidgetItem` con la vista para facilitar la búsqueda en drag and drop
-    viewItem->setData(0, Qt::UserRole, QVariant::fromValue(&view));
+    auto customComponentPtr = std::dynamic_pointer_cast<GenericNode>(customComponentsNode);
+    auto viewsPtr = std::dynamic_pointer_cast<GenericNode>(viewsNode);
 
-    // Agregar `Header H1` como un elemento hijo en `currentViewTree` bajo el elemento de la vista
-    QTreeWidgetItem *headerItem = new QTreeWidgetItem(viewItem);
-    headerItem->setText(0, "Header H1");
+    for (auto child : customComponentPtr->getChildren()) {
+        auto childSec = std::dynamic_pointer_cast<Section>(child);
+        if (childSec->getName() == section->getName()) {
+            QMessageBox::warning(
+                this,
+                "Name Error",
+                "The section has the same name as another custom component that already exists.");
+            return;
+        }
+    }
 
-    // Asociar `headerItem` con el componente `headerComponent`
-    headerItem->setData(0, Qt::UserRole, QVariant::fromValue(&headerComponent));
+    for (auto child : viewsPtr->getChildren()) {
+        auto childSec = std::dynamic_pointer_cast<Section>(child);
+        if (childSec->getName() == section->getName()) {
+            QMessageBox::warning(
+                this,
+                "Name Error",
+                "The section has the same name as another view that already exists.");
+            return;
+        }
 
-    // Expandir el elemento de la vista para mostrar `Header H1`
-    viewItem->setExpanded(true);
+        if (!section->getPath().empty() && childSec->getPath() == section->getPath()) {
+            QMessageBox::warning(
+                this,
+                "Path Error",
+                "The section has the same path as another view that already exists.");
+            return;
+        }
+    }
 
-    // Actualizar las rutas y vistas en la interfaz si es necesario
-    setRoutes(routes);
+    if (section->getPath().empty()) {
+        // Añadir hijo
+        customComponentPtr->addChild(section);
+
+        // Obtener el primer QTreeWidgetItem (Custom)
+        QTreeWidgetItem *customComponents = ui->componentsTree->topLevelItem(0);
+
+        // Crear un nuevo QTreeWidgetItem para el component y agregarlo al
+        // `Custom` QTreeWidgetItem del `componentsTree`
+        QTreeWidgetItem *newCustomComponent = new QTreeWidgetItem();
+
+        auto sectionPtr = std::dynamic_pointer_cast<Section>(section);
+
+        newCustomComponent->setText(0, QString::fromStdString(sectionPtr->getName()));
+
+        // Añadir el nuevo component en caso tenga un nombre
+        customComponents->addChild(newCustomComponent);
+
+        // Verificación
+        bool childAdded = (customComponents->childCount() > 0
+                           && customComponents->child(customComponents->childCount() - 1)
+                                  == newCustomComponent);
+
+        assert(childAdded && "Custom Component added");
+
+        // Añadir la nueva view al combobox
+        ui->sectionComboBox->addItem(QString::fromStdString(sectionPtr->getName()));
+
+        // Añadir al cache
+        RenderCallback::customComponentsCache.insert(sectionPtr->getName());
+
+    } else {
+        viewsPtr->addChild(section);
+
+        // Crear un componente `Header H1` predeterminado
+        auto headerComponent = std::make_shared<Component>(ComponentType::HeaderH1);
+
+        // Asignar propiedades predeterminadas al `Header H1`
+        headerComponent->setProps({{"class", ""}, {"text", "Default Header"}});
+
+        // Agregar `Header H1` a los componentes de la vista
+        section->addChild(headerComponent);
+
+        auto currentSectionPtr = std::dynamic_pointer_cast<Section>(currentSection);
+
+        if (currentSectionPtr && section->getName() == currentSectionPtr->getName()) {
+            setCurrentSection(section);
+        }
+
+        ui->sectionComboBox->addItem(QString::fromStdString(section->getName()));
+    }
 }
 
 void FrontendDashboard::on_deleteButton_clicked()
 {
-    // Obtener el elemento seleccionado en `currentViewTree`
-    QTreeWidgetItem *selectedItem = ui->currentViewTree->currentItem();
+    // Obtiene el elemento seleccionado en el árbol
+    QTreeWidgetItem *selectedItem = ui->currentSectionTree->currentItem();
     if (!selectedItem) {
-        qDebug() << "No item selected for deletion.";
+        QMessageBox::warning(this, "ERROR", "You haven't selected an item");
         return;
     }
 
-    // Obtener el nombre del elemento seleccionado
+    // Cuadro de diálogo de confirmación con estilos aplicados
+    QMessageBox msgBox;
+    msgBox.setStyleSheet(
+        "QPushButton { background-color: #f0f0f0; color: black; padding: 5px 10px; }"
+        "QMessageBox { background-color: white; }");
+
+    msgBox.setWindowTitle("Delete Component");
+    msgBox.setText("Are you sure you want to delete the selected component?");
+    msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
+    msgBox.setDefaultButton(QMessageBox::No);
+
+    int reply = msgBox.exec();
+
+    if (reply == QMessageBox::No)
+        return;
+
+    // Obtiene el nombre del elemento seleccionado
     std::string selectedItemName = selectedItem->text(0).toStdString();
 
-    // Verificar si el elemento seleccionado es una vista
-    auto viewIt = std::find_if(views.begin(), views.end(), [&selectedItemName](const View &view) {
-        return view.getName() == selectedItemName;
-    });
+    // Busca en views
+    auto viewsNode = getMainNode("Views");
 
-    if (viewIt != views.end()) {
-        // Si es una vista, eliminar la vista de `views` y de `currentViewTree`
-        views.erase(viewIt);
-        delete selectedItem; // Esto eliminará el elemento del árbol
+    if (!viewsNode) {
+        qDebug() << "Views node is null.";
+        return;
+    }
+
+    auto viewsPtr = std::dynamic_pointer_cast<GenericNode>(viewsNode);
+
+    auto viewIt = std::find_if(viewsPtr->getChildren().begin(),
+                               viewsPtr->getChildren().end(),
+                               [&selectedItemName](const auto &node) {
+                                   auto nodePtr = std::dynamic_pointer_cast<Section>(node);
+                                   return nodePtr->getName() == selectedItemName;
+                               });
+
+    if (viewIt != viewsPtr->getChildren().end()) {
+        // Remover del customTreeWidget
+        delete selectedItem;
+
+        // Remover del AST
+        viewsPtr->removeChild(viewIt);
+
+        // Limpiar para evitar editar algo inexistente
+        cleanPropertiesTable();
+
+        // Remover del comboBox
+        ui->sectionComboBox->removeItem(ui->sectionComboBox->currentIndex());
+
         qDebug() << "View deleted:" << QString::fromStdString(selectedItemName);
+
+        return;
+    }
+
+    // Busca en custom components
+    auto customComponentsNode = getMainNode("CustomComponents");
+
+    auto customComponentsPtr = std::dynamic_pointer_cast<GenericNode>(customComponentsNode);
+
+    auto custComponentIt = std::find_if(customComponentsPtr->getChildren().begin(),
+                                        customComponentsPtr->getChildren().end(),
+                                        [&selectedItemName](const auto &node) {
+                                            auto nodePtr = std::dynamic_pointer_cast<Section>(node);
+                                            return nodePtr->getName() == selectedItemName;
+                                        });
+
+    // Si el custom component es de alto nivel se elimina, sino se continua buscando
+    // como un subcomponent o subsection
+    if (custComponentIt != customComponentsPtr->getChildren().end() && !selectedItem->parent()) {
+        // Remover del customTreeWidget
+        delete selectedItem;
+
+        // Remover del AST
+        customComponentsPtr->removeChild(custComponentIt);
+
+        // Remover los subsections
+        removeSubsectionsOnAST(frontendRoot, selectedItemName);
+
+        // Remover del cache
+        RenderCallback::customComponentsCache.erase(selectedItemName);
+
+        // Limpiar para evitar editar algo inexistente
+        cleanPropertiesTable();
+
+        // Remover del QTreeWidgetItem de custom components
+        QList<QTreeWidgetItem *> customItems
+            = ui->componentsTree->findItems("Custom", Qt::MatchExactly | Qt::MatchRecursive, 0);
+
+        for (QTreeWidgetItem *customItem : customItems) {
+            for (int i = 0; i < customItem->childCount(); ++i) {
+                QTreeWidgetItem *child = customItem->child(i);
+                if (child->text(0) == QString::fromStdString(selectedItemName)) {
+                    customItem->removeChild(child);
+                    delete child; // Liberar memoria
+                    break;        // solo uno
+                }
+            }
+        }
+
+        // Remover del comboBox
+        ui->sectionComboBox->removeItem(ui->sectionComboBox->currentIndex());
+
+        qDebug() << "Custom component deleted:" << QString::fromStdString(selectedItemName);
+
+        return;
+    }
+
+    // Verifica si currentSection es un Section
+    auto currentSectionPtr = std::dynamic_pointer_cast<Section>(currentSection);
+    if (!currentSectionPtr) {
+        QMessageBox::warning(this, "Error", "Current section is not valid for deletion");
+        return;
+    }
+
+    // Busca el componente dentro de la jerarquía del árbol
+    std::vector<QTreeWidgetItem *> hierarchy;
+    QTreeWidgetItem *currentItem = selectedItem;
+    while (currentItem) {
+        hierarchy.insert(hierarchy.begin(), currentItem);
+        currentItem = currentItem->parent();
+    }
+
+    // Llama a una función para eliminar un componente basado en la jerarquía
+    if (deleteComponentByHierarchy(currentSectionPtr, hierarchy)) {
+        delete selectedItem;
+        qDebug() << "Item deleted from section:" << QString::fromStdString(selectedItemName);
+        // Limpiar para evitar editar algo inexistente
+        cleanPropertiesTable();
     } else {
-        // Si no es una vista, buscar y eliminar el componente en `currentView`
-
-        // Usamos una pila de QTreeWidgetItem para guardar la jerarquía completa hasta el item actual
-        std::vector<QTreeWidgetItem *> hierarchy;
-        QTreeWidgetItem *currentItem = selectedItem;
-        while (currentItem) {
-            hierarchy.insert(hierarchy.begin(), currentItem);
-            currentItem = currentItem->parent();
-        }
-
-        // Buscar el componente en `currentView` usando la jerarquía de items
-        Component *foundComponent = findComponentByHierarchy(currentView.getComponents(),
-                                                             hierarchy,
-                                                             1);
-
-        if (foundComponent) {
-            // Eliminar el componente de `currentView`
-            auto &components = currentView.getComponents();
-            components.erase(std::remove_if(components.begin(),
-                                            components.end(),
-                                            [foundComponent](const Component &component) {
-                                                return &component == foundComponent;
-                                            }),
-                             components.end());
-
-            // Eliminar el elemento del árbol
-            delete selectedItem;
-            qDebug() << "Component deleted:"
-                     << QString::fromStdString(componentTypeToString(foundComponent->getType()));
-        } else {
-            qDebug() << "Component not found for deletion.";
-        }
+        qDebug() << "Failed to delete item: Not found in hierarchy.";
     }
 }
 
+void FrontendDashboard::removeSubsectionsOnAST(std::shared_ptr<BaseNode> &node,
+                                               const std::string &sectionName)
+{
+    auto &children = node->getChildren();
+    std::vector<boost::uuids::uuid> toRemove;
+
+    for (auto child : children) {
+        if (auto section = std::dynamic_pointer_cast<Section>(child)) {
+            const std::string parentType = section->getParent()->getNodeType();
+
+            // Si el nombre coincide, lo marcamos para eliminar
+            if (section->getName() == sectionName) {
+                toRemove.push_back(section->getId());
+            } else {
+                if (!section->getChildren().empty())
+                    removeSubsectionsOnAST(child, sectionName);
+            }
+        } else if (auto component = std::dynamic_pointer_cast<Component>(child)) {
+            if (component->isAllowingItems() && !component->getChildren().empty()) {
+                removeSubsectionsOnAST(child, sectionName);
+            }
+        } else {
+            // GenericNodes
+            removeSubsectionsOnAST(child, sectionName);
+        }
+    }
+
+    // Borrar luego de recorrer (para evitar errores por modificar mientras se itera)
+    for (const auto &id : toRemove) {
+        node->removeChildById(boost::uuids::to_string(id));
+    }
+}
+
+bool FrontendDashboard::deleteComponentByHierarchy(const std::shared_ptr<BaseNode> &parent,
+                                                   const std::vector<QTreeWidgetItem *> &hierarchy)
+{
+    if (hierarchy.empty()) {
+        return false;
+    }
+
+    const std::string &targetId = getComponentIdFromTree(hierarchy.back());
+
+    // Usamos el método encapsulado para eliminar el componente
+    auto parentSection = std::dynamic_pointer_cast<Section>(parent);
+    if (parentSection && parentSection->removeChildById(targetId))
+        return true;
+
+    auto parentComponent = std::dynamic_pointer_cast<Component>(parent);
+    if (parentComponent && parentComponent->removeChildById(targetId))
+        return true;
+
+    // Si no está en los componentes directos, buscar en subcomponentes
+    auto &components = parent->getChildren();
+    for (const auto &child : components) {
+        // auto  = std::dynamic_pointer_cast<BaseNode>(child);
+        if (child && deleteComponentByHierarchy(child, hierarchy)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+void FrontendDashboard::on_addSectionButton_clicked()
+{
+    // Show create section dialog
+    if (!createSectionDialog) {
+        createSectionDialog = new CreateSection(this);
+
+        connect(createSectionDialog,
+                &CreateSection::onSectionSaved,
+                this,
+                &FrontendDashboard::onSectionSaved);
+    }
+    createSectionDialog->exec();
+}
+
 // Getters
-const std::vector<Route> &FrontendDashboard::getRoutes() const
+const std::shared_ptr<BaseNode> FrontendDashboard::getMainNode(const std::string &nodeName) const
 {
-    return routes;
-}
+    if (!frontendRoot) {
+        qDebug() << "frontendRoot is null. Please initialize it before accessing main nodes.";
+        return nullptr;
+    }
+    auto it = std::find_if(frontendRoot->getChildren().begin(),
+                           frontendRoot->getChildren().end(),
+                           [&nodeName](const auto &node) {
+                               return node->getNodeType() == nodeName;
+                           });
 
-std::vector<Route> &FrontendDashboard::getRoutes()
-{
-    return routes;
-}
+    if (it != frontendRoot->getChildren().end()) {
+        return *it; // Devuelve el nodo encontrado
+    }
 
-std::vector<View> &FrontendDashboard::getViews()
-{
-    return views;
-}
-
-const std::vector<View> &FrontendDashboard::getViews() const
-{
-    return views;
+    qDebug() << "The node" << QString::fromStdString(nodeName) << "wasn't found";
+    return nullptr; // No se encontró el nodo
 }
 
 // Setters
-void FrontendDashboard::setRoutes(const std::vector<Route> &routes)
+
+void FrontendDashboard::setFrontendRoot(const std::shared_ptr<BaseNode> &frontendRoot)
 {
-    this->routes = routes;
+    this->frontendRoot = frontendRoot;
 }
 
-void FrontendDashboard::setViews(const std::vector<View> &views)
+void FrontendDashboard::setCurrentSection(const std::shared_ptr<BaseNode> &section)
 {
-    this->views = views;
-}
-
-void FrontendDashboard::setCurrentView(View &view)
-{
-    currentView = view;
-
-    ui->currentViewLabel->setText(QString::fromStdString("Current View: " + currentView.getName()));
-
-    populateCurrentViewTree();
+    if (!section) {
+        qDebug() << "Attempted to set current section to null.";
+        return;
+    }
+    auto sectionPtr = std::dynamic_pointer_cast<Section>(section);
+    if (!sectionPtr) {
+        qDebug() << "Provided node is not a valid Section.";
+        return;
+    }
+    this->currentSection = sectionPtr;
+    populateCurrentSectionTree();
 }

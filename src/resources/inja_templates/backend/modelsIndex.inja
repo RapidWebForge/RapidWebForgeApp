@@ -11,7 +11,6 @@ const sequelize = new Sequelize('{{ credentials.dbname }}', '{{ credentials.user
 const {{ transaction.name }} = require('./{{transaction.name}}')(sequelize);
 {% endfor %}
 
-// Exportar los modelos y la instancia de Sequelize
 module.exports = {
   sequelize,
   {% for transaction in transactions %}

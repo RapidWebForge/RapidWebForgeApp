@@ -1,14 +1,14 @@
 #ifndef DATABASEASSISTANT_H
 #define DATABASEASSISTANT_H
 
-#include <QDialog>
+#include <QWidget>
 #include "../../models/project/project.h"
 
 namespace Ui {
 class DatabaseAssistant;
 }
 
-class DatabaseAssistant : public QDialog
+class DatabaseAssistant : public QWidget
 {
     Q_OBJECT
 

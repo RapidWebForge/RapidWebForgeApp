@@ -19,6 +19,7 @@ public:
 signals:
     void projectClicked(const Project &project);
     void deleteRequested(int projectId);
+    void editRequested(int projectId);
 
 protected:
     void mousePressEvent(QMouseEvent *event) override;

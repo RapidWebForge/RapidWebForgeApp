@@ -1,8 +1,8 @@
 #include "configurationview.h"
 #include <QFileDialog>
 #include <QMessageBox>
+#include <QProcess>
 #include "ui_configurationview.h"
-#include <boost/process.hpp> // Incluir Boost.Process
 
 ConfigurationView::ConfigurationView(QWidget *parent)
     : QDialog(parent)
@@ -72,19 +72,47 @@ ConfigurationView::~ConfigurationView()
     delete ui;
 }
 
-void ConfigurationView::on_ngInxPathButton_clicked()
+void ConfigurationView::selectDirectoryAndSetUI(QPushButton *button,
+                                                QLineEdit *lineEdit,
+                                                const QString &title)
 {
-    QString dir = QFileDialog::getExistingDirectory(this,
-                                                    tr("Select NgInx Location"),
-                                                    QDir::homePath(),
-                                                    QFileDialog::ShowDirsOnly
-                                                        | QFileDialog::DontResolveSymlinks);
-    if (!dir.isEmpty()) {
-        // Actualiza tanto el botón como el QLineEdit
-        ui->ngInxPathButton->setText(dir);
-        ui->ngInxPathLineEdit->setText(dir);
+    QFileDialog dialog(this);
+    dialog.setWindowTitle(title);
+    dialog.setFileMode(QFileDialog::Directory);
+    dialog.setOption(QFileDialog::ShowDirsOnly, true);
+    dialog.setOption(QFileDialog::DontResolveSymlinks, true);
+    dialog.setOption(QFileDialog::DontUseNativeDialog, true);
+    dialog.setDirectory(QDir::homePath());
+
+    if (dialog.exec() == QDialog::Accepted) {
+        QString dir = dialog.selectedFiles().first();
+        if (!dir.isEmpty()) {
+            button->setText(dir);
+            lineEdit->setText(dir);
+        }
     }
 }
+
+void ConfigurationView::on_ngInxPathButton_clicked()
+{
+    selectDirectoryAndSetUI(ui->ngInxPathButton, ui->ngInxPathLineEdit, tr("Select NgInx Location"));
+}
+
+void ConfigurationView::on_nodePathButton_clicked()
+{
+    selectDirectoryAndSetUI(ui->nodePathButton, ui->nodePathLineEdit, tr("Select Node Location"));
+}
+
+void ConfigurationView::on_bunPathButton_clicked()
+{
+    selectDirectoryAndSetUI(ui->bunPathButton, ui->bunPathLineEdit, tr("Select Bun Location"));
+}
+
+void ConfigurationView::on_mysqlPathButton_clicked()
+{
+    selectDirectoryAndSetUI(ui->mysqlPathButton, ui->mysqlPathLineEdit, tr("Select MySQL Location"));
+}
+
 void ConfigurationView::on_testButton_clicked()
 {
     ui->testButton->setEnabled(false); // Desactiva temporalmente el botón para evitar doble clic
@@ -94,10 +122,10 @@ void ConfigurationView::on_testButton_clicked()
                          ui->bunPathLineEdit->text(),
                          ui->mysqlPathLineEdit->text()};
     QStringList commands = {
-        " -version",  // para Nginx
-        " --version", // para Node.js
-        " --version", // para Bun
-        " --version"  // para MySQL
+        "-version",  // para Nginx
+        "--version", // para Node.js
+        "--version", // para Bun
+        "--version"  // para MySQL
     };
     QStringList names = {"Nginx", "Node.js", "Bun", "MySQL"};
     std::vector<std::string> invalidPaths;
@@ -137,6 +165,7 @@ void ConfigurationView::on_testButton_clicked()
 
     ui->testButton->setEnabled(true); // Vuelve a habilitar el botón de probar
 }
+
 void ConfigurationView::on_saveButton_clicked()
 {
     QString nginxPath = ui->ngInxPathLineEdit->text();
@@ -177,16 +206,11 @@ void ConfigurationView::on_saveButton_clicked()
 
 bool ConfigurationView::checkPathValid(const std::string &path, const std::string &versionFlag)
 {
-    namespace bp = boost::process;
-    try {
-        bp::ipstream is;
-        bp::child c(path + versionFlag,
-                    bp::std_out > is,
-                    bp::std_err > bp::null); // Redirigir errores a null
+    // Usamos QProcess::execute para simplificar
+    const QString program = QString::fromStdString(path);
+    const QStringList args = {QString::fromStdString(versionFlag)};
 
-        c.wait();
-        return c.exit_code() == 0;
-    } catch (...) {
-        return false; // Si ocurre una excepción, retornar falso
-    }
+    // QProcess::execute arranca el programa, espera a que termine y devuelve el código de salida
+    int exitCode = QProcess::execute(program, args);
+    return (exitCode == 0);
 }

@@ -21,14 +21,16 @@ endif()
 
 # Packages
 # QtCreator
-find_package(Qt6 COMPONENTS Widgets CONFIG QUIET)
-if(NOT TARGET Qt6::Widgets)
-    find_package(Qt5 REQUIRED COMPONENTS Widgets CONFIG)
-endif()
+# find_package(Qt6 COMPONENTS Widgets CONFIG QUIET)
+# if(NOT TARGET Qt6::Widgets)
+#     find_package(Qt5 REQUIRED COMPONENTS Widgets CONFIG)
+# endif()
+find_package(Qt6 REQUIRED COMPONENTS Widgets Network CONFIG QUIET)
 
 # Vcpkg
-find_package(boost_algorithm CONFIG REQUIRED)
-find_package(boost_process REQUIRED CONFIG)
+find_package(boost_algorithm REQUIRED CONFIG)
+find_package(boost_uuid REQUIRED CONFIG)
+find_package(OpenSSL REQUIRED)
 find_package(fmt CONFIG REQUIRED)
 find_package(inja CONFIG REQUIRED)
 find_package(unofficial-mysql-connector-cpp CONFIG REQUIRED)
@@ -81,9 +83,9 @@ set(PROJECT_SOURCES
         src/components/project-preview/projectpreview.h
         src/components/project-preview/projectpreview.cpp
         src/components/project-preview/projectpreview.ui
-        src/components/create-view/createview.h
-        src/components/create-view/createview.cpp
-        src/components/create-view/createview.ui
+        src/components/create-section/createsection.h
+        src/components/create-section/createsection.cpp
+        src/components/create-section/createsection.ui
         src/components/custom-tree-widget/customtreewidget.h
         src/components/custom-tree-widget/customtreewidget.cpp
         src/components/create-version/createversion.h
@@ -106,6 +108,24 @@ set(PROJECT_SOURCES
         src/components/delete-version/deleteversion.h
         src/components/delete-version/deleteversion.cpp
         src/components/delete-version/deleteversion.ui
+        src/components/overview-panel/overviewpanel.h
+        src/components/overview-panel/overviewpanel.cpp
+        src/components/overview-panel/overviewpanel.ui
+        src/components/tutorials-panel/tutorialspanel.h
+        src/components/tutorials-panel/tutorialspanel.cpp
+        src/components/tutorials-panel/tutorialspanel.ui
+        src/components/pro-panel/propanel.h
+        src/components/pro-panel/propanel.cpp
+        src/components/pro-panel/propanel.ui
+        src/components/overview-panel/overviewpanel.h
+        src/components/overview-panel/overviewpanel.cpp
+        src/components/overview-panel/overviewpanel.ui
+        src/components/edit-project/editproject.h
+        src/components/edit-project/editproject.cpp
+        src/components/edit-project/editproject.ui
+        src/components/templates-panel/templatespanel.h
+        src/components/templates-panel/templatespanel.cpp
+        src/components/templates-panel/templatespanel.ui
         # Core
         src/core/project-manager/projectmanager.h
         src/core/project-manager/projectmanager.cpp
@@ -121,6 +141,16 @@ set(PROJECT_SOURCES
         src/core/configuration-manager/configurationmanager.cpp
         src/core/deploy-manager/deploymanager.h
         src/core/deploy-manager/deploymanager.cpp
+        src/core/project-worker/projectworker.h
+        src/core/project-worker/projectworker.cpp
+        src/core/logging/actionloggerjson.h
+        src/core/logging/actionloggerjson.cpp
+        src/core/logging/stepvalidator.h
+        src/core/logging/stepvalidator.cpp
+        src/core/code-worker/codeworker.h
+        src/core/code-worker/codeworker.cpp
+        src/core/deploy-worker/deployworker.h
+        src/core/deploy-worker/deployworker.cpp
         # Models
         src/models/project/project.h
         src/models/project/project.cpp
@@ -130,14 +160,18 @@ set(PROJECT_SOURCES
         src/models/transaction/transaction.cpp
         src/models/field/field.h
         src/models/field/field.cpp
-        src/models/route/route.h
-        src/models/route/route.cpp
         src/models/component/component.h
         src/models/component/component.cpp
-        src/models/view/view.h
-        src/models/view/view.cpp
+        src/models/section/section.h
+        src/models/section/section.cpp
         src/models/configuration/configuration.h
         src/models/configuration/configuration.cpp
+        src/models/base-node/basenode.h
+        src/models/base-node/basenode.cpp
+        src/models/generic-node/genericnode.h
+        src/models/generic-node/genericnode.cpp
+        src/models/node-operation/nodeoperation.h
+        src/models/transaction-operation/transactionoperation.h
         # Utils
         src/utils/database/database.h
         src/utils/database/database.cpp
@@ -147,6 +181,14 @@ set(PROJECT_SOURCES
         src/utils/file/fileutiils.cpp
         src/utils/render_callback/rendercallback.h
         src/utils/render_callback/rendercallback.cpp
+        src/utils/file/filewatcher.h
+        src/utils/file/filewatcher.cpp
+        src/utils/vscode/fileopener.h
+        src/utils/vscode/fileopener.cpp
+        src/utils/ui/codeviewer.h
+        src/utils/ui/codeviewer.cpp
+        src/utils/logger_util/loggerutils.h
+        src/utils/logger_util/loggerutils.cpp
         # Resources
         src/resources/resources.qrc
 )
@@ -167,8 +209,10 @@ pkg_check_modules(LIBGIT2 REQUIRED IMPORTED_TARGET libgit2)
 
 target_link_libraries(RapidWebForgeApp PRIVATE
     Qt${QT_VERSION_MAJOR}::Widgets
+    Qt${QT_VERSION_MAJOR}::Network
     Boost::algorithm
-    Boost::process
+    Boost::uuid
+    OpenSSL::SSL
     fmt::fmt
     pantor::inja
     unofficial::mysql-connector-cpp::connector

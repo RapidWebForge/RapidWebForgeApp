@@ -1,8 +1,14 @@
 #include "backendgenerator.h"
 #include <QDebug>
+#include <QDir>
 #include <QFile>
+#include <QProcess>
+#include <QStandardPaths>
 #include <QTextStream>
+#include "../../core/configuration-manager/configurationmanager.h"
+#include "../../utils/file/fileutiils.h"
 #include "../../utils/render_callback/rendercallback.h"
+#include <boost/algorithm/string.hpp>
 #include <fmt/core.h>
 #include <fstream>
 #include <inja/inja.hpp>
@@ -14,7 +20,7 @@ BackendGenerator::BackendGenerator(const std::string &projectPath, const Databas
     , databaseData(databaseData)
 {}
 
-// Loading database schema from JSON file
+// Cargar el backend.json
 bool BackendGenerator::loadSchema()
 {
     std::ifstream file(projectPath + "/backend.json");
@@ -87,6 +93,8 @@ void BackendGenerator::writeFile(const std::string &filePath, const std::string 
 // Parse the JSON file and convert it to a vector of transactions and fields
 void BackendGenerator::parseJson(const nlohmann::json &jsonSchema)
 {
+    this->transactions.clear();
+
     for (const auto &transactionJson : jsonSchema["transactions"]) {
         Transaction transaction;
         transaction.setName(transactionJson["name"].get<std::string>());
@@ -135,8 +143,10 @@ void BackendGenerator::parseJson(const nlohmann::json &jsonSchema)
         }
         transaction.setFields(fields);
 
-        transactions.push_back(transaction);
+        this->transactions.push_back(transaction);
     }
+
+    this->oldTransactions = this->transactions;
 }
 
 bool BackendGenerator::updateSchema()
@@ -208,14 +218,20 @@ bool BackendGenerator::updateSchema()
     return true;
 }
 
-// Generate the backend code using Inja templates
-bool BackendGenerator::generateBackendCode()
+// Generar backend a partir de un JSON (usado principalmente para generar el código inicial en un template)
+bool BackendGenerator::generateInitialBackendCode()
 {
-    for (const auto &transaction : transactions) {
-        generateController(transaction);
-        generateModel(transaction);
-        generateRoute(transaction);
-        generateIndexFiles();
+    if (!loadSchema()) {
+        fmt::print(stderr, "generateInitialBackendCode: Failed to load schema.\n");
+        return false;
+    }
+
+    // Generar los archivos de backend
+    for (auto &transaction : transactions) {
+        if (!applyInsertion(transaction)) {
+            fmt::print(stderr, "❌ Failed generating transaction\n");
+            return false;
+        }
     }
 
     return true;
@@ -224,96 +240,212 @@ bool BackendGenerator::generateBackendCode()
 // Regenerate backend with new information
 bool BackendGenerator::updateBackendCode()
 {
-    // Actualizar el esquema del backend
-    if (updateSchema()) {
-        // Generar el código del backend
-        if (!generateBackendCode()) {
-            return false;
-        }
+    std::vector<TransactionOperation> operations = diffVecs();
 
-        // Generar modelos y servicios para el frontend
-        if (!generateFrontendModels() || !generateFrontendServices()) {
-            fmt::print(stderr, "Error generating frontend code.\n");
-            return false;
-        }
-
+    if (operations.empty()) {
+        qDebug() << "No changes detected, skipping backend generation.";
         return true;
     }
-    return false;
-}
 
-void BackendGenerator::generateFileAll(const Transaction &transaction,
-                                       const std::string &templatePath,
-                                       const std::string &outputPath,
-                                       bool includeFields,
-                                       const nlohmann::json &allTransactions)
-{
-    inja::Environment env;
-    nlohmann::json data;
-    data["name"] = transaction.getName();
-    data["nameConst"] = transaction.getNameConst();
-
-    // Verificar si hay campos y si se deben incluir en el contexto
-    if (includeFields) {
-        data["fields"] = nlohmann::json::array();
-        for (const auto &field : transaction.getFields()) {
-            nlohmann::json fieldJson;
-            fieldJson["name"] = field.getName();
-            fieldJson["type"] = field.getType();
-            fieldJson["isNull"] = field.getIsNull();
-            fieldJson["isUnique"] = field.getIsUnique();
-            fieldJson["isForeignKey"] = field.isForeignKey(); // Campo existente
-
-            // Si es una Foreign Key, agregar la tabla relacionada
-            if (field.isForeignKey()) {
-                fieldJson["foreignKeyTable"] = field.getForeignKeyTable();
-                fieldJson["foreignKeyTableLower"]
-                    = field.getForeignKeyTableLower(); // Nombre en minúsculas
-            }
-
-            data["fields"].push_back(fieldJson);
+    std::vector<TransactionOperation> deletes, modifies, inserts;
+    for (auto op : operations) {
+        switch (op.type) {
+        case OperationType::Insert:
+            inserts.push_back(op);
+            break;
+        case OperationType::Modify:
+            modifies.push_back(op);
+            break;
+        case OperationType::Delete:
+            deletes.push_back(op);
+            break;
         }
     }
 
-    // Verificar que `allTransactions` no esté vacío
-    if (allTransactions.is_null() || allTransactions.empty()) {
-        fmt::print(stderr, "allTransactions is empty or null.\n");
-        return;
-    }
-    data["allTransactions"] = allTransactions;
-    // Verificar si el archivo de plantilla existe y puede abrirse
-    QFile file(QString::fromStdString(templatePath));
-    if (!file.exists()) {
-        fmt::print(stderr, "Template file does not exist: {}\n", templatePath);
-        return;
-    }
-    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        fmt::print(stderr, "Unable to open template file from resource: {}\n", templatePath);
-        return;
+    for (auto &op : modifies)
+        if (!applyModification(op.transaction))
+            return false;
+    for (auto &op : inserts)
+        if (!applyInsertion(op.transaction))
+            return false;
+    for (auto &op : deletes)
+        if (!applyDeletion(op.transaction))
+            return false;
+
+    if (!updateSchema()) {
+        qDebug() << "Error on Updating Schema";
+        return false;
     }
 
-    QTextStream in(&file);
-    QString templateContent = in.readAll();
-    file.close();
+    this->oldTransactions = this->transactions;
+    return true;
+}
 
-    // Convertir el contenido a std::string para usarlo con Inja
-    std::string templateString = templateContent.toStdString();
-
-    // Depuración: Imprimir el JSON para verificar su estructura antes de renderizar
-    fmt::print("Data being passed to Inja:\n{}\n", data.dump(2));
-
-    try {
-        // Renderizar la plantilla con Inja
-        std::string result = env.render(templateString, data);
-
-        // Escribir el archivo de salida
-        writeFile(outputPath, result);
-    } catch (const std::exception &e) {
-        fmt::print(stderr,
-                   "General error generating file for {}: {}\n",
-                   transaction.getName(),
-                   e.what());
+bool BackendGenerator::runEditorScript(const std::vector<std::string> &stdArgs)
+{
+    // 1. Volcar recurso interno a un archivo temporal
+    const QString resourcePath = ":/babel/editorBackend";
+    QFile resourceFile(resourcePath);
+    if (!resourceFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        fmt::print(stderr, "❌ Unable to open resource: {}\n", resourcePath.toStdString());
+        return false;
     }
+
+    const QString tempDir = QStandardPaths::writableLocation(QStandardPaths::TempLocation);
+    const QString tempFilePath = tempDir + "/editorBack.js";
+    QFile tempFile(tempFilePath);
+    if (!tempFile.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text)) {
+        fmt::print(stderr, "❌ Unable to write temporary editorBack.js\n");
+        return false;
+    }
+    tempFile.write(resourceFile.readAll());
+    tempFile.close();
+
+    // 2. Preparar QProcess
+    ConfigurationManager configurationManager;
+    const QString bunPath = QString::fromStdString(
+        configurationManager.getConfiguration().getBunPath());
+    const QString backendDir = QDir::toNativeSeparators(QString::fromStdString(projectPath)
+                                                        + "/backend");
+
+    // 3. Construir lista de argumentos
+    QStringList qArgs;
+    qArgs << "run" << "edit" << "--" << tempFilePath;
+    for (const auto &s : stdArgs) {
+        qArgs << QString::fromStdString(s);
+    }
+
+    // 4. Configurar y lanzar el proceso, heredando stdout/stderr
+    QProcess proc;
+    proc.setProgram(bunPath);
+    proc.setArguments(qArgs);
+    proc.setWorkingDirectory(backendDir);
+    proc.setProcessChannelMode(QProcess::ForwardedChannels);
+
+    proc.start();
+    if (!proc.waitForFinished(-1)) {
+        qWarning() << "El proceso no terminó correctamente.";
+        return false;
+    } else {
+        // qDebug() << "Proceso backend terminado con código:" << proc.exitCode();
+        if (proc.exitCode() == 1)
+            return false;
+        else
+            return true;
+    }
+}
+
+bool BackendGenerator::applyInsertion(Transaction &transaction)
+{
+    // Editor.js
+    QString backendPath = QDir(QString::fromStdString(projectPath)).filePath("backend");
+    std::vector<std::string> args = {backendPath.toStdString(), "insert", transaction.getName()};
+
+    // Run script
+    if (!runEditorScript(args))
+        return false;
+
+    // Generar controlador, modelo y ruta para el backend
+    generateController(transaction);
+    generateModel(transaction);
+    generateRoute(transaction);
+    // Generar modelos y servicios para el frontend
+    generateFrontendModel(transaction);
+    generateFrontendService(transaction);
+
+    return true;
+}
+
+bool BackendGenerator::applyModification(Transaction &transaction)
+{
+    // Transaction a JSON
+    nlohmann::json transactionJson;
+    transactionJson["name"] = transaction.getName();
+
+    // Crear el arreglo de fields por cada transaction
+    transactionJson["fields"] = nlohmann::json::array();
+    for (const auto &field : transaction.getFields()) {
+        // Crear un objeto JSON por cada field
+        nlohmann::json fieldJson;
+        fieldJson["name"] = field.getName();
+        fieldJson["type"] = field.getType();
+        fieldJson["isNull"] = field.getIsNull();
+        fieldJson["isUnique"] = field.getIsUnique();
+        //fieldJson["isPrimaryKey"] = field.isPrimaryKey();
+        fieldJson["isForeignKey"] = field.isForeignKey();
+        // Incluir los nuevos constraints en el JSON
+        fieldJson["hasCheck"] = field.getHasCheck();
+        fieldJson["hasDefault"] = field.getHasDefault();
+
+        // Si es una Foreign Key, guarda la tabla relacionada
+        if (field.isForeignKey()) {
+            fieldJson["foreignKeyTable"] = field.getForeignKeyTable();
+        }
+        // Add the field JSON object to the fields array
+        transactionJson["fields"].push_back(fieldJson);
+    }
+
+    std::string payloadJson = transactionJson.dump();
+
+    QString tempPath = QStandardPaths::writableLocation(QStandardPaths::TempLocation);
+    QString payloadPath = tempPath + "/payload.json";
+    QFile payloadFile(payloadPath);
+
+    if (payloadFile.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text)) {
+        QTextStream out(&payloadFile);
+        out << QString::fromStdString(payloadJson);
+        payloadFile.close();
+    } else {
+        fmt::print(stderr, "❌ Unable to write temporary payload.json\n");
+        return false;
+    }
+
+    // Editor.js
+    std::vector<std::string> args = {projectPath, "modify", payloadPath.toStdString()};
+
+    // Run script
+    return runEditorScript(args);
+}
+
+bool BackendGenerator::applyDeletion(Transaction &transaction)
+{
+    auto toQString = [](const std::string &s) { return QString::fromStdString(s); };
+    auto buildPath = [](const QString &base, const QString &subdir, const QString &file) {
+        return QDir(QDir(base).filePath(subdir)).filePath(file);
+    };
+
+    // Para una transaction eliminada solo hay que borrar los archivos e imports
+    QString transactionNameQString = toQString(transaction.getName());
+    QString transactionLowerNameQString = toQString(boost::to_lower_copy(transaction.getName()));
+
+    QString backendPath = QDir(toQString(projectPath)).filePath("backend");
+    QString frontendPath = QDir(toQString(projectPath)).filePath("frontend");
+    QString frontendSrc = QDir(frontendPath).filePath("src");
+
+    // Editor.js
+    std::vector<std::string> args = {backendPath.toStdString(), "delete", transaction.getName()};
+
+    // Run script
+    if (!runEditorScript(args))
+        return false;
+
+    // Backend
+    // controllers
+    FileUtils::deleteFile(
+        buildPath(backendPath, "controllers", transactionLowerNameQString + "Controller.js"));
+    // models
+    FileUtils::deleteFile(buildPath(backendPath, "models", transactionLowerNameQString + ".js"));
+    // routes
+    FileUtils::deleteFile(
+        buildPath(backendPath, "routes", transactionLowerNameQString + "Routes.js"));
+
+    // Frontend
+    // models
+    FileUtils::deleteFile(buildPath(frontendSrc, "models", transactionNameQString + ".ts"));
+    // services
+    FileUtils::deleteFile(buildPath(frontendSrc, "services", transactionNameQString + "Service.ts"));
+
+    return true;
 }
 
 void BackendGenerator::generateFile(const Transaction &transaction,
@@ -378,15 +510,6 @@ void BackendGenerator::generateController(const Transaction &transaction)
     std::string templatePath = ":/inja/backend/controllers";
     std::string outputPath = projectPath + "/backend/controllers/" + transaction.getNameConst()
                              + "Controller.js";
-
-    // Crear un JSON con todas las transacciones
-    nlohmann::json allTransactionsData = nlohmann::json::array();
-    for (const auto &otherTransaction : transactions) {
-        nlohmann::json transactionJson;
-        transactionJson["name"] = otherTransaction.getName();
-        transactionJson["nameConst"] = otherTransaction.getNameConst();
-        allTransactionsData.push_back(transactionJson);
-    }
     generateFile(transaction, templatePath, outputPath);
 }
 
@@ -405,68 +528,7 @@ void BackendGenerator::generateRoute(const Transaction &transaction)
     generateFile(transaction, templatePath, outputPath);
 }
 
-void BackendGenerator::generateIndexFiles()
-{
-    inja::Environment env;
-
-    // Crear un JSON para almacenar los nombres de las transacciones
-    nlohmann::json transactionsNames = nlohmann::json::array();
-    for (const auto &transaction : transactions) {
-        nlohmann::json name;
-        name["name"] = transaction.getName();
-        name["nameConst"] = transaction.getNameConst();
-        transactionsNames.push_back(name); // Añadir cada nombre de transacción al array
-    }
-
-    // Crear el contexto de datos para inja
-    nlohmann::json context;
-    context["transactions"] = transactionsNames; // Añadir transacciones al contexto
-
-    // Ruta al template de modelsIndex
-    QString modelsIndexTemplatePath = ":/inja/backend/modelsIndex";
-    QFile modelsIndexFile(modelsIndexTemplatePath);
-    if (!modelsIndexFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        fmt::print(stderr,
-                   "Unable to open template file from resource: {}\n",
-                   modelsIndexTemplatePath.toStdString());
-        return;
-    }
-
-    QTextStream modelsIndexStream(&modelsIndexFile);
-    QString modelsIndexTemplateContent = modelsIndexStream.readAll();
-    modelsIndexFile.close();
-
-    // Añadir credenciales a `context` para usar en el template de rutas
-    nlohmann::json credentials = {{"dbname", databaseData.getDatabaseName()},
-                                  {"user", databaseData.getUser()},
-                                  {"password", databaseData.getPassword()},
-                                  {"host", databaseData.getServer()}};
-    context["credentials"] = credentials;
-
-    // Renderizar el template de modelsIndex con el contexto
-    std::string modelsIndexResult = env.render(modelsIndexTemplateContent.toStdString(), context);
-    writeFile(projectPath + "/backend/models/index.js", modelsIndexResult);
-
-    // Ruta al template de routesIndex
-    QString routesIndexTemplatePath = ":/inja/backend/routesIndex";
-    QFile routesIndexFile(routesIndexTemplatePath);
-    if (!routesIndexFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        fmt::print(stderr,
-                   "Unable to open template file from resource: {}\n",
-                   routesIndexTemplatePath.toStdString());
-        return;
-    }
-
-    QTextStream routesIndexStream(&routesIndexFile);
-    QString routesIndexTemplateContent = routesIndexStream.readAll();
-    routesIndexFile.close();
-
-    // Renderizar el template de routesIndex con el contexto
-    std::string routesIndexResult = env.render(routesIndexTemplateContent.toStdString(), context);
-    writeFile(projectPath + "/backend/routes/index.js", routesIndexResult);
-}
-
-bool BackendGenerator::generateFrontendModels()
+void BackendGenerator::generateFrontendModel(const Transaction &transaction)
 {
     inja::Environment env;
 
@@ -474,8 +536,11 @@ bool BackendGenerator::generateFrontendModels()
         env.add_callback("render_type", 1, [&env](inja::Arguments &args) -> std::string {
             return RenderCallback::renderTypeFrontendModel(env, args);
         });
+        env.add_callback("render_default_type", 1, [&env](inja::Arguments &args) -> std::string {
+            return RenderCallback::renderDefaultTypeFrontendModel(env, args);
+        });
     } catch (const std::exception &e) {
-        fmt::print(stderr, "Error adding callback: {}\n", e.what());
+        fmt::print(stderr, "Error adding callbacks: {}\n", e.what());
     }
 
     std::string modelTemplatePath = ":/inja/frontend/model";
@@ -486,7 +551,7 @@ bool BackendGenerator::generateFrontendModels()
         fmt::print(stderr,
                    "Unable to open model template file from resource: {}\n",
                    modelTemplatePath);
-        return false;
+        return;
     }
 
     QTextStream in(&file);
@@ -494,37 +559,28 @@ bool BackendGenerator::generateFrontendModels()
     file.close();
     std::string templateString = templateContent.toStdString();
 
-    // Iterar sobre las transacciones para generar modelos
-    for (const auto &transaction : transactions) {
-        nlohmann::json data;
-        data["model_name"] = transaction.getName();
-        data["fields"] = nlohmann::json::array();
+    nlohmann::json data;
+    data["model_name"] = transaction.getName();
+    data["fields"] = nlohmann::json::array();
 
-        for (const auto &field : transaction.getFields()) {
-            nlohmann::json fieldJson;
-            fieldJson["name"] = field.getName();
-            fieldJson["type"] = field.getType();
-            data["fields"].push_back(fieldJson);
-        }
-
-        // Crear el archivo de modelo en el frontend
-        std::string outputPath = projectPath + "/frontend/src/models/" + transaction.getName()
-                                 + ".ts";
-        try {
-            std::string result = env.render(templateString, data);
-            writeFile(outputPath, result);
-        } catch (const std::exception &e) {
-            fmt::print(stderr,
-                       "Error generating model for {}: {}\n",
-                       transaction.getName(),
-                       e.what());
-            return false;
-        }
+    for (const auto &field : transaction.getFields()) {
+        nlohmann::json fieldJson;
+        fieldJson["name"] = field.getName();
+        fieldJson["type"] = field.getType();
+        data["fields"].push_back(fieldJson);
     }
-    return true;
+
+    // Crear el archivo de modelo en el frontend
+    std::string outputPath = projectPath + "/frontend/src/models/" + transaction.getName() + ".ts";
+    try {
+        std::string result = env.render(templateString, data);
+        writeFile(outputPath, result);
+    } catch (const std::exception &e) {
+        fmt::print(stderr, "Error generating model for {}: {}\n", transaction.getName(), e.what());
+    }
 }
 
-bool BackendGenerator::generateFrontendServices()
+void BackendGenerator::generateFrontendService(const Transaction &transaction)
 {
     inja::Environment env;
     std::string serviceTemplatePath = ":/inja/frontend/service";
@@ -535,7 +591,7 @@ bool BackendGenerator::generateFrontendServices()
         fmt::print(stderr,
                    "Unable to open service template file from resource: {}\n",
                    serviceTemplatePath);
-        return false;
+        return;
     }
 
     QTextStream in(&file);
@@ -543,38 +599,26 @@ bool BackendGenerator::generateFrontendServices()
     file.close();
     std::string templateString = templateContent.toStdString();
 
-    // Iterar sobre las transacciones para generar servicios
-    for (const auto &transaction : transactions) {
-        nlohmann::json data;
-        data["model_name"] = transaction.getName();
-        data["model_name_lower"] = transaction.getNameConst(); // Nombre en minúsculas
+    nlohmann::json data;
+    data["model_name"] = transaction.getName();
+    data["model_name_lower"] = transaction.getNameConst(); // Nombre en minúsculas
 
-        // Crear el archivo de servicio en el frontend
-        std::string outputPath = projectPath + "/frontend/src/services/" + transaction.getName()
-                                 + "Service.ts";
-        try {
-            std::string result = env.render(templateString, data);
-            writeFile(outputPath, result);
-        } catch (const std::exception &e) {
-            fmt::print(stderr,
-                       "Error generating service for {}: {}\n",
-                       transaction.getName(),
-                       e.what());
-            return false;
-        }
+    // Crear el archivo de servicio en el frontend
+    std::string outputPath = projectPath + "/frontend/src/services/" + transaction.getName()
+                             + "Service.ts";
+    try {
+        std::string result = env.render(templateString, data);
+        writeFile(outputPath, result);
+    } catch (const std::exception &e) {
+        fmt::print(stderr, "Error generating service for {}: {}\n", transaction.getName(), e.what());
     }
-    return true;
 }
 
 // Getter
-const std::vector<Transaction> &BackendGenerator::getTransactions() const
-{
-    return transactions;
-}
 
-std::vector<Transaction> &BackendGenerator::getTransactions()
+std::vector<Transaction> *BackendGenerator::getTransactions()
 {
-    return transactions;
+    return &transactions;
 }
 
 // Setter
@@ -583,55 +627,48 @@ void BackendGenerator::setTransactions(const std::vector<Transaction> &transacti
     this->transactions = transactions;
 }
 
-bool BackendGenerator::updateTransactionName(const std::string &currentName,
-                                             const std::string &newName,
-                                             const std::string &newNameConst)
+std::vector<TransactionOperation> BackendGenerator::diffVecs()
 {
-    // Cargar el JSON
-    std::ifstream file(projectPath + "/backend.json");
-    if (!file.is_open()) {
-        fmt::print(stderr, "Unable to open JSON file: {}/backend.json\n", projectPath);
-        return false;
-    }
+    std::vector<TransactionOperation> ops;
 
-    nlohmann::json jsonSchema;
-    try {
-        file >> jsonSchema;
-    } catch (const nlohmann::json::parse_error &e) {
-        fmt::print(stderr, "Error parsing JSON: {}\n", e.what());
-        return false;
-    }
+    for (const Transaction &newTx : this->transactions) {
+        auto it = std::find_if(this->oldTransactions.begin(),
+                               this->oldTransactions.end(),
+                               [&](const Transaction &existingTx) {
+                                   return existingTx.getName() == newTx.getName();
+                               });
 
-    file.close();
-
-    // Buscar la transacción por el nombre actual
-    bool found = false;
-    for (auto &transaction : jsonSchema["transactions"]) {
-        if (transaction["name"] == currentName) {
-            // Actualizar "name" y "nameConst"
-            transaction["name"] = newName;
-            transaction["nameConst"] = newNameConst;
-            found = true;
-            break;
+        if (it == this->oldTransactions.end()) {
+            ops.emplace_back(OperationType::Insert, newTx);
+        } else if (newTx.isDifferentFrom(*it)) {
+            ops.emplace_back(OperationType::Modify, newTx);
         }
     }
 
-    if (!found) {
-        fmt::print(stderr, "Transaction with name {} not found.\n", currentName);
-        return false;
+    for (const Transaction &oldTx : this->oldTransactions) {
+        auto it = std::find_if(transactions.begin(),
+                               transactions.end(),
+                               [&](const Transaction &newTx) {
+                                   return newTx.getName() == oldTx.getName();
+                               });
+
+        if (it == this->transactions.end()) {
+            ops.emplace_back(OperationType::Delete, oldTx);
+        }
     }
 
-    // Guardar el JSON actualizado
-    std::ofstream jsonFile(projectPath + "/backend.json");
-    if (!jsonFile.is_open()) {
-        fmt::print(stderr, "Failed to open backend.json for writing\n");
+    return ops;
+}
+
+bool BackendGenerator::isProgressSaved()
+{
+    std::vector<TransactionOperation> operations = diffVecs();
+
+    if (operations.empty()) {
+        qDebug() << "No changes detected.";
+        return true;
+    } else {
+        qDebug() << "Changes detected.";
         return false;
     }
-
-    jsonFile << jsonSchema.dump(
-        2); // Guardar con una indentación de 2 espacios para mejor legibilidad
-    jsonFile.close();
-
-    fmt::print("Transaction updated successfully: name={}, nameConst={}\n", newName, newNameConst);
-    return true;
 }

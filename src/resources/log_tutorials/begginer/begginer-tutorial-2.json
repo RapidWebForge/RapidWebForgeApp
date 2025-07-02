@@ -1,0 +1,38 @@
+{
+  "title": "HTML: Atributos de las etiquetas",
+  "description": "En este tutorial seguiremos viendo las etiquetas de HTML, pero ahora conocerás los atributos que cada una presenta y cómo estos pueden ser modificados para ajustarlos a nuestra conveniencia.",
+  "steps": [
+    {
+      "goal": "Conocer los atributos de una etiqueta de entrada",
+      "comment": "Las etiquetas HTML como `<input>` o `<textarea>` tienen atributos que permiten ajustar su comportamiento, como 'placeholder', 'maxlength' o 'required'.",
+      "help": "Explora la documentación oficial para ver qué atributos están disponibles para cada tipo de etiqueta.",
+      "reference": "https://www.w3schools.com/tags/ref_attributes.asp",
+      "log": "edit-tag-attributes",
+      "completed": "false"
+    },
+    {
+      "goal": "Modificar el placeholder de un campo",
+      "comment": "Selecciona una etiqueta de entrada y cambia su valor `placeholder` para mostrar una referencia o ejemplo dentro del campo de texto.",
+      "help": "Un buen placeholder mejora la experiencia de usuario al indicar qué información se espera.",
+      "reference": "https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input",
+      "log": "edit-placeholder",
+      "completed": "false"
+    },
+    {
+      "goal": "Añadir una restricción con maxlength",
+      "comment": "Agrega el atributo `maxlength` a un `<input>` o `<textarea>` para limitar la cantidad de caracteres que se pueden escribir.",
+      "help": "Esto es útil cuando esperas datos como números de documento o nombres con longitud máxima.",
+      "reference": "https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input#maxlength",
+      "log": "add-maxlength",
+      "completed": "false"
+    },
+    {
+      "goal": "Marcar un campo como obligatorio",
+      "comment": "Utiliza el atributo `required` en un campo de entrada para que el formulario no se envíe sin completarlo. Debes de agregar `true` en la casilla.",
+      "help": "Esto agrega una validación automática sin necesidad de código adicional.",
+      "reference": "https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input#the-required-attribute",
+      "log": "add-required",
+      "completed": "false"
+    }
+  ]
+}

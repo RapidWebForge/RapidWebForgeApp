@@ -1,18 +1,18 @@
 #include "createtabledialog.h"
 #include <QFile>
+#include <QMessageBox>
 #include "ui_createtabledialog.h"
 #include <boost/algorithm/string.hpp>
+#include <qregularexpression.h>
 
 CreateTableDialog::CreateTableDialog(QWidget *parent)
     : QDialog(parent)
     , ui(new Ui::CreateTableDialog)
-    , addFieldDialog(nullptr)
+
 {
     ui->setupUi(this);
 
     ui->addFieldButton->hide();
-
-    connect(ui->addFieldButton, &QPushButton::clicked, this, &CreateTableDialog::showAddFieldDialog);
 
     connect(ui->cancelButton, &QPushButton::clicked, this, &QDialog::close);
 
@@ -22,7 +22,6 @@ CreateTableDialog::CreateTableDialog(QWidget *parent)
 CreateTableDialog::~CreateTableDialog()
 {
     delete ui;
-    delete addFieldDialog;
 }
 
 void CreateTableDialog::applyStyles()
@@ -39,32 +38,27 @@ void CreateTableDialog::applyStyles()
     }
 }
 
-void CreateTableDialog::showAddFieldDialog()
-{
-    if (!addFieldDialog) {
-        addFieldDialog = new AddFieldDialog(this);
-
-        connect(addFieldDialog, &AddFieldDialog::fieldSaved, this, &CreateTableDialog::onFieldSaved);
-    }
-    addFieldDialog->exec();
-}
-
-void CreateTableDialog::onFieldSaved(const Field &field)
-{
-    transaction.getFields().push_back(field);
-
-    accept();
-}
-
 void CreateTableDialog::on_createButton_clicked()
 {
     std::string transactionName = ui->tableNameLineEdit->text().toStdString();
+
+    QRegularExpression invalidChars(R"([\\/:*?"<>|])");
+    if (invalidChars.match(QString::fromStdString(transactionName)).hasMatch()) {
+        QMessageBox::warning(this, "Invalid name", "Table name have invalid characters.");
+        return;
+    }
+    if (transactionName.empty()) {
+        QMessageBox::warning(this, "Error", "Table name cannot be empty.");
+        return;
+    }
     // TODO: Ensure capitalize
     transaction.setName(transactionName);
     transaction.setNameConst(boost::to_lower_copy(transactionName));
 
     emit transactionSaved(transaction);
-
+    // Log de la creación del modelo (concatenación directa)
+    loggerJson.logAction("create-new-model", "Model create with name " + transactionName);
     // Limpiar el campo de texto después de crear la transacción
     ui->tableNameLineEdit->clear(); // Esto limpia el input de la tabla
+    accept();
 }

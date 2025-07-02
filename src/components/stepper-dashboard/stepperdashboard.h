@@ -2,29 +2,57 @@
 #define STEPPERDASHBOARD_H
 
 #include <QAction>
+#include <QDialog>
+#include <QEnterEvent>
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonObject>
 #include <QMenu>
+#include <QPropertyAnimation>
+#include <QPushButton>
+#include <QResizeEvent>
+#include <QString>
+#include <QTimer>
 #include <QWidget>
 #include "../../core/code-generator/codegenerator.h"
 #include "../../core/configuration-manager/configurationmanager.h"
+#include "../../core/logging/actionloggerjson.h"
+#include "../../core/logging/stepvalidator.h"
 #include "../../core/version-manager/versionmanager.h"
 #include "../../models/project/project.h"
+#include "../../utils/file/filewatcher.h"
+#include "../../utils/vscode/fileopener.h"
 #include "../backend-dashboard/backenddashboard.h"
+#include "../custom-tree-widget/customtreewidget.h"
 #include "../frontend-dashboard/frontenddashboard.h"
+#include <nlohmann/json.hpp>
+#include <variant>
 
 namespace Ui {
 class StepperDashboard;
 }
 
-class StepperDashboard : public QDialog
+class StepperDashboard : public QWidget
 {
     Q_OBJECT
 
 public:
-    explicit StepperDashboard(QDialog *parent = nullptr, const Project &project = Project());
+    explicit StepperDashboard(QWidget *parent = nullptr,
+                              const Project &project = Project(),
+                              const QString &tutorialPath = "");
     ~StepperDashboard();
+
+    void loadTutorialData();
+    bool showConfirmationDialog(QWidget *parent, const QString &title, const QString &message);
 
 protected:
     void showEvent(QShowEvent *event) override;
+    void closeEvent(QCloseEvent *event) override;
+    void resizeEvent(QResizeEvent *event) override;
+    void contextMenuEvent(QContextMenuEvent *event) override;
+
+public slots:
+    void validateCurrentStep(int index);
 
 signals:
     void backendSchemaLoaded();
@@ -39,6 +67,7 @@ private slots:
     void onBackendSchemaLoaded();
     void onFrontendSchemaLoaded();
     void onSaveChanges();
+    bool killNgInx();
     void onCreateVersion();
     void onChangeVersion();
     void onVersionHistory();
@@ -46,14 +75,47 @@ private slots:
     void onDeployProject();
     void onProjectChange();
     void onCreateProject();
+    // Slots relacionados con los tutoriales
+    void showTutorialComment();
+    void showTutorialHelp();
+    void goToNextTutorialStep();
+    void showTutorialIntro(QString tutorialTitle, QString tutorialDescription);
+    void onUserActionPerformed();
+    bool isProgressSaved();
+    void toggleMenuButtons(bool active);
 
 private:
     Ui::StepperDashboard *ui;
     BackendDashboard *backendDashboard;
     FrontendDashboard *frontendDashboard;
+    StepValidator *stepValidator;
+    CustomTreeWidget *customTreeWidget;
+    QPushButton *floatingButton;
+    QPushButton *backendButton;
+    QPushButton *frontendButton;
+    QPushButton *lastFileButton;
+
+    QPropertyAnimation *backendAnimation;
+    QPropertyAnimation *frontendAnimation;
+    QPropertyAnimation *lastFileAnimation;
+
+    // Tutorial bar methods
+    void initializeTutorialBar();
+    void setupTutorialConnections();
+    void setupFloatingButton();
+    void toggleExtraButtons();
+    void createAnimations();
+
+    void openBackendInVSCode();
+    void openFrontendInVSCode();
+    void openLastModifiedFile();
+
     // Definición de menús
     QMenu *projectMenu;
     QMenu *versionsMenu;
+
+    std::variant<Project, QString> dataVariant;
+    bool isTutorialMode = false;
 
     // Definición de acciones para los menús
     QAction *projectChangeAction;
@@ -66,14 +128,38 @@ private:
     QAction *versionHistoryAction;
     QAction *deleteVersionAction;
 
+    // Variables para manejar el tutorial
+    nlohmann::json tutorialData;  // Almacena los datos del JSON
+    int currentTutorialIndex = 0; // Índice del tutorial actual
+
+    // Métodos privados
+    void showTutorialStep(int tutorialIndex, int stepIndex); // Mostrar el paso actual
+
     // Code Generator definition
     CodeGenerator *codeGenerator;
 
     // Version Manager
     VersionManager *versionManager;
 
+    // Log Manager
+    ActionLoggerJson loggerJson;
+
     // Project
     Project project;
+    int currentStepIndex = 0; // Inicializa el índice en 0
+
+    QString tutorialPath;
+    QString tutorialFilePath;
+
+    QJsonArray tutorialSteps;
+
+    void showStep(int index);
+    QTimer *stepCheckTimer;
+    QString currentReference;
+
+    FileWatcher *fileWatcher;
+
+    bool initialized = false;
 };
 
 #endif // STEPPERDASHBOARD_H

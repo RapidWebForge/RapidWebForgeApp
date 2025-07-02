@@ -5,8 +5,9 @@
 #include <QComboBox>
 #include <QDialog>
 #include <QString>
+#include "../../core/logging/actionloggerjson.h"
 #include "../../models/field/field.h"
-#include "../../models/transaction/transaction.h" // Incluir el modelo de transacción
+#include "../../models/transaction/transaction.h"
 #include <vector>
 
 namespace Ui {
@@ -21,24 +22,27 @@ public:
     explicit AddFieldDialog(QWidget *parent = nullptr);
     ~AddFieldDialog();
 
-    void setTransaction(Transaction &transaction);
-    void setAvailableTables(const std::vector<QString> &tables,
-                            const QString &currentTableName); // Método para llenar el combo box
+    void setTransaction(Transaction *transaction);
+    // Método para llenar el combo box
+    void setAvailableTables(const std::vector<QString> &tables, const QString &currentTableName);
 
 signals:
-    void fieldSaved(const Field &field);
+    void fieldSaved();
 
 private slots:
+    void on_cancelButton_clicked();
     void on_addButton_clicked();
-    void on_foreignKeyCheckBox_stateChanged(
-        int state); // Maneja el cambio de estado del checkbox de clave foránea
+    // Maneja el cambio de estado del checkbox de clave foránea
+    void on_foreignKeyCheckBox_stateChanged(int state);
 
 private:
     Ui::AddFieldDialog *ui;
     Field field;
     Transaction *currentTransaction; // Referencia a la transacción actual
+    ActionLoggerJson loggerJson;     // Logs en formato .json
 
     void applyStyles();
+    void clearContent();
 };
 
 #endif // ADDFIELDDIALOG_H

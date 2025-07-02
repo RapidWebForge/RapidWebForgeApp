@@ -60,6 +60,11 @@
           </column>
           <item>
            <property name="text">
+            <string>Custom</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
             <string>Inputs</string>
            </property>
            <item>
@@ -69,7 +74,12 @@
            </item>
            <item>
             <property name="text">
-             <string>TextArea</string>
+             <string>Text Area</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Label</string>
             </property>
            </item>
           </item>
@@ -107,6 +117,26 @@
              <string>Button</string>
             </property>
            </item>
+           <item>
+            <property name="text">
+             <string>Hyperlink</string>
+            </property>
+           </item>
+          </item>
+          <item>
+           <property name="text">
+            <string>Media</string>
+           </property>
+           <item>
+            <property name="text">
+             <string>Image</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Iframe</string>
+            </property>
+           </item>
           </item>
           <item>
            <property name="text">
@@ -137,6 +167,11 @@
              <string>Model Layout</string>
             </property>
            </item>
+           <item>
+            <property name="text">
+             <string>Layout</string>
+            </property>
+           </item>
           </item>
          </widget>
         </item>
@@ -144,7 +179,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QGroupBox" name="currentViewGroup">
+      <widget class="QGroupBox" name="currentSectionGroup">
        <property name="styleSheet">
         <string notr="true">border: none;</string>
        </property>
@@ -153,16 +188,12 @@
        </property>
        <layout class="QVBoxLayout" name="verticalLayoutMainView">
         <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_2">
+         <layout class="QHBoxLayout" name="horizontalLayoutSectionActions">
           <property name="sizeConstraint">
            <enum>QLayout::SizeConstraint::SetDefaultConstraint</enum>
           </property>
           <item>
-           <widget class="QLabel" name="currentViewLabel">
-            <property name="text">
-             <string>Current View</string>
-            </property>
-           </widget>
+           <widget class="QComboBox" name="sectionComboBox"/>
           </item>
           <item>
            <widget class="QPushButton" name="deleteButton">
@@ -184,13 +215,13 @@
          </layout>
         </item>
         <item>
-         <widget class="CustomTreeWidget" name="currentViewTree">
+         <widget class="CustomTreeWidget" name="currentSectionTree">
           <property name="headerHidden">
            <bool>true</bool>
           </property>
           <column>
            <property name="text">
-            <string>1</string>
+            <string>Sections</string>
            </property>
           </column>
          </widget>
@@ -201,13 +232,6 @@
            <widget class="QPushButton" name="addSectionButton">
             <property name="text">
              <string>New Section</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="saveButton">
-            <property name="text">
-             <string>Save</string>
             </property>
            </widget>
           </item>

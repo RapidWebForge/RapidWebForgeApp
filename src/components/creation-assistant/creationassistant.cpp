@@ -1,9 +1,13 @@
 #include "creationassistant.h"
+#include <QDebug>
 #include <QFileDialog>
+#include <QMessageBox>
+#include <QRegularExpression>
+#include "../../core/project-manager/projectmanager.h"
 #include "ui_creationassistant.h"
 
 CreationAssistant::CreationAssistant(QWidget *parent)
-    : QDialog(parent)
+    : QWidget(parent)
     , ui(new Ui::CreationAssistant)
 {
     ui->setupUi(this);
@@ -21,13 +25,25 @@ CreationAssistant::~CreationAssistant()
 
 std::string CreationAssistant::isValid(Project &project)
 {
+    ProjectManager projectManager;
+
     std::string projectName = ui->projectNameLineEdit->text().toStdString();
+    std::string projectDescription = ui->descriptionPlainTextEdit->toPlainText().toStdString();
     std::string projectPath = ui->browseButton->text().toStdString();
 
     if (projectName.empty()) {
         return "Give a name for the project";
     } else {
-        project.setName(projectName);
+        QRegularExpression invalidChars(R"([\\/:*?"<>|])");
+        if (invalidChars.match(QString::fromStdString(projectName)).hasMatch())
+            return "Invalid project name";
+        if (projectManager.isProjectAvailable(projectName))
+            project.setName(projectName);
+        else
+            return "A project with that name was already created";
+    }
+    if (!projectDescription.empty()) {
+        project.setDescription(projectDescription);
     }
     if (projectPath == "Select path" || projectPath.empty()) {
         return "Select a path for your project";
@@ -46,13 +62,20 @@ std::string CreationAssistant::isValid(Project &project)
 
 void CreationAssistant::on_browseButton_clicked()
 {
-    QString dir = QFileDialog::getExistingDirectory(this,
-                                                    tr("Select Project Location"),
-                                                    QDir::homePath(),
-                                                    QFileDialog::ShowDirsOnly
-                                                        | QFileDialog::DontResolveSymlinks);
-    if (!dir.isEmpty()) {
-        ui->browseButton->setText(dir);
+    QFileDialog dialog(this);
+    dialog.setWindowTitle(tr("Select Project Location"));
+    dialog.setFileMode(QFileDialog::Directory);
+    dialog.setOption(QFileDialog::ShowDirsOnly, true);
+    dialog.setOption(QFileDialog::DontResolveSymlinks, true);
+    dialog.setOption(QFileDialog::DontUseNativeDialog, true);
+
+    dialog.setDirectory(QDir::homePath());
+
+    if (dialog.exec() == QDialog::Accepted) {
+        QString dir = dialog.selectedFiles().first();
+        if (!dir.isEmpty()) {
+            ui->browseButton->setText(dir);
+        }
     }
 }
 
@@ -72,7 +95,7 @@ void CreationAssistant::applyStylesCA()
     ui->projectNameLabel->setStyleSheet(generalStyle);
     ui->projectLocationLabel->setStyleSheet(generalStyle);
     ui->defaultLanguageLabel->setStyleSheet(generalStyle);
-    ui->label->setStyleSheet(generalStyle);
+    ui->descriptionLabel->setStyleSheet(generalStyle);
 
     // Estilo específico para la etiqueta de información del proyecto
     ui->projectInfoLabel->setStyleSheet("font-size: 25px; color: #000000; padding-bottom: 0px; "
@@ -81,6 +104,7 @@ void CreationAssistant::applyStylesCA()
         "font-size: 35px; color: #27292A; padding-top: 10px; padding-left: 40px;");
     // Estilo para la línea de edición de texto
     ui->projectNameLineEdit->setStyleSheet(inputStyle);
+    ui->descriptionPlainTextEdit->setStyleSheet(inputStyle);
 
     // Estilo para el botón de búsqueda
     ui->browseButton->setStyleSheet(inputStyle);
@@ -91,14 +115,4 @@ void CreationAssistant::applyStylesCA()
     // Ajustar margenes y espaciamiento del layout principal (opcional)
     ui->verticalLayout->setContentsMargins(20, 0, 20, 0); // Ajusta los márgenes del layout
     ui->verticalLayout->setSpacing(10);                   // Ajusta el espaciado entre widgets
-}
-
-void CreationAssistant::keyPressEvent(QKeyEvent *event)
-{
-    if (event->key() == Qt::Key_Escape) {
-        // Ignorar la tecla "Escape" globalmente o asignarle otra función
-        event->ignore();
-    } else {
-        QWidget::keyPressEvent(event); // Ajusta esto si Stepper no hereda de QMainWindow
-    }
 }

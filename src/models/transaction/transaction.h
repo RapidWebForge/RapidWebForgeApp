@@ -23,6 +23,13 @@ public:
     void setNameConst(const std::string &newNameConst);
     void setFields(const std::vector<Field> &newFields);
 
+    bool isDifferentFrom(const Transaction &other) const;
+
+    // Fields Operations
+    Field &getFieldByName(const std::string &fieldName);
+    void removeFieldByName(const std::string &fieldName);
+    void addField(const Field field);
+
 private:
     int id;
     std::string name;

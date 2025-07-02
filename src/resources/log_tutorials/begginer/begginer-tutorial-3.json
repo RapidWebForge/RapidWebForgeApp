@@ -1,0 +1,38 @@
+{
+  "title": "CSS: Conociendo los estilos en cascada",
+  "description": "Los estilos en cascada (CSS) nos permiten cambiar el aspecto visual de nuestras etiquetas HTML. En este tutorial aprenderás a aplicar estilos con TailwindCSS, un framework que simplifica este proceso.",
+  "steps": [
+    {
+      "goal": "Agregar estilos a una etiqueta de texto",
+      "comment": "Usa clases de Tailwind como `text-red-500`, `text-2xl`, `italic` para cambiar color, tamaño y estilo del texto.",
+      "help": "Puedes aplicar múltiples clases para personalizar tu contenido.",
+      "reference": "https://tailwindcss.com/docs/text-color",
+      "log": "apply-text-styling",
+      "completed": "false"
+    },
+    {
+      "goal": "Aplicar estilos a botones",
+      "comment": "Selecciona un botón y agrégale clases como `bg-blue-500 text-white p-2 rounded` para darle estilo.",
+      "help": "Una buena apariencia mejora la claridad y usabilidad de los elementos interactivos.",
+      "reference": "https://tailwindcss.com/docs/background-color",
+      "log": "style-button-tailwind",
+      "completed": "false"
+    },
+    {
+      "goal": "Usar layout vertical u horizontal",
+      "comment": "Usa los componentes 'Vertical Layout' y 'Horizontal Layout' para estructurar contenido con flexbox.",
+      "help": "Estos componentes agrupan automáticamente los elementos y aplican estilos responsive.",
+      "reference": "https://css-tricks.com/snippets/css/a-guide-to-flexbox/",
+      "log": "use-layout-tailwind",
+      "completed": "false"
+    },
+    {
+      "goal": "Aplicar márgenes y paddings",
+      "comment": "Agrega clases como `m-4`, `p-2`, `mt-2` para controlar el espaciado de los elementos.",
+      "help": "Tailwind ofrece control total del espaciado en todas las direcciones.",
+      "reference": "https://tailwindcss.com/docs/margin",
+      "log": "add-spacing-tailwind",
+      "completed": "false"
+    }
+  ]
+}

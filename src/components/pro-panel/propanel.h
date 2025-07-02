@@ -1,0 +1,46 @@
+#ifndef PROPANEL_H
+#define PROPANEL_H
+
+#include <QDialog>
+#include <QGridLayout>
+#include <QLabel>
+#include <QPushButton>
+#include <QWidget>
+#include "../../core/configuration-manager/configurationmanager.h"
+#include "../../models/project/project.h"
+#include "../stepper/stepper.h"
+#include <vector>
+
+namespace Ui {
+class ProPanel;
+}
+
+class ProPanel : public QWidget
+{
+    Q_OBJECT
+
+public:
+    explicit ProPanel(QWidget *parent = nullptr);
+    ~ProPanel();
+
+    void setupProjects(const std::vector<Project> &projects);
+
+private:
+    Ui::ProPanel *ui;
+    QGridLayout *gridLayout;
+    std::vector<Project> projects;
+    ConfigurationManager *confManager = nullptr;
+
+private slots:
+    void onAddProjectClicked();
+    void onProjectPreviewClicked(const Project &project);
+    void onDeleteProjectRequested(int projectId);
+    void onEditProjectRequested(int projectId);
+
+signals:
+    void projectClicked(const Project &project);
+    void deleteRequested(int projectId);
+    void editRequested(int projectId);
+};
+
+#endif // PROPANEL_H
